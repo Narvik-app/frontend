@@ -17,6 +17,30 @@ watchEffect(() => {
   menuVisible.value = isDesktopDisplay.value;
 })
 
+
+// We create the custom items props so we can auto close the menu on page change
+const cItems: GroupedNavigationLinks[] = []
+props.items?.forEach(value => {
+  let item : GroupedNavigationLinks = {
+    title: value.title,
+    links: []
+  }
+  value.links.forEach(link => {
+    // We push into the link object our custon onSelect trigger
+    Object.assign(link, {
+      onSelect() {
+        if (isDesktopDisplay) {
+          menuVisible.value = true // On pc it's always open
+        } else {
+          menuVisible.value = false // We close the menu
+        }
+      }})
+    item.links.push(link)
+  })
+
+  cItems.push(item)
+})
+
 </script>
 
 <template>
@@ -33,7 +57,7 @@ watchEffect(() => {
               :label="menuVisible ? 'Masquer le menu' : 'Menu'"
               @click="menuVisible = !menuVisible"
             />
-            <template v-if="menuVisible" v-for="groupedLinks in props.items">
+            <template v-if="menuVisible" v-for="groupedLinks in cItems">
               <USeparator v-if="groupedLinks.title !== undefined"
                         class="p-2"
                         :label="groupedLinks.title"
