@@ -6,6 +6,7 @@ import {convertUuidToUrlUuid} from "~/utils/resource";
 import {ClubRole, getAvailableClubRoles} from "~/types/api/item/club";
 import {createBrowserCsvDownload} from "~/utils/browser";
 import type {TablePaginateInterface} from "~/types/table";
+import type {SelectApiItem} from "~/types/select";
 
 const toast = useToast();
 const isLoading = ref(true);
@@ -24,6 +25,14 @@ const onlyCurrentSeason = ref(true);
 const onlySeasonNotRenewed = ref(false);
 const onlyPreviousSeason = ref(false);
 const onlyWithLicence = ref(true);
+
+const selectedRoles = ref([])
+const rolesSelect = getAvailableClubRoles().map(item => {
+  return {
+    label: item.text,
+    value: item.value
+  }
+}) as SelectApiItem[]
 
 
 const members: Ref<Member[]> = ref([]);
@@ -65,7 +74,13 @@ function getUrlParams(): URLSearchParams {
   urlParams.append(`order[firstname]`, 'asc');
 
   if (query.value.trim().length > 0) {
-    urlParams.append('multiple[licence, firstname, lastname]', query.value.trim())
+    urlParams.append('multiple[licence, firstname, lastname, email, phone, mobilePhone]', query.value.trim())
+  }
+
+  if (selectedRoles.value.length > 0) {
+    selectedRoles.value.forEach(value => {
+      urlParams.append('userMember.role[]', value)
+    })
   }
 
   if (onlyCurrentSeason.value) {
@@ -140,17 +155,23 @@ async function downloadCsv() {
 <template>
   <div class="flex flex-col gap-4">
     <UCard>
-      <div class="flex gap-2 flex-col flex-wrap sm:flex-row">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
+        <div class="sm:col-span-5 grid grid-cols-1 sm:grid-cols-9 gap-2">
+          <UFormField class="sm:col-span-5" label="Recherche">
+            <UInput
+              v-model="query"
+              @update:model-value="queryUpdated()"
+              placeholder="Rechercher..."  />
+          </UFormField>
 
-        <div class="flex flex-col justify-center">
-          <UInput
-            v-model="query"
-            @update:model-value="queryUpdated()"
-            placeholder="Rechercher..."  />
+          <UFormField label="Rôle" class="sm:col-span-4">
+            <USelect multiple v-model="selectedRoles" :items="rolesSelect" placeholder="Tous" @change="page = 1; getMembers()" />
+          </UFormField>
         </div>
-        <div class="flex-1"></div>
 
-        <div class="grid grid-cols-2 gap-2 gap-x-4">
+        <div class="sm:col-span-2"></div>
+
+        <div class="sm:col-span-4 grid grid-cols-2 gap-2 gap-x-4">
           <UCheckbox label="Saison actuelle" v-model="onlyCurrentSeason" @change="onlySeasonNotRenewed = false; onlyPreviousSeason = false; page = 1; getMembers()" />
           <UCheckbox label="Non renouvelée" v-model="onlySeasonNotRenewed" @change="onlyCurrentSeason = false; page = 1; getMembers()" />
           <UCheckbox label="Saison précédente" v-model="onlyPreviousSeason" @change="onlyCurrentSeason = false; page = 1; getMembers()" />
