@@ -28,7 +28,11 @@ props.items?.forEach(value => {
   value.links.forEach(link => {
     Object.assign(link, {
       onSelect() {
-        menuVisible.value = false // We close the menu
+        if (isDesktopDisplay) {
+          menuVisible.value = true // On pc it's always open
+        } else {
+          menuVisible.value = false // We close the menu
+        }
       }})
     item.links.push(link)
   })
