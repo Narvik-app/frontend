@@ -26,10 +26,10 @@ props.items?.forEach(value => {
     links: []
   }
   value.links.forEach(link => {
-    // We push into the link object our custon onSelect trigger
+    // We push into the link object our custom onSelect trigger
     Object.assign(link, {
       onSelect() {
-        if (isDesktopDisplay) {
+        if (isDesktopDisplay.value) {
           menuVisible.value = true // On pc it's always open
         } else {
           menuVisible.value = false // We close the menu
