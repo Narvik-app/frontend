@@ -1,5 +1,8 @@
 <script setup lang="ts">
+  import ActivityQuery from "~/composables/api/query/clubDependent/plugin/presence/ActivityQuery";
   import {usePresenceStore} from "~/stores/usePresenceStore";
+  import type { Activity } from "~/types/api/item/clubDependent/plugin/presence/activity";
+  import type { SelectApiItem } from "~/types/select";
   import {formatDateRangeReadable} from "~/utils/date";
 
   const props = defineProps({
@@ -10,7 +13,29 @@
     },
   });
 
+  const activityQuery = new ActivityQuery()
+  const filteredActivities: Ref<SelectApiItem<Activity>[]> = ref([])
+  const activities: Ref<Activity[]> = ref([])
+  activityQuery.getAll().then(value => {
+    activities.value = value.items.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))
+  });
+  const activitiesSelect = computed( () => {
+    const items: SelectApiItem<Activity>[] = []
+    activities.value.forEach(value => {
+      items.push({
+        label: value.name,
+        value: value.uuid,
+        item: value
+      })
+    })
+    return items;
+  })
+  
   const presenceStore = usePresenceStore()
+  
+  watch(filteredActivities, (new_value, old_value) => {
+    presenceStore.filteredActivities = new_value
+  })
 
   const popoverOpen = ref(false)
 </script>
@@ -24,6 +49,22 @@
           <UInput
             v-model="presenceStore.searchQuery"
             placeholder="Rechercher..."  />
+        </div>
+
+        <div>
+          <USelectMenu
+            class="w-44"
+            v-model="filteredActivities"
+            :items="activitiesSelect"
+            multiple
+          >
+            <template #default>
+              <span v-if="filteredActivities.length" class="truncate">
+                {{ filteredActivities.map(fa => fa.label).join(', ') }}
+              </span>
+              <span v-else>Activités</span>
+            </template>
+          </USelectMenu>
         </div>
 
         <div class="flex-1"></div>
