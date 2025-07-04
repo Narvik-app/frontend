@@ -22,7 +22,7 @@
 
   const selfStore = useSelfUserStore()
   const presenceStore = usePresenceStore()
-  const { selectedRange, searchQuery } = storeToRefs(presenceStore)
+  const { selectedRange, searchQuery, filteredActivities } = storeToRefs(presenceStore)
 
   const isAdmin = selfStore.isAdmin()
 
@@ -43,7 +43,7 @@
 
   getPresences();
 
-  watch([selectedRange, searchQuery], (value) => {
+  watch([selectedRange, searchQuery, filteredActivities], (value) => {
     page.value = 1
     getPresences()
   })
@@ -76,6 +76,13 @@
 
     if (searchQuery.value) {
       urlParams.append(`multiple[member.firstname, member.lastname, member.licence]`, searchQuery.value);
+    }
+
+    if (filteredActivities.value.length > 0) {
+      filteredActivities.value.forEach(filteredActivity => {
+        if (!filteredActivity.value) return;
+        urlParams.append('activities.uuid[]', filteredActivity.value)
+      })
     }
 
     presenceQuery.getAll(urlParams).then(value => {
