@@ -777,6 +777,9 @@ async function deleteMember() {
                 </div>
               </template>
 
+              <template #date-header="{ column }">
+                <GenericTableSortButton :column="column" />
+              </template>
               <template #date-cell="{ row }">
                 {{ formatDate(row.original.date) }} à {{ formatTimeReadable(row.original.createdAt) }}
               </template>
