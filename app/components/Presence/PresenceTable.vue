@@ -134,6 +134,9 @@ function sortClicked() {
       </div>
     </template>
 
+    <template #date-header="{ column }" v-if="props.displayFullDate">
+      <GenericTableSortButton :column="column" />
+    </template>
     <template #date-cell="{ row }">
       <template v-if="props.displayFullDate">
         {{ formatDateReadable(row.original.date) }} à {{ formatTimeReadable(row.original.createdAt) }}
