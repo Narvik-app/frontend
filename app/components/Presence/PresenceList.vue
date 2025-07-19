@@ -13,8 +13,10 @@
     },
   });
 
+  const presenceStore = usePresenceStore()
   const activityQuery = new ActivityQuery()
-  const filteredActivities: Ref<SelectApiItem<Activity>[]> = ref([])
+
+  const selectedActivities: Ref<SelectApiItem<Activity>[]> = ref([])
   const activities: Ref<Activity[]> = ref([])
   activityQuery.getAll().then(value => {
     activities.value = value.items.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))
@@ -30,11 +32,10 @@
     })
     return items;
   })
-  
-  const presenceStore = usePresenceStore()
-  
-  watch(filteredActivities, (new_value, old_value) => {
-    presenceStore.filteredActivities = new_value
+
+
+  watch(selectedActivities, (new_value, old_value) => {
+    presenceStore.selectedActivities = new_value
   })
 
   const popoverOpen = ref(false)
@@ -54,13 +55,13 @@
         <div>
           <USelectMenu
             class="w-44"
-            v-model="filteredActivities"
+            v-model="selectedActivities"
             :items="activitiesSelect"
             multiple
           >
             <template #default>
-              <span v-if="filteredActivities.length" class="truncate">
-                {{ filteredActivities.map(fa => fa.label).join(', ') }}
+              <span v-if="selectedActivities.length" class="truncate">
+                {{ selectedActivities.map(fa => fa.label).join(', ') }}
               </span>
               <span v-else>Activités</span>
             </template>

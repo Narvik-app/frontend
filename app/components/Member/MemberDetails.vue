@@ -24,6 +24,8 @@ import clipboard from "clipboardy";
 import type {TablePaginateInterface} from "~/types/table";
 import type {SelectApiItem} from "~/types/select";
 import {createBrowserCsvDownload} from "~/utils/browser";
+import type {ColumnSort} from "@tanstack/table-core";
+import {getTableSortVal} from "~/utils/table";
 
 ChartJS.register(Title, Tooltip, Legend, DoughnutController, ArcElement, CategoryScale, LinearScale, Colors)
 
@@ -95,10 +97,11 @@ const memberSeasonRows = computed(() => {
 const isUpdating = ref(false);
 const page = ref(1);
 const itemsPerPage = ref(10);
-const sort = ref({
-  column: 'date',
-  direction: 'desc'
-});
+const sort = ref([{
+  id: 'date',
+  desc: true,
+
+}] as ColumnSort[]);
 
 const memberQuery = new MemberQuery();
 let memberSeasonQuery: MemberSeasonQuery|null = null
@@ -107,7 +110,7 @@ const memberPresenceQuery = new MemberPresenceQuery();
 const fileQuery = new FileQuery();
 
 const activityQuery = new ActivityQuery()
-const filteredActivities: Ref<SelectApiItem<Activity>[]> = ref([])
+const selectedActivities: Ref<SelectApiItem<Activity>[]> = ref([])
 const activities: Ref<Activity[]> = ref([])
 activityQuery.getAll().then(value => {
   activities.value = value.items.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))
@@ -124,7 +127,7 @@ const activitiesSelect = computed( () => {
   return items;
 })
 
-watch(filteredActivities, (newValue) => {
+watch(selectedActivities, (newValue) => {
   getMemberPresencesPaginated()
 })
 
@@ -147,7 +150,6 @@ watch(member, (newValue, oldValue) => {
       memberSeasonQuery = new MemberSeasonQuery(member.value)
 
       if (member.value.profileImage?.privateUrl) {
-        console.log(member.value.profileImage.privateUrl)
         fileQuery.getFromUrl(member.value.profileImage.privateUrl).then(imageResponse => {
           memberProfileImage.value = imageResponse.retrieved
         })
@@ -283,11 +285,14 @@ async function getMemberPresencesPaginated() {
     itemsPerPage: itemsPerPage.value.toString(),
   });
 
-  urlParams.append(`order[${sort.value.column}]`, sort.value.direction);
-  urlParams.append(`order[createdAt]`, sort.value.direction);
+  if (sort.value.length > 0) {
+    sort.value.forEach((value) => {
+      urlParams.append(`order[${value.id}]`, getTableSortVal(value))
+    })
+  }
 
-  if (filteredActivities.value.length > 0) {
-    filteredActivities.value.forEach(filteredActivity => {
+  if (selectedActivities.value.length > 0) {
+    selectedActivities.value.forEach(filteredActivity => {
       if (!filteredActivity.value) return;
       urlParams.append('activities.uuid[]', filteredActivity.value)
     })
@@ -342,11 +347,14 @@ async function downloadCsv() {
     pagination: 'false',
   });
 
-  urlParams.append(`order[${sort.value.column}]`, sort.value.direction);
-  urlParams.append(`order[createdAt]`, sort.value.direction);
+  if (sort.value.length > 0) {
+    sort.value.forEach((value) => {
+      urlParams.append(`order[${value.id}]`, getTableSortVal(value))
+    })
+  }
 
-  if (filteredActivities.value.length > 0) {
-    filteredActivities.value.forEach(filteredActivity => {
+  if (selectedActivities.value.length > 0) {
+    selectedActivities.value.forEach(filteredActivity => {
       if (!filteredActivity.value) return;
       urlParams.append('activities.uuid[]', filteredActivity.value)
     })
@@ -721,13 +729,13 @@ async function deleteMember() {
             <div v-if="isSupervisor" class="flex flex-col-reverse lg:flex-row gap-4">
               <USelectMenu
                 class="w-44"
-                v-model="filteredActivities"
+                v-model="selectedActivities"
                 :items="activitiesSelect"
                 multiple
               >
                 <template #default>
-                  <span v-if="filteredActivities.length" class="truncate">
-                    {{ filteredActivities.map(fa => fa.label).join(', ') }}
+                  <span v-if="selectedActivities.length" class="truncate">
+                    {{ selectedActivities.map(fa => fa.label).join(', ') }}
                   </span>
                   <span v-else>Activités</span>
                 </template>
@@ -749,7 +757,6 @@ async function deleteMember() {
               {
                 accessorKey: 'date',
                 header: 'Date',
-                sortable: true,
               },
               {
                 accessorKey: 'activities',
@@ -765,9 +772,12 @@ async function deleteMember() {
                 header: ''
               }
             ]"
-              v-model:sort="sort"
-              sort-mode="manual"
-              @update:sort="getMemberPresencesPaginated()"
+              v-model:sorting="sort"
+              :sorting-options="{
+                manualSorting: true,
+                enableMultiSort: false,
+              }"
+              @update:sorting="getMemberPresencesPaginated()"
               :data="memberPresencesPaginated"
             >
 

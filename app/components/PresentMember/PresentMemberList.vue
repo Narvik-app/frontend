@@ -5,9 +5,10 @@
   import MemberPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/MemberPresenceQuery";
   import {useSelfUserStore} from "~/stores/useSelfUser";
   import {createBrowserCsvDownload} from "~/utils/browser";
-  import type {TableSortInterface} from "~/components/Presence/PresenceTable.vue";
   import type {TablePaginateInterface} from "~/types/table";
   import type {TableRow} from "#ui/types";
+  import type {ColumnSort} from "@tanstack/table-core";
+  import {getTableSortVal} from "~/utils/table";
 
   const props = defineProps({
     listOnly: {
@@ -22,7 +23,7 @@
 
   const selfStore = useSelfUserStore()
   const presenceStore = usePresenceStore()
-  const { selectedRange, searchQuery, filteredActivities } = storeToRefs(presenceStore)
+  const { selectedRange, searchQuery, selectedActivities } = storeToRefs(presenceStore)
 
   const isAdmin = selfStore.isAdmin()
 
@@ -33,17 +34,18 @@
 
   const page = ref(1);
   const itemsPerPage = ref(10);
-  const sort: Ref<TableSortInterface> = ref({
-    column: 'date',
-    direction: 'desc'
-  });
+  const sort = ref([{
+    id: 'date',
+    desc: true,
+
+  }] as ColumnSort[]);
 
   const presences: Ref<MemberPresence[]> = ref([])
   const presenceQuery = new MemberPresenceQuery()
 
   getPresences();
 
-  watch([selectedRange, searchQuery, filteredActivities], (value) => {
+  watch([selectedRange, searchQuery, selectedActivities], (value) => {
     page.value = 1
     getPresences()
   })
@@ -56,9 +58,11 @@
       itemsPerPage: itemsPerPage.value.toString(),
     });
 
-
-    urlParams.append(`order[${sort.value.column}]`, sort.value.direction);
-    urlParams.append(`order[createdAt]`, sort.value.direction);
+    if (sort.value.length > 0) {
+      sort.value.forEach((value) => {
+        urlParams.append(`order[${value.id}]`, getTableSortVal(value))
+      })
+    }
 
     if (selectedRange.value) {
       const formattedStartDate = formatDateInput(selectedRange.value.start.toString())
@@ -78,8 +82,8 @@
       urlParams.append(`multiple[member.firstname, member.lastname, member.licence]`, searchQuery.value);
     }
 
-    if (filteredActivities.value.length > 0) {
-      filteredActivities.value.forEach(filteredActivity => {
+    if (selectedActivities.value.length > 0) {
+      selectedActivities.value.forEach(filteredActivity => {
         if (!filteredActivity.value) return;
         urlParams.append('activities.uuid[]', filteredActivity.value)
       })
@@ -179,7 +183,7 @@
       :display-no-data-register="false"
       :is-loading="isLoading"
       @rowClicked="rowClicked"
-      @sort="(object: TableSortInterface) => { sort = object; getPresences() }"
+      @sort="(object: ColumnSort) => { sort = object; getPresences() }"
       @paginate="(object: TablePaginateInterface) => { page = object.page; itemsPerPage = object.itemsPerPage; getPresences() }"
     />
 

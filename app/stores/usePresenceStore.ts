@@ -7,10 +7,10 @@ import type { SelectApiItem } from "~/types/select";
 import type { Activity } from "~/types/api/item/clubDependent/plugin/presence/activity";
 
 export const usePresenceStore = defineStore('presence', () => {
-	const selectedDate: Ref<Date|null> = ref(null)
+  const selectedActivities: Ref<SelectApiItem<Activity>[]> = ref([])
+  const selectedDate: Ref<Date|null> = ref(null)
 	const selectedRange: Ref<DateRange|undefined> = ref({ start: dayjs().subtract(30, 'day').toDate(), end: new Date() })
 	const searchQuery: Ref<string> = ref('')
-	const filteredActivities: Ref<SelectApiItem<Activity>[]> = ref([])
 
 	const totalExternal: Ref<number> = ref(0)
 	const totalMembers: Ref<number> = ref(0)
@@ -48,9 +48,9 @@ export const usePresenceStore = defineStore('presence', () => {
 
 	return {
 		searchQuery,
+    selectedActivities,
 		selectedDate,
 		selectedRange,
-		filteredActivities,
 		totalExternal,
 		totalMembers,
 
