@@ -5,6 +5,7 @@ import type {ExternalPresence} from "~/types/api/item/clubDependent/plugin/prese
 import {formatDateReadable} from "~/utils/date";
 import type {TablePaginateInterface} from "~/types/table";
 import type {TableRow} from "#ui/types";
+import type {ColumnSort} from "@tanstack/table-core";
 
 const props = defineProps({
   presences: {
@@ -49,27 +50,23 @@ const props = defineProps({
 const emit = defineEmits<{
   register: [],
   rowClicked: [TableRow<ExternalPresence|MemberPresence>],
-  sort: [TableSortInterface],
+  sort: [ColumnSort],
   paginate: [TablePaginateInterface],
 }>()
 
 const page = ref(1);
 const itemsPerPage = ref(10);
-const sort: Ref<TableSortInterface> = ref({
-  column: 'date',
-  direction: 'desc'
-});
 
-export interface TableSortInterface {
-  column: string,
-  direction: string
-}
+const sort = ref([{
+  id: 'date',
+  desc: true,
+
+}] as ColumnSort[]);
 
 const columns = [
   {
     accessorKey: 'date',
-    header: props.displayFullDate ? 'Date' : 'Heure',
-    sortable: props.canSort
+    header: props.displayFullDate ? 'Date' : 'Heure'
   },
   {
     accessorKey: 'licence',
@@ -117,9 +114,12 @@ function sortClicked() {
   <UTable
     :loading="props.isLoading"
     class="w-full"
-    v-model:sort="sort"
-    sort-mode="manual"
-    @update:sort="sortClicked()"
+    v-model:sorting="sort"
+    :sorting-options="{
+      manualSorting: true,
+      enableMultiSort: false,
+    }"
+    @update:sorting="sortClicked()"
     :columns="columns"
     :data="props.presences"
     @select="rowClicked"
@@ -134,6 +134,9 @@ function sortClicked() {
       </div>
     </template>
 
+    <template #date-header="{ column }" v-if="props.displayFullDate">
+      <GenericTableSortButton :column="column" />
+    </template>
     <template #date-cell="{ row }">
       <template v-if="props.displayFullDate">
         {{ formatDateReadable(row.original.date) }} à {{ formatTimeReadable(row.original.createdAt) }}
