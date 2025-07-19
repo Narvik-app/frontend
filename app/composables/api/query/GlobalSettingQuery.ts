@@ -3,14 +3,9 @@ import {type GlobalSetting, GlobalSettingPublicEnum} from "~/types/api/item/glob
 import {useFetchItem, usePost, useUploadFile} from "~/composables/api/api";
 import type {SmtpConfig} from "~/types/api/smtp";
 import dayjs from "dayjs";
-import type {ClubSetting} from "~/types/api/item/clubDependent/clubSetting";
 
 export default class GlobalSettingQuery extends AbstractQuery<GlobalSetting, GlobalSetting> {
   rootPath = "global-settings";
-
-  async importLogo(formData: FormData) {
-    return useUploadFile(this.rootPath + "/-/logo", formData)
-  }
 
   async getPublic(id: GlobalSettingPublicEnum, useCache: boolean = false) {
     return useFetchItem<GlobalSetting>(`public/${this.rootPath}/${id}`, useCache, false);
