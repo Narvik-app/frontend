@@ -291,7 +291,7 @@
           </template>
 
           <template #name-header="{ column }">
-            <GenericTableSortButton :column="column" />
+            <GenericTableSortButton :column="column" :can-be-unsorted="true" />
           </template>
           <template #name-cell="{ row }">
             <UBadge v-if="!row.original.canBeSold" color="error" class="mr-2">Désactivé</UBadge>
@@ -299,7 +299,7 @@
           </template>
 
           <template #quantity-header="{ column }">
-            <GenericTableSortButton :column="column" />
+            <GenericTableSortButton :column="column" :can-be-unsorted="true" />
           </template>
           <template #quantity-cell="{ row }">
             <p v-if="row.original.quantity || row.original.quantity === 0" :class="row.original.quantityAlert && row.original.quantity <= row.original.quantityAlert ? 'font-bold text-error-600' : ''">

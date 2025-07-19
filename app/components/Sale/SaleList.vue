@@ -184,7 +184,7 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
           </template>
 
           <template #createdAt-header="{ column }">
-            <GenericTableSortButton :column="column" />
+            <GenericTableSortButton :column="column" :can-be-unsorted="true" />
           </template>
           <template #createdAt-cell="{ row }">
             {{ formatDateTimeReadable(row.original.createdAt) }}
