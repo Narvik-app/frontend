@@ -48,7 +48,7 @@ export const usePresenceStore = defineStore('presence', () => {
 
 	return {
 		searchQuery,
-    selectedActivities,
+		selectedActivities,
 		selectedDate,
 		selectedRange,
 		totalExternal,
