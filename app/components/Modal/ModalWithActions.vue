@@ -10,6 +10,10 @@ const props = defineProps(
     dismissible: {
       type: Boolean,
       default: true
+    },
+    cancelText: {
+      type: String,
+      default: 'Annuler'
     }
   }
 )
@@ -26,7 +30,7 @@ const props = defineProps(
           <div class="flex gap-2 justify-between sm:justify-end flex-wrap">
             <slot name="cancel">
               <UButton color="neutral" variant="ghost" @click="emit('close', false)">
-                Annuler
+                {{ props.cancelText }}
               </UButton>
             </slot>
 

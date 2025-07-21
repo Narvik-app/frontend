@@ -4,6 +4,7 @@ import {useAppConfigStore} from "~/stores/useAppConfig";
 
 const publicPaths = [
   "^/login$",
+  "^/login/badger-quick-login",
   "^/login/password-reset",
   "^/login/register",
   "^/login/bdg/.*",

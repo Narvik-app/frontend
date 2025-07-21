@@ -1,16 +1,11 @@
 <script setup lang="ts">
 
 import clipboard from "clipboardy";
-import ActivityQuery from "~/composables/api/query/clubDependent/plugin/presence/ActivityQuery";
-import type {Activity} from "~/types/api/item/clubDependent/plugin/presence/activity";
 import {useSelfUserStore} from "~/stores/useSelfUser";
-import {convertUuidToUrlUuid} from "~/utils/resource";
-import type {WriteClubSetting} from "~/types/api/item/clubDependent/clubSetting";
-import ClubSettingQuery from "~/composables/api/query/clubDependent/ClubSettingQuery";
+import {convertUuidToUrlUuid, generateBadgerLoginPath} from "~/utils/resource";
 import ClubModalGenerateBadger from "~/components/Club/ClubModalGenerateBadger.vue";
-import type {SelectApiItem} from "~/types/select";
 import type {Club} from "~/types/api/item/club";
-import type {Season} from "~/types/api/item/season";
+import ClubModalBadgerQuickLogin from "~/components/Club/ClubModalBadgerQuickLogin.vue";
 
 definePageMeta({
   layout: "admin"
@@ -29,11 +24,11 @@ const { selectedProfile } = storeToRefs(selfStore)
 const badgerSetting: Ref<string | undefined> = ref(selectedProfile.value?.club.badgerToken);
 
 function getBadgerLoginPath(): string|undefined {
-  if (!badgerSetting.value || !selectedProfile.value) {
+  if (!badgerSetting.value || !selectedProfile.value?.club.uuid) {
     return undefined
   }
 
-  return `/login/bdg/${convertUuidToUrlUuid(selectedProfile.value.club.uuid)}/${badgerSetting.value}`
+  return generateBadgerLoginPath(selectedProfile.value.club.uuid, badgerSetting.value)
 }
 
 function copyBadgerLink() {
@@ -53,6 +48,7 @@ function copyBadgerLink() {
     <GenericCardWithActions class="md:col-span-2" title="Connexion en mode badgeuse/pointeuse">
       <template #actions>
         <UButton
+          icon="i-heroicons-arrow-path"
           @click="
           overlay.create(ClubModalGenerateBadger).open({
             onGenerated(newClub: Club) {
@@ -64,6 +60,12 @@ function copyBadgerLink() {
         >
           Générer un nouveau lien
         </UButton>
+        <UButton v-if="badgerSetting"
+          icon="i-heroicons-key"
+          @click="overlay.create(ClubModalBadgerQuickLogin).open()">
+          Connexion rapide
+        </UButton>
+
       </template>
 
       <template #default>
