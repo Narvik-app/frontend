@@ -100,6 +100,12 @@ function redirectSuccessLogin() {
           <UButton block :disabled="isLoading" variant="soft" to="login/register">
             S'enregistrer
           </UButton>
+
+          <div class="flex justify-end !-mt-0 ">
+            <UButton class="text-[.6rem]" variant="link" @click="navigateTo('login/badger-quick-login')">
+              Connexion pointeuse
+            </UButton>
+          </div>
         </div>
       </UForm>
     </UCard>

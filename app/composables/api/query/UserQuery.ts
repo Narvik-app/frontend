@@ -1,4 +1,4 @@
-import {useDelete, useFetchItem, usePatch, usePostRawJson, usePut} from "~/composables/api/api";
+import {useDelete, useFetchItem, usePatch, usePost, usePostRawJson, usePut} from "~/composables/api/api";
 import {AbstractQuery} from "~/composables/api/query/AbstractQuery";
 import type {User} from "~/types/api/item/user";
 
@@ -83,6 +83,10 @@ export default class UserQuery extends AbstractQuery<User, User> {
 
   async selfDelete() {
     return useDelete('/self');
+  }
+
+  async getBadgerQuickLoginInfo(securityCode: string, turnstileToken: string|undefined = undefined) {
+    return usePost('/auth/quick-login/bdg', { securityCode: securityCode, cf_token: turnstileToken }, false)
   }
 
 }
