@@ -1,8 +1,6 @@
 <script setup lang="ts">
 
-import clipboard from "clipboardy";
 import {useSelfUserStore} from "~/stores/useSelfUser";
-import {convertUuidToUrlUuid, generateBadgerLoginPath} from "~/utils/resource";
 import ClubModalGenerateBadger from "~/components/Club/ClubModalGenerateBadger.vue";
 import type {Club} from "~/types/api/item/club";
 import ClubModalBadgerQuickLogin from "~/components/Club/ClubModalBadgerQuickLogin.vue";
