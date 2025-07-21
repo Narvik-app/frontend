@@ -1,0 +1,171 @@
+<script setup lang="ts">
+  import {Editor, EditorContent} from '@tiptap/vue-3'
+  import StarterKit from '@tiptap/starter-kit'
+  import TextAlign from '@tiptap/extension-text-align'
+
+  const props = defineProps(
+    {
+      modelValue: {
+        type: String
+      }
+    }
+  )
+
+  const emit = defineEmits(['update:modelValue'])
+
+  const editor = ref()
+  editor.value = new Editor({
+    content: props.modelValue,
+    extensions: [StarterKit, TextAlign.configure({ types: ['heading', 'paragraph'] })],
+    onUpdate: ({editor}) => {
+      emit('update:modelValue', editor.getHTML())
+    }
+  })
+
+  const textTypes = ref([
+    {
+      label: 'Paragraphe',
+      value: 'paragraph'
+    },
+    {
+      label: 'Titre 1',
+      value: 'heading-1'
+    },
+    {
+      label: 'Titre 2',
+      value: 'heading-2'
+    },
+    {
+      label: 'Titre 3',
+      value: 'heading-3'
+    }
+  ])
+  const currentTextType = computed(() => {
+    if (!editor.value) return 'paragraph'
+    if (editor.value.isActive('heading', { level: 1 })) return 'heading-1'
+    if (editor.value.isActive('heading', { level: 2 })) return 'heading-2'
+    if (editor.value.isActive('heading', { level: 3 })) return 'heading-3'
+    return 'paragraph'
+  })
+  const selectedTextType = ref(currentTextType.value)
+
+  onMounted(() => {
+    if (!editor.value) return
+
+    editor.value.on('selectionUpdate', () => {
+      const newType = currentTextType.value
+      if (newType !== selectedTextType.value) {
+        selectedTextType.value = newType
+      }
+    })
+  })
+
+  onUnmounted(() => {
+    editor.value.destroy()
+  })
+
+  function setTextType(newType: string) {
+    console.log(`Triggered update: ${newType}`)
+    if (!editor.value) return
+
+    if (newType === "paragraph") {
+      editor.value.chain().focus().setParagraph().run()
+    } else if (newType === "heading-1") {
+      editor.value.chain().focus().setHeading({ level: 1 }).run()
+    } else if (newType === "heading-2") {
+      editor.value.chain().focus().setHeading({ level: 2 }).run()
+    } else if (newType === "heading-3") {
+      editor.value.chain().focus().setHeading({ level: 3 }).run()
+    }
+  }
+</script>
+
+<template>
+  <div class="border rounded-xl bg-background p-4 space-y-2">
+    <div class="flex flex-wrap gap-2 mb-2">
+      <UButton icon="i-heroicons-arrow-uturn-left" size="sm" @click="editor.chain().focus().undo().run()" />
+      <UButton icon="i-heroicons-arrow-uturn-right" size="sm" @click="editor.chain().focus().redo().run()" />
+      
+      <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
+
+      <USelect
+        v-model="selectedTextType"
+        :items="textTypes"
+        class="w-32 bg-primary-500 text-white"
+        @update:model-value="setTextType"
+      />
+
+      <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
+      
+      <UButton icon="i-heroicons-bold" size="sm" @click="editor.chain().focus().toggleBold().run()" />
+      <UButton icon="i-heroicons-italic" size="sm" @click="editor.chain().focus().toggleItalic().run()" />
+      <UButton icon="i-heroicons-underline" size="sm" @click="editor.chain().focus().toggleUnderline().run()" />
+      <UButton icon="i-heroicons-strikethrough" size="sm" @click="editor.chain().focus().toggleStrike().run()" />
+      
+      <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
+      
+      <UButton icon="i-heroicons-list-bullet" size="sm" @click="editor.chain().focus().toggleBulletList().run()" />
+      <UButton icon="i-heroicons-numbered-list" size="sm" @click="editor.chain().focus().toggleOrderedList().run()" />
+
+      <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
+
+      <UButton icon="i-heroicons-bars-3-bottom-left" color="primary" size="sm" @click="editor.chain().focus().setTextAlign('left').run()" />
+      <UButton icon="i-heroicons-bars-3" color="primary" size="sm" @click="editor.chain().focus().setTextAlign('center').run()" />
+      <UButton icon="i-heroicons-bars-3-bottom-right" color="primary" size="sm" @click="editor.chain().focus().setTextAlign('right').run()" />
+    </div>
+
+    <EditorContent
+      :editor="editor"
+      class="prose dark:prose-invert min-h-[200px] focus:outline-none px-3 py-2 rounded-md border border-gray-300 bg-white dark:bg-gray-900"
+    />
+  </div>
+</template>
+
+<style scoped>
+:deep(.ProseMirror-focused) {
+  outline: none;
+}
+
+
+:deep(.ProseMirror ol) {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+}
+
+:deep(.ProseMirror ul) {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+}
+
+:deep(.ProseMirror li) {
+  margin-bottom: 0.25rem;
+}
+
+:deep(.ProseMirror a) {
+  color: #3b82f6;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+:deep(.ProseMirror a:hover) {
+  text-decoration: underline dotted;
+}
+
+:deep(.ProseMirror h1) {
+	font-size: 2rem;
+	font-weight: bold;
+	margin-bottom: 0.5rem;
+}
+
+:deep(.ProseMirror h2) {
+	font-size: 1.5rem;
+	font-weight: bold;
+	margin-bottom: 0.4rem;
+}
+
+:deep(.ProseMirror h3) {
+	font-size: 1.2rem;
+	font-weight: bold;
+	margin-bottom: 0.3rem;
+}
+</style>

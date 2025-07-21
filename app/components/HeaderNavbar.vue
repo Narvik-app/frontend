@@ -96,6 +96,9 @@
         <div v-if="isSupervisor">
           <UButton to="/admin/sales/new" icon="i-heroicons-shopping-cart" variant="ghost" color="neutral">Vente</UButton>
         </div>
+        <div v-if="isAdmin">
+          <UButton to="/admin/email" icon="i-heroicons-envelope" variant="ghost" color="neutral">Email</UButton>
+        </div>
       </div>
       <div class="flex gap-4">
         <div v-if="isSupervisor">
