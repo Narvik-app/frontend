@@ -1,8 +1,6 @@
 <script setup lang="ts">
 
-import ClubQuery from "~/composables/api/query/ClubQuery";
-import type {PropType} from "vue";
-import type {WriteClub} from "~/types/api/item/club";
+import {generateBadgerLoginPath} from "~/utils/resource";
 
 const props = defineProps({
   clubUuid: {
@@ -17,34 +15,25 @@ const props = defineProps({
 
 const emit = defineEmits(['close'])
 
-const isLoading = ref(false)
-const securityCode = ref('')
+const isLoading = ref(false);
 
-async function getInfos() {
+async function login() {
   isLoading.value = true
-  const clubQuery = new ClubQuery()
-  const { retrieved } = await clubQuery.getBadgerQuickLogin()
-  isLoading.value = false
-  securityCode.value = retrieved.securityCode
+  await navigateTo(generateBadgerLoginPath(props.clubUuid, props.token))
+  emit('close', true)
 }
 
-getInfos()
 </script>
 
 <template>
-  <ModalWithActions title="Code de connexion rapide" cancel-text="Fermer" @close="(state: boolean) => emit('close', state)">
+  <ModalWithActions :dismissible="false" title="Connexion en mode badgeuse/pointeuse" cancel-text="Fermer" @close="(state: boolean) => emit('close', state)">
 
-    <USkeleton v-if="isLoading" class="h-10 w-1/3 mx-auto" />
-    <p v-else class="text-4xl text-center font-bold">
-      {{ securityCode }}
-    </p>
-
-    <p class="text-xs">Ce code est valable 10 minutes.</p>
+    <PresenceBadgerConfigInfos :club-uuid="props.clubUuid" :badger-token="props.token" />
 
     <template #actions>
       <UButton
         :loading="isLoading"
-        @click="getInfos()"
+        @click="login()"
       >
         Connexion
       </UButton>
