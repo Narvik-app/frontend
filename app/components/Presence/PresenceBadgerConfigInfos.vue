@@ -36,7 +36,7 @@ function copyBadgerLink() {
 <template>
   <div>
     <p>A mettre en favoris sur l'ordinateur accessible publiquement.</p>
-    <p>Ce lien permet d'être automatiquement connecté en tant que badgeuse (accès seulement à l'enregistrement des présences).</p>
+    <p>Ce lien permet d'être automatiquement connecté en tant que pointeuse (accès seulement à l'enregistrement des présences).</p>
     <p class="mb-4">Le lien peut être déposé directement dans la barre personnelle pour le marquer en favoris.</p>
 
     <div v-if="!getBadgerLoginPath()">
