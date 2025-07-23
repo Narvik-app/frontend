@@ -2,6 +2,7 @@
   import {Editor, EditorContent} from '@tiptap/vue-3'
   import StarterKit from '@tiptap/starter-kit'
   import TextAlign from '@tiptap/extension-text-align'
+  import {TextStyle, Color} from '@tiptap/extension-text-style'
 
   const props = defineProps(
     {
@@ -12,15 +13,6 @@
   )
 
   const emit = defineEmits(['update:modelValue'])
-
-  const editor = ref()
-  editor.value = new Editor({
-    content: props.modelValue,
-    extensions: [StarterKit, TextAlign.configure({ types: ['heading', 'paragraph'] })],
-    onUpdate: ({editor}) => {
-      emit('update:modelValue', editor.getHTML())
-    }
-  })
 
   const textTypes = ref([
     {
@@ -40,6 +32,32 @@
       value: 'heading-3'
     }
   ])
+
+  const colors = [
+    { 'name': 'Noir', hex: '#000000' },
+    { 'name': 'Gris foncé', hex: '#444444' },
+    { 'name': 'Gris', hex: '#888888' },
+    { 'name': 'Gris clair', hex: '#CCCCCC' },
+    { 'name': 'Blanc', hex: '#FFFFFF' },
+    { 'name': 'Rouge', hex: '#FF4C4C' },
+    { 'name': 'Orange', hex: '#FF9900' },
+    { 'name': 'Jaune', hex: '#FFEE58' },
+    { 'name': 'Vert', hex: '#4CAF50' },
+    { 'name': 'Bleu ciel', hex: '#00BCD4' },
+    { 'name': 'Bleu', hex: '#2196F3' },
+    { 'name': 'Violet', hex: '#9C27B0' },
+    { 'name': 'Rose', hex: '#EC407A' }
+  ]
+
+  const editor = ref()
+  editor.value = new Editor({
+    content: props.modelValue,
+    extensions: [StarterKit, TextStyle, Color, TextAlign.configure({ types: ['heading', 'paragraph'] })],
+    onUpdate: ({editor}) => {
+      emit('update:modelValue', editor.getHTML())
+    }
+  })
+  
   const currentTextType = computed(() => {
     if (!editor.value) return 'paragraph'
     if (editor.value.isActive('heading', { level: 1 })) return 'heading-1'
@@ -49,6 +67,9 @@
   })
   const selectedTextType = ref(currentTextType.value)
 
+  const color = ref('#000000')
+  const chip = computed(() => ({ backgroundColor: color.value }))
+
   onMounted(() => {
     if (!editor.value) return
 
@@ -56,6 +77,11 @@
       const newType = currentTextType.value
       if (newType !== selectedTextType.value) {
         selectedTextType.value = newType
+      }
+
+      const newColor = editor.value.getAttributes('textStyle').color || "#000000"
+      if (newColor !== color.value) {
+        color.value = newColor
       }
     })
   })
@@ -65,7 +91,6 @@
   })
 
   function setTextType(newType: string) {
-    console.log(`Triggered update: ${newType}`)
     if (!editor.value) return
 
     if (newType === "paragraph") {
@@ -77,6 +102,13 @@
     } else if (newType === "heading-3") {
       editor.value.chain().focus().setHeading({ level: 3 }).run()
     }
+  }
+
+  function setTextColor(hexColor: string) {
+    if (!editor.value) return
+
+    editor.value.chain().focus().setColor(hexColor).run()
+    color.value = hexColor
   }
 </script>
 
@@ -91,9 +123,36 @@
       <USelect
         v-model="selectedTextType"
         :items="textTypes"
-        class="w-32 bg-primary-500 text-white"
+        class="w-32"
+        variant="outline"
         @update:model-value="setTextType"
       />
+
+      <UPopover>
+        <UButton variant="ghost" size="sm">
+          <span :style="chip" class="size-3 rounded-full" />
+        </UButton>
+
+        <template #content>
+          <UTooltip
+            v-for="(color, index) in colors"
+            :key="index"
+            :text="color.name"
+          >
+            <UButton variant="ghost" @click="setTextColor(color.hex)">
+              <span :style="{ backgroundColor: color.hex }" class="size-3 rounded-full"></span>
+            </UButton>
+          </UTooltip>
+
+          <UTooltip text="Autre couleur">
+            <input
+              type="color"
+              @input="setTextColor($event.target.value)"
+              :value="editor.getAttributes('textStyle').color"
+              class="w-4 h-4 rouded-full" >
+          </UTooltip>
+        </template>
+      </UPopover>
 
       <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
       

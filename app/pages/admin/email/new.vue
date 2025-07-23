@@ -17,8 +17,8 @@
 </script>
 
 <template>
-  <div class="grid grid-cols-1 lg:grid-cols-6 gap-4">
-    <div class="lg:col-span-4">
+  <GenericLayoutContentWithStickySide>
+    <template #main>
       <UCard>
         <template #header>
           <div class="text-xl font-bold">Rédiger un email</div>
@@ -29,6 +29,10 @@
           @update:model-value="modelValue = $event"
         />
       </UCard>
-    </div>
-  </div>
+    </template>
+
+    <template #side>
+      
+    </template>
+  </GenericLayoutContentWithStickySide>
 </template>
