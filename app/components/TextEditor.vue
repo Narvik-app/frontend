@@ -12,7 +12,7 @@
     }
   )
 
-  const emit = defineEmits(['update:modelValue'])
+  const emit = defineEmits(['update:modelValue', 'update:editor'])
 
   const textTypes = ref([
     {
@@ -53,8 +53,12 @@
   editor.value = new Editor({
     content: props.modelValue,
     extensions: [StarterKit, TextStyle, Color, TextAlign.configure({ types: ['heading', 'paragraph'] })],
+    onCreate: ({editor}) => {
+      emit('update:editor', editor)
+    },
     onUpdate: ({editor}) => {
       emit('update:modelValue', editor.getHTML())
+      emit('update:editor', editor)
     }
   })
   
