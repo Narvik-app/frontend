@@ -57,7 +57,7 @@
 
   async function getMembers() {
     const { items } = await memberQuery.getAll()
-    allMembers.value = items
+    allMembers.value = items.filter(member => member.email)
   }
 
   function filterMembers() {
@@ -93,7 +93,7 @@
     } else {
       toast.add({
         title: "Mail envoyé",
-        description: `Votre mail a été envoyé à ${selectedMembers.value.length} membres !`,
+        description: `Votre mail a été envoyé à ${selectedMembers.value.length} ${selectedMembers.value.length > 1 ? "membres" : "membre"} !`,
         color: "success"
       })
     }
