@@ -96,6 +96,8 @@
         description: `Votre mail a été envoyé à ${selectedMembers.value.length} ${selectedMembers.value.length > 1 ? "membres" : "membre"} !`,
         color: "success"
       })
+
+      navigateTo("/admin/email")
     }
 
     isSending.value = false
