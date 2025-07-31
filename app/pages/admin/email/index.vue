@@ -2,15 +2,12 @@
   definePageMeta({
     layout: "email"
   })
+
+  useHead({
+    title: 'Historique'
+  })
 </script>
 
 <template>
-  <div>
-    <UCard >
-      <template #header>
-        <div class="text-xl font-bold">Historique des emails</div>
-      </template>
-      <p>Mail history</p>
-    </UCard>
-  </div>
+  <EmailList></EmailList>
 </template>

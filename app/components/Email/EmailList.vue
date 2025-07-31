@@ -1,0 +1,141 @@
+<script setup lang="ts">
+  import type { Email } from '~/types/api/item/clubDependent/plugin/emailing/email';
+  import EmailQuery from '~/composables/api/query/clubDependent/plugin/emailing/EmailQuery';
+  import type { TableRow } from '@nuxt/ui';
+
+  const toast = useToast()
+  const isLoading = ref(true)
+
+  const modalOpen = ref(false)
+  const selectedEmail: Ref<Email | undefined> = ref(undefined)
+
+  const page = ref(1)
+  const itemsPerPage = ref(30)
+  const totalEmails: Ref<number> = ref(0)
+
+  const emails: Ref<Email[]> = ref([])
+  const emailQuery = new EmailQuery()
+
+  getEmails()
+
+  const columns = [
+    {
+      accessorKey: 'createdAt',
+      header: 'Date'
+    },
+    {
+      accessorKey: 'sender',
+      header: 'Expéditeur',
+      meta: {
+        class: {
+          th: 'w-1/4'
+        }
+      }
+    },
+    {
+      accessorKey: 'title',
+      header: 'Sujet',
+      meta: {
+        class: {
+          th: 'w-full'
+        }
+      }
+    },
+    {
+      accessorKey: 'recipientCount',
+      header: 'Destinataires'
+    },
+    {
+      accessorKey: 'actions',
+      header: 'Actions'
+    }
+  ]
+
+  async function getEmails() {
+    isLoading.value = true
+
+    const { error, items, totalItems } = await emailQuery.getAll()
+    isLoading.value = false
+
+    if (error) {
+      toast.add({
+        title: "Une erreur s'est produite",
+        description: error.message || error.toString(),
+        color: "error"
+      })
+      return
+    }
+
+    emails.value = items
+    totalEmails.value = totalItems ? totalItems : 0
+  }
+
+  function selectEmail(row: TableRow<Email>) {
+    selectedEmail.value = row.original
+    modalOpen.value = true
+  }
+</script>
+
+<template>
+  <div class="flex flex-col gap-4">
+    <UCard>
+      <div class="flex gap-2 flex-row flex-wrap">
+        <div class="text-xl font-bold">Emails</div>
+        <div class="flex-1"></div>
+        <div class="flex justify-end">
+          <UButton to="/admin/email/new" icon="i-heroicons-plus" />
+        </div>
+      </div>
+
+      <UTable
+        :columns="columns"
+        :data="emails"
+      >
+        <template #empty>
+          <div class="flex flex-col items-center justify-center py-6 gap-3">
+            <span class="italic text-sm">Aucun mails trouvés.</span>
+          </div>
+        </template>
+
+        <template #createdAt-cell="{ row }">
+          {{ formatDateTimeReadable(row.original.createdAt) }}
+        </template>
+
+        <template #sender-cell="{ row }">
+          <div class="whitespace-normal break-words">
+            {{ row.original.sender }}
+          </div>
+        </template>
+
+        <template #title-cell="{ row }">
+          <div class="whitespace-normal break-words">
+            {{ row.original.title }}
+          </div>
+        </template>
+
+        <template #recipientCount-cell="{ row }">
+          {{ row.original.recipientCount }} {{ row.original.recipientCount > 1 ? 'membres' : 'membre' }}
+        </template>
+
+        <template #actions-cell="{ row }" >
+          <UButton
+            label="Voir"
+            @click="selectEmail(row)"
+          />
+        </template>
+      </UTable>
+    </UCard>
+
+    <UModal
+      v-model:open="modalOpen"
+    >
+      <template #content>
+        <EmailDetails
+          v-if="selectedEmail"
+          :item="selectedEmail"
+          @close="modalOpen = false; selectedEmail = undefined"
+        />
+      </template>
+    </UModal>
+  </div>
+</template>
