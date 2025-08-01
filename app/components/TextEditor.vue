@@ -179,7 +179,7 @@
 
     <EditorContent
       :editor="editor"
-      class="prose dark:prose-invert min-h-[200px] focus:outline-none px-3 py-2 rounded-md border border-gray-300 bg-white dark:bg-gray-900"
+      class="prose dark:prose-invert min-h-[200px] focus:outline-none px-3 py-2 rounded-md border border-gray-300 bg-white dark:bg-gray-900 overflow-y-auto max-h-72"
     />
   </div>
 </template>
