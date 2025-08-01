@@ -2,6 +2,7 @@
   import type { Email } from '~/types/api/item/clubDependent/plugin/emailing/email';
   import EmailQuery from '~/composables/api/query/clubDependent/plugin/emailing/EmailQuery';
   import type { TableRow } from '@nuxt/ui';
+import type { TablePaginateInterface } from '~/types/table';
 
   const toast = useToast()
   const isLoading = ref(true)
@@ -10,7 +11,7 @@
   const selectedEmail: Ref<Email | undefined> = ref(undefined)
 
   const page = ref(1)
-  const itemsPerPage = ref(30)
+  const itemsPerPage = ref(10)
   const totalEmails: Ref<number> = ref(0)
 
   const emails: Ref<Email[]> = ref([])
@@ -54,7 +55,12 @@
   async function getEmails() {
     isLoading.value = true
 
-    const { error, items, totalItems } = await emailQuery.getAll()
+    const urlParams = new URLSearchParams({
+      page: page.value.toString(),
+      itemsPerPage: itemsPerPage.value.toString()
+    })
+
+    const { error, items, totalItems } = await emailQuery.getAll(urlParams)
     isLoading.value = false
 
     if (error) {
@@ -124,6 +130,17 @@
           />
         </template>
       </UTable>
+
+      <GenericTablePagination
+        v-model:page="page"
+        v-model:items-per-page="itemsPerPage"
+        :total-items="totalEmails"
+        @paginate="(object: TablePaginateInterface) => {
+          page = object.page
+          itemsPerPage = object.itemsPerPage
+          getEmails()
+        }"
+      />
     </UCard>
 
     <UModal
