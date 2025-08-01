@@ -31,7 +31,8 @@ const configState = reactive({
   excludedActivitiesFromOpeningDays: selectedProfile.value?.club.settings.excludedActivitiesFromOpeningDays?.map((a: Activity) => a.uuid),
   selectedMonth: selectedProfile.value?.club.settings.seasonEnd.split('-')[0].toString(),
   selectedDay: selectedProfile.value?.club.settings.seasonEnd.split('-')[1].toString(),
-  activity: getSelectMenuClubActivity().find((item) => item.value === selectedProfile.value?.club.settings.activity)
+  activity: getSelectMenuClubActivity().find((item) => item.value === selectedProfile.value?.club.settings.activity),
+  emailReplyTo: selectedProfile.value?.club.settings.emailReplyTo
 })
 const selectedControlShootingActivity: Ref<Activity | undefined> = ref(undefined);
 
@@ -282,6 +283,30 @@ async function clubActivityUpdated() {
   });
 }
 
+async function emailReplyToUpdated() {
+  if (!selectedProfile.value?.club.settings ||
+    !configState.emailReplyTo
+  ) return;
+
+  const payload: WriteClubSetting = {
+    emailReplyTo: configState.emailReplyTo
+  }
+
+  let { updated, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
+
+  if (error) {
+    displayApiError(error)
+    return
+  }
+
+  selfStore.refreshSelectedClub().then()
+
+  toast.add({
+    color: "success",
+    title: "Paramètre enregistré"
+  })
+}
+
 </script>
 
 <template>
@@ -367,40 +392,58 @@ async function clubActivityUpdated() {
       </GenericCard>
     </div>
 
-    <GenericCard title="Logo">
-      <div v-if="selectedProfile?.club?.settings?.logoBase64" class="mt-4 flex justify-center">
-        <NuxtImg :src="selectedProfile.club.settings.logoBase64" class="w-48" />
-      </div>
+    <div class="flex flex-col gap-4">
+      <GenericCard title="Logo">
+        <div v-if="selectedProfile?.club?.settings?.logoBase64" class="mt-4 flex justify-center">
+          <NuxtImg :src="selectedProfile.club.settings.logoBase64" class="w-48" />
+        </div>
+  
+        <UInput
+            :loading="logoUploading"
+            class="my-4"
+            type="file"
+            accept="image/png"
+            icon="i-heroicons-paint-brush"
+            @change="uploadLogo"
+        />
+  
+        <UModal v-if="selectedProfile?.club.settings.logo">
+          <UButton color="error">
+            Supprimer le logo
+          </UButton>
+  
+          <template #content>
+            <UCard>
+              <div class="flex flex-col gap-4">
+                <div class="text-center text-lg font-bold">Êtes-vous certain ?</div>
+  
+                <UButton color="error" @click="deleteLogo" class="mx-auto">
+                  Supprimer le logo
+                </UButton>
+              </div>
+            </UCard>
+          </template>
+  
+        </UModal>
+  
+      </GenericCard>
 
-      <UInput
-          :loading="logoUploading"
-          class="my-4"
-          type="file"
-          accept="image/png"
-          icon="i-heroicons-paint-brush"
-          @change="uploadLogo"
-      />
+      <GenericCard title="Email">
+        <div class="flex flex-col gap-2">
+          <div class="text-xs">
+            <p>A quelle adresse doivent être envoyées les réponses aux emails envoyés par votre club ?</p>
+          </div>
 
-      <UModal v-if="selectedProfile?.club.settings.logo">
-        <UButton color="error">
-          Supprimer le logo
-        </UButton>
+          <UInput
+            v-model="configState.emailReplyTo"
+            icon="i-heroicons-envelope"
+            placeholder="replyTo"
+          />
 
-        <template #content>
-          <UCard>
-            <div class="flex flex-col gap-4">
-              <div class="text-center text-lg font-bold">Êtes-vous certain ?</div>
-
-              <UButton color="error" @click="deleteLogo" class="mx-auto">
-                Supprimer le logo
-              </UButton>
-            </div>
-          </UCard>
-        </template>
-
-      </UModal>
-
-    </GenericCard>
+          <UButton class="w-fit" label="Sauvegarder" @click="emailReplyToUpdated" />
+        </div>
+      </GenericCard>
+    </div>
   </div>
 </template>
 
