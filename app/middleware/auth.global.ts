@@ -33,6 +33,11 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     await appConfigStore.refresh();
   }
 
+  // Anyone is allowed to access the unsubscribe page, logged in or not
+  if (to.fullPath === "/unsubscribe") {
+    return
+  }
+
   if (pathsMatch(publicPaths, to.fullPath)) {
     if (selfStore.isLogged()) { // User is logged
       return navigateTo("/");
