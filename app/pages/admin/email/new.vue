@@ -22,6 +22,11 @@
   
   const selfStore = useSelfUserStore()
   const { selectedProfile } = storeToRefs(selfStore)
+
+  // Redirect to main page if there's no profile
+  if (!selectedProfile.value) {
+    navigateTo("/")
+  }
   
   const currentMonthEmailsSent = ref(selectedProfile.value?.club.currentMonthEmailsSent)
   const maxMonthlyEmails = ref(selectedProfile.value?.club.maxMonthlyEmails)
@@ -134,7 +139,7 @@
 </script>
 
 <template>
-  <GenericLayoutContentWithStickySide>
+  <GenericLayoutContentWithStickySide v-if="selectedProfile">
     <template #main>
       <UCard>
         <template #header>
