@@ -56,6 +56,7 @@
   const title = ref('')
   const htmlContent = ref('')
   const sendAsNewsletter = ref(true)
+  const baseFormData: Ref<FormData | undefined> = ref(undefined)
 
   await getMembers()
   filterMembers()
@@ -75,10 +76,28 @@
     }
   }
 
+  function updateAttachment(event: any) {
+    const formData = getFileFormDataFromUInputChangeEvent(event)
+    if (formData) {
+      baseFormData.value = formData
+    }
+  }
+
+  function deleteAttachment() {
+    baseFormData.value = undefined
+  }
+
   async function sendEmail() {
     isSending.value = true
 
-    const payload = new FormData()
+    let payload: FormData
+
+    if (baseFormData.value) {
+      payload = baseFormData.value
+    } else {
+      payload = new FormData()
+    }
+
     payload.append("title", title.value)
     payload.append("content", htmlContent.value)
     payload.append("members", selectedMembers.value.map(member => member.uuid).join(","))
@@ -102,6 +121,7 @@
         color: "success"
       })
 
+      await selfStore.refreshSelectedClub()
       navigateTo("/admin/email")
     }
 
@@ -146,11 +166,31 @@
           <UInput placeholder="Sujet" v-model="title" />
         </template>
 
-        <TextEditor
-          :model-value="htmlContent"
-          @update:model-value="htmlContent = $event"
-          @update:editor="editor = $event"
-        />
+        <div class="flex flex-col gap-4">
+          <div class="flex flex-row gap-8 items-center">
+            <p class="whitespace-nowrap">Pièce jointe</p>
+            <UButtonGroup class="w-full">
+              <UInput
+                type="file"
+                icon="i-heroicons-paper-clip"
+                @change="updateAttachment"
+              />
+              <UButton
+                v-if="baseFormData"
+                icon="i-heroicons-trash"
+                label="Supprimer"
+                color="error"
+                @click="deleteAttachment"
+              />
+            </UButtonGroup>
+          </div>
+  
+          <TextEditor
+            :model-value="htmlContent"
+            @update:model-value="htmlContent = $event"
+            @update:editor="editor = $event"
+          />
+        </div>
       </UCard>
     </template>
 
