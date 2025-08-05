@@ -5,6 +5,8 @@
   import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
   import EmailQuery from "~/composables/api/query/clubDependent/plugin/emailing/EmailQuery";
 
+  const MAX_ATTACHMENT_SIZE_MB = 15
+
   definePageMeta({
     layout: "email"
   })
@@ -79,7 +81,16 @@
   function updateAttachment(event: any) {
     const formData = getFileFormDataFromUInputChangeEvent(event)
     if (formData) {
-      baseFormData.value = formData
+      const file = formData.get("file") as File
+      if (file.size > MAX_ATTACHMENT_SIZE_MB * 1024 * 1024) {
+        toast.add({
+          title: "Impossible d'ajouter la pièce jointe",
+          description: "La pièce jointe ne doit pas dépasser 15 Mo",
+          color: "error"
+        })
+      } else {
+        baseFormData.value = formData
+      }
     }
   }
 
