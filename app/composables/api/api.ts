@@ -284,7 +284,7 @@ export async function useGetCsv(path: string) {
   };
 }
 
-export async function usePost<T>(path: string, payload: object) {
+export async function usePost<T>(path: string, payload: object, requireLogin: boolean = true) {
   let item: T | undefined = undefined;
   let error: NuxtError | undefined = undefined;
 
@@ -296,7 +296,7 @@ export async function usePost<T>(path: string, payload: object) {
         Accept: MIME_TYPE,
         "Content-Type": MIME_TYPE,
       },
-    }, true, 0, 10000);
+    }, requireLogin, 0, 10000);
 
     item = data as T;
   } catch (e) {

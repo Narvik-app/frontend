@@ -7,6 +7,8 @@
   import {useSelfUserStore} from "~/stores/useSelfUser";
   import {createBrowserCsvDownload} from "~/utils/browser";
   import type {TableRow} from "#ui/types";
+  import type {ColumnSort} from "@tanstack/table-core";
+  import {getTableSortVal} from "~/utils/table";
 
   const props = defineProps({
     listOnly: {
@@ -26,7 +28,7 @@
   const presenceStore = usePresenceStore()
   const selfStore = useSelfUserStore()
 
-  const { selectedRange, searchQuery } = storeToRefs(presenceStore)
+  const { selectedRange, searchQuery, selectedActivities } = storeToRefs(presenceStore)
 
   const isAdmin = selfStore.isAdmin()
 
@@ -45,7 +47,7 @@
 
   getPresences();
 
-  watch([searchQuery, selectedRange], (value) => {
+  watch([searchQuery, selectedRange, selectedActivities], (value) => {
     page.value = 1
     getPresences()
   })
@@ -58,9 +60,11 @@
       itemsPerPage: itemsPerPage.value.toString(),
     });
 
-
-    urlParams.append(`order[${sort.value.column}]`, sort.value.direction);
-    urlParams.append(`order[createdAt]`, sort.value.direction);
+    if (sort.value.length > 0) {
+      sort.value.forEach((value) => {
+        urlParams.append(`order[${value.id}]`, getTableSortVal(value))
+      })
+    }
 
     if (selectedRange.value) {
       const formattedStartDate = formatDateInput(selectedRange.value.start.toString())
@@ -78,6 +82,13 @@
 
     if (searchQuery.value) {
       urlParams.append(`multiple[firstname, lastname, licence]`, searchQuery.value);
+    }
+
+    if (selectedActivities.value.length > 0) {
+      selectedActivities.value.forEach(filteredActivity => {
+        if (!filteredActivity.value) return;
+        urlParams.append('activities.uuid[]', filteredActivity.value)
+      })
     }
 
     presenceQuery.getAll(urlParams).then(value => {
@@ -176,7 +187,7 @@
       :is-loading="isLoading"
       accent-color="warning"
       @rowClicked="rowClicked"
-      @sort="(object: TableSortInterface) => { sort = object; getPresences() }"
+      @sort="(object: ColumnSort) => { sort = object; getPresences() }"
       @paginate="(object: TablePaginateInterface) => { page = object.page; itemsPerPage = object.itemsPerPage; getPresences() }"
     />
 

@@ -2,12 +2,18 @@
 import type {Column} from "@tanstack/table-core";
 import type {PropType} from "vue";
 import type {Item} from "~/types/api/item";
+import * as console from "node:console";
 
 const props = defineProps({
   column: {
     type: Object as PropType<Column<Item>>,
     required: true
   },
+
+  canBeUnsorted: {
+    type: Boolean,
+    default: false
+  }
 })
 
 const icon = computed(() => {
@@ -27,8 +33,14 @@ function changeFilter() {
     return
   }
 
-  // Last case we disable the sorting
-  props.column.clearSorting()
+  if (props.canBeUnsorted) {
+    // Last case we disable the sorting
+    props.column.clearSorting()
+    return
+  }
+
+  // Fallback, we do the opposite
+  props.column.toggleSorting(props.column.getNextSortingOrder(), props.column.getCanMultiSort())
 }
 
 </script>

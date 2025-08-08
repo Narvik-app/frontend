@@ -28,6 +28,10 @@ export default class ClubQuery extends AbstractQuery<Club, WriteClub> {
     return usePatch<Club>(`${this.getCurrentClubPath()}/generate-badger`, {})
   }
 
+  async getBadgerQuickLogin() {
+    return useFetchItem(`${this.getCurrentClubPath()}/badger-quick-login`, false, true);
+  }
+
   async programDeletion() {
     return usePatch<Club>(`${this.getCurrentClubPath()}/delete`, {})
   }
