@@ -16,19 +16,7 @@
 
 <template>
   <UCard>
-    <template #header>
-      <div class="flex flex-row gap-4">
-        <UButton
-          @click="emit('close')"
-          icon="i-heroicons-x-circle"
-          color="neutral"
-          variant="outline"
-          size="xs"
-        />
-  
-        <div class="text-xl font-bold">{{ email.title }}</div>
-      </div>
-    </template>
+    <div class="text-xl font-bold">{{ email.title }}</div>
 
     <div class="flex flex-col gap-4">
       <div>
