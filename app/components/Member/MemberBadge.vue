@@ -16,7 +16,6 @@
 
   const fileQuery = new FileQuery()
 
-  load()
   function load() {
     if (props.member) {
       member.value = props.member
@@ -28,6 +27,8 @@
       }
     }
   }
+
+  load()
 </script>
 
 <template>

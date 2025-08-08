@@ -14,14 +14,14 @@
   useHead({
     title: 'Nouveau mail'
   })
-  
+
   const memberQuery = new MemberQuery()
   const allMembers: Ref<Member[]> = ref([])
   const filteredMembers: Ref<Member[]> = ref([])
   const selectedMembers: Ref<Member[]> = ref([])
 
   const emailQuery = new EmailQuery()
-  
+
   const selfStore = useSelfUserStore()
   const { selectedProfile } = storeToRefs(selfStore)
 
@@ -29,7 +29,7 @@
   if (!selectedProfile.value) {
     navigateTo("/")
   }
-  
+
   const currentMonthEmailsSent = ref(selectedProfile.value?.club.currentMonthEmailsSent)
   const maxMonthlyEmails = ref(selectedProfile.value?.club.maxMonthlyEmails)
   const newMonthEmailsSent = computed(() => currentMonthEmailsSent.value + selectedMembers.value.length)
@@ -45,7 +45,7 @@
     if (value < 0) value = 0
     return value
   })
-  
+
   const toast = useToast()
   const isSending = ref(false)
   const barColor = computed(() => {
@@ -53,11 +53,12 @@
     "error" :
     "primary"
   })
-  
+
   const editor = ref()
   const title = ref('')
   const htmlContent = ref('')
   const sendAsNewsletter = ref(true)
+  const attachment = ref(undefined)
   const baseFormData: Ref<FormData | undefined> = ref(undefined)
 
   await getMembers()
@@ -88,14 +89,17 @@
           description: "La pièce jointe ne doit pas dépasser 15 Mo",
           color: "error"
         })
-      } else {
-        baseFormData.value = formData
+        deleteAttachment()
+        return
       }
+
+      baseFormData.value = formData
     }
   }
 
   function deleteAttachment() {
     baseFormData.value = undefined
+    attachment.value = undefined
   }
 
   async function sendEmail() {
@@ -118,6 +122,7 @@
     }
 
     const { error } = await emailQuery.sendEmail(payload)
+    isSending.value = false
 
     if (error) {
       toast.add({
@@ -125,18 +130,17 @@
         description: error.message,
         color: "error"
       })
-    } else {
-      toast.add({
-        title: "Mail envoyé",
-        description: `Votre mail a été envoyé à ${selectedMembers.value.length} ${selectedMembers.value.length > 1 ? "membres" : "membre"} !`,
-        color: "success"
-      })
-
-      await selfStore.refreshSelectedClub()
-      navigateTo("/admin/email")
+      return
     }
 
-    isSending.value = false
+    toast.add({
+      title: "Mail envoyé",
+      description: `Votre mail a été envoyé à ${selectedMembers.value.length} ${selectedMembers.value.length > 1 ? "membres" : "membre"} !`,
+      color: "success"
+    })
+
+    await selfStore.refreshSelectedClub()
+    navigateTo("/admin/email")
   }
 
   const sendButtonDisabled = computed(() => {
@@ -172,16 +176,23 @@
 <template>
   <GenericLayoutContentWithStickySide v-if="selectedProfile">
     <template #main>
-      <UCard>
-        <template #header>
-          <UInput placeholder="Sujet" v-model="title" />
+      <GenericCardWithActions title="Envoie d'un email">
+        <template #actions>
+          <div class="pl-2 pb-3">
+            <UButton label="Envoyer" icon="heroicons-paper-airplane" :disabled="sendButtonDisabled" :loading="isSending" @click="sendEmail" />
+          </div>
         </template>
 
         <div class="flex flex-col gap-4">
-          <div class="flex flex-row gap-8 items-center">
-            <p class="whitespace-nowrap">Pièce jointe</p>
+
+          <UFormField label="Sujet" class="flex-1">
+            <UInput size="xl" v-model="title" />
+          </UFormField>
+
+          <UFormField label="Pièce-jointe">
             <UButtonGroup class="w-full">
               <UInput
+                v-model="attachment"
                 type="file"
                 icon="i-heroicons-paper-clip"
                 @change="updateAttachment"
@@ -190,19 +201,30 @@
                 v-if="baseFormData"
                 icon="i-heroicons-trash"
                 label="Supprimer"
-                color="error"
                 @click="deleteAttachment"
               />
             </UButtonGroup>
-          </div>
-  
+          </UFormField>
+
+
+          <UFormField label="Newsletter">
+            <UCheckbox v-model="sendAsNewsletter" @update:model-value="filterMembers()" />
+
+            <template #help>
+              <p v-if="sendAsNewsletter">L'email ne sera envoyé qu’aux destinataires ayant donné leur accord.</p>
+              <div v-else>
+                <p>L'email sera envoyé à tous les destinataires.</p>
+              </div>
+            </template>
+          </UFormField>
+
           <TextEditor
             :model-value="htmlContent"
             @update:model-value="htmlContent = $event"
             @update:editor="editor = $event"
           />
         </div>
-      </UCard>
+      </GenericCardWithActions>
     </template>
 
     <template #side>
@@ -227,12 +249,9 @@
         <div class="flex gap-1 mt-2 flex-wrap">
           <MemberBadge v-for="(member) in selectedMembers" :key="member.email" :member="member" />
         </div>
-      
       </UCard>
 
-      <UCard>
-        <UCheckbox label="Newsletter" v-model="sendAsNewsletter" @update:model-value="filterMembers()" />
-        <UButton label="Envoyer" :disabled="sendButtonDisabled" :loading="isSending" @click="sendEmail" />
+      <UCard v-if="reasons.length > 0">
         <ul>
           <li
             v-for="(reason, index) in reasons"
@@ -240,7 +259,7 @@
             class="text-error flex items-center"
           >
             <UIcon name="i-heroicons-x-circle" />
-            <span>{{ reason }}</span>
+            <span class="ml-1">{{ reason }}</span>
           </li>
         </ul>
       </UCard>

@@ -9,20 +9,27 @@
 
   const mainSection = [
     {
-      label: 'Historique',
-      icon: 'i-heroicons-archive-box',
-      to: '/admin/email'
-    },
-    {
-      label: 'Nouveau mail',
+      label: 'Écrire un mail',
       icon: 'i-heroicons-pencil',
       to: '/admin/email/new'
     }
   ]
 
+  const bottomSection = [
+    {
+      label: 'Historique',
+      icon: 'i-heroicons-archive-box',
+      to: '/admin/email'
+    },
+  ]
+
   let links: GroupedNavigationLinks[] = [
     {
       links: mainSection
+    },
+    {
+      title: '',
+      links: bottomSection
     }
   ]
 </script>

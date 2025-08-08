@@ -53,6 +53,12 @@
   editor.value = new Editor({
     content: props.modelValue,
     extensions: [StarterKit, TextStyle, Color, TextAlign.configure({ types: ['heading', 'paragraph'] })],
+    editorProps: {
+      attributes: {
+        class: 'min-h-[200px]'
+      }
+    },
+
     onCreate: ({editor}) => {
       emit('update:editor', editor)
     },
@@ -61,7 +67,7 @@
       emit('update:editor', editor)
     }
   })
-  
+
   const currentTextType = computed(() => {
     if (!editor.value) return 'paragraph'
     if (editor.value.isActive('heading', { level: 1 })) return 'heading-1'
@@ -117,11 +123,11 @@
 </script>
 
 <template>
-  <div class="border rounded-xl bg-background p-4 space-y-2">
+  <div class="ring ring-inset ring-accented rounded-xl p-4 space-y-2">
     <div class="flex flex-wrap gap-2 mb-2">
       <UButton icon="i-heroicons-arrow-uturn-left" size="sm" @click="editor.chain().focus().undo().run()" />
       <UButton icon="i-heroicons-arrow-uturn-right" size="sm" @click="editor.chain().focus().redo().run()" />
-      
+
       <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
 
       <USelect
@@ -159,14 +165,14 @@
       </UPopover>
 
       <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
-      
+
       <UButton icon="i-heroicons-bold" size="sm" @click="editor.chain().focus().toggleBold().run()" />
       <UButton icon="i-heroicons-italic" size="sm" @click="editor.chain().focus().toggleItalic().run()" />
       <UButton icon="i-heroicons-underline" size="sm" @click="editor.chain().focus().toggleUnderline().run()" />
       <UButton icon="i-heroicons-strikethrough" size="sm" @click="editor.chain().focus().toggleStrike().run()" />
-      
+
       <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
-      
+
       <UButton icon="i-heroicons-list-bullet" size="sm" @click="editor.chain().focus().toggleBulletList().run()" />
       <UButton icon="i-heroicons-numbered-list" size="sm" @click="editor.chain().focus().toggleOrderedList().run()" />
 
@@ -179,7 +185,7 @@
 
     <EditorContent
       :editor="editor"
-      class="prose dark:prose-invert min-h-[200px] focus:outline-none px-3 py-2 rounded-md border border-gray-300 bg-white dark:bg-gray-900 overflow-y-auto max-h-72"
+      class="prose dark:prose-invert focus:outline-none px-3 py-2 rounded-md border border-gray-300 bg-white dark:bg-gray-900 overflow-y-auto max-h-72"
     />
   </div>
 </template>
