@@ -79,6 +79,11 @@
     }
   }
 
+  function removeMember(member: Member) {
+    const newList = selectedMembers.value.filter(m => m.email !== member.email)
+    selectedMembers.value = newList
+  }
+
   function updateAttachment(event: any) {
     const formData = getFileFormDataFromUInputChangeEvent(event)
     if (formData) {
@@ -247,7 +252,13 @@
           label-key="fullName"
         />
         <div class="flex gap-1 mt-2 flex-wrap">
-          <MemberBadge v-for="(member) in selectedMembers" :key="member.email" :member="member" />
+          <MemberBadge
+            v-for="(member) in selectedMembers"
+            :key="member.email"
+            :member="member"
+            :clickable="true"
+            @clicked="removeMember"
+          />
         </div>
       </UCard>
 
