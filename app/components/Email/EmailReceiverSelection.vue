@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import type { Member } from '~/types/api/item/clubDependent/member';
   import type { SelectApiItem } from '~/types/select';
+  import type {TablePaginateInterface} from "~/types/table";
   import { ClubRole, getAvailableClubRoles } from "~/types/api/item/club";
   import MemberQuery from '~/composables/api/query/clubDependent/MemberQuery';
 
@@ -237,6 +238,13 @@
           <p v-if="row.original.role && row.original.role !== ClubRole.Member">{{ getAvailableClubRoles().find((role) => role.value === row.original.role)?.text }}</p>
         </template>
       </UTable>
+
+      <GenericTablePagination
+        v-model:page="page"
+        v-model:items-per-page="itemsPerPage"
+        :total-items="totalMembers"
+        @paginate="(object: TablePaginateInterface) => { getMembers() }"
+      />
     </UCard>
   </div>
 </template>
