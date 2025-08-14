@@ -2,7 +2,6 @@
   import type {Member} from "~/types/api/item/clubDependent/member";
   import TextEditor from '~/components/TextEditor.vue';
   import { useSelfUserStore } from '~/stores/useSelfUser';
-  import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
   import EmailQuery from "~/composables/api/query/clubDependent/plugin/emailing/EmailQuery";
 
   const MAX_ATTACHMENT_SIZE_MB = 15
@@ -15,9 +14,6 @@
     title: 'Nouveau mail'
   })
 
-  const memberQuery = new MemberQuery()
-  const allMembers: Ref<Member[]> = ref([])
-  const filteredMembers: Ref<Member[]> = ref([])
   const selectedMembers: Ref<Member[]> = ref([])
 
   const emailQuery = new EmailQuery()
@@ -48,6 +44,7 @@
 
   const toast = useToast()
   const isSending = ref(false)
+  const modalOpen = ref(false)
   const barColor = computed(() => {
     return maxMonthlyEmails.value - newMonthEmailsSent.value < 0 ?
     "error" :
@@ -61,21 +58,10 @@
   const attachment = ref(undefined)
   const baseFormData: Ref<FormData | undefined> = ref(undefined)
 
-  await getMembers()
-  filterMembers()
-
-  async function getMembers() {
-    const { items } = await memberQuery.getAll()
-    allMembers.value = items.filter(member => member.email)
-  }
-
   function filterMembers() {
     if (sendAsNewsletter.value) {
       // Remove members who disabled newsletter from the select menu and the receivers list
-      filteredMembers.value = allMembers.value.filter(member => member.clubNewsletter)
       selectedMembers.value = selectedMembers.value.filter(member => member.clubNewsletter)
-    } else {
-      filteredMembers.value = allMembers.value
     }
   }
 
@@ -91,7 +77,7 @@
       if (file.size > MAX_ATTACHMENT_SIZE_MB * 1024 * 1024) {
         toast.add({
           title: "Impossible d'ajouter la pièce jointe",
-          description: "La pièce jointe ne doit pas dépasser 15 Mo",
+          description: `La pièce jointe ne doit pas dépasser ${MAX_ATTACHMENT_SIZE_MB} Mo`,
           color: "error"
         })
         deleteAttachment()
@@ -181,7 +167,7 @@
 <template>
   <GenericLayoutContentWithStickySide v-if="selectedProfile">
     <template #main>
-      <GenericCardWithActions title="Envoie d'un email">
+      <GenericCardWithActions title="Envoi d'un email">
         <template #actions>
           <div class="pl-2 pb-3">
             <UButton label="Envoyer" icon="heroicons-paper-airplane" :disabled="sendButtonDisabled" :loading="isSending" @click="sendEmail" />
@@ -213,7 +199,7 @@
 
 
           <UFormField label="Newsletter">
-            <UCheckbox v-model="sendAsNewsletter" @update:model-value="filterMembers()" />
+            <UCheckbox v-model="sendAsNewsletter" @change="filterMembers()" />
 
             <template #help>
               <p v-if="sendAsNewsletter">L'email ne sera envoyé qu’aux destinataires ayant donné leur accord.</p>
@@ -244,13 +230,26 @@
       </UCard>
 
       <UCard>
-        <p>Destinataires</p>
-        <USelectMenu
+        <p>Destinataires ({{ selectedMembers.length }})</p>
+
+        <UModal
+          v-model:open="modalOpen"
+          title="Modifier les destinataires"
+          :fullscreen="true"
+        >
+          <UButton label="Modifier les destinataires" />
+
+          <template #body>
+            <EmailReceiverSelection :newsletter-enabled="sendAsNewsletter" v-model="selectedMembers" @update:model-value="val => selectedMembers = val" @close="modalOpen = false" />
+          </template>
+        </UModal>
+        
+        <!-- <USelectMenu
           v-model="selectedMembers"
           :items="filteredMembers"
           multiple
           label-key="fullName"
-        />
+        /> -->
         <div class="flex gap-1 mt-2 flex-wrap">
           <MemberBadge
             v-for="(member) in selectedMembers"
