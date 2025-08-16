@@ -229,6 +229,19 @@
         <ContentLink to="https://about.narvik.app/abonnements" target="_blank">Augmentez votre quota</ContentLink>
       </UCard>
 
+      <UCard v-if="reasons.length > 0">
+        <ul>
+          <li
+            v-for="(reason, index) in reasons"
+            :key="index"
+            class="text-error flex items-center"
+          >
+            <UIcon name="i-heroicons-x-circle" />
+            <span class="ml-1">{{ reason }}</span>
+          </li>
+        </ul>
+      </UCard>
+
       <UCard>
         <p>Destinataires ({{ selectedMembers.length }})</p>
 
@@ -255,19 +268,6 @@
             @clicked="removeMember"
           />
         </div>
-      </UCard>
-
-      <UCard v-if="reasons.length > 0">
-        <ul>
-          <li
-            v-for="(reason, index) in reasons"
-            :key="index"
-            class="text-error flex items-center"
-          >
-            <UIcon name="i-heroicons-x-circle" />
-            <span class="ml-1">{{ reason }}</span>
-          </li>
-        </ul>
       </UCard>
     </template>
   </GenericLayoutContentWithStickySide>

@@ -45,7 +45,7 @@
 
 <template>
   <div
-    class="flex-row gap-1 items-center border-primary border-2 rounded-2xl inline-flex pr-1"
+    class="flex-row gap-1 items-center border-primary border-2 rounded-2xl inline-flex pr-1 select-none"
     @mouseenter="isHovered = true"
     @mouseleave="isHovered = false"
     @click="handleClick"
