@@ -234,8 +234,10 @@
 
         <UModal
           v-model:open="modalOpen"
-          title="Modifier les destinataires"
-          :fullscreen="true"
+          title="Choix des destinataires"
+          :ui="{
+            content: 'max-w-[80vw]'
+          }"
         >
           <UButton label="Modifier les destinataires" />
 
@@ -243,13 +245,7 @@
             <EmailReceiverSelection :newsletter-enabled="sendAsNewsletter" v-model="selectedMembers" @update:model-value="val => selectedMembers = val" @close="modalOpen = false" />
           </template>
         </UModal>
-        
-        <!-- <USelectMenu
-          v-model="selectedMembers"
-          :items="filteredMembers"
-          multiple
-          label-key="fullName"
-        /> -->
+
         <div class="flex gap-1 mt-2 flex-wrap">
           <MemberBadge
             v-for="(member) in selectedMembers"

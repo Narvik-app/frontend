@@ -68,8 +68,6 @@
     }
   ]
 
-  await getMembers()
-
   function getUrlParams(paginationEnabled = true): URLSearchParams {
     const urlParams = new URLSearchParams()
 
@@ -152,7 +150,7 @@
     emit('close')
   }
 
-  function deselectAll() {
+  function unselectAll() {
     emit('update:modelValue', [])
     emit('close')
   }
@@ -165,6 +163,8 @@
       getMembers()
     }, 800)
   }
+
+  await getMembers()
 </script>
 
 <template>
@@ -201,7 +201,7 @@
         <div class="flex-1"></div>
         <div class="flex justify-end" v-if="totalMembers > 0">
           <UButton v-if="modelValue.length < totalMembers" icon="i-heroicons-list-bullet" label="Tout sélectionner" @click="selectAll()" loading-auto />
-          <UButton v-else label="Tout désélectionner" icon="i-heroicons-no-symbol" @click="deselectAll()" />
+          <UButton v-else label="Tout désélectionner" icon="i-heroicons-no-symbol" @click="unselectAll()" />
         </div>
       </div>
 
