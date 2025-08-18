@@ -135,18 +135,18 @@
 
   async function selectAll() {
     const urlParams = getUrlParams(false)
-    const { error, items } = await memberQuery.getAll(urlParams)
+    const results = await memberQuery.getAllWithoutPagination(urlParams)
 
-    if (error) {
+    if (!results) {
       toast.add({
         color: "error",
         title: "Une erreur s'est produite",
-        description: error.message || error.toString()
+        description: "Impossible de sélectionner tous les destinataires"
       })
       return
     }
 
-    emit('update:modelValue', items)
+    emit('update:modelValue', results)
     emit('close')
   }
 
@@ -221,6 +221,7 @@
 
         <template #select-cell="{ row }">
           <UCheckbox
+            :key="row.original.uuid"
             :default-value="modelValue.some(member => member.email === row.original.email)"
             @update:model-value="selected => {
               if (selected) {
