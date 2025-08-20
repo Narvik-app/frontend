@@ -3,6 +3,9 @@
   import ClubQuery from '~/composables/api/query/ClubQuery'
   import type { Club } from '~/types/api/item/club'
 
+  const selfUser = useSelfUserStore()
+  const isLogged = selfUser.isLogged()
+
   const clubQuery = new ClubQuery()
   const { query } = useRoute()
   const toast = useToast()
@@ -23,13 +26,16 @@
     navigateTo("/")
   } else {
     clubUuid.value = decodeUrlUuid(clubId)
-    const { retrieved, error } = await clubQuery.get(clubUuid.value)
-    
-    if (!retrieved) {
-      errorEncountered.value = true
-      errorMessage.value = "Impossible de récupérer les informations du club."
-    } else {
-      club.value = retrieved
+
+    if (isLogged) {
+      const { retrieved, error } = await clubQuery.get(clubUuid.value)
+      
+      if (!retrieved) {
+        errorEncountered.value = true
+        errorMessage.value = "Impossible de récupérer les informations du club."
+      } else {
+        club.value = retrieved
+      }
     }
   }
 
@@ -41,7 +47,7 @@
       "email": email.value
     }
 
-    const {item, error} = await usePost("/unsubscribe", payload)
+    const {item, error} = await usePost("/unsubscribe", payload, false)
 
     if (error) {
       toast.add({
@@ -71,7 +77,8 @@
     <div class="flex flex-col gap-4 text-center">
       <p class="text-2xl font-bold">Succès</p>
       <div>
-        <p>Vous n'êtes plus abonné à la newsletter de <span class="font-bold">{{ club?.name }}</span> !</p>
+        <p v-if="isLogged">Vous n'êtes plus abonné à la newsletter de <span class="font-bold">{{ club?.name }}</span> !</p>
+        <p v-else>Vous n'êtes plus abonné à la newsletter du club !</p>
         <p>Vous pouvez fermer cette page</p>
       </div>
     </div>
@@ -79,7 +86,8 @@
   <UCard v-else>
     <div class="flex flex-col gap-4 text-center">
       <p class="text-2xl font-bold">Se désabonner</p>
-      <p>Vous ne recevrez plus la newsletter de <span class="font-bold">{{ club?.name }}</span>.</p>
+      <p v-if="isLogged">Vous ne recevrez plus la newsletter de <span class="font-bold">{{ club?.name }}</span>.</p>
+      <p v-else>Vous ne recevrez plus la newsletter du club.</p>
       <UButtonGroup>
         <UInput
           icon="i-heroicons-envelope"
