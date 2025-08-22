@@ -1,0 +1,276 @@
+<script lang="ts" setup>
+  import type {Member} from "~/types/api/item/clubDependent/member";
+  import TextEditor from '~/components/TextEditor.vue';
+  import { useSelfUserStore } from '~/stores/useSelfUser';
+  import EmailQuery from "~/composables/api/query/clubDependent/plugin/emailing/EmailQuery";
+
+  const MAX_ATTACHMENT_SIZE_MB = 15
+
+  definePageMeta({
+    layout: "email"
+  })
+
+  useHead({
+    title: 'Nouveau mail'
+  })
+
+  const selectedMembers: Ref<Member[]> = ref([])
+
+  const emailQuery = new EmailQuery()
+
+  const selfStore = useSelfUserStore()
+  const { selectedProfile } = storeToRefs(selfStore)
+
+  // Redirect to main page if there's no profile
+  if (!selectedProfile.value) {
+    navigateTo("/")
+  }
+
+  const currentMonthEmailsSent = ref(selectedProfile.value?.club.currentMonthEmailsSent)
+  const maxMonthlyEmails = ref(selectedProfile.value?.club.maxMonthlyEmails)
+  const newMonthEmailsSent = computed(() => currentMonthEmailsSent.value + selectedMembers.value.length)
+  const newMonthEmailsSentCapped = computed(() => {
+    if (newMonthEmailsSent.value > maxMonthlyEmails.value) {
+      return maxMonthlyEmails.value
+    } else {
+      return newMonthEmailsSent.value
+    }
+  })
+  const remainingEmailsDisplay = computed(() => {
+    let value = maxMonthlyEmails.value - currentMonthEmailsSent.value
+    if (value < 0) value = 0
+    return value
+  })
+
+  const toast = useToast()
+  const isSending = ref(false)
+  const modalOpen = ref(false)
+  const barColor = computed(() => {
+    return maxMonthlyEmails.value - newMonthEmailsSent.value < 0 ? "error" : "primary"
+  })
+
+  const editor = ref()
+  const title = ref('')
+  const htmlContent = ref('')
+  const sendAsNewsletter = ref(true)
+  const attachment = ref(undefined)
+  const baseFormData: Ref<FormData | undefined> = ref(undefined)
+
+  function filterMembers() {
+    if (sendAsNewsletter.value) {
+      // Remove members who disabled newsletter from the select menu and the receivers list
+      selectedMembers.value = selectedMembers.value.filter(member => member.clubNewsletter)
+    }
+  }
+
+  function removeMember(member: Member) {
+    const newList = selectedMembers.value.filter(m => m.email !== member.email)
+    selectedMembers.value = newList
+  }
+
+  function updateAttachment(event: any) {
+    const formData = getFileFormDataFromUInputChangeEvent(event)
+    if (formData) {
+      const file = formData.get("file") as File
+      if (file.size > MAX_ATTACHMENT_SIZE_MB * 1024 * 1024) {
+        toast.add({
+          title: "Impossible d'ajouter la pièce jointe",
+          description: `La pièce jointe ne doit pas dépasser ${MAX_ATTACHMENT_SIZE_MB} Mo`,
+          color: "error"
+        })
+        deleteAttachment()
+        return
+      }
+
+      baseFormData.value = formData
+    }
+  }
+
+  function deleteAttachment() {
+    baseFormData.value = undefined
+    attachment.value = undefined
+  }
+
+  async function sendEmail() {
+    isSending.value = true
+
+    let payload: FormData
+
+    if (baseFormData.value) {
+      payload = baseFormData.value
+    } else {
+      payload = new FormData()
+    }
+
+    payload.append("title", title.value)
+    payload.append("content", htmlContent.value)
+    payload.append("members", selectedMembers.value.map(member => member.uuid).join(","))
+    payload.append("isNewsletter", sendAsNewsletter.value.toString())
+    if (selectedProfile.value?.club?.settings?.emailReplyTo) {
+      payload.append("replyTo", selectedProfile.value?.club?.settings?.emailReplyTo)
+    }
+
+    const { error } = await emailQuery.sendEmail(payload)
+    isSending.value = false
+
+    if (error) {
+      toast.add({
+        title: "Une erreur est survenue",
+        description: error.message,
+        color: "error"
+      })
+      return
+    }
+
+    toast.add({
+      title: "Mail envoyé",
+      description: `Votre mail a été envoyé à ${selectedMembers.value.length} ${selectedMembers.value.length > 1 ? "membres" : "membre"} !`,
+      color: "success"
+    })
+
+    await selfStore.refreshSelectedClub()
+    navigateTo("/admin/email")
+  }
+
+  const sendButtonDisabled = computed(() => {
+    return reasons.value.length > 0 ? true : false
+  })
+  const reasons = computed(() => {
+    const errors: string[] = []
+
+    // Check quota
+    if (maxMonthlyEmails.value - newMonthEmailsSent.value < 0) {
+      errors.push("Quota dépassé !")
+    }
+
+    // Title cannot be empty
+    if (title.value === "") {
+      errors.push("Aucun sujet")
+    }
+
+    // Content cannot be empty
+    if (editor.value?.isEmpty) {
+      errors.push("Email vide")
+    }
+
+    // At least one receiver must be selected
+    if (selectedMembers.value.length === 0) {
+      errors.push("Aucun destinataire sélectionné")
+    }
+
+    return errors
+  })
+</script>
+
+<template>
+  <GenericLayoutContentWithStickySide v-if="selectedProfile">
+    <template #main>
+      <GenericCardWithActions title="Envoi d'un email">
+        <template #actions>
+          <div class="pl-2 pb-3">
+            <UButton label="Envoyer" icon="heroicons-paper-airplane" :disabled="sendButtonDisabled" :loading="isSending" @click="sendEmail" />
+          </div>
+        </template>
+
+        <div class="flex flex-col gap-4">
+
+          <UFormField label="Sujet" class="flex-1">
+            <UInput size="xl" v-model="title" />
+          </UFormField>
+
+          <UFormField label="Pièce-jointe">
+            <UButtonGroup class="w-full">
+              <UInput
+                v-model="attachment"
+                type="file"
+                icon="i-heroicons-paper-clip"
+                @change="updateAttachment"
+              />
+              <UButton
+                v-if="baseFormData"
+                icon="i-heroicons-trash"
+                label="Supprimer"
+                @click="deleteAttachment"
+              />
+            </UButtonGroup>
+          </UFormField>
+
+
+          <UFormField label="Newsletter">
+            <UCheckbox v-model="sendAsNewsletter" @change="filterMembers()" />
+
+            <template #help>
+              <p v-if="sendAsNewsletter">L'email ne sera envoyé qu’aux destinataires ayant donné leur accord.</p>
+              <div v-else>
+                <p>L'email sera envoyé à tous les destinataires.</p>
+              </div>
+            </template>
+          </UFormField>
+
+          <TextEditor
+            :model-value="htmlContent"
+            @update:model-value="htmlContent = $event"
+            @update:editor="editor = $event"
+          />
+        </div>
+      </GenericCardWithActions>
+    </template>
+
+    <template #side>
+      <UCard>
+        <div class="flex gap-1 justify-between items-center mb-2">Emails restants : {{ remainingEmailsDisplay }} <UBadge v-if="selectedMembers.length > 0">+ {{ selectedMembers.length }}</UBadge></div>
+        <UProgress
+          v-model="newMonthEmailsSentCapped"
+          :max="maxMonthlyEmails"
+          :color="barColor"
+        />
+        <div class="text-center text-xs mb-2 select-none">{{ (currentMonthEmailsSent ?? 0) + selectedMembers.length }} / {{ maxMonthlyEmails }}</div>
+        <ContentLink to="https://about.narvik.app/abonnements" target="_blank">Augmentez votre quota</ContentLink>
+      </UCard>
+
+      <UCard v-if="reasons.length > 0">
+        <ul>
+          <li
+            v-for="(reason, index) in reasons"
+            :key="index"
+            class="text-error flex items-center"
+          >
+            <UIcon name="i-heroicons-x-circle" />
+            <span class="ml-1">{{ reason }}</span>
+          </li>
+        </ul>
+      </UCard>
+
+      <UCard>
+        <div class="flex justify-between items-center gap-1 flex-wrap">
+          <p>Destinataires ({{ selectedMembers.length }})</p>
+
+          <UModal
+            v-model:open="modalOpen"
+            title="Choix des destinataires"
+            :description="sendAsNewsletter ? 'Seuls les membres inscrits à la newsletter recevront une notification.' : ''"
+            :ui="{
+            content: 'max-w-[80vw]'
+          }"
+          >
+            <UButton :label="selectedMembers.length > 0 ? 'Modifier les destinataires' : 'Choisir les destinataires'" />
+
+            <template #body>
+              <EmailReceiverSelection :newsletter-enabled="sendAsNewsletter" v-model="selectedMembers" @update:model-value="val => selectedMembers = val" @close="modalOpen = false" />
+            </template>
+          </UModal>
+        </div>
+
+        <div class="flex gap-1 mt-2 flex-wrap">
+          <MemberBadge
+            v-for="(member) in selectedMembers"
+            :key="member.email"
+            :member="member"
+            :clickable="true"
+            @clicked="removeMember"
+          />
+        </div>
+      </UCard>
+    </template>
+  </GenericLayoutContentWithStickySide>
+</template>

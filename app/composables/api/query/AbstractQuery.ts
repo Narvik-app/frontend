@@ -85,6 +85,50 @@ export abstract class AbstractQuery<R, W> {
     return response
   }
 
+  async getAllWithoutPagination(urlParams?: URLSearchParams, itemsPerPage = 100) {
+    if (!urlParams) {
+      urlParams = new URLSearchParams()
+    }
+
+    // Figure out the number of pages to request
+    urlParams.set('page', '1')
+    urlParams.set('itemsPerPage', '1')
+    const { totalItems } = await this.getAll(urlParams)
+    if (!totalItems) {
+      return
+    }
+
+    urlParams.set('itemsPerPage', itemsPerPage.toString())
+
+    const numberOfPages = Math.ceil(totalItems / itemsPerPage)
+    const data = []
+    const maxRetries = 3
+
+    for (let i = 0; i < numberOfPages; i++) {
+      urlParams.set('page', (i+1).toString())
+      let fetched = false
+      let attempt = 1
+
+      while (!fetched) {
+        let { items } = await this.getAll(urlParams)
+        if (items) {
+          data.push(...items)
+          fetched = true
+        } else {
+          // Do 3 attempts in case of failure
+          if (attempt >= maxRetries) {
+            return
+          }
+          attempt += 1
+
+          await new Promise(resolve => setTimeout(resolve, 200))
+        }
+      }
+    }
+
+    return data
+  }
+
 	async post(payload: Item) {
 		return useCreateItem<W>(this.getRootUrl(), payload)
 	}

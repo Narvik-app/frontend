@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import type {FormError, FormSubmitEvent} from '#ui/types'
 import {useLoginUser} from "~/composables/api/api";
-import {useAppConfigStore} from "~/stores/useAppConfig";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import ModalLegalsAcceptance from "~/components/Modal/ModalLegalsAcceptance.vue";
 import {convertUuidToUrlUuid} from "~/utils/resource";
+
+definePageMeta({
+  layout: "empty",
+});
+
 
 const toast = useToast()
 const overlay = useOverlay()
@@ -15,10 +19,7 @@ const state = reactive({
   password: undefined
 })
 
-const appConfigStore = useAppConfigStore();
-
 const selfStore = useSelfUserStore();
-const siteLogo: Ref<string> = appConfigStore.getLogo()
 
 const validate = (state: any): FormError[] => {
   const errors = []
@@ -70,9 +71,7 @@ function redirectSuccessLogin() {
 
 <template>
   <div>
-    <div v-if="siteLogo" class="h-24 flex justify-center mb-4">
-      <NuxtImg :src="siteLogo" class="h-full" />
-    </div>
+    <HeaderDefaultLayout :back-login-button="false" />
 
     <UCard>
       <UForm :state="state" class="space-y-4" :validate="validate" @submit="onSubmit">

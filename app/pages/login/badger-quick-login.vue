@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import {useAppConfigStore} from "~/stores/useAppConfig";
 import UserQuery from "~/composables/api/query/UserQuery";
 import {displayApiError} from "~/utils/resource";
 import type {NuxtTurnstile} from "#components";
@@ -15,9 +14,6 @@ const state = reactive({
 
 const turnstile = ref<InstanceType<typeof NuxtTurnstile>>()
 const requireTurnstile = useRuntimeConfig().public.clientTurnstile
-
-const appConfigStore = useAppConfigStore();
-const siteLogo: Ref<string> = appConfigStore.getLogo()
 
 const userQuery = new UserQuery()
 
@@ -51,14 +47,6 @@ async function getBadgerLogin() {
 
 <template>
   <div>
-    <div v-if="siteLogo" class="h-24 flex justify-center mb-4">
-      <NuxtImg :src="siteLogo" class="h-full"/>
-    </div>
-
-    <div class="mb-2">
-      <UButton size="xs" variant="link" to="/login" label="Se connecter" icon="i-heroicons-arrow-uturn-left"/>
-    </div>
-
     <UCard>
 
       <UForm :state="state" class="space-y-4" @submit="getBadgerLogin">

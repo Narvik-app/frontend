@@ -100,6 +100,8 @@ interface _Club extends UuidItem, TimestampItem {
   contactName?: string
   contactEmail?: string
   contactPhone?: string
+  currentMonthEmailsSent?: number
+  maxMonthlyEmails?: number
 }
 
 export interface Club extends _Club {

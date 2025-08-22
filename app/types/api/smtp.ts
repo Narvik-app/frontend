@@ -5,6 +5,7 @@ export interface SmtpConfig {
   username?: string
   password?: string
   sender?: string
+  newsletterSender?: string
   senderName?: string
 }
 
@@ -18,5 +19,6 @@ export const GLOBAL_SETTINGS_SMTP_STRING_MAPPING = {
   username: "SMTP_USERNAME",
   password: "SMTP_PASSWORD",
   sender: "SMTP_SENDER",
+  newsletterSender: "SMTP_NEWSLETTER_SENDER",
   senderName: "SMTP_SENDER_NAME",
 }
