@@ -4,6 +4,7 @@
   import type {TablePaginateInterface} from "~/types/table";
   import { ClubRole, getAvailableClubRoles } from "~/types/api/item/club";
   import MemberQuery from '~/composables/api/query/clubDependent/MemberQuery';
+  import { UCheckbox } from '#components';
 
   const props = defineProps({
     "newsletterEnabled": {
@@ -47,7 +48,43 @@
   const columns = [
     {
       accessorKey: 'select',
-      header: ''
+      header: ({table}) => h(UCheckbox, {
+        modelValue: someMembersSelectedInPage()
+        ? 'indeterminate'
+        : allMembersSelectedInPage(),
+        'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
+          if (value) {
+            // Select all members
+            let newMembers: Member[] = []
+            const emailsAlreadySelected = props.modelValue.map(member => member.email)
+
+            members.value.forEach(member => {
+              if (!emailsAlreadySelected.includes(member.email)) {
+                newMembers.push(member)
+              }
+            })
+
+            emit('update:modelValue', [...props.modelValue, ...newMembers])
+          } else {
+            // Only remove members in the current page
+            const emailsToRemove = members.value.map(member => member.email)
+            const updatedList = props.modelValue.filter(member => !emailsToRemove.includes(member.email))
+            emit('update:modelValue', updatedList)
+          }
+        },
+        disabled: members.value.length === 0
+      }),
+      cell: ({row}) => h(UCheckbox, {
+        modelValue: props.modelValue.some(member => member.email === row.original.email),
+        'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
+          if (value) {
+            emit('update:modelValue', [...props.modelValue, row.original])
+          } else {
+            emit('update:modelValue', props.modelValue.filter(member => member.email !== row.original.email))
+          }
+        },
+        key: row.original.uuid
+      })
     },
     {
       accessorKey: 'licence',
@@ -155,6 +192,24 @@
     emit('close')
   }
 
+  function someMembersSelectedInPage() {
+    if (allMembersSelectedInPage()) return false;
+
+    const emailsToCheck = members.value.map(member => member.email)
+    return props.modelValue.some(member => emailsToCheck.includes(member.email))
+  }
+
+  function allMembersSelectedInPage() {
+    const emailsToCheck = members.value.map(member => member.email)
+    let count = 0
+
+    props.modelValue.forEach(member => {
+      if (emailsToCheck.includes(member.email)) count++;
+    })
+
+    return count === itemsPerPage.value
+  }
+
   let inputTimer: NodeJS.Timeout;
   function queryUpdated() {
     clearTimeout(inputTimer)
@@ -217,21 +272,6 @@
           <div class="flex flex-col items-center justify-center py-6 gap-3">
             <span class="italic text-sm">Aucun membres trouvés.</span>
           </div>
-        </template>
-
-        <template #select-cell="{ row }">
-          <UCheckbox
-            :key="row.original.uuid"
-            :default-value="modelValue.some(member => member.email === row.original.email)"
-            @update:model-value="selected => {
-              if (selected) {
-                emit('update:modelValue', [...modelValue, row.original])
-              } else {
-                const newArray = modelValue.filter(member => member.email !== row.original.email)
-                emit('update:modelValue', newArray)
-              }
-            }"
-          />
         </template>
 
         <template #status-cell="{ row }">
