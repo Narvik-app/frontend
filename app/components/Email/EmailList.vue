@@ -17,8 +17,6 @@ import type { TablePaginateInterface } from '~/types/table';
   const emails: Ref<Email[]> = ref([])
   const emailQuery = new EmailQuery()
 
-  getEmails()
-
   const columns = [
     {
       accessorKey: 'createdAt',
@@ -80,6 +78,8 @@ import type { TablePaginateInterface } from '~/types/table';
     selectedEmail.value = row.original
     modalOpen.value = true
   }
+
+  getEmails()
 </script>
 
 <template>
@@ -120,7 +120,7 @@ import type { TablePaginateInterface } from '~/types/table';
         </template>
 
         <template #recipientCount-cell="{ row }">
-          {{ row.original.recipientCount }} {{ row.original.recipientCount > 1 ? 'membres' : 'membre' }}
+          {{ row.original.recipientCount }} {{ (row.original.recipientCount ?? 0) > 1 ? 'membres' : 'membre' }}
         </template>
 
         <template #actions-cell="{ row }" >

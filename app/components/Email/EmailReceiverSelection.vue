@@ -20,6 +20,7 @@
   const emit = defineEmits(["update:modelValue", "close"])
   const toast = useToast()
 
+  const isLoading = ref(true);
   const page = ref(1);
   const itemsPerPage = ref(30);
   const sort = ref({
@@ -151,7 +152,10 @@
 
   async function getMembers() {
     const urlParams = getUrlParams()
+
+    isLoading.value = true
     const { error, items, totalItems } = await memberQuery.getAll(urlParams);
+    isLoading.value = false
 
     if (error) {
       toast.add({
@@ -189,7 +193,6 @@
 
   function unselectAll() {
     emit('update:modelValue', [])
-    emit('close')
   }
 
   function someMembersSelectedInPage() {
@@ -215,11 +218,11 @@
     clearTimeout(inputTimer)
     inputTimer = setTimeout(async () => {
       page.value = 1
-      getMembers()
+      await getMembers()
     }, 800)
   }
 
-  await getMembers()
+  getMembers()
 </script>
 
 <template>
@@ -246,6 +249,7 @@
           <UCheckbox label="Non renouvelée" v-model="onlySeasonNotRenewed" @change="onlyCurrentSeason = false; page = 1; getMembers()" />
           <UCheckbox label="Saison précédente" v-model="onlyPreviousSeason" @change="onlyCurrentSeason = false; page = 1; getMembers()" />
           <UCheckbox label="Licence" v-model="onlyWithLicence" @change="page = 1; getMembers()" />
+          <span></span>
         </div>
       </div>
     </UCard>
@@ -266,6 +270,7 @@
         sort-mode="manual"
         @update:sort="getMembers()"
         :columns="columns"
+        :loading="isLoading"
         :data="members"
       >
         <template #empty>
@@ -286,6 +291,10 @@
         :total-items="totalMembers"
         @paginate="(object: TablePaginateInterface) => { getMembers() }"
       />
+
+      <div class="text-right">
+        <UButton @click="emit('close')">Sauvegarder</UButton>
+      </div>
     </UCard>
   </div>
 </template>

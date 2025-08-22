@@ -243,21 +243,24 @@
       </UCard>
 
       <UCard>
-        <p>Destinataires ({{ selectedMembers.length }})</p>
+        <div class="flex justify-between items-center gap-1 flex-wrap">
+          <p>Destinataires ({{ selectedMembers.length }})</p>
 
-        <UModal
-          v-model:open="modalOpen"
-          title="Choix des destinataires"
-          :ui="{
+          <UModal
+            v-model:open="modalOpen"
+            title="Choix des destinataires"
+            :description="sendAsNewsletter ? 'Seuls les membres inscrits à la newsletter recevront une notification.' : ''"
+            :ui="{
             content: 'max-w-[80vw]'
           }"
-        >
-          <UButton label="Modifier les destinataires" />
+          >
+            <UButton :label="selectedMembers.length > 0 ? 'Modifier les destinataires' : 'Choisir les destinataires'" />
 
-          <template #body>
-            <EmailReceiverSelection :newsletter-enabled="sendAsNewsletter" v-model="selectedMembers" @update:model-value="val => selectedMembers = val" @close="modalOpen = false" />
-          </template>
-        </UModal>
+            <template #body>
+              <EmailReceiverSelection :newsletter-enabled="sendAsNewsletter" v-model="selectedMembers" @update:model-value="val => selectedMembers = val" @close="modalOpen = false" />
+            </template>
+          </UModal>
+        </div>
 
         <div class="flex gap-1 mt-2 flex-wrap">
           <MemberBadge
