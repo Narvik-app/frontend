@@ -25,11 +25,11 @@
   if (!clubId) {
     navigateTo("/")
   } else {
-    clubUuid.value = decodeUrlUuid(clubId)
+    clubUuid.value = decodeUrlUuid(clubId?.toString())
 
     if (isLogged) {
       const { retrieved, error } = await clubQuery.get(clubUuid.value)
-      
+
       if (!retrieved) {
         errorEncountered.value = true
         errorMessage.value = "Impossible de récupérer les informations du club."
@@ -52,7 +52,7 @@
     if (error) {
       toast.add({
         title: "Une erreur est survenue",
-        description: error.message,
+        // description: error.message,
         color: "error"
       })
     } else {
@@ -75,32 +75,39 @@
   </UCard>
   <UCard v-else-if="unsubscribed">
     <div class="flex flex-col gap-4 text-center">
-      <p class="text-2xl font-bold">Succès</p>
+      <p class="text-xl font-bold">Vous ne recevrez plus de newsletter de la part de l'association</p>
       <div>
-        <p v-if="isLogged">Vous n'êtes plus abonné à la newsletter de <span class="font-bold">{{ club?.name }}</span> !</p>
-        <p v-else>Vous n'êtes plus abonné à la newsletter du club !</p>
         <p>Vous pouvez fermer cette page</p>
       </div>
     </div>
   </UCard>
   <UCard v-else>
     <div class="flex flex-col gap-4 text-center">
-      <p class="text-2xl font-bold">Se désabonner</p>
-      <p v-if="isLogged">Vous ne recevrez plus la newsletter de <span class="font-bold">{{ club?.name }}</span>.</p>
-      <p v-else>Vous ne recevrez plus la newsletter du club.</p>
-      <UButtonGroup>
-        <UInput
-          icon="i-heroicons-envelope"
-          placeholder="Votre adresse email"
-          v-model="email"
-        />
-        <UButton
-          label="Se désabonner"
-          :disabled="buttonDisabled"
-          :loading="isLoading"
-          @click="unsubscribe"
-        />
-      </UButtonGroup>
+      <p class="text-2xl font-bold">
+        <template v-if="isLogged">
+          {{ club?.name }}
+        </template>
+        <template v-else>
+          Se désabonner
+        </template>
+      </p>
+      <p>Vous ne recevrez plus de newsletter de la part de l'association.</p>
+
+      <UFormField label="Email">
+        <UButtonGroup class="w-full" size="lg">
+          <UInput
+            v-model="email"
+            icon="i-heroicons-envelope"
+            type="email"
+          />
+          <UButton
+            label="Se désabonner"
+            :disabled="buttonDisabled"
+            :loading="isLoading"
+            @click="unsubscribe"
+          />
+        </UButtonGroup>
+      </UFormField>
     </div>
   </UCard>
 </template>
