@@ -115,12 +115,12 @@ export abstract class AbstractQuery<R, W> {
           data.push(...items)
           fetched = true
         } else {
-          // Do 3 attemps in case of failure
+          // Do 3 attempts in case of failure
           if (attempt >= maxRetries) {
             return
           }
           attempt += 1
-          
+
           await new Promise(resolve => setTimeout(resolve, 200))
         }
       }
