@@ -37,7 +37,7 @@
     }
   })
   const remainingEmailsDisplay = computed(() => {
-    let value = maxMonthlyEmails.value - currentMonthEmailsSent.value - selectedMembers.value.length
+    let value = maxMonthlyEmails.value - currentMonthEmailsSent.value
     if (value < 0) value = 0
     return value
   })
@@ -46,9 +46,7 @@
   const isSending = ref(false)
   const modalOpen = ref(false)
   const barColor = computed(() => {
-    return maxMonthlyEmails.value - newMonthEmailsSent.value < 0 ?
-    "error" :
-    "primary"
+    return maxMonthlyEmails.value - newMonthEmailsSent.value < 0 ? "error" : "primary"
   })
 
   const editor = ref()
@@ -220,12 +218,13 @@
 
     <template #side>
       <UCard>
-        <p>Emails restants: {{ remainingEmailsDisplay }}</p>
+        <div class="flex gap-1 justify-between items-center mb-2">Emails restants : {{ remainingEmailsDisplay }} <UBadge v-if="selectedMembers.length > 0">+ {{ selectedMembers.length }}</UBadge></div>
         <UProgress
           v-model="newMonthEmailsSentCapped"
           :max="maxMonthlyEmails"
           :color="barColor"
         />
+        <div class="text-center text-xs mb-2 select-none">{{ (currentMonthEmailsSent ?? 0) + selectedMembers.length }} / {{ maxMonthlyEmails }}</div>
         <ContentLink to="https://about.narvik.app/abonnements" target="_blank">Augmentez votre quota</ContentLink>
       </UCard>
 
