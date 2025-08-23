@@ -119,6 +119,10 @@ async function submitItem() {
         <USelect class="min-w-32" v-model="item.gender" :items="[{label: 'Homme', value: 'M'}, {label: 'Femme', value: 'F'}]" option-attribute="name" :class="props.viewOnly ? 'pointer-events-none' : ''" :tabindex="props.viewOnly ? '-1' : '0'" />
       </UFormField>
 
+      <UFormField label="Newsletter">
+        <USwitch v-model="item.clubNewsletter" :disabled="props.viewOnly" />
+      </UFormField>
+
       <UFormField label="Blacklisté">
         <USwitch v-model="item.blacklisted" :disabled="props.viewOnly" />
       </UFormField>

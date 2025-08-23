@@ -609,6 +609,12 @@ async function deleteMember() {
               <MemberDetailsPersonnalInfo icon="i-heroicons-at-symbol" :label="member.email" :to="'mailto:' + member.email" />
               <MemberDetailsPersonnalInfo icon="i-heroicons-phone" :label="member.phone?.match(/.{1,2}/g)?.join(' ')" :to="member.phone ? 'tel:' + member.phone : undefined" />
               <MemberDetailsPersonnalInfo icon="i-heroicons-phone" :label="member.mobilePhone?.match(/.{1,2}/g)?.join(' ')" :to="member.mobilePhone ? 'tel:' + member.mobilePhone : undefined" />
+              <MemberDetailsPersonnalInfo
+                :as-link="true"
+                icon="i-heroicons-newspaper"
+                :classes="!member.clubNewsletter ? 'text-error-500 hover:text-error-500' : ''"
+                :label="(member.clubNewsletter ? 'Accepte' : 'Refuse') + ' les newsletters'"
+              />
 
               <USeparator label="Adresse" class="xl:col-span-2" />
 
