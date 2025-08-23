@@ -94,15 +94,27 @@
         </NuxtLink>
         <UButton class="-mx-3 hidden lg:block" to="/" variant="ghost" color="neutral">Accueil</UButton>
         <div v-if="isSupervisor">
-          <UButton to="/admin/sales/new" icon="i-heroicons-shopping-cart" variant="ghost" color="neutral">Vente</UButton>
+          <UButton to="/admin/sales/new" icon="i-heroicons-shopping-cart" variant="ghost" color="neutral">
+            <template v-if="isDesktopDisplay || isTabletDisplay">
+              Vente
+            </template>
+          </UButton>
         </div>
         <div v-if="isAdmin">
-          <UButton to="/admin/email" icon="i-heroicons-envelope" variant="ghost" color="neutral">Email</UButton>
+          <UButton to="/admin/email" icon="i-heroicons-envelope" variant="ghost" color="neutral">
+            <template v-if="isDesktopDisplay || isTabletDisplay">
+              Email
+            </template>
+          </UButton>
         </div>
       </div>
       <div class="flex gap-4">
         <div v-if="isSupervisor">
-          <UButton to="/admin" icon="i-heroicons-key" variant="ghost" color="neutral">Administration</UButton>
+          <UButton to="/admin" icon="i-heroicons-key" variant="ghost" color="neutral">
+            <template v-if="isDesktopDisplay || isTabletDisplay">
+              Administration
+            </template>
+          </UButton>
         </div>
         <div v-if="selfStore.isImpersonating">
           <UButton color="warning" @click="selfStore.stopImpersonation()">Arrêter impersonification</UButton>
