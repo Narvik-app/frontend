@@ -5,6 +5,7 @@
   import { ClubRole, getAvailableClubRoles } from "~/types/api/item/club";
   import MemberQuery from '~/composables/api/query/clubDependent/MemberQuery';
   import { UCheckbox } from '#components';
+  import type { TableColumn, TableRow } from '@nuxt/ui'
 
   const props = defineProps({
     "newsletterEnabled": {
@@ -105,6 +106,15 @@
       header: 'Statut'
     }
   ]
+
+  function onSelect(row: TableRow<Member>, e?: Event) {
+    const foundMember = props.modelValue.some(member => member.email === row.original.email)
+    if (!foundMember) {
+      emit('update:modelValue', [...props.modelValue, row.original])
+    } else {
+      emit('update:modelValue', props.modelValue.filter(member => member.email !== row.original.email))
+    }
+  }
 
   function getUrlParams(paginationEnabled = true): URLSearchParams {
     const urlParams = new URLSearchParams()
@@ -269,6 +279,7 @@
         v-model:sort="sort"
         sort-mode="manual"
         @update:sort="getMembers()"
+        @select="onSelect"
         :columns="columns"
         :loading="isLoading"
         :data="members"
