@@ -24,7 +24,7 @@ import type { TablePaginateInterface } from '~/types/table';
     },
     {
       accessorKey: 'sender',
-      header: 'Expéditeur',
+      header: 'Utilisateur',
       meta: {
         class: {
           th: 'w-1/4'

@@ -20,7 +20,7 @@
 
     <div class="flex flex-col gap-4">
       <div>
-        <p>Expéditeur: {{ email.sender }}</p>
+        <p>Utilisateur: {{ email.sender }}</p>
         <p v-if="email.replyTo">Réponse à: {{ email.replyTo }}</p>
         <p>Date: {{ formatDateTimeReadable(email.createdAt) }}</p>
       </div>
