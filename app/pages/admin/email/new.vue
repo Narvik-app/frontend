@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-  import type {Member} from "~/types/api/item/clubDependent/member";
-  import TextEditor from '~/components/TextEditor.vue';
-  import { useSelfUserStore } from '~/stores/useSelfUser';
-  import EmailQuery from "~/composables/api/query/clubDependent/plugin/emailing/EmailQuery";
+import type {Member} from "~/types/api/item/clubDependent/member";
+import TextEditor from '~/components/TextEditor.vue';
+import {useSelfUserStore} from '~/stores/useSelfUser';
+import EmailQuery from "~/composables/api/query/clubDependent/plugin/emailing/EmailQuery";
 
-  const MAX_ATTACHMENT_SIZE_MB = 15
+const MAX_ATTACHMENT_SIZE_MB = 15
 
   definePageMeta({
     layout: "email"
@@ -52,6 +52,7 @@
   const editor = ref()
   const title = ref('')
   const htmlContent = ref('')
+  const replyTo = ref('')
   const sendAsNewsletter = ref(true)
   const attachment = ref(undefined)
   const baseFormData: Ref<FormData | undefined> = ref(undefined)
@@ -64,8 +65,7 @@
   }
 
   function removeMember(member: Member) {
-    const newList = selectedMembers.value.filter(m => m.email !== member.email)
-    selectedMembers.value = newList
+    selectedMembers.value = selectedMembers.value.filter(m => m.email !== member.email)
   }
 
   function updateAttachment(event: any) {
@@ -106,8 +106,8 @@
     payload.append("content", htmlContent.value)
     payload.append("members", selectedMembers.value.map(member => member.uuid).join(","))
     payload.append("isNewsletter", sendAsNewsletter.value.toString())
-    if (selectedProfile.value?.club?.settings?.emailReplyTo) {
-      payload.append("replyTo", selectedProfile.value?.club?.settings?.emailReplyTo)
+    if (replyTo.value.length > 0) {
+      payload.append("replyTo", replyTo.value)
     }
 
     const { error } = await emailQuery.sendEmail(payload)
@@ -174,11 +174,15 @@
 
         <div class="flex flex-col gap-4">
 
-          <UFormField label="Sujet" class="flex-1">
+          <UFormField class="flex-1" label="Sujet">
             <UInput size="xl" v-model="title" />
           </UFormField>
 
-          <UFormField label="Pièce-jointe">
+          <UFormField class="flex-1" label="Répondre à" help="Par défaut reprendra l'adresse mail configuré par l'administrateur.">
+            <UInput v-model="replyTo" />
+          </UFormField>
+
+          <UFormField label="Pièce-jointe" :help="`Taille maximum : ${MAX_ATTACHMENT_SIZE_MB} Mo`">
             <UButtonGroup class="w-full">
               <UInput
                 v-model="attachment"
