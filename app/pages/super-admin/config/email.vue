@@ -156,6 +156,10 @@ async function testSmtp() {
               <UInput v-model="smtpSetting.sender" />
             </UFormField>
 
+            <UFormField label="Email newsletter" name="newsletterSender" required>
+              <UInput v-model="smtpSetting.newsletterSender" />
+            </UFormField>
+
             <UFormField label="Nom expéditeur" name="senderName">
               <UInput v-model="smtpSetting.senderName" />
             </UFormField>

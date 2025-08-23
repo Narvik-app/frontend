@@ -2,8 +2,13 @@ import {pathsMatch} from "~/utils/resource";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {useAppConfigStore} from "~/stores/useAppConfig";
 
+const pathsAccessibleToAll = [
+  "^/unsubscribe\?.*"
+]
+
 const publicPaths = [
   "^/login$",
+  "^/login/badger-quick-login",
   "^/login/password-reset",
   "^/login/register",
   "^/login/bdg/.*",
@@ -31,6 +36,11 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   if (!appConfigStore.config) {
     await appConfigStore.refresh();
+  }
+
+  // Anyone is allowed to access the resource, logged in or not
+  if (pathsMatch(pathsAccessibleToAll, to.fullPath)) {
+    return;
   }
 
   if (pathsMatch(publicPaths, to.fullPath)) {

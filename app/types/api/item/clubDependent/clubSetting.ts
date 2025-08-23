@@ -17,6 +17,7 @@ interface _ClubSetting extends UuidItem, ClubLinkedItem {
   itacSecondaryImportDate?: Date
   itacSecondaryImportRemaining?: number
   cerbereImportRemaining?: number,
+  emailReplyTo?: string
 }
 
 export interface ClubSetting extends _ClubSetting {

@@ -80,3 +80,7 @@ export function displayApiError(error: NuxtError, title: string|undefined = unde
     description: error.message
   })
 }
+
+export function generateBadgerLoginPath(clubUuid: string, token: string) {
+  return `/login/bdg/${convertUuidToUrlUuid(clubUuid)}/${token}`
+}
