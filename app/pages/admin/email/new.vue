@@ -139,7 +139,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
     const errors: string[] = []
 
     // Check quota
-    if (maxMonthlyEmails.value - newMonthEmailsSent.value < 0) {
+    if ((maxMonthlyEmails.value ?? 0) - newMonthEmailsSent.value < 0) {
       errors.push("Quota dépassé !")
     }
 
@@ -148,9 +148,13 @@ const MAX_ATTACHMENT_SIZE_MB = 15
       errors.push("Aucun sujet")
     }
 
+    if (replyTo.value.length > 0 && !String(replyTo.value).toLowerCase().match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)) {
+      errors.push("Répondre à : Email invalide")
+    }
+
     // Content cannot be empty
     if (editor.value?.isEmpty) {
-      errors.push("Email vide")
+      errors.push("Email sans contenu")
     }
 
     // At least one receiver must be selected
@@ -179,7 +183,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
           </UFormField>
 
           <UFormField class="flex-1" label="Répondre à" help="Par défaut reprendra l'adresse mail configuré par l'administrateur.">
-            <UInput v-model="replyTo" />
+            <UInput v-model="replyTo" type="email" />
           </UFormField>
 
           <UFormField label="Pièce-jointe" :help="`Taille maximum : ${MAX_ATTACHMENT_SIZE_MB} Mo`">
