@@ -20,9 +20,9 @@
 
     <div class="flex flex-col gap-4">
       <div>
-        <p>Utilisateur: {{ email.sender }}</p>
-        <p v-if="email.replyTo">Réponse à: {{ email.replyTo }}</p>
-        <p>Date: {{ formatDateTimeReadable(email.createdAt) }}</p>
+        <p>Utilisateur : {{ email.sender }}</p>
+        <p v-if="email.replyTo">Réponse à : {{ email.replyTo }}</p>
+        <p>Date : {{ formatDateTimeReadable(email.createdAt) }}</p>
       </div>
       <UCard>
         <div v-html="email.content" class="email-preview"></div>
