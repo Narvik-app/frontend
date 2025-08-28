@@ -109,13 +109,11 @@
           <div class="flex gap-2">
             <UButton
               icon="i-heroicons-pencil-square"
-              label="Modifier"
               color="warning"
               :to="`/admin/email/templates/edit/${convertUuidToUrlUuid(row.original.uuid)}`"
             />
             <UButton
               icon="i-heroicons-trash"
-              label="Supprimer"
               color="error"
               @click="overlayDeleteConfirmation.open({
                 alertDescription: `Le modèle '${row.original.name}' sera supprimé`,
