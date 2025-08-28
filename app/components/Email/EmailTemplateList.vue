@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import type { EmailTemplate } from '~/types/api/item/clubDependent/plugin/emailing/emailTemplate';
   import EmailTemplateQuery from '~/composables/api/query/clubDependent/plugin/emailing/EmailTemplateQuery';
-import type { TablePaginateInterface } from '~/types/table';
+  import type { TablePaginateInterface } from '~/types/table';
 
   const toast = useToast()
   const isLoading = ref(true)
@@ -19,8 +19,8 @@ import type { TablePaginateInterface } from '~/types/table';
       header: 'Dernière mise à jour'
     },
     {
-      accessorKey: 'title',
-      header: 'Sujet',
+      accessorKey: 'name',
+      header: 'Nom',
       meta: {
         class: {
           th: 'w-full'
@@ -80,6 +80,13 @@ import type { TablePaginateInterface } from '~/types/table';
 
         <template #updatedAt-cell="{ row }">
           {{ formatDateTimeReadable(row.original.updatedAt) }}
+        </template>
+
+        <template #actions-cell="{ row }">
+          <div class="flex gap-2">
+            <UButton label="Modifier" color="warning" to="/admin/email/templates/edit" />
+            <UButton label="Supprimer" color="error" />
+          </div>
         </template>
       </UTable>
 
