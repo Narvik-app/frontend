@@ -8,6 +8,9 @@
     {
       modelValue: {
         type: String
+      },
+      disabled: {
+        type: Boolean
       }
     }
   )
@@ -49,24 +52,26 @@
     { 'name': 'Rose', hex: '#EC407A' }
   ]
 
-  const editor = ref()
-  editor.value = new Editor({
-    content: props.modelValue,
-    extensions: [StarterKit, TextStyle, Color, TextAlign.configure({ types: ['heading', 'paragraph'] })],
-    editorProps: {
-      attributes: {
-        class: 'min-h-[200px]'
-      }
-    },
+  const editor: Ref<Editor> = ref(
+    new Editor({
+      content: props.modelValue,
+      extensions: [StarterKit, TextStyle, Color, TextAlign.configure({ types: ['heading', 'paragraph'] })],
+      editable: !props.disabled,
+      editorProps: {
+        attributes: {
+          class: 'min-h-[200px]'
+        }
+      },
 
-    onCreate: ({editor}) => {
-      emit('update:editor', editor)
-    },
-    onUpdate: ({editor}) => {
-      emit('update:modelValue', editor.getHTML())
-      emit('update:editor', editor)
-    }
-  })
+      onCreate: ({editor}) => {
+        emit('update:editor', editor)
+      },
+      onUpdate: ({editor}) => {
+        emit('update:modelValue', editor.getHTML())
+        emit('update:editor', editor)
+      }
+    })
+  )
 
   const currentTextType = computed(() => {
     if (!editor.value) return 'paragraph'
@@ -120,13 +125,23 @@
     editor.value.chain().focus().setColor(hexColor).run()
     color.value = hexColor
   }
+
+  watch(() => props.modelValue, (newValue) => {
+    if (newValue !== editor.value.getHTML()) {
+      editor.value.commands.setContent(newValue)
+    }
+  })
+
+  watch(() => props.disabled, (editorDisabled) => {
+    editor.value.setEditable(!editorDisabled)
+  })
 </script>
 
 <template>
   <div class="ring ring-inset ring-accented rounded-xl p-4 space-y-2">
     <div class="flex flex-wrap gap-2 mb-2">
-      <UButton icon="i-heroicons-arrow-uturn-left" size="sm" @click="editor.chain().focus().undo().run()" />
-      <UButton icon="i-heroicons-arrow-uturn-right" size="sm" @click="editor.chain().focus().redo().run()" />
+      <UButton icon="i-heroicons-arrow-uturn-left" size="sm" @click="editor.chain().focus().undo().run()" :disabled="props.disabled" />
+      <UButton icon="i-heroicons-arrow-uturn-right" size="sm" @click="editor.chain().focus().redo().run()" :disabled="props.disabled" />
 
       <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
 
@@ -135,11 +150,12 @@
         :items="textTypes"
         class="w-32"
         variant="outline"
+        :disabled="props.disabled"
         @update:model-value="setTextType"
       />
 
       <UPopover>
-        <UButton variant="ghost" size="sm">
+        <UButton variant="ghost" size="sm" :disabled="props.disabled">
           <span :style="chip" class="size-3 rounded-full" />
         </UButton>
 
@@ -166,21 +182,21 @@
 
       <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
 
-      <UButton icon="i-heroicons-bold" size="sm" @click="editor.chain().focus().toggleBold().run()" />
-      <UButton icon="i-heroicons-italic" size="sm" @click="editor.chain().focus().toggleItalic().run()" />
-      <UButton icon="i-heroicons-underline" size="sm" @click="editor.chain().focus().toggleUnderline().run()" />
-      <UButton icon="i-heroicons-strikethrough" size="sm" @click="editor.chain().focus().toggleStrike().run()" />
+      <UButton icon="i-heroicons-bold" size="sm" @click="editor.chain().focus().toggleBold().run()" :disabled="props.disabled" />
+      <UButton icon="i-heroicons-italic" size="sm" @click="editor.chain().focus().toggleItalic().run()" :disabled="props.disabled" />
+      <UButton icon="i-heroicons-underline" size="sm" @click="editor.chain().focus().toggleUnderline().run()" :disabled="props.disabled" />
+      <UButton icon="i-heroicons-strikethrough" size="sm" @click="editor.chain().focus().toggleStrike().run()" :disabled="props.disabled" />
 
       <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
 
-      <UButton icon="i-heroicons-list-bullet" size="sm" @click="editor.chain().focus().toggleBulletList().run()" />
-      <UButton icon="i-heroicons-numbered-list" size="sm" @click="editor.chain().focus().toggleOrderedList().run()" />
+      <UButton icon="i-heroicons-list-bullet" size="sm" @click="editor.chain().focus().toggleBulletList().run()" :disabled="props.disabled" />
+      <UButton icon="i-heroicons-numbered-list" size="sm" @click="editor.chain().focus().toggleOrderedList().run()" :disabled="props.disabled" />
 
       <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
 
-      <UButton icon="i-heroicons-bars-3-bottom-left" color="primary" size="sm" @click="editor.chain().focus().setTextAlign('left').run()" />
-      <UButton icon="i-heroicons-bars-3" color="primary" size="sm" @click="editor.chain().focus().setTextAlign('center').run()" />
-      <UButton icon="i-heroicons-bars-3-bottom-right" color="primary" size="sm" @click="editor.chain().focus().setTextAlign('right').run()" />
+      <UButton icon="i-heroicons-bars-3-bottom-left" color="primary" size="sm" @click="editor.chain().focus().setTextAlign('left').run()" :disabled="props.disabled" />
+      <UButton icon="i-heroicons-bars-3" color="primary" size="sm" @click="editor.chain().focus().setTextAlign('center').run()" :disabled="props.disabled" />
+      <UButton icon="i-heroicons-bars-3-bottom-right" color="primary" size="sm" @click="editor.chain().focus().setTextAlign('right').run()" :disabled="props.disabled" />
     </div>
 
     <EditorContent
