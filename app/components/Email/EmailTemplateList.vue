@@ -2,6 +2,7 @@
   import type { EmailTemplate } from '~/types/api/item/clubDependent/plugin/emailing/emailTemplate';
   import EmailTemplateQuery from '~/composables/api/query/clubDependent/plugin/emailing/EmailTemplateQuery';
   import type { TablePaginateInterface } from '~/types/table';
+  import ModalDeleteConfirmation from '../Modal/ModalDeleteConfirmation.vue';
 
   const toast = useToast()
   const isLoading = ref(true)
@@ -12,6 +13,9 @@
 
   const templates: Ref<EmailTemplate[]> = ref([])
   const templateQuery = new EmailTemplateQuery()
+
+  const overlay = useOverlay()
+  const overlayDeleteConfirmation = overlay.create(ModalDeleteConfirmation)
 
   const columns = [
     {
@@ -57,6 +61,25 @@
     totalTemplates.value = totalItems ? totalItems : 0
   }
 
+  async function deleteTemplate(template: EmailTemplate) {
+    const { error } = await templateQuery.delete(template)
+
+    if (error) {
+      toast.add({
+        title: "La suppression a échouée",
+        description: error.message,
+        color: "error"
+      })
+      return
+    }
+
+    toast.add({
+      title: "Modèle supprimé",
+      color: "success"
+    })
+    getTemplates()
+  }
+
   getTemplates()
 </script>
 
@@ -84,8 +107,25 @@
 
         <template #actions-cell="{ row }">
           <div class="flex gap-2">
-            <UButton label="Modifier" color="warning" to="/admin/email/templates/edit" />
-            <UButton label="Supprimer" color="error" />
+            <UButton
+              icon="i-heroicons-pencil-square"
+              label="Modifier"
+              color="warning"
+              to="/admin/email/templates/edit"
+            />
+            <UButton
+              icon="i-heroicons-trash"
+              label="Supprimer"
+              color="error"
+              @click="overlayDeleteConfirmation.open({
+                alertDescription: `Le modèle '${row.original.name}' sera supprimé`,
+                alertColor: 'error',
+                async onDelete() {
+                  await deleteTemplate(row.original)
+                  overlayDeleteConfirmation.close(true)
+                }
+              })"
+            />
           </div>
         </template>
       </UTable>

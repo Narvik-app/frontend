@@ -35,6 +35,10 @@
   const reasons = computed(() => {
     const errors: string[] = []
 
+    if (name.value === "") {
+      errors.push("Aucun nom")
+    }
+
     if (title.value === "") {
       errors.push("Aucun sujet")
     }
