@@ -111,7 +111,7 @@
               icon="i-heroicons-pencil-square"
               label="Modifier"
               color="warning"
-              to="/admin/email/templates/edit"
+              :to="`/admin/email/templates/edit/${convertUuidToUrlUuid(row.original.uuid)}`"
             />
             <UButton
               icon="i-heroicons-trash"
