@@ -3,6 +3,8 @@ import type {Member} from "~/types/api/item/clubDependent/member";
 import TextEditor from '~/components/TextEditor.vue';
 import {useSelfUserStore} from '~/stores/useSelfUser';
 import EmailQuery from "~/composables/api/query/clubDependent/plugin/emailing/EmailQuery";
+import EmailTemplateQuery from "~/composables/api/query/clubDependent/plugin/emailing/EmailTemplateQuery";
+import type { EmailTemplate } from "~/types/api/item/clubDependent/plugin/emailing/emailTemplate";
 
 const MAX_ATTACHMENT_SIZE_MB = 15
 
@@ -17,6 +19,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
   const selectedMembers: Ref<Member[]> = ref([])
 
   const emailQuery = new EmailQuery()
+  const templateQuery = new EmailTemplateQuery()
 
   const selfStore = useSelfUserStore()
   const { selectedProfile } = storeToRefs(selfStore)
@@ -44,7 +47,8 @@ const MAX_ATTACHMENT_SIZE_MB = 15
 
   const toast = useToast()
   const isSending = ref(false)
-  const modalOpen = ref(false)
+  const memberSelectionModalOpen = ref(false)
+  const templateModalOpen = ref(false)
   const barColor = computed(() => {
     return maxMonthlyEmails.value - newMonthEmailsSent.value < 0 ? "error" : "primary"
   })
@@ -56,6 +60,8 @@ const MAX_ATTACHMENT_SIZE_MB = 15
   const sendAsNewsletter = ref(true)
   const attachment = ref(undefined)
   const baseFormData: Ref<FormData | undefined> = ref(undefined)
+  const templates: Ref<EmailTemplate[]> = ref([])
+  const selectedTemplate: Ref<EmailTemplate | undefined> = ref(undefined)
 
   function filterMembers() {
     if (sendAsNewsletter.value) {
@@ -89,6 +95,31 @@ const MAX_ATTACHMENT_SIZE_MB = 15
   function deleteAttachment() {
     baseFormData.value = undefined
     attachment.value = undefined
+  }
+
+  async function getEmailTemplates() {
+    const { items, totalItems, error } = await templateQuery.getAll()
+
+    if (error) {
+      toast.add({
+        title: "Une erreur est survenue",
+        description: error.message,
+        color: "error"
+      })
+      return
+    }
+
+    templates.value = items
+  }
+
+  function loadTemplate() {
+    console.log("Loading template")
+
+    title.value = selectedTemplate.value?.title
+    htmlContent.value = selectedTemplate.value?.content
+    sendAsNewsletter.value = selectedTemplate.value?.isNewsletter
+
+    deleteAttachment()
   }
 
   async function sendEmail() {
@@ -164,6 +195,8 @@ const MAX_ATTACHMENT_SIZE_MB = 15
 
     return errors
   })
+
+  getEmailTemplates()
 </script>
 
 <template>
@@ -236,6 +269,53 @@ const MAX_ATTACHMENT_SIZE_MB = 15
         <ContentLink to="https://about.narvik.app/abonnements" target="_blank">Augmentez votre quota</ContentLink>
       </UCard>
 
+      <UCard>
+        <div class="flex flex-col gap-2">
+          <p>Modèles</p>
+          <UButtonGroup class="w-full">
+            <USelectMenu
+              :items="templates"
+              v-model="selectedTemplate"
+              label-key="name"
+              placeholder="Rechercher un modèle"
+            />
+  
+            <UButton
+              v-if="selectedTemplate"
+              label="Charger"
+              @click="() => {
+                if (editor.isEmpty && title === '' && !attachment) {
+                  loadTemplate()
+                  return
+                }
+
+                templateModalOpen = true
+              }"
+            />
+          </UButtonGroup>
+        </div>
+
+        <UModal v-model:open="templateModalOpen">
+          <template #content>
+            <UCard>
+              <div class="flex flex-col gap-4">
+                <div class="text-xl font-bold text-center">Charger le modèle ?</div>
+                <UAlert
+                  class="mb-4"
+                  variant="subtle"
+                  color="warning"
+                  description="Vous avez entré des informations qui seront écrasées si vous chargez ce modèle."
+                />
+                <div class="flex justify-end gap-2">
+                  <UButton label="Annuler" variant="ghost" color="neutral" @click="templateModalOpen = false" />
+                  <UButton label="Charger le modèle" color="warning" @click="loadTemplate(); templateModalOpen = false" />
+                </div>
+              </div>
+            </UCard>
+          </template>
+        </UModal>
+      </UCard>
+
       <UCard v-if="reasons.length > 0">
         <ul>
           <li
@@ -254,7 +334,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
           <p>Destinataires ({{ selectedMembers.length }})</p>
 
           <UModal
-            v-model:open="modalOpen"
+            v-model:open="memberSelectionModalOpen"
             title="Choix des destinataires"
             :description="sendAsNewsletter ? 'Seuls les membres inscrits à la newsletter recevront une notification.' : ''"
             :ui="{
@@ -264,7 +344,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
             <UButton :label="selectedMembers.length > 0 ? 'Modifier les destinataires' : 'Choisir les destinataires'" />
 
             <template #body>
-              <EmailReceiverSelection :newsletter-enabled="sendAsNewsletter" v-model="selectedMembers" @update:model-value="val => selectedMembers = val" @close="modalOpen = false" />
+              <EmailReceiverSelection :newsletter-enabled="sendAsNewsletter" v-model="selectedMembers" @update:model-value="val => selectedMembers = val" @close="memberSelectionModalOpen = false" />
             </template>
           </UModal>
         </div>
