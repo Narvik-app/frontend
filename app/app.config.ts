@@ -41,7 +41,7 @@ export default defineAppConfig({
     },
     modal: {
       slots: {
-        content: 'overflow-y-auto thin-scrollbar' // Fix for cards not scrolling when they have too much content...
+        content: '!overflow-y-auto thin-scrollbar' // Fix for cards not scrolling when they have too much content...
       }
     },
     select: {
