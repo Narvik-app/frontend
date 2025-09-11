@@ -33,7 +33,7 @@
     "dayjs": "^1.11.13",
     "jwt-decode": "^4.0.0",
     "mergician": "^2.0.2",
-    "nuxt": "^4.0.3",
+    "nuxt": "^4.1.1",
     "nuxt-api-party": "^2.2.8",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.5.0",
