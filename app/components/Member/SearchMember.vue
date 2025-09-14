@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
 import type {Member} from "~/types/api/item/clubDependent/member";
-import type {TableRow} from "#ui/types";
 
 const props = defineProps({
   query: {
@@ -106,6 +105,21 @@ function rowClicked(row: Member) {
   emit('selected-member', row)
 }
 
+function onSelect(event: Event) {
+  const input = event.target as HTMLInputElement|null;
+  if (!input) {
+    return
+  }
+
+  // Fix the issue when the modal is first openned with value filled from typing
+  // Html on the focus will select all the data and so will be removed at the next typing...
+  const length = input.value.length;
+  if (length <= 1) {
+    input.setSelectionRange(length, length)
+    event.preventDefault()
+  }
+}
+
 </script>
 
 <template>
@@ -123,8 +137,8 @@ function rowClicked(row: Member) {
           v-model="query"
           :loading="searching"
           placeholder="Nom / Licence"
+          @select="onSelect"
           trailing
-          :ui="{ icon: { trailing: { pointer: '' } } }"
       >
         <template #trailing v-if="cameraIsPresent || query">
           <UIcon

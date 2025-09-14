@@ -134,7 +134,6 @@ async function impersonate(club: Club) {
               v-model="searchQuery"
               @update:model-value="searchQueryUpdated()"
               placeholder="Rechercher..."
-              :ui="{ icon: { trailing: { pointer: '' } } }"
             >
               <template #trailing v-if="searchQuery">
                 <UIcon
