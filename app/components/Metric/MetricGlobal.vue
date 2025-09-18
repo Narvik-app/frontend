@@ -200,7 +200,6 @@ function parseGetActivities(value: FetchItemData<Metric>) {
             title="Jours ouverts"
             tooltip="Cette saison"
             :value="presenceStats.currentYearOpenedDays"
-            :is-increasing="presenceStats.currentYearOpenedDays >= presenceStats.previousYearOpenedDays"
             :top-right="{
               value: presenceStats.previousYearOpenedDays,
               tooltip: 'Saison précédente'
@@ -212,7 +211,6 @@ function parseGetActivities(value: FetchItemData<Metric>) {
             title="Présences (membres + externes)"
             tooltip="Cette saison"
             :value="presenceStats.currentYear + externalPresenceStats.currentYear"
-            :is-increasing="(presenceStats.currentYear + externalPresenceStats.currentYear) >= (presenceStats.previousYear + externalPresenceStats.previousYear)"
             :top-right="{
               value: (presenceStats.previousYear + externalPresenceStats.previousYear),
               tooltip: 'Saison précédente'
@@ -236,7 +234,6 @@ function parseGetActivities(value: FetchItemData<Metric>) {
             title="Présences"
             tooltip="Cette saison"
             :value="presenceStats.currentYear"
-            :is-increasing="presenceStats.currentYear >= presenceStats.previousYear"
             :top-right="{
               value: presenceStats.previousYear,
               tooltip: 'Saison précédente'
@@ -260,7 +257,6 @@ function parseGetActivities(value: FetchItemData<Metric>) {
             title="Présences externes"
             tooltip="Cette saison"
             :value="externalPresenceStats.currentYear"
-            :is-increasing="externalPresenceStats.currentYear >= externalPresenceStats.previousYear"
             :top-right="{
               value: externalPresenceStats.previousYear,
               tooltip: 'Saison précédente'

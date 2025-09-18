@@ -74,6 +74,17 @@ const topRightClass = computed( () => {
   return value;
 })
 
+const topRightColor = computed( () => {
+  if (isIncreasing.value != undefined) {
+    if (isIncreasing.value) {
+      return 'success'
+    } else {
+      return 'error'
+    }
+  }
+  return 'neutral'
+})
+
 const topRightIcon = computed( () => {
   if (!topRight.value) return undefined;
 
@@ -113,26 +124,18 @@ const topRightIcon = computed( () => {
 
       <slot name="top">
         <p v-if="props.topRight" :class="topRightClass">
-          <template v-if="props.topRight.tooltip">
-            <UTooltip :delay-duration="0" :text="props.topRight.tooltip">
-              <div class="items-center">
-                <span class="font-bold">{{ props.topRight.value }}</span>
-                <icon v-if="topRightIcon" :name="topRightIcon" class="ml-2"/>
-              </div>
+            <UTooltip :delay-duration="0" :text="props.topRight.tooltip ?? undefined">
+                <UBadge :color="topRightColor" variant="soft" :trailing-icon="topRightIcon">
+                  <span class="font-bold">{{ props.topRight.value }}</span>
+                </UBadge>
             </UTooltip>
-          </template>
-          <template v-else>
-            <span class="font-bold">{{ props.topRight.value }}</span>
-            <icon v-if="topRightIcon" :name="topRightIcon" class="ml-2"/>
-          </template>
         </p>
       </slot>
 
       <p :class="valueClass"><slot name="value">{{ props.value }}</slot></p>
-      <UTooltip v-if="props.tooltip" :delay-duration="0" :text="props.tooltip" class="w-full justify-center text-center">
+      <UTooltip :delay-duration="0" :text="props.tooltip" class="w-full justify-center text-center">
         <div><p class="text-lg text-center">{{ props.title }}</p></div>
       </UTooltip>
-      <p v-else class="text-lg text-center">{{ props.title }}</p>
     </div>
 
   </UCard>
