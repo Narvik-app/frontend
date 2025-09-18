@@ -111,7 +111,7 @@ function onSelect(event: Event) {
     return
   }
 
-  // Fix the issue when the modal is first openned with value filled from typing
+  // Fix the issue when the modal is first opened with value filled from typing
   // Html on the focus will select all the data and so will be removed at the next typing...
   const length = input.value.length;
   if (length <= 1) {
