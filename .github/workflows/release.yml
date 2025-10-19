@@ -42,10 +42,11 @@ jobs:
 
   build-and-push:
     runs-on: ubuntu-latest
-    # This job depends on the update-version job.
-    # On a push to main, update-version is skipped, and this job runs immediately.
-    # On a release, this job waits for update-version to succeed.
     needs: update-version
+    if: success() || needs.update-version.result == 'skipped'
+    # This job depends on the update-version job.
+    # On a push to main, update-version is skipped, but this job will still run.
+    # On a release, this job waits for update-version to succeed.
     steps:
       - name: Checkout
         uses: actions/checkout@v4
