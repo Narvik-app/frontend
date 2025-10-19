@@ -1,0 +1,83 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    # Only run on a release or pre-release
+    if: github.event_name == 'release'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update package.json
+        run: |
+          VERSION=${{ github.ref_name }}
+          VERSION_NUMBER=${VERSION#v}
+          jq --indent 2 --arg ver "$VERSION_NUMBER" '.version = $ver' package.json > package.json.tmp && mv package.json.tmp package.json
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "ci: Bump version to ${{ github.ref_name }}"
+          branch: main
+          file_pattern: package.json
+
+      - name: Upload package.json for build job
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-json
+          path: package.json
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    # This job depends on the update-version job.
+    # On a push to main, update-version is skipped, and this job runs immediately.
+    # On a release, this job waits for update-version to succeed.
+    needs: update-version
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download package.json
+        if: github.event_name == 'release'
+        uses: actions/download-artifact@v4
+        with:
+          name: package-json
+          path: .
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/narvik-front
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ !github.event.release.prerelease }}
+            type=semver,pattern={{major}},enable=${{ !github.event.release.prerelease }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
