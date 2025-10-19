@@ -7,17 +7,23 @@ FROM node:${NODE_VERSION}-slim AS base
 ARG PORT=3000
 ENV NODE_ENV=production
 
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+ENV CI=true
+RUN corepack enable
+
 WORKDIR /app
 
 # Build
 FROM base AS build
 
-COPY --link package.json yarn.lock .
-RUN yarn install --production=false
+COPY --link package.json pnpm-lock.yaml ./
+RUN pnpm fetch
 
 COPY --link . .
 
-RUN yarn run build
+RUN pnpm install --frozen-lockfile --offline && \
+    pnpm run build
 
 # Run
 FROM base AS run
