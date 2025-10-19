@@ -397,7 +397,7 @@ async function emailReplyToUpdated() {
         <div v-if="selectedProfile?.club?.settings?.logoBase64" class="mt-4 flex justify-center">
           <NuxtImg :src="selectedProfile.club.settings.logoBase64" class="w-48" />
         </div>
-  
+
         <UInput
             :loading="logoUploading"
             class="my-4"
@@ -406,26 +406,28 @@ async function emailReplyToUpdated() {
             icon="i-heroicons-paint-brush"
             @change="uploadLogo"
         />
-  
+
         <UModal v-if="selectedProfile?.club.settings.logo">
           <UButton color="error">
             Supprimer le logo
           </UButton>
-  
+
           <template #content>
-            <UCard>
-              <div class="flex flex-col gap-4">
-                <div class="text-center text-lg font-bold">Êtes-vous certain ?</div>
-  
-                <UButton color="error" @click="deleteLogo" class="mx-auto">
-                  Supprimer le logo
-                </UButton>
-              </div>
-            </UCard>
+            <div>
+              <UCard>
+                <div class="flex flex-col gap-4">
+                  <div class="text-center text-lg font-bold">Êtes-vous certain ?</div>
+
+                  <UButton color="error" @click="deleteLogo" class="mx-auto">
+                    Supprimer le logo
+                  </UButton>
+                </div>
+              </UCard>
+            </div>
           </template>
-  
+
         </UModal>
-  
+
       </GenericCard>
 
       <GenericCard title="Email">

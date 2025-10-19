@@ -224,7 +224,9 @@ onUnmounted(() => {
     <UModal
         v-model:open="addExternalPresenceModal">
       <template #content>
-        <RegisterExternalPresence @registered="externalPresenceRegistered" @canceled="addExternalPresenceModal = false" />
+        <div>
+          <RegisterExternalPresence @registered="externalPresenceRegistered" @canceled="addExternalPresenceModal = false" />
+        </div>
       </template>
     </UModal>
 
@@ -235,24 +237,28 @@ onUnmounted(() => {
         }"
     >
       <template #content>
-        <PresentMemberDetails
+        <div>
+          <PresentMemberDetails
             v-if="selectedMemberPresence"
             :item="selectedMemberPresence"
             @updated="memberPresenceUpdated"
             @close="memberPresenceModalOpen = false; selectedMemberPresence = null"
-        />
+          />
+        </div>
       </template>
     </UModal>
 
     <UModal
         v-model:open="searchMemberModalOpen">
       <template #content>
-        <template v-if="!selectedMember">
-          <SearchMember :query="searchQuery" @selected-member="memberSelectedFromSearch" />
-        </template>
-        <template v-else>
-          <RegisterMemberPresence :member="selectedMember" @registered="presenceRegistered" @canceled="searchMemberModalOpen = false;" />
-        </template>
+        <div>
+          <template v-if="!selectedMember">
+            <SearchMember :query="searchQuery" @selected-member="memberSelectedFromSearch" />
+          </template>
+          <template v-else>
+            <RegisterMemberPresence :member="selectedMember" @registered="presenceRegistered" @canceled="searchMemberModalOpen = false;" />
+          </template>
+        </div>
       </template>
     </UModal>
 
@@ -263,7 +269,9 @@ onUnmounted(() => {
       }"
     >
       <template #content>
-        <PresenceList />
+        <div>
+          <PresenceList />
+        </div>
       </template>
     </UModal>
 

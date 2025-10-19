@@ -470,23 +470,25 @@ async function deleteMember() {
           </UButton>
 
           <template #content>
-            <UCard>
-              <div class="flex flex-col gap-4">
-                <div class="text-center text-lg font-bold">Nouveau rôle souhaité</div>
+            <div>
+              <UCard>
+                <div class="flex flex-col gap-4">
+                  <div class="text-center text-lg font-bold">Nouveau rôle souhaité</div>
 
-                <USelect
-                  v-model="selectedNewRole"
-                  :items="rolesSelect"
-                  placeholder="Aucun rôle de défini" />
+                  <USelect
+                    v-model="selectedNewRole"
+                    :items="rolesSelect"
+                    placeholder="Aucun rôle de défini" />
 
-                <UButton
-                  @click="changeMemberRole()"
-                  class="mx-auto"
-                >
-                  Modifier
-                </UButton>
-              </div>
-            </UCard>
+                  <UButton
+                    @click="changeMemberRole()"
+                    class="mx-auto"
+                  >
+                    Modifier
+                  </UButton>
+                </div>
+              </UCard>
+            </div>
           </template>
 
         </UModal>
@@ -849,35 +851,41 @@ async function deleteMember() {
       <UModal
         v-model:open="itemModalOpen">
         <template #content>
-          <UCard>
-            <MemberForm
-              :item="member ? {...member} : undefined"
-              @updated="(value) => {itemModalOpen = false; loadItem() }"
-            />
-          </UCard>
+          <div>
+            <UCard>
+              <MemberForm
+                :item="member ? {...member} : undefined"
+                @updated="(value) => {itemModalOpen = false; loadItem() }"
+              />
+            </UCard>
+          </div>
         </template>
       </UModal>
 
       <UModal v-model:open="addMemberPresenceModal">
         <template #content>
-          <RegisterMemberPresence
-            :member="member"
-            :date-editable="true"
-            @canceled="addMemberPresenceModal = false"
-            @registered="addMemberPresenceModal = false; getMemberPresences()"
-          />
+          <div>
+            <RegisterMemberPresence
+              :member="member"
+              :date-editable="true"
+              @canceled="addMemberPresenceModal = false"
+              @registered="addMemberPresenceModal = false; getMemberPresences()"
+            />
+          </div>
         </template>
       </UModal>
 
       <UModal
         v-model:open="memberPresenceModal">
         <template #content>
-          <RegisterMemberPresence
-            :member-presence="selectedPresence"
-            :date-editable="true"
-            @canceled="memberPresenceModal = false"
-            @registered="presenceUpdated"
-          />
+          <div>
+            <RegisterMemberPresence
+              :member-presence="selectedPresence"
+              :date-editable="true"
+              @canceled="memberPresenceModal = false"
+              @registered="presenceUpdated"
+            />
+          </div>
         </template>
       </UModal>
 

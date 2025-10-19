@@ -238,11 +238,13 @@ async function downloadCsv() {
   <UModal
     v-model:open="createMemberModal">
     <template #content>
-      <UCard>
-        <MemberForm
-          @updated="(value) => {createMemberModal = false; displayMemberPage(value) }"
-        />
-      </UCard>
+      <div>
+        <UCard>
+          <MemberForm
+            @updated="(value) => {createMemberModal = false; displayMemberPage(value) }"
+          />
+        </UCard>
+      </div>
     </template>
   </UModal>
 </template>

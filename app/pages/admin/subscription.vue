@@ -134,13 +134,15 @@ async function deleteClub() {
     <UModal
       v-model:open="selfClubModalOpen">
       <template #content>
-        <UCard>
-          <ClubForm v-if="selfStore.selectedProfile"
-            :is-self-edit="true"
-            :item="{...selfStore.selectedProfile.club}"
-            @updated="(value) => {selfClubModalOpen = false; selfStore.refreshSelectedClub() }"
-          />
-        </UCard>
+        <div>
+          <UCard>
+            <ClubForm v-if="selfStore.selectedProfile"
+                      :is-self-edit="true"
+                      :item="{...selfStore.selectedProfile.club}"
+                      @updated="(value) => {selfClubModalOpen = false; selfStore.refreshSelectedClub() }"
+            />
+          </UCard>
+        </div>
       </template>
     </UModal>
   </div>

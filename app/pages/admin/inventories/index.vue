@@ -359,13 +359,15 @@
   <UModal
     v-model:open="inventoryItemModalOpen">
     <template #content>
-      <UCard>
-        <InventoryItemForm
-          :item="selectedItem ? {...selectedItem} : undefined"
-          :categories="categories"
-          @updated="onItemUpdated"
-        />
-      </UCard>
+      <div>
+        <UCard>
+          <InventoryItemForm
+            :item="selectedItem ? {...selectedItem} : undefined"
+            :categories="categories"
+            @updated="onItemUpdated"
+          />
+        </UCard>
+      </div>
     </template>
   </UModal>
 

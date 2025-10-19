@@ -284,31 +284,33 @@
 
       <UModal v-model:open="cartCustomItemModalOpen">
         <template #content>
-          <UCard>
-            <UForm class="flex gap-2 flex-col" :state="customItemForm" :validate="cartStore.validateCustomCartForm" @submit="cartStore.addCustomItemToCart">
-              <UFormField label="Nom" name="name">
-                <UInput v-model="customItemForm.name"/>
-              </UFormField>
+          <div>
+            <UCard>
+              <UForm class="flex gap-2 flex-col" :state="customItemForm" :validate="cartStore.validateCustomCartForm" @submit="cartStore.addCustomItemToCart">
+                <UFormField label="Nom" name="name">
+                  <UInput v-model="customItemForm.name"/>
+                </UFormField>
 
-              <UFormField label="Prix de vente" name="sellingPrice" description="Le prix peut être négatif afin de faire une réduction.">
-                <UInput v-model="customItemForm.sellingPrice">
-                  <template #trailing>
-                    <span class="text-gray-500 dark:text-gray-400 text-xs">EUR</span>
-                  </template>
-                </UInput>
-              </UFormField>
+                <UFormField label="Prix de vente" name="sellingPrice" description="Le prix peut être négatif afin de faire une réduction.">
+                  <UInput v-model="customItemForm.sellingPrice">
+                    <template #trailing>
+                      <span class="text-gray-500 dark:text-gray-400 text-xs">EUR</span>
+                    </template>
+                  </UInput>
+                </UFormField>
 
-              <div class="flex gap-2 mt-2 justify-end">
-                <UButton color="error" variant="ghost" @click="cartStore.closeCustomItemModal()">
-                  Annuler
-                </UButton>
+                <div class="flex gap-2 mt-2 justify-end">
+                  <UButton color="error" variant="ghost" @click="cartStore.closeCustomItemModal()">
+                    Annuler
+                  </UButton>
 
-                <UButton type="submit">
-                  Ajouter au panier
-                </UButton>
-              </div>
-            </UForm>
-          </UCard>
+                  <UButton type="submit">
+                    Ajouter au panier
+                  </UButton>
+                </div>
+              </UForm>
+            </UCard>
+          </div>
         </template>
       </UModal>
     </template>
