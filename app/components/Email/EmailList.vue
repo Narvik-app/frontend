@@ -147,11 +147,13 @@ import type { TablePaginateInterface } from '~/types/table';
       v-model:open="modalOpen"
     >
       <template #content>
-        <EmailDetails
-          v-if="selectedEmail"
-          :item="selectedEmail"
-          @close="modalOpen = false; selectedEmail = undefined"
-        />
+        <div>
+          <EmailDetails
+            v-if="selectedEmail"
+            :item="selectedEmail"
+            @close="modalOpen = false; selectedEmail = undefined"
+          />
+        </div>
       </template>
     </UModal>
   </div>

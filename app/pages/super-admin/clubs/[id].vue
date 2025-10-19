@@ -364,12 +364,14 @@ loadClubUsers()
   <UModal
     v-model:open="itemModalOpen">
     <template #content>
-      <UCard>
-        <ClubForm
-          :item="club ? {...club} : undefined"
-          @updated="(value) => {itemModalOpen = false; loadItem() }"
-        />
-      </UCard>
+      <div>
+        <UCard>
+          <ClubForm
+            :item="club ? {...club} : undefined"
+            @updated="(value) => {itemModalOpen = false; loadItem() }"
+          />
+        </UCard>
+      </div>
     </template>
   </UModal>
 </template>

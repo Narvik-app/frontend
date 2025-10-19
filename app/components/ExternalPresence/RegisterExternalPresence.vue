@@ -223,7 +223,9 @@ function presenceCanceled() {
   <UModal
       v-model:open="registerMemberPresenceModal">
     <template #content>
-      <RegisterMemberPresence :member="matchedMember" @registered="presenceRegistered" @canceled="presenceCanceled" />
+      <div>
+        <RegisterMemberPresence :member="matchedMember" @registered="presenceRegistered" @canceled="presenceCanceled" />
+      </div>
     </template>
   </UModal>
 </template>

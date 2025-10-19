@@ -194,13 +194,15 @@
         }"
     >
       <template #content>
-        <PresentMemberDetails
+        <div>
+          <PresentMemberDetails
             v-if="selectedPresence"
             :view-only="props.listOnly"
             :item="selectedPresence"
             @updated="presenceUpdated"
             @close="modalOpen = false; selectedPresence = undefined"
-        />
+          />
+        </div>
       </template>
     </UModal>
   </div>

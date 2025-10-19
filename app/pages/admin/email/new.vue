@@ -279,7 +279,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
               label-key="name"
               placeholder="Rechercher un modèle"
             />
-  
+
             <UButton
               v-if="selectedTemplate"
               label="Charger"
@@ -297,21 +297,23 @@ const MAX_ATTACHMENT_SIZE_MB = 15
 
         <UModal v-model:open="templateModalOpen">
           <template #content>
-            <UCard>
-              <div class="flex flex-col gap-4">
-                <div class="text-xl font-bold text-center">Charger le modèle ?</div>
-                <UAlert
-                  class="mb-4"
-                  variant="subtle"
-                  color="warning"
-                  description="Vous avez entré des informations qui seront écrasées si vous chargez ce modèle."
-                />
-                <div class="flex justify-end gap-2">
-                  <UButton label="Annuler" variant="ghost" color="neutral" @click="templateModalOpen = false" />
-                  <UButton label="Charger le modèle" color="warning" @click="loadTemplate(); templateModalOpen = false" />
+            <div>
+              <UCard>
+                <div class="flex flex-col gap-4">
+                  <div class="text-xl font-bold text-center">Charger le modèle ?</div>
+                  <UAlert
+                    class="mb-4"
+                    variant="subtle"
+                    color="warning"
+                    description="Vous avez entré des informations qui seront écrasées si vous chargez ce modèle."
+                  />
+                  <div class="flex justify-end gap-2">
+                    <UButton label="Annuler" variant="ghost" color="neutral" @click="templateModalOpen = false" />
+                    <UButton label="Charger le modèle" color="warning" @click="loadTemplate(); templateModalOpen = false" />
+                  </div>
                 </div>
-              </div>
-            </UCard>
+              </UCard>
+            </div>
           </template>
         </UModal>
       </UCard>

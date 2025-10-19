@@ -22,22 +22,24 @@ const props = defineProps(
 <template>
   <UModal :dismissible="props.dismissible">
     <template #content>
-      <UCard>
-        <div class="flex flex-col gap-4">
-          <div class="text-xl font-bold text-center">{{ props.title }}</div>
-          <slot></slot>
+      <div>
+        <UCard>
+          <div class="flex flex-col gap-4">
+            <div class="text-xl font-bold text-center">{{ props.title }}</div>
+            <slot></slot>
 
-          <div class="flex gap-2 justify-between sm:justify-end flex-wrap">
-            <slot name="cancel">
-              <UButton color="neutral" variant="ghost" @click="emit('close', false)">
-                {{ props.cancelText }}
-              </UButton>
-            </slot>
+            <div class="flex gap-2 justify-between sm:justify-end flex-wrap">
+              <slot name="cancel">
+                <UButton color="neutral" variant="ghost" @click="emit('close', false)">
+                  {{ props.cancelText }}
+                </UButton>
+              </slot>
 
-            <slot name="actions"></slot>
+              <slot name="actions"></slot>
+            </div>
           </div>
-        </div>
-      </UCard>
+        </UCard>
+      </div>
     </template>
   </UModal>
 </template>
