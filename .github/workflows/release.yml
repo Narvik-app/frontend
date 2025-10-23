@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - '[0-9]+.[0-9]+*'
   release:
     types: [published]
 
@@ -74,6 +75,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=semver,pattern={{major}}.{{minor}},enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
             type=semver,pattern={{major}},enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
+            type=ref,event=branch,pattern=^([0-9]+\.[0-9]+.*)$,group=1,prefix=dev-,enable=${{ github.ref_name != github.event.repository.default_branch }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -81,4 +83,7 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          labels: |
+            ${{ steps.meta.outputs.labels }}
+            org.opencontainers.image.vendor=Benoit VIGNAL
+            org.opencontainers.image.url=https://about.narvik.app
