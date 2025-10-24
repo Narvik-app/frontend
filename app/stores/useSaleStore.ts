@@ -9,7 +9,7 @@ import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
 import {createBrowserCsvDownload} from "~/utils/browser";
 import {defineStore} from "pinia";
 import {ClubRole} from "~/types/api/item/club";
-import type {DateRange} from "~/types/date";
+import type {DateRange, DateRangeFilter} from "~/types/date";
 
 export const useSaleStore = defineStore('sale', () => {
   const saleQuery = new SaleQuery()
@@ -18,7 +18,7 @@ export const useSaleStore = defineStore('sale', () => {
 
   const isLoading = ref(false)
   const isDownloadingCsv = ref(false)
-  const selectedRange: Ref<DateRange | undefined> = ref({start: new Date(), end: new Date()})
+  const selectedRange: Ref<DateRange | DateRangeFilter | undefined> = ref({start: new Date(), end: new Date()})
   const lastRefreshDate: Ref<Date> = ref(new Date())
 
   const shouldRefreshSales = ref(false)
@@ -39,15 +39,21 @@ export const useSaleStore = defineStore('sale', () => {
       page: page.toString(),
     });
 
-    const formattedStartDate = formatDateInput(selectedRange.value?.start.toString())
-    const formattedEndDate = formatDateInput(dayjs(selectedRange.value?.end).add(1, 'days').toString())
-    if (formattedStartDate) {
-      urlParams.append(`createdAt[after]`, formattedStartDate);
-
-      if (formattedEndDate) {
-        urlParams.append(`createdAt[before]`, formattedEndDate);
+    if (selectedRange.value) {
+      if (typeof selectedRange.value.value === 'string') {
+        urlParams.append(`${selectedRange.value.value}[createdAt]`, 'true');
       } else {
-        urlParams.append(`createdAt[before]`, formattedStartDate);
+        const formattedStartDate = formatDateInput(selectedRange.value.start.toString())
+        const formattedEndDate = formatDateInput(dayjs(selectedRange.value.end).add(1, 'days').toString())
+        if (formattedStartDate) {
+          urlParams.append(`createdAt[after]`, formattedStartDate);
+
+          if (formattedEndDate) {
+            urlParams.append(`createdAt[before]`, formattedEndDate);
+          } else {
+            urlParams.append(`createdAt[before]`, formattedStartDate);
+          }
+        }
       }
     }
 
@@ -81,15 +87,19 @@ export const useSaleStore = defineStore('sale', () => {
     });
 
     if (selectedRange.value) {
-      const formattedStartDate = formatDateInput(selectedRange.value.start.toString())
-      const formattedEndDate = formatDateInput(dayjs(selectedRange.value.end).add(1, 'days').toString())
-      if (formattedStartDate) {
-        urlParams.append(`createdAt[after]`, formattedStartDate);
+      if (typeof selectedRange.value.value === 'string') {
+        urlParams.append(`${selectedRange.value.value}[createdAt]`, 'true');
+      } else {
+        const formattedStartDate = formatDateInput(selectedRange.value.start.toString())
+        const formattedEndDate = formatDateInput(dayjs(selectedRange.value.end).add(1, 'days').toString())
+        if (formattedStartDate) {
+          urlParams.append(`createdAt[after]`, formattedStartDate);
 
-        if (formattedEndDate) {
-          urlParams.append(`createdAt[before]`, formattedEndDate);
-        } else {
-          urlParams.append(`createdAt[before]`, formattedStartDate);
+          if (formattedEndDate) {
+            urlParams.append(`createdAt[before]`, formattedEndDate);
+          } else {
+            urlParams.append(`createdAt[before]`, formattedStartDate);
+          }
         }
       }
     } else {
