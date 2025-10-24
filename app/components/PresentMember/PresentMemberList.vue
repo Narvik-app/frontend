@@ -65,15 +65,19 @@
     }
 
     if (selectedRange.value) {
-      const formattedStartDate = formatDateInput(selectedRange.value.start.toString())
-      const formattedEndDate = formatDateInput(selectedRange.value.end.toString())
-      if (formattedStartDate) {
-        urlParams.append(`date[after]`, formattedStartDate);
+      if (typeof selectedRange.value.value === 'string') {
+        urlParams.append(`${selectedRange.value.value}[date]`, 'true');
+      } else {
+        const formattedStartDate = formatDateInput(selectedRange.value.start.toString())
+        const formattedEndDate = formatDateInput(selectedRange.value.end.toString())
+        if (formattedStartDate) {
+          urlParams.append(`date[after]`, formattedStartDate);
 
-        if (formattedEndDate) {
-          urlParams.append(`date[before]`, formattedEndDate);
-        } else {
-          urlParams.append(`date[before]`, formattedStartDate);
+          if (formattedEndDate) {
+            urlParams.append(`date[before]`, formattedEndDate);
+          } else {
+            urlParams.append(`date[before]`, formattedStartDate);
+          }
         }
       }
     }
@@ -128,15 +132,19 @@
     urlParams.append(`order[${sort.value.column}]`, sort.value.direction);
 
     if (selectedRange.value) {
-      const formattedStartDate = formatDateInput(selectedRange.value.start.toString())
-      const formattedEndDate = formatDateInput(selectedRange.value.end.toString())
-      if (formattedStartDate) {
-        urlParams.append(`date[after]`, formattedStartDate);
+      if (typeof selectedRange.value.value === 'string') {
+        urlParams.append(`${selectedRange.value.value}[date]`, 'true');
+      } else {
+        const formattedStartDate = formatDateInput(selectedRange.value.start.toString())
+        const formattedEndDate = formatDateInput(selectedRange.value.end.toString())
+        if (formattedStartDate) {
+          urlParams.append(`date[after]`, formattedStartDate);
 
-        if (formattedEndDate) {
-          urlParams.append(`date[before]`, formattedEndDate);
-        } else {
-          urlParams.append(`date[before]`, formattedStartDate);
+          if (formattedEndDate) {
+            urlParams.append(`date[before]`, formattedEndDate);
+          } else {
+            urlParams.append(`date[before]`, formattedStartDate);
+          }
         }
       }
     } else {
