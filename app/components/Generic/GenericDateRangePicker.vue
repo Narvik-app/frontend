@@ -2,11 +2,28 @@
 import { DatePicker as VCalendarDatePicker } from 'v-calendar'
 import 'v-calendar/style.css'
 import dayjs from "dayjs";
-import type {DateRange} from "~/types/date";
+import type {DateRange, DateRangeFilter} from "~/types/date";
 
-const date = defineModel<DateRange|undefined>({default: undefined})
+interface Range {
+  label: string,
+  duration: { type: string, value: string|number }
+}
 
-const emit = defineEmits<{ rangeUpdated: [DateRange | undefined] }>()
+const date = defineModel<DateRange|DateRangeFilter|undefined>({default: undefined})
+const dateRange = ref<DateRange|undefined>(undefined)
+
+if (date.value && typeof date.value.label !== 'string') {
+  dateRange.value = date.value as DateRange
+}
+
+const emit = defineEmits<{ rangeUpdated: [DateRange | DateRangeFilter | undefined] }>()
+
+const props = defineProps({
+  seasonSelectors: {
+    type: Boolean,
+    default: true
+  }
+});
 
 const columns = computed(() => {
   return isMobile().value ? 1 : 2
@@ -37,16 +54,44 @@ const ranges = [
   { label: '30 derniers jours', duration: { type: 'day', value: 30 } },
   { label: '3 derniers mois', duration: { type: 'month', value: 3 } },
   { label: '6 derniers mois', duration: { type: 'month', value: 6 } },
-  { label: 'Dernière année', duration: { type: 'year', value: 1 } }
-]
+] as Range[]
 
-function isRangeSelected (duration: { type: string, value: number }) {
-  if (!date.value) return false
-  return dayjs(date.value.start).isSame(dayjs().subtract(duration.value, duration.type), 'day') && dayjs().isSame(date.value.end, 'day')
+if (props.seasonSelectors) {
+  ranges.push({ label: 'Saison actuelle', duration: { type: 'filter', value: 'current-season' } })
+  ranges.push({ label: 'Saison précédente', duration: { type: 'filter', value: 'previous-season' } })
+
+} else {
+  ranges.push({ label: 'Dernière année', duration: { type: 'year', value: 1 } })
 }
 
-function selectRange (duration: { type: string, value: number }) {
-  date.value = { start: dayjs().subtract(duration.value, duration.type).toDate(), end: new Date() }
+function isRangeSelected(range: Range) {
+  if (!date.value) return false
+
+  const isFilter = typeof range.duration.value === 'string';
+  if (isFilter) {
+    return typeof date.value === 'object' && 'value' in date.value && date.value.value === range.duration.value;
+  }
+
+  return dayjs(date.value.start).isSame(dayjs().subtract(range.duration.value, range.duration.type), 'day') && dayjs().isSame(date.value.end, 'day')
+}
+
+function selectRange(range: Range) {
+  const isFilter = typeof range.duration.value === 'string';
+  if (isFilter) {
+    date.value = { label: range.label, value: range.duration.value} as DateRangeFilter;
+    dateRange.value = undefined;
+    notify()
+    return;
+  }
+
+  dateRange.value = { start: dayjs().subtract(range.duration.value, range.duration.type).toDate(), end: new Date() }
+}
+
+function notify() {
+  if (dateRange.value) {
+    date.value = dateRange.value
+  }
+  emit('rangeUpdated', date.value)
 }
 </script>
 
@@ -57,15 +102,14 @@ function selectRange (duration: { type: string, value: number }) {
           v-for="(range, index) in ranges"
           :key="index"
           :label="range.label"
-          color="neutral"
-          variant="ghost"
+          :color="isRangeSelected(range) ? 'primary' : 'neutral'"
+          :variant="isRangeSelected(range) ? 'soft' : 'ghost'"
           class="rounded-none px-6"
-          :class="[isRangeSelected(range.duration) ? 'bg-gray-100 dark:bg-gray-800' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50']"
           truncate
-          @click="selectRange(range.duration)"
+          @click="selectRange(range)"
       />
     </div>
-    <VCalendarDatePicker v-model.range="date" @update:model-value="emit('rangeUpdated', date)" :columns="columns" v-bind="{ ...attrs, ...$attrs }" />
+    <VCalendarDatePicker v-model.range="dateRange" @update:model-value="notify" :columns="columns" v-bind="{ ...attrs, ...$attrs }" />
   </div>
 
 </template>

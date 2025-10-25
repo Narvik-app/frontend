@@ -138,15 +138,15 @@
     }
 
     if (onlyCurrentSeason.value) {
-      urlParams.append('currentSeason[memberSeasons.season]', 'true')
+      urlParams.append('current-season[memberSeasons.season]', 'true')
     }
 
     if (onlyPreviousSeason.value) {
-      urlParams.append('previousSeason[memberSeasons.season]', 'true')
+      urlParams.append('previous-season[memberSeasons.season]', 'true')
     }
 
     if (onlySeasonNotRenewed.value) {
-      urlParams.append('seasonNotRenewed[memberSeasons.season]', 'true')
+      urlParams.append('season-not-renewed[memberSeasons.season]', 'true')
     }
 
     if (onlyWithLicence.value) {
