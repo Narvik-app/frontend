@@ -10,6 +10,11 @@ interface Range {
 }
 
 const date = defineModel<DateRange|DateRangeFilter|undefined>({default: undefined})
+const dateRange = ref<DateRange|undefined>(undefined)
+
+if (date.value && typeof date.value.label !== 'string') {
+  dateRange.value = date.value as DateRange
+}
 
 const emit = defineEmits<{ rangeUpdated: [DateRange | DateRangeFilter | undefined] }>()
 
@@ -74,10 +79,19 @@ function selectRange(range: Range) {
   const isFilter = typeof range.duration.value === 'string';
   if (isFilter) {
     date.value = { label: range.label, value: range.duration.value} as DateRangeFilter;
+    dateRange.value = undefined;
+    notify()
     return;
   }
 
-  date.value = { start: dayjs().subtract(range.duration.value, range.duration.type).toDate(), end: new Date() }
+  dateRange.value = { start: dayjs().subtract(range.duration.value, range.duration.type).toDate(), end: new Date() }
+}
+
+function notify() {
+  if (dateRange.value) {
+    date.value = dateRange.value
+  }
+  emit('rangeUpdated', date.value)
 }
 </script>
 
@@ -88,15 +102,14 @@ function selectRange(range: Range) {
           v-for="(range, index) in ranges"
           :key="index"
           :label="range.label"
-          color="neutral"
-          variant="ghost"
+          :color="isRangeSelected(range) ? 'primary' : 'neutral'"
+          :variant="isRangeSelected(range) ? 'soft' : 'ghost'"
           class="rounded-none px-6"
-          :class="[isRangeSelected(range) ? 'bg-gray-100 dark:bg-gray-800' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50']"
           truncate
           @click="selectRange(range)"
       />
     </div>
-    <VCalendarDatePicker v-model.range="date" @update:model-value="emit('rangeUpdated', date)" :columns="columns" v-bind="{ ...attrs, ...$attrs }" />
+    <VCalendarDatePicker v-model.range="dateRange" @update:model-value="notify" :columns="columns" v-bind="{ ...attrs, ...$attrs }" />
   </div>
 
 </template>
