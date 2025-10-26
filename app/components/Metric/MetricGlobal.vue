@@ -2,12 +2,8 @@
 import MetricQuery from "~/composables/api/query/MetricQuery";
 import type {Metric} from "~/types/api/item/metric";
 
-import { Chart as ChartJS, Title, Tooltip, Legend, BarController, BarElement, CategoryScale, LinearScale, Colors } from 'chart.js'
-import { Bar } from 'vue-chartjs'
-import type {FetchItemData} from "~/types/api/api";
 import {useSelfUserStore} from "~/stores/useSelfUser";
-
-ChartJS.register(Title, Tooltip, Legend, BarController, BarElement, CategoryScale, LinearScale, Colors)
+import type {ChartBarData} from "~/components/Chart/ChartBar.vue";
 
 const props = defineProps({
   superAdmin: {
@@ -20,11 +16,7 @@ const props = defineProps({
 const selfStore = useSelfUserStore();
 const { selectedProfile } = storeToRefs(selfStore)
 
-const chartData: Ref<object|undefined> = ref(undefined)
-const chartOptions = ref({
-  responsive: true,
-  maintainAspectRatio: true,
-})
+const chartData: Ref<ChartBarData|undefined> = ref(undefined)
 
 const metricsQuery = new MetricQuery()
 
@@ -100,8 +92,6 @@ const externalPresenceStats = computed(() => {
     response.ratioPresenceOpenPreviousSeason = openDaysMetricsPreviousSeason.value?.value === (0 || undefined) ? 0 : (Math.round(response.previousSeason/openDaysMetricsPreviousSeason.value.value) || 0)
   }
 
-  console.log('responmse', response)
-
   return response
 });
 
@@ -139,7 +129,6 @@ function getMetrics() {
   // We get metrics for a club
   metricsQuery.get("opened-days").then(value => {
     openDaysMetrics.value = value.retrieved
-    console.log(value.retrieved)
   });
   metricsQuery.get("opened-days?previous-season=true").then(value => {
     openDaysMetricsPreviousSeason.value = value.retrieved
@@ -158,8 +147,6 @@ function getMetrics() {
       presenceMetricsPreviousSeason.value = value.retrieved
     });
     metricsQuery.get("external-presences").then(value => {
-      console.log('ttt')
-      console.log(value.retrieved)
       externalPresenceMetrics.value = value.retrieved
     });
     metricsQuery.get("external-presences?previous-season=true").then(value => {
@@ -301,10 +288,7 @@ function getMetrics() {
       </div>
 
       <GenericCard v-if="chartData && selectedProfile?.club.presencesEnabled" class="mt-4" title="Statistiques d'activités réalisées (membres)">
-        <Bar
-          :data="chartData"
-          :options="chartOptions"
-        />
+        <ChartBar :data="chartData"/>
       </GenericCard>
     </div>
   </div>
