@@ -1,9 +1,8 @@
 <script lang="ts" setup>
 import MetricQuery from "~/composables/api/query/MetricQuery";
 import type {Metric} from "~/types/api/item/metric";
-
+import type {ChartBarData, ChartData} from "~/types/chart";
 import {useSelfUserStore} from "~/stores/useSelfUser";
-import type {ChartBarData} from "~/components/Chart/ChartBar.vue";
 
 const props = defineProps({
   superAdmin: {
@@ -15,8 +14,6 @@ const props = defineProps({
 
 const selfStore = useSelfUserStore();
 const { selectedProfile } = storeToRefs(selfStore)
-
-const chartData: Ref<ChartBarData|undefined> = ref(undefined)
 
 const metricsQuery = new MetricQuery()
 
@@ -155,36 +152,46 @@ function getMetrics() {
   }
 }
 
-// function parseGetActivities(value: FetchItemData<Metric>) {
-//   if (!value.retrieved || isNaN(value.retrieved.value)) return;
-//
-//   let datasets: any[] = [];
-//
-//   let newChartData = {
-//     datasets: [{ }],
-//   }
-//
-//   value.retrieved.childMetrics.forEach(cm => {
-//     let data: object[] = [];
-//     cm.childMetrics.forEach(ccm => {
-//       data.push({
-//         x: ccm.name,
-//         y: ccm.value
-//       })
-//     })
-//
-//     const dataset = {
-//       'label': cm.name === 'previous-season' ? 'Saison précédente' : 'Saison courante',
-//       'data': data
-//     }
-//
-//     datasets.push(dataset)
-//   })
-//
-//   newChartData.datasets = datasets
-//   chartData.value = newChartData
-// }
+const chartData = computed(() => {
+  const response: ChartBarData = {
+    datasets: [],
+  }
 
+  if (presenceMetricsPreviousSeason.value) {
+    const data: ChartData[] = [];
+
+    presenceMetricsPreviousSeason.value.childMetrics.forEach(cm => {
+      data.push({
+        x: cm.name,
+        y: cm.value
+      })
+    })
+
+    response.datasets.push({
+      label: 'Période précédente',
+      data: data,
+    })
+  }
+
+  if (presenceMetrics.value) {
+    const data: ChartData[] = [];
+
+    presenceMetrics.value.childMetrics.forEach(cm => {
+      data.push({
+        x: cm.name,
+        y: cm.value
+      })
+    })
+
+    response.datasets.push({
+      label: 'Période courante',
+      data: data,
+      backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--ui-success'),
+    })
+  }
+
+  return response
+})
 </script>
 
 <template>

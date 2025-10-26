@@ -1,16 +1,21 @@
 <script setup lang="ts">
 
 import {
-  Chart as ChartJS, Title, Tooltip, Legend, BarController, BarElement, CategoryScale, LinearScale, Colors,
-  type ChartData as ChartJsData
+  BarController,
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  Title,
+  Tooltip
 } from 'chart.js'
 
-import { Bar } from 'vue-chartjs'
+import {Bar} from 'vue-chartjs'
 import type {PropType} from "vue";
+import type {ChartBarData} from "~/types/chart";
 
-ChartJS.register(Title, Tooltip, Legend, BarController, BarElement, CategoryScale, LinearScale, Colors)
-
-export interface ChartBarData extends ChartJsData<'bar'> {}
+ChartJS.register(Title, Tooltip, Legend, BarController, BarElement, CategoryScale, LinearScale)
 
 const props = defineProps({
   data: {
@@ -26,12 +31,25 @@ const props = defineProps({
   }
 });
 
+const chartData = computed(() => {
+  const data = props.data;
+
+  // A good feature could be to get color from a custom palette
+
+  for(let item of Object.keys(data.datasets)) {
+    // Setting the default color
+    if (data.datasets[item].backgroundColor === undefined ) {
+      data.datasets[item].backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--ui-primary');
+    }
+  }
+  return data
+});
 
 </script>
 
 <template>
   <Bar
-    :data="props.data"
+    :data="chartData"
     :options="props.options"
   />
 </template>
