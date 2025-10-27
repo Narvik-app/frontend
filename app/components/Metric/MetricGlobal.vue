@@ -3,6 +3,7 @@ import MetricQuery from "~/composables/api/query/MetricQuery";
 import type {Metric} from "~/types/api/item/metric";
 import type {ChartBarData, ChartData} from "~/types/chart";
 import {useSelfUserStore} from "~/stores/useSelfUser";
+import {ColorName, getColor} from "~/utils/colors";
 
 const props = defineProps({
   superAdmin: {
@@ -186,7 +187,6 @@ const chartData = computed(() => {
     response.datasets.push({
       label: 'Période courante',
       data: data,
-      backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--ui-success'),
     })
   }
 

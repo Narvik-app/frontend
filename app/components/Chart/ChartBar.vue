@@ -14,6 +14,7 @@ import {
 import {Bar} from 'vue-chartjs'
 import type {PropType} from "vue";
 import type {ChartBarData} from "~/types/chart";
+import {getColorByIndex} from "~/utils/colors";
 
 ChartJS.register(Title, Tooltip, Legend, BarController, BarElement, CategoryScale, LinearScale)
 
@@ -34,12 +35,12 @@ const props = defineProps({
 const chartData = computed(() => {
   const data = props.data;
 
-  // A good feature could be to get color from a custom palette
-
+  let notFoundColorIndex = 0;
   for(let item of Object.keys(data.datasets)) {
     // Setting the default color
     if (data.datasets[item].backgroundColor === undefined ) {
-      data.datasets[item].backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--ui-primary');
+      data.datasets[item].backgroundColor = getColorByIndex(notFoundColorIndex).value;
+      notFoundColorIndex++;
     }
   }
   return data
