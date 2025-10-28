@@ -294,7 +294,9 @@ const chartData = computed(() => {
       </div>
 
       <GenericCard v-if="chartData && selectedProfile?.club.presencesEnabled" class="mt-4" title="Statistiques d'activités réalisées (membres)">
-        <ChartBar :data="chartData"/>
+        <div class="h-[40vh] sm:h-[55vh]">
+          <ChartBar :data="chartData"/>
+        </div>
       </GenericCard>
     </div>
   </div>
