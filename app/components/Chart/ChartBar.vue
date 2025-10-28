@@ -13,8 +13,8 @@ import {
 
 import {Bar} from 'vue-chartjs'
 import type {PropType} from "vue";
-import type {ChartBarData} from "~/types/chart";
-import {getColorByIndex} from "~/utils/colors";
+
+import type {ChartBarData, setChartDefaultBackgroundColors} from "~/utils/chart";
 
 ChartJS.register(Title, Tooltip, Legend, BarController, BarElement, CategoryScale, LinearScale)
 
@@ -32,25 +32,11 @@ const props = defineProps({
   }
 });
 
-const chartData = computed(() => {
-  const data = props.data;
-
-  let notFoundColorIndex = 0;
-  for(let item of Object.keys(data.datasets)) {
-    // Setting the default color
-    if (data.datasets[item].backgroundColor === undefined ) {
-      data.datasets[item].backgroundColor = getColorByIndex(notFoundColorIndex).value;
-      notFoundColorIndex++;
-    }
-  }
-  return data
-});
-
 </script>
 
 <template>
   <Bar
-    :data="chartData"
+    :data="setChartDefaultBackgroundColors(props.data)"
     :options="props.options"
   />
 </template>

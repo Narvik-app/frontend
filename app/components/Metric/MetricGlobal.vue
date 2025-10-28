@@ -1,9 +1,8 @@
 <script lang="ts" setup>
 import MetricQuery from "~/composables/api/query/MetricQuery";
 import type {Metric} from "~/types/api/item/metric";
-import type {ChartBarData, ChartData} from "~/types/chart";
 import {useSelfUserStore} from "~/stores/useSelfUser";
-import {ColorName, getColor} from "~/utils/colors";
+import type {ChartBarData, ChartDataField} from "~/utils/chart";
 
 const props = defineProps({
   superAdmin: {
@@ -159,7 +158,7 @@ const chartData = computed(() => {
   }
 
   if (presenceMetricsPreviousSeason.value) {
-    const data: ChartData[] = [];
+    const data: ChartDataField[] = [];
 
     presenceMetricsPreviousSeason.value.childMetrics.forEach(cm => {
       data.push({
@@ -175,7 +174,7 @@ const chartData = computed(() => {
   }
 
   if (presenceMetrics.value) {
-    const data: ChartData[] = [];
+    const data: ChartDataField[] = [];
 
     presenceMetrics.value.childMetrics.forEach(cm => {
       data.push({

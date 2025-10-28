@@ -16,12 +16,12 @@ export enum ColorName {
 export function getColors(): Color[] {
   return [
     { name: ColorName.Primary, value: getComputedStyle(document.documentElement).getPropertyValue('--ui-primary') },
+    { name: ColorName.Error, value: getComputedStyle(document.documentElement).getPropertyValue('--ui-error') },
     { name: ColorName.Success, value: getComputedStyle(document.documentElement).getPropertyValue('--ui-success') },
     { name: ColorName.Warning, value: getComputedStyle(document.documentElement).getPropertyValue('--ui-warning') },
-    { name: ColorName.Error, value: getComputedStyle(document.documentElement).getPropertyValue('--ui-error') },
-    { name: ColorName.Neutral, value: getComputedStyle(document.documentElement).getPropertyValue('--ui-neutral') },
     { name: ColorName.Orange, value: getComputedStyle(document.documentElement).getPropertyValue('--ui-orange') },
     { name: ColorName.Purple, value: getComputedStyle(document.documentElement).getPropertyValue('--ui-purple') },
+    { name: ColorName.Neutral, value: getComputedStyle(document.documentElement).getPropertyValue('--ui-neutral') },
   ]
 }
 
