@@ -13,9 +13,6 @@ import ActivityQuery from "~/composables/api/query/clubDependent/plugin/presence
 import type {Activity} from "~/types/api/item/clubDependent/plugin/presence/activity";
 import type {MemberSeason, MemberSeasonWrite} from "~/types/api/item/clubDependent/memberSeason";
 import {ClubRole, getAvailableClubRoles} from "~/types/api/item/club";
-
-import { ArcElement, CategoryScale, Chart as ChartJS, Colors, DoughnutController, Legend, LinearScale, Title, Tooltip } from 'chart.js'
-import {Doughnut} from 'vue-chartjs'
 import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
 import MemberSeasonQuery from "~/composables/api/query/clubDependent/MemberSeasonQuery";
 import MemberSeasonSelectModal from "~/components/MemberSeason/MemberSeasonSelectModal.vue";
@@ -26,8 +23,6 @@ import type {SelectApiItem} from "~/types/select";
 import {createBrowserCsvDownload} from "~/utils/browser";
 import type {ColumnSort} from "@tanstack/table-core";
 import {getTableSortVal} from "~/utils/table";
-
-ChartJS.register(Title, Tooltip, Legend, DoughnutController, ArcElement, CategoryScale, LinearScale, Colors)
 
 
 const props = defineProps({
@@ -81,10 +76,6 @@ const changeMemberRoleModalOpen = ref(false)
 
 
 const chartData: Ref<object|undefined> = ref(undefined)
-const chartOptions = ref({
-  responsive: true,
-  maintainAspectRatio: false,
-})
 
 // Season table
 const seasonPage = ref(1)
@@ -720,10 +711,7 @@ async function deleteMember() {
       <div class="lg:col-span-9">
         <GenericCard v-if="totalMemberPresences > 0" :title="`${totalMemberPresences} présences ces 12 derniers mois`">
           <div class="h-96 mt-2">
-            <Doughnut
-              :data="chartData"
-              :options="chartOptions"
-            />
+            <ChartDoughnut :data="chartData"/>
           </div>
         </GenericCard>
         <GenericCard v-else>
