@@ -1,13 +1,8 @@
 <script lang="ts" setup>
 import MetricQuery from "~/composables/api/query/MetricQuery";
 import type {Metric} from "~/types/api/item/metric";
-
-import { Chart as ChartJS, Title, Tooltip, Legend, BarController, BarElement, CategoryScale, LinearScale, Colors } from 'chart.js'
-import { Bar } from 'vue-chartjs'
-import type {FetchItemData} from "~/types/api/api";
 import {useSelfUserStore} from "~/stores/useSelfUser";
-
-ChartJS.register(Title, Tooltip, Legend, BarController, BarElement, CategoryScale, LinearScale, Colors)
+import type {ChartBarData, ChartDataField} from "~/utils/chart";
 
 const props = defineProps({
   superAdmin: {
@@ -20,13 +15,10 @@ const props = defineProps({
 const selfStore = useSelfUserStore();
 const { selectedProfile } = storeToRefs(selfStore)
 
-const chartData: Ref<object|undefined> = ref(undefined)
-const chartOptions = ref({
-  responsive: true,
-  maintainAspectRatio: true,
-})
-
 const metricsQuery = new MetricQuery()
+
+const openDaysMetrics: Ref<Metric | undefined> = ref(undefined);
+const openDaysMetricsPreviousSeason: Ref<Metric | undefined> = ref(undefined);
 
 const memberMetrics: Ref<Metric | undefined> = ref(undefined);
 const memberStats = computed(() => {
@@ -48,60 +40,53 @@ const memberStats = computed(() => {
 });
 
 const presenceMetrics: Ref<Metric | undefined> = ref(undefined);
+const presenceMetricsPreviousSeason: Ref<Metric | undefined> = ref(undefined);
 const presenceStats = computed(() => {
   let response = {
     loading: true,
-    currentYear: 0,
-    currentYearOpenedDays: 0,
-    ratioPresenceOpenCurrentYear: 0,
 
-    previousYear: 0,
-    previousYearOpenedDays: 0,
-    ratioPresenceOpenPreviousYear: 0,
+    currentSeason: 0,
+    ratioPresenceOpenCurrentSeason: 0,
+
+    previousSeason: 0,
+    ratioPresenceOpenPreviousSeason: 0,
   }
 
   if (presenceMetrics.value) {
     response.loading = false;
-    presenceMetrics.value.childMetrics.forEach(childMetric => {
-      if (childMetric.name == "current-season") {
-        response.currentYear = childMetric.value;
-        response.currentYearOpenedDays = childMetric.childMetrics[0].value;
-        response.ratioPresenceOpenCurrentYear = response.currentYearOpenedDays === 0 ? 0 : (Math.round(response.currentYear/response.currentYearOpenedDays) || 0)
-      }
-      if (childMetric.name == "previous-season") {
-        response.previousYear = childMetric.value;
-        response.previousYearOpenedDays = childMetric.childMetrics[0].value;
-        response.ratioPresenceOpenPreviousYear = response.previousYearOpenedDays === 0 ? 0 : (Math.round(response.previousYear/response.previousYearOpenedDays) || 0)
-      }
-    })
+    response.currentSeason = presenceMetrics.value.value || 0;
+    response.ratioPresenceOpenCurrentSeason = openDaysMetrics.value?.value === (0 || undefined) ? 0 : (Math.round(response.currentSeason/openDaysMetrics.value.value) || 0)
+  }
+
+  if (presenceMetricsPreviousSeason.value) {
+    response.previousSeason = presenceMetricsPreviousSeason.value.value || 0;
+    response.ratioPresenceOpenPreviousSeason = openDaysMetricsPreviousSeason.value?.value === (0 || undefined) ? 0 : (Math.round(response.previousSeason/openDaysMetricsPreviousSeason.value.value) || 0)
   }
 
   return response
 });
 
 const externalPresenceMetrics: Ref<Metric | undefined> = ref(undefined);
+const externalPresenceMetricsPreviousSeason: Ref<Metric | undefined> = ref(undefined);
 const externalPresenceStats = computed(() => {
   let response = {
     loading: true,
-    currentYear: 0,
-    ratioPresenceOpenCurrentYear: 0,
+    currentSeason: 0,
+    ratioPresenceOpenCurrentSeason: 0,
 
-    previousYear: 0,
-    ratioPresenceOpenPreviousYear: 0,
+    previousSeason: 0,
+    ratioPresenceOpenPreviousSeason: 0,
   }
 
   if (externalPresenceMetrics.value) {
     response.loading = false;
-    externalPresenceMetrics.value.childMetrics.forEach(childMetric => {
-      if (childMetric.name == "current-season") {
-        response.currentYear = childMetric.value;
-        response.ratioPresenceOpenCurrentYear = presenceStats.value.currentYearOpenedDays === 0 ? 0 : (Math.round(response.currentYear/presenceStats.value.currentYearOpenedDays) || 0)
-      }
-      if (childMetric.name == "previous-season") {
-        response.previousYear = childMetric.value;
-        response.ratioPresenceOpenPreviousYear = presenceStats.value.previousYearOpenedDays === 0 ? 0 : (Math.round(response.previousYear/presenceStats.value.previousYearOpenedDays) || 0)
-      }
-    })
+    response.currentSeason = externalPresenceMetrics.value.value || 0;
+    response.ratioPresenceOpenCurrentSeason = openDaysMetrics.value?.value === (0 || undefined) ? 0 : (Math.round(response.currentSeason/openDaysMetrics.value.value) || 0)
+  }
+
+  if (externalPresenceMetricsPreviousSeason.value) {
+    response.previousSeason = externalPresenceMetricsPreviousSeason.value.value || 0;
+    response.ratioPresenceOpenPreviousSeason = openDaysMetricsPreviousSeason.value?.value === (0 || undefined) ? 0 : (Math.round(response.previousSeason/openDaysMetricsPreviousSeason.value.value) || 0)
   }
 
   return response
@@ -112,6 +97,13 @@ getMetrics()
 
 function getMetrics() {
   if (props.superAdmin) {
+    metricsQuery.getSuperAdmin("opened-days").then(value => {
+      openDaysMetrics.value = value.retrieved
+    });
+    metricsQuery.getSuperAdmin("opened-days?previous-season=true").then(value => {
+      openDaysMetricsPreviousSeason.value = value.retrieved
+    });
+
     metricsQuery.getSuperAdmin("members").then(value => {
       memberMetrics.value = value.retrieved
     });
@@ -119,13 +111,25 @@ function getMetrics() {
     metricsQuery.getSuperAdmin("presences").then(value => {
       presenceMetrics.value = value.retrieved
     });
+    metricsQuery.getSuperAdmin("presences?previous-season=true").then(value => {
+      presenceMetricsPreviousSeason.value = value.retrieved
+    });
     metricsQuery.getSuperAdmin("external-presences").then(value => {
       externalPresenceMetrics.value = value.retrieved
+    });
+    metricsQuery.getSuperAdmin("external-presences?previous-season=true").then(value => {
+      externalPresenceMetricsPreviousSeason.value = value.retrieved
     });
     return
   }
 
   // We get metrics for a club
+  metricsQuery.get("opened-days").then(value => {
+    openDaysMetrics.value = value.retrieved
+  });
+  metricsQuery.get("opened-days?previous-season=true").then(value => {
+    openDaysMetricsPreviousSeason.value = value.retrieved
+  });
 
   metricsQuery.get("members").then(value => {
     memberMetrics.value = value.retrieved
@@ -136,46 +140,57 @@ function getMetrics() {
     metricsQuery.get("presences").then(value => {
       presenceMetrics.value = value.retrieved
     });
+    metricsQuery.get("presences?previous-season=true").then(value => {
+      presenceMetricsPreviousSeason.value = value.retrieved
+    });
     metricsQuery.get("external-presences").then(value => {
       externalPresenceMetrics.value = value.retrieved
     });
-    metricsQuery.get('activities').then(value => {
-      parseGetActivities(value)
+    metricsQuery.get("external-presences?previous-season=true").then(value => {
+      externalPresenceMetricsPreviousSeason.value = value.retrieved
     });
   }
-
 }
 
-function parseGetActivities(value: FetchItemData<Metric>) {
-  if (!value.retrieved || isNaN(value.retrieved.value)) return;
-
-  let datasets: any[] = [];
-
-  let newChartData = {
-    datasets: [{ }],
+const chartData = computed(() => {
+  const response: ChartBarData = {
+    datasets: [],
   }
 
-  value.retrieved.childMetrics.forEach(cm => {
-    let data: object[] = [];
-    cm.childMetrics.forEach(ccm => {
+  if (presenceMetricsPreviousSeason.value) {
+    const data: ChartDataField[] = [];
+
+    presenceMetricsPreviousSeason.value.childMetrics.forEach(cm => {
       data.push({
-        x: ccm.name,
-        y: ccm.value
+        x: cm.name,
+        y: cm.value
       })
     })
 
-    const dataset = {
-      'label': cm.name === 'previous-season' ? 'Saison précédente' : 'Saison courante',
-      'data': data
-    }
+    response.datasets.push({
+      label: 'Période précédente',
+      data: data,
+    })
+  }
 
-    datasets.push(dataset)
-  })
+  if (presenceMetrics.value) {
+    const data: ChartDataField[] = [];
 
-  newChartData.datasets = datasets
-  chartData.value = newChartData
-}
+    presenceMetrics.value.childMetrics.forEach(cm => {
+      data.push({
+        x: cm.name,
+        y: cm.value
+      })
+    })
 
+    response.datasets.push({
+      label: 'Période courante',
+      data: data,
+    })
+  }
+
+  return response
+})
 </script>
 
 <template>
@@ -199,9 +214,9 @@ function parseGetActivities(value: FetchItemData<Metric>) {
           <GenericStatCard
             title="Jours ouverts"
             tooltip="Cette saison"
-            :value="presenceStats.currentYearOpenedDays"
+            :value="openDaysMetrics?.value"
             :top-right="{
-              value: presenceStats.previousYearOpenedDays,
+              value: openDaysMetricsPreviousSeason?.value,
               tooltip: 'Saison précédente'
             }"
             :loading="presenceStats.loading">
@@ -210,9 +225,9 @@ function parseGetActivities(value: FetchItemData<Metric>) {
           <GenericStatCard
             title="Présences (membres + externes)"
             tooltip="Cette saison"
-            :value="presenceStats.currentYear + externalPresenceStats.currentYear"
+            :value="presenceStats.currentSeason + externalPresenceStats.currentSeason"
             :top-right="{
-              value: (presenceStats.previousYear + externalPresenceStats.previousYear),
+              value: (presenceStats.previousSeason + externalPresenceStats.previousSeason),
               tooltip: 'Saison précédente'
             }"
             :loading="presenceStats.loading && externalPresenceStats.loading">
@@ -221,10 +236,10 @@ function parseGetActivities(value: FetchItemData<Metric>) {
           <GenericStatCard
             title="Présences/ouvertures (membres + externes)"
             tooltip="Cette saison"
-            :value="'≃ ' + (presenceStats.ratioPresenceOpenCurrentYear + externalPresenceStats.ratioPresenceOpenCurrentYear)"
-            :is-increasing="(presenceStats.ratioPresenceOpenCurrentYear + externalPresenceStats.ratioPresenceOpenCurrentYear) >= (presenceStats.ratioPresenceOpenPreviousYear + externalPresenceStats.ratioPresenceOpenPreviousYear)"
+            :value="'≃ ' + (presenceStats.ratioPresenceOpenCurrentSeason + externalPresenceStats.ratioPresenceOpenCurrentSeason)"
+            :is-increasing="(presenceStats.ratioPresenceOpenCurrentSeason + externalPresenceStats.ratioPresenceOpenCurrentSeason) >= (presenceStats.ratioPresenceOpenPreviousSeason + externalPresenceStats.ratioPresenceOpenPreviousSeason)"
             :top-right="{
-              value: (presenceStats.ratioPresenceOpenPreviousYear + externalPresenceStats.ratioPresenceOpenPreviousYear),
+              value: (presenceStats.ratioPresenceOpenPreviousSeason + externalPresenceStats.ratioPresenceOpenPreviousSeason),
               tooltip: 'Saison précédente'
             }"
             :loading="presenceStats.loading">
@@ -233,9 +248,9 @@ function parseGetActivities(value: FetchItemData<Metric>) {
           <GenericStatCard
             title="Présences"
             tooltip="Cette saison"
-            :value="presenceStats.currentYear"
+            :value="presenceStats.currentSeason"
             :top-right="{
-              value: presenceStats.previousYear,
+              value: presenceStats.previousSeason,
               tooltip: 'Saison précédente'
             }"
             :loading="presenceStats.loading">
@@ -244,10 +259,10 @@ function parseGetActivities(value: FetchItemData<Metric>) {
           <GenericStatCard
             title="Présences/ouvertures"
             tooltip="Cette saison"
-            :value="'≃ ' + presenceStats.ratioPresenceOpenCurrentYear"
-            :is-increasing="presenceStats.ratioPresenceOpenCurrentYear >= presenceStats.ratioPresenceOpenPreviousYear"
+            :value="'≃ ' + presenceStats.ratioPresenceOpenCurrentSeason"
+            :is-increasing="presenceStats.ratioPresenceOpenCurrentSeason >= presenceStats.ratioPresenceOpenPreviousSeason"
             :top-right="{
-              value: presenceStats.ratioPresenceOpenPreviousYear,
+              value: presenceStats.ratioPresenceOpenPreviousSeason,
               tooltip: 'Saison précédente'
             }"
             :loading="presenceStats.loading">
@@ -256,9 +271,9 @@ function parseGetActivities(value: FetchItemData<Metric>) {
           <GenericStatCard
             title="Présences externes"
             tooltip="Cette saison"
-            :value="externalPresenceStats.currentYear"
+            :value="externalPresenceStats.currentSeason"
             :top-right="{
-              value: externalPresenceStats.previousYear,
+              value: externalPresenceStats.previousSeason,
               tooltip: 'Saison précédente'
             }"
             :loading="externalPresenceStats.loading">
@@ -267,10 +282,10 @@ function parseGetActivities(value: FetchItemData<Metric>) {
           <GenericStatCard
             title="Présences externes/ouvertures"
             tooltip="Cette saison"
-            :value="'≃ ' + externalPresenceStats.ratioPresenceOpenCurrentYear"
-            :is-increasing="externalPresenceStats.ratioPresenceOpenCurrentYear >= externalPresenceStats.ratioPresenceOpenPreviousYear"
+            :value="'≃ ' + externalPresenceStats.ratioPresenceOpenCurrentSeason"
+            :is-increasing="externalPresenceStats.ratioPresenceOpenCurrentSeason >= externalPresenceStats.ratioPresenceOpenPreviousSeason"
             :top-right="{
-              value: externalPresenceStats.ratioPresenceOpenPreviousYear,
+              value: externalPresenceStats.ratioPresenceOpenPreviousSeason,
               tooltip: 'Saison précédente'
             }"
             :loading="externalPresenceStats.loading">
@@ -279,10 +294,9 @@ function parseGetActivities(value: FetchItemData<Metric>) {
       </div>
 
       <GenericCard v-if="chartData && selectedProfile?.club.presencesEnabled" class="mt-4" title="Statistiques d'activités réalisées (membres)">
-        <Bar
-          :data="chartData"
-          :options="chartOptions"
-        />
+        <div class="h-[40vh] sm:h-[55vh]">
+          <ChartBar :data="chartData"/>
+        </div>
       </GenericCard>
     </div>
   </div>

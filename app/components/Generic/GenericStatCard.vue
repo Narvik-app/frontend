@@ -35,7 +35,7 @@ const emit = defineEmits([
 ])
 
 interface topRight {
-  value?: string,
+  value?: string|number,
   tooltip?: string|null,
   icon?: string|null,
   useDefaultIcon?: boolean

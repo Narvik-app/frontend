@@ -20,6 +20,10 @@
   --color-blue-200: #CFD8F5;
   --color-blue-100: #E7ECFA;
   --color-blue-50: #FFFFFF;
+
+  /* We are using a color already set in tailwind, so we juste need to set the default name for ui-nuxt */
+  --ui-orange: var(--color-orange-500);
+  --ui-purple: var(--color-purple-500);
 }
 
 :root {
