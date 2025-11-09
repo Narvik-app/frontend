@@ -21,7 +21,7 @@ ChartJS.register(Title, Tooltip, Legend, DoughnutController, ArcElement, Categor
 
 const props = defineProps({
   data: {
-    type: Object as PropType<ChartBarData>,
+    type: Object as PropType<ChartDoughnutData>,
     required: true
   },
   options: {

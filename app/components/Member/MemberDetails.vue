@@ -75,7 +75,7 @@ const itemModalOpen = ref(false)
 const changeMemberRoleModalOpen = ref(false)
 
 
-const chartData: Ref<object|undefined> = ref(undefined)
+const chartData: Ref<ChartDoughnutData|undefined> = ref(undefined)
 
 // Season table
 const seasonPage = ref(1)

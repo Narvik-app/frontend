@@ -28,7 +28,7 @@ export interface ChartBubbleData extends ChartData<'bubble'> { }
 
 export interface ChartScatterData extends ChartData<'scatter'> { }
 
-export function setChartDefaultBackgroundColors(chartData: ChartData, isXY = true) {
+export function setChartDefaultBackgroundColors(chartData: ChartData, isXY = true, propname: string = 'backgroundColor') {
   let notFoundColorIndex = 0;
   for (let itemKey of Object.keys(chartData.datasets)) {
     const index = Number(itemKey)
@@ -37,17 +37,19 @@ export function setChartDefaultBackgroundColors(chartData: ChartData, isXY = tru
       continue;
     }
 
+    const dataset = chartData.datasets[index]
+
     // Setting the default color
-    if (chartData.datasets[index].backgroundColor === undefined) {
+    if (dataset[propname] === undefined) {
       if (isXY) {
-        chartData.datasets[index].backgroundColor = getColorByIndex(notFoundColorIndex).value;
+        dataset[propname] = getColorByIndex(notFoundColorIndex).value;
       } else {
-        const numberOfColors = chartData.datasets[index].data.length
+        const numberOfColors = dataset.data.length
         const colors: string[] = []
         for (let i = 0; i < numberOfColors; i++) {
           colors.push(getColorByIndex(i).value);
         }
-        chartData.datasets[index].backgroundColor = colors
+        dataset[propname] = colors
       }
       notFoundColorIndex++;
     }
