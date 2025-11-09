@@ -182,7 +182,7 @@ function refreshMetrics() {
           <UButton icon="i-heroicons-calendar-days-20-solid" :label="dateRange ? formatDateRangeReadable(dateRange) || 'Choisir une plage' : 'Choisir une plage'" />
 
           <template #content>
-            <GenericDateRangePicker :date-range="dateRange" @range-updated="(range) => handleDateRangeUpdate(range)" :season-selectors="true" />
+            <GenericDateRangePicker :date-range="dateRange" @range-updated="(range) => handleDateRangeUpdate(range)" :season-selectors="true" :exclude-previous-season="true" />
           </template>
         </UPopover>
       </div>

@@ -18,6 +18,10 @@ const props = defineProps({
     type: Boolean,
     default: true
   },
+  excludePreviousSeason: {
+    type: Boolean,
+    default: false
+  },
   dateRange: {
     type: Object as PropType<DateRange|DateRangeFilter|undefined>,
     default: undefined
@@ -61,8 +65,9 @@ const ranges = [
 
 if (props.seasonSelectors) {
   ranges.push({ label: 'Saison actuelle', duration: { type: 'filter', value: 'current-season' } })
-  ranges.push({ label: 'Saison précédente', duration: { type: 'filter', value: 'previous-season' } })
-
+  if (!props.excludePreviousSeason) {
+    ranges.push({ label: 'Saison précédente', duration: { type: 'filter', value: 'previous-season' } })
+  }
 } else {
   ranges.push({ label: 'Dernière année', duration: { type: 'year', value: 1 } })
 }
