@@ -159,7 +159,7 @@ export const useMetricStore = defineStore('metric', () => {
   // Load metrics for club
   async function getClubMetrics(forceRefresh: boolean = false) {
     // Don't reload if metrics are already loaded and not forced
-    if (!forceRefresh && areMetricsLoaded(false)) {
+    if (!forceRefresh && isMetricsLoaded(false)) {
       return;
     }
 
