@@ -73,8 +73,58 @@ export const useMetricStore = defineStore('metric', () => {
     return baseQuery;
   }
 
+  // Check if all required metrics are loaded
+  function areMetricsLoaded(isSuperAdmin: boolean = false): boolean {
+    // For super admin, we need all metrics
+    if (isSuperAdmin) {
+      return !!(
+        openDaysMetrics.value &&
+        openDaysMetricsPreviousSeason.value &&
+        memberMetrics.value &&
+        presenceMetrics.value &&
+        presenceMetricsPreviousSeason.value &&
+        externalPresenceMetrics.value &&
+        externalPresenceMetricsPreviousSeason.value
+      );
+    }
+
+    // For club, we need basic metrics and presence metrics only if presences are enabled
+    const basicMetricsLoaded = !!(
+      openDaysMetrics.value &&
+      openDaysMetricsPreviousSeason.value &&
+      memberMetrics.value
+    );
+
+    if (selectedProfile.value?.club.presencesEnabled) {
+      return basicMetricsLoaded && !!(
+        presenceMetrics.value &&
+        presenceMetricsPreviousSeason.value &&
+        externalPresenceMetrics.value &&
+        externalPresenceMetricsPreviousSeason.value
+      );
+    }
+
+    return basicMetricsLoaded;
+  }
+
+  // Clear all metrics data
+  function clearMetrics() {
+    openDaysMetrics.value = undefined;
+    openDaysMetricsPreviousSeason.value = undefined;
+    memberMetrics.value = undefined;
+    presenceMetrics.value = undefined;
+    presenceMetricsPreviousSeason.value = undefined;
+    externalPresenceMetrics.value = undefined;
+    externalPresenceMetricsPreviousSeason.value = undefined;
+  }
+
   // Load metrics for super admin
-  async function getSuperAdminMetrics() {
+  async function getSuperAdminMetrics(forceRefresh: boolean = false) {
+    // Don't reload if metrics are already loaded and not forced
+    if (!forceRefresh && areMetricsLoaded(true)) {
+      return;
+    }
+
     isLoading.value = true
 
     const promises = [
@@ -107,7 +157,12 @@ export const useMetricStore = defineStore('metric', () => {
   }
 
   // Load metrics for club
-  async function getClubMetrics() {
+  async function getClubMetrics(forceRefresh: boolean = false) {
+    // Don't reload if metrics are already loaded and not forced
+    if (!forceRefresh && areMetricsLoaded(false)) {
+      return;
+    }
+
     isLoading.value = true
 
     const promises = [
@@ -146,15 +201,17 @@ export const useMetricStore = defineStore('metric', () => {
   }
 
   // Actions
-  async function getMetrics(isSuperAdmin: boolean = false) {
+  async function getMetrics(isSuperAdmin: boolean = false, forceRefresh: boolean = false) {
     if (isSuperAdmin) {
-      await getSuperAdminMetrics()
+      await getSuperAdminMetrics(forceRefresh)
     } else {
-      await getClubMetrics()
+      await getClubMetrics(forceRefresh)
     }
   }
 
   function setDateRange(range: DateRange | DateRangeFilter | undefined) {
+    // Clear metrics when date range changes to force reload
+    clearMetrics()
     dateRange.value = range
   }
 

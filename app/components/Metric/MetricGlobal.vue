@@ -106,7 +106,7 @@ metricStore.getMetrics(props.superAdmin)
 
 // Watch for store changes and reload metrics
 watch([previousSeason], () => {
-  metricStore.getMetrics(props.superAdmin)
+  metricStore.getMetrics(props.superAdmin, true)
 })
 
 const chartData = computed(() => {
@@ -151,12 +151,12 @@ const chartData = computed(() => {
 
 function handleDateRangeUpdate(range: DateRange | DateRangeFilter | undefined) {
   metricStore.setDateRange(range)
-  metricStore.getMetrics(props.superAdmin)
+  metricStore.getMetrics(props.superAdmin, true)
   popoverOpen.value = false
 }
 
 function refreshMetrics() {
-  metricStore.getMetrics(props.superAdmin)
+  metricStore.getMetrics(props.superAdmin, true)
 }
 </script>
 
