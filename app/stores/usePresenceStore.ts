@@ -62,6 +62,6 @@ export const usePresenceStore = defineStore('presence', () => {
 		refresh,
 		updateItem,
 		deleteItem,
-    setSelectedRange,
+		setSelectedRange,
 	}
 })
