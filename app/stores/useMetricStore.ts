@@ -121,7 +121,7 @@ export const useMetricStore = defineStore('metric', () => {
   // Load metrics for super admin
   async function getSuperAdminMetrics(forceRefresh: boolean = false) {
     // Don't reload if metrics are already loaded and not forced
-    if (!forceRefresh && areMetricsLoaded(true)) {
+    if (!forceRefresh && isMetricsLoaded(true)) {
       return;
     }
 
