@@ -2,7 +2,7 @@
 import { DatePicker as VCalendarDatePicker } from 'v-calendar'
 import 'v-calendar/style.css'
 import dayjs from "dayjs";
-import type {DateRange, DateRangeFilter} from "~/types/date";
+import {type DateRange, DateRangeFilter} from "~/types/date";
 
 interface Range {
   label: string,
@@ -88,7 +88,7 @@ function selectRange(range: Range) {
   if (isFilter) {
     // props.dateRange = { label: range.label, value: range.duration.value} as DateRangeFilter;
     dateRange.value = undefined;
-    notify({ label: range.label, value: range.duration.value} as DateRangeFilter)
+    notify(new DateRangeFilter(range.label, range.duration.value))
     return;
   }
 

@@ -2,7 +2,7 @@ import type {Ref} from "vue";
 import {defineStore} from "pinia";
 import dayjs from "dayjs";
 import MetricQuery from "~/composables/api/query/MetricQuery";
-import type {DateRange, DateRangeFilter} from "~/types/date";
+import {type DateRange, DateRangeFilter} from "~/types/date";
 import type {Metric} from "~/types/api/item/metric";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {formatDateInput} from "~/utils/date";
@@ -10,7 +10,7 @@ import {formatDateInput} from "~/utils/date";
 export const useMetricStore = defineStore('metric', () => {
   // Filter settings
   const previousSeason: Ref<boolean> = ref(false)
-  const dateRange: Ref<DateRange | DateRangeFilter | undefined> = ref(undefined)
+  const dateRange: Ref<DateRange | DateRangeFilter | undefined> = ref(DateRangeFilter.curent())
 
   const isLoading: Ref<boolean> = ref(false)
   const lastRefreshDate: Ref<Date> = ref(new Date())
@@ -29,16 +29,31 @@ export const useMetricStore = defineStore('metric', () => {
   const { selectedProfile } = storeToRefs(selfStore)
 
   // Build query parameters based on current filters
-  function buildQueryParams(baseQuery: string, isSuperAdmin: boolean = false): string {
+  function buildQueryParams(baseQuery: string, isSuperAdmin: boolean = false, isPreviousSeason: boolean = false): string {
     const urlParams = new URLSearchParams();
 
     if (dateRange.value) {
       if (typeof dateRange.value.value === 'string') {
-        urlParams.append(`${dateRange.value.value}`, 'true');
+        if (isPreviousSeason) {
+          urlParams.append('previous-season', 'true');
+        } else {
+          urlParams.append(`${dateRange.value.value}`, 'true');
+        }
       } else {
         const dateRangeObj = dateRange.value as DateRange;
-        const formattedStartDate = formatDateInput(dateRangeObj.start.toString())
-        const formattedEndDate = formatDateInput(dayjs(dateRangeObj.end).add(1, 'days').toString())
+        let startDate, endDate;
+
+        if (isPreviousSeason) {
+          // Subtract one year for previous season
+          startDate = dayjs(dateRangeObj.start).subtract(1, 'year');
+          endDate = dayjs(dateRangeObj.end).subtract(1, 'year');
+        } else {
+          startDate = dayjs(dateRangeObj.start);
+          endDate = dayjs(dateRangeObj.end);
+        }
+
+        const formattedStartDate = formatDateInput(startDate.toString())
+        const formattedEndDate = formatDateInput(endDate.add(1, 'days').toString())
         if (formattedStartDate) {
           urlParams.append(`start`, formattedStartDate);
 
@@ -63,25 +78,25 @@ export const useMetricStore = defineStore('metric', () => {
     isLoading.value = true
 
     const promises = [
-      metricsQuery.getSuperAdmin(buildQueryParams("opened-days", true)).then(value => {
+      metricsQuery.getSuperAdmin(buildQueryParams("opened-days", true, false)).then(value => {
         openDaysMetrics.value = value.retrieved
       }),
-      metricsQuery.getSuperAdmin(buildQueryParams("opened-days", true)).then(value => {
+      metricsQuery.getSuperAdmin(buildQueryParams("opened-days", true, true)).then(value => {
         openDaysMetricsPreviousSeason.value = value.retrieved
       }),
       metricsQuery.getSuperAdmin("members").then(value => {
         memberMetrics.value = value.retrieved
       }),
-      metricsQuery.getSuperAdmin(buildQueryParams("presences", true)).then(value => {
+      metricsQuery.getSuperAdmin(buildQueryParams("presences", true, false)).then(value => {
         presenceMetrics.value = value.retrieved
       }),
-      metricsQuery.getSuperAdmin(buildQueryParams("presences", true)).then(value => {
+      metricsQuery.getSuperAdmin(buildQueryParams("presences", true, true)).then(value => {
         presenceMetricsPreviousSeason.value = value.retrieved
       }),
-      metricsQuery.getSuperAdmin(buildQueryParams("external-presences", true)).then(value => {
+      metricsQuery.getSuperAdmin(buildQueryParams("external-presences", true, false)).then(value => {
         externalPresenceMetrics.value = value.retrieved
       }),
-      metricsQuery.getSuperAdmin(buildQueryParams("external-presences", true)).then(value => {
+      metricsQuery.getSuperAdmin(buildQueryParams("external-presences", true, true)).then(value => {
         externalPresenceMetricsPreviousSeason.value = value.retrieved
       })
     ];
@@ -96,10 +111,10 @@ export const useMetricStore = defineStore('metric', () => {
     isLoading.value = true
 
     const promises = [
-      metricsQuery.get(buildQueryParams("opened-days")).then(value => {
+      metricsQuery.get(buildQueryParams("opened-days", false, false)).then(value => {
         openDaysMetrics.value = value.retrieved
       }),
-      metricsQuery.get(buildQueryParams("opened-days")).then(value => {
+      metricsQuery.get(buildQueryParams("opened-days", false, true)).then(value => {
         openDaysMetricsPreviousSeason.value = value.retrieved
       }),
       metricsQuery.get("members").then(value => {
@@ -110,16 +125,16 @@ export const useMetricStore = defineStore('metric', () => {
     // We get presences stats
     if (selectedProfile.value?.club.presencesEnabled) {
       promises.push(
-        metricsQuery.get(buildQueryParams("presences")).then(value => {
+        metricsQuery.get(buildQueryParams("presences", false, false)).then(value => {
           presenceMetrics.value = value.retrieved
         }),
-        metricsQuery.get(buildQueryParams("presences")).then(value => {
+        metricsQuery.get(buildQueryParams("presences", false, true)).then(value => {
           presenceMetricsPreviousSeason.value = value.retrieved
         }),
-        metricsQuery.get(buildQueryParams("external-presences")).then(value => {
+        metricsQuery.get(buildQueryParams("external-presences", false, false)).then(value => {
           externalPresenceMetrics.value = value.retrieved
         }),
-        metricsQuery.get(buildQueryParams("external-presences")).then(value => {
+        metricsQuery.get(buildQueryParams("external-presences", false, true)).then(value => {
           externalPresenceMetricsPreviousSeason.value = value.retrieved
         })
       );
