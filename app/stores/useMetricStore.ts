@@ -74,7 +74,7 @@ export const useMetricStore = defineStore('metric', () => {
   }
 
   // Check if all required metrics are loaded
-  function areMetricsLoaded(isSuperAdmin: boolean = false): boolean {
+  function isMetricsLoaded(isSuperAdmin: boolean = false): boolean {
     // For super admin, we need all metrics
     if (isSuperAdmin) {
       return !!(
