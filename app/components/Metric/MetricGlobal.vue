@@ -1,8 +1,9 @@
 <script lang="ts" setup>
-import MetricQuery from "~/composables/api/query/MetricQuery";
-import type {Metric} from "~/types/api/item/metric";
 import {useSelfUserStore} from "~/stores/useSelfUser";
+import {useMetricStore} from "~/stores/useMetricStore";
 import type {ChartBarData, ChartDataField} from "~/utils/chart";
+import type {DateRange, DateRangeFilter} from "~/types/date";
+import {formatDateRangeReadable, formatDateTimeReadable} from "~/utils/date";
 
 const props = defineProps({
   superAdmin: {
@@ -12,15 +13,27 @@ const props = defineProps({
   },
 });
 
+const popoverOpen = ref(false)
+
 const selfStore = useSelfUserStore();
 const { selectedProfile } = storeToRefs(selfStore)
+const metricStore = useMetricStore()
 
-const metricsQuery = new MetricQuery()
+// Use store references
+const {
+  previousSeason,
+  dateRange,
+  isLoading,
+  lastRefreshDate,
+  openDaysMetrics,
+  openDaysMetricsPreviousSeason,
+  memberMetrics,
+  presenceMetrics,
+  presenceMetricsPreviousSeason,
+  externalPresenceMetrics,
+  externalPresenceMetricsPreviousSeason
+} = storeToRefs(metricStore)
 
-const openDaysMetrics: Ref<Metric | undefined> = ref(undefined);
-const openDaysMetricsPreviousSeason: Ref<Metric | undefined> = ref(undefined);
-
-const memberMetrics: Ref<Metric | undefined> = ref(undefined);
 const memberStats = computed(() => {
   let response = {
     loading: true,
@@ -39,8 +52,6 @@ const memberStats = computed(() => {
   return response
 });
 
-const presenceMetrics: Ref<Metric | undefined> = ref(undefined);
-const presenceMetricsPreviousSeason: Ref<Metric | undefined> = ref(undefined);
 const presenceStats = computed(() => {
   let response = {
     loading: true,
@@ -66,8 +77,6 @@ const presenceStats = computed(() => {
   return response
 });
 
-const externalPresenceMetrics: Ref<Metric | undefined> = ref(undefined);
-const externalPresenceMetricsPreviousSeason: Ref<Metric | undefined> = ref(undefined);
 const externalPresenceStats = computed(() => {
   let response = {
     loading: true,
@@ -93,64 +102,12 @@ const externalPresenceStats = computed(() => {
 });
 
 // We load the metrics
-getMetrics()
+metricStore.getMetrics(props.superAdmin)
 
-function getMetrics() {
-  if (props.superAdmin) {
-    metricsQuery.getSuperAdmin("opened-days").then(value => {
-      openDaysMetrics.value = value.retrieved
-    });
-    metricsQuery.getSuperAdmin("opened-days?previous-season=true").then(value => {
-      openDaysMetricsPreviousSeason.value = value.retrieved
-    });
-
-    metricsQuery.getSuperAdmin("members").then(value => {
-      memberMetrics.value = value.retrieved
-    });
-
-    metricsQuery.getSuperAdmin("presences").then(value => {
-      presenceMetrics.value = value.retrieved
-    });
-    metricsQuery.getSuperAdmin("presences?previous-season=true").then(value => {
-      presenceMetricsPreviousSeason.value = value.retrieved
-    });
-    metricsQuery.getSuperAdmin("external-presences").then(value => {
-      externalPresenceMetrics.value = value.retrieved
-    });
-    metricsQuery.getSuperAdmin("external-presences?previous-season=true").then(value => {
-      externalPresenceMetricsPreviousSeason.value = value.retrieved
-    });
-    return
-  }
-
-  // We get metrics for a club
-  metricsQuery.get("opened-days").then(value => {
-    openDaysMetrics.value = value.retrieved
-  });
-  metricsQuery.get("opened-days?previous-season=true").then(value => {
-    openDaysMetricsPreviousSeason.value = value.retrieved
-  });
-
-  metricsQuery.get("members").then(value => {
-    memberMetrics.value = value.retrieved
-  });
-
-  // We get presences stats
-  if (selectedProfile.value?.club.presencesEnabled) {
-    metricsQuery.get("presences").then(value => {
-      presenceMetrics.value = value.retrieved
-    });
-    metricsQuery.get("presences?previous-season=true").then(value => {
-      presenceMetricsPreviousSeason.value = value.retrieved
-    });
-    metricsQuery.get("external-presences").then(value => {
-      externalPresenceMetrics.value = value.retrieved
-    });
-    metricsQuery.get("external-presences?previous-season=true").then(value => {
-      externalPresenceMetricsPreviousSeason.value = value.retrieved
-    });
-  }
-}
+// Watch for store changes and reload metrics
+watch([previousSeason], () => {
+  metricStore.getMetrics(props.superAdmin)
+})
 
 const chartData = computed(() => {
   const response: ChartBarData = {
@@ -191,11 +148,44 @@ const chartData = computed(() => {
 
   return response
 })
+
+function handleDateRangeUpdate(range: DateRange | DateRangeFilter | undefined) {
+  metricStore.getMetrics(props.superAdmin)
+  popoverOpen.value = false
+}
+
+function refreshMetrics() {
+  metricStore.getMetrics(props.superAdmin)
+}
 </script>
 
 <template>
   <div>
     <div id="wrapper" class=" mx-auto">
+
+      <div class="flex flex-wrap justify-center mb-4">
+        <UButton
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          icon="i-heroicons-arrow-path"
+          :loading="isLoading"
+          @click="refreshMetrics()"
+        >
+          Dernière mise à jour : {{ formatDateTimeReadable(lastRefreshDate.toString()) }}
+        </UButton>
+
+        <div class="w-full mb-2"></div>
+
+        <UPopover v-model:open="popoverOpen">
+          <UButton icon="i-heroicons-calendar-days-20-solid" :label="dateRange ? formatDateRangeReadable(dateRange) || 'Choisir une plage' : 'Choisir une plage'" />
+
+          <template #content>
+            <GenericDateRangePicker v-model="dateRange" @range-updated="(range) => handleDateRangeUpdate(range)" :season-selectors="true" />
+          </template>
+        </UPopover>
+      </div>
+
       <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
 
         <GenericStatCard
