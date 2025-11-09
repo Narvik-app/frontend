@@ -139,6 +139,10 @@ export const useMetricStore = defineStore('metric', () => {
     }
   }
 
+  function setDateRange(range: DateRange | DateRangeFilter | undefined) {
+    dateRange.value = range
+  }
+
   return {
     // State
     previousSeason,
@@ -157,5 +161,6 @@ export const useMetricStore = defineStore('metric', () => {
 
     // Actions
     getMetrics,
+    setDateRange,
   }
 })

@@ -150,6 +150,7 @@ const chartData = computed(() => {
 })
 
 function handleDateRangeUpdate(range: DateRange | DateRangeFilter | undefined) {
+  metricStore.setDateRange(range)
   metricStore.getMetrics(props.superAdmin)
   popoverOpen.value = false
 }
@@ -181,7 +182,7 @@ function refreshMetrics() {
           <UButton icon="i-heroicons-calendar-days-20-solid" :label="dateRange ? formatDateRangeReadable(dateRange) || 'Choisir une plage' : 'Choisir une plage'" />
 
           <template #content>
-            <GenericDateRangePicker v-model="dateRange" @range-updated="(range) => handleDateRangeUpdate(range)" :season-selectors="true" />
+            <GenericDateRangePicker :date-range="dateRange" @range-updated="(range) => handleDateRangeUpdate(range)" :season-selectors="true" />
           </template>
         </UPopover>
       </div>

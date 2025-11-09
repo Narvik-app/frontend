@@ -153,6 +153,10 @@ export const useSaleStore = defineStore('sale', () => {
     sellersLoading.value = []
   }
 
+  function setSelectedRange(range: DateRange | DateRangeFilter | undefined) {
+    selectedRange.value = range
+  }
+
   return {
     sales,
     seller,
@@ -169,5 +173,6 @@ export const useSaleStore = defineStore('sale', () => {
     getSalesCsv,
     getSellers,
     getPaymentModes,
+    setSelectedRange,
   }
 })
