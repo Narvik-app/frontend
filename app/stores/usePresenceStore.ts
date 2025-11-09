@@ -46,9 +46,9 @@ export const usePresenceStore = defineStore('presence', () => {
 		})
 	}
 
-  function setSelectedRange(range: DateRange|DateRangeFilter|undefined) {
-    selectedRange.value = range
-  }
+	function setSelectedRange(range: DateRange|DateRangeFilter|undefined) {
+		selectedRange.value = range
+	}
 
 	return {
 		searchQuery,
