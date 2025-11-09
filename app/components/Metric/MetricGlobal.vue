@@ -204,80 +204,80 @@ function refreshMetrics() {
         <template v-if="props.superAdmin || selectedProfile?.club.presencesEnabled">
           <GenericStatCard
             title="Jours ouverts"
-            tooltip="Cette saison"
+            tooltip="Période courante"
             :value="openDaysMetrics?.value"
             :top-right="{
               value: openDaysMetricsPreviousSeason?.value,
-              tooltip: 'Saison précédente'
+              tooltip: 'Période précédente'
             }"
             :loading="presenceStats.loading">
           </GenericStatCard>
 
           <GenericStatCard
             title="Présences (membres + externes)"
-            tooltip="Cette saison"
+            tooltip="Période courante"
             :value="presenceStats.currentSeason + externalPresenceStats.currentSeason"
             :top-right="{
               value: (presenceStats.previousSeason + externalPresenceStats.previousSeason),
-              tooltip: 'Saison précédente'
+              tooltip: 'Période précédente'
             }"
             :loading="presenceStats.loading && externalPresenceStats.loading">
           </GenericStatCard>
 
           <GenericStatCard
             title="Présences/ouvertures (membres + externes)"
-            tooltip="Cette saison"
+            tooltip="Période courante"
             :value="'≃ ' + (presenceStats.ratioPresenceOpenCurrentSeason + externalPresenceStats.ratioPresenceOpenCurrentSeason)"
             :is-increasing="(presenceStats.ratioPresenceOpenCurrentSeason + externalPresenceStats.ratioPresenceOpenCurrentSeason) >= (presenceStats.ratioPresenceOpenPreviousSeason + externalPresenceStats.ratioPresenceOpenPreviousSeason)"
             :top-right="{
               value: (presenceStats.ratioPresenceOpenPreviousSeason + externalPresenceStats.ratioPresenceOpenPreviousSeason),
-              tooltip: 'Saison précédente'
+              tooltip: 'Période précédente'
             }"
             :loading="presenceStats.loading">
           </GenericStatCard>
 
           <GenericStatCard
             title="Présences"
-            tooltip="Cette saison"
+            tooltip="Période courante"
             :value="presenceStats.currentSeason"
             :top-right="{
               value: presenceStats.previousSeason,
-              tooltip: 'Saison précédente'
+              tooltip: 'Période précédente'
             }"
             :loading="presenceStats.loading">
           </GenericStatCard>
 
           <GenericStatCard
             title="Présences/ouvertures"
-            tooltip="Cette saison"
+            tooltip="Période courante"
             :value="'≃ ' + presenceStats.ratioPresenceOpenCurrentSeason"
             :is-increasing="presenceStats.ratioPresenceOpenCurrentSeason >= presenceStats.ratioPresenceOpenPreviousSeason"
             :top-right="{
               value: presenceStats.ratioPresenceOpenPreviousSeason,
-              tooltip: 'Saison précédente'
+              tooltip: 'Période précédente'
             }"
             :loading="presenceStats.loading">
           </GenericStatCard>
 
           <GenericStatCard
             title="Présences externes"
-            tooltip="Cette saison"
+            tooltip="Période courante"
             :value="externalPresenceStats.currentSeason"
             :top-right="{
               value: externalPresenceStats.previousSeason,
-              tooltip: 'Saison précédente'
+              tooltip: 'Période précédente'
             }"
             :loading="externalPresenceStats.loading">
           </GenericStatCard>
 
           <GenericStatCard
             title="Présences externes/ouvertures"
-            tooltip="Cette saison"
+            tooltip="Période courante"
             :value="'≃ ' + externalPresenceStats.ratioPresenceOpenCurrentSeason"
             :is-increasing="externalPresenceStats.ratioPresenceOpenCurrentSeason >= externalPresenceStats.ratioPresenceOpenPreviousSeason"
             :top-right="{
               value: externalPresenceStats.ratioPresenceOpenPreviousSeason,
-              tooltip: 'Saison précédente'
+              tooltip: 'Période précédente'
             }"
             :loading="externalPresenceStats.loading">
           </GenericStatCard>

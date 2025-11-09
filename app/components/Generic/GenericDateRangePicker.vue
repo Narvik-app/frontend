@@ -64,7 +64,12 @@ const ranges = [
 ] as Range[]
 
 if (props.seasonSelectors) {
+  if (props.excludePreviousSeason) {
+    ranges.push({label: 'Dernière année', duration: {type: 'year', value: 1}})
+  }
+
   ranges.push({ label: 'Saison actuelle', duration: { type: 'filter', value: 'current-season' } })
+
   if (!props.excludePreviousSeason) {
     ranges.push({ label: 'Saison précédente', duration: { type: 'filter', value: 'previous-season' } })
   }
