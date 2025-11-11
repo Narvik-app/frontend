@@ -220,7 +220,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
           </UFormField>
 
           <UFormField label="Pièce-jointe" :help="`Taille maximum : ${MAX_ATTACHMENT_SIZE_MB} Mo`">
-            <UButtonGroup class="w-full">
+            <UFieldGroup class="w-full">
               <UInput
                 v-model="attachment"
                 type="file"
@@ -233,7 +233,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
                 label="Supprimer"
                 @click="deleteAttachment"
               />
-            </UButtonGroup>
+            </UFieldGroup>
           </UFormField>
 
 
@@ -272,7 +272,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
       <UCard>
         <div class="flex flex-col gap-2">
           <p>Modèles</p>
-          <UButtonGroup class="w-full">
+          <UFieldGroup class="w-full">
             <USelectMenu
               :items="templates"
               v-model="selectedTemplate"
@@ -292,7 +292,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
                 templateModalOpen = true
               }"
             />
-          </UButtonGroup>
+          </UFieldGroup>
         </div>
 
         <UModal v-model:open="templateModalOpen">
