@@ -333,7 +333,7 @@ watch([previousSeason, dateRange], () => {
         <GenericStatCard
           title="Évolution"
           tooltip="Variation par rapport à la période précédente"
-          :value="activityStats.isIncreasing ? '+' : '-' + Math.abs(activityStats.currentSeason - activityStats.previousSeason)"
+          :value="(activityStats.isIncreasing ? '+' : '-') + Math.abs(activityStats.currentSeason - activityStats.previousSeason)"
           :is-increasing="activityStats.isIncreasing"
           :top-right="{
             tooltip: 'Variation relative',
