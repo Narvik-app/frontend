@@ -9,7 +9,7 @@ import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
 import {createBrowserCsvDownload} from "~/utils/browser";
 import {defineStore} from "pinia";
 import {ClubRole} from "~/types/api/item/club";
-import type {DateRange, DateRangeFilter} from "~/types/date";
+import {type DateRange, DateRangeFilter} from "~/types/date";
 
 export const useSaleStore = defineStore('sale', () => {
   const saleQuery = new SaleQuery()
@@ -153,6 +153,10 @@ export const useSaleStore = defineStore('sale', () => {
     sellersLoading.value = []
   }
 
+  function setSelectedRange(range: DateRange | DateRangeFilter | undefined) {
+    selectedRange.value = range
+  }
+
   return {
     sales,
     seller,
@@ -169,5 +173,6 @@ export const useSaleStore = defineStore('sale', () => {
     getSalesCsv,
     getSellers,
     getPaymentModes,
+    setSelectedRange,
   }
 })

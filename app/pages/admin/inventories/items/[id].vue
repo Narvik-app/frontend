@@ -2,13 +2,9 @@
   import InventoryItemQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryItemQuery";
   import type {InventoryItem} from "~/types/api/item/clubDependent/plugin/sale/inventoryItem";
   import type {InventoryItemHistory} from "~/types/api/item/clubDependent/plugin/sale/inventoryItemHistory";
-
-  import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Colors } from 'chart.js'
-  import { Line } from 'vue-chartjs'
   import {formatMonetary} from "~/utils/string";
   import {convertUuidToUrlUuid, decodeUrlUuid} from "~/utils/resource";
   import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
-  ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Colors)
 
   definePageMeta({
     layout: "pos"
@@ -29,11 +25,7 @@
   const inventoryItem: Ref<InventoryItem | undefined> = ref(undefined)
   const inventoryItemHistories: Ref<InventoryItemHistory[]> = ref([])
 
-  const chartData: Ref<object|undefined> = ref(undefined)
-  const chartOptions = ref({
-    responsive: true,
-    maintainAspectRatio: true,
-  })
+  const chartData: Ref<ChartLineData|undefined> = ref(undefined)
 
   const itemQuery = new InventoryItemQuery()
 
@@ -210,10 +202,9 @@
     </div>
 
     <GenericCard v-if="chartData" title="Historique des prix de ventes/achats">
-      <Line
-        :data="chartData"
-        :options="chartOptions"
-      />
+      <div class="h-[55vh] sm:h-[65vh]">
+        <ChartLine :data="chartData" />
+      </div>
     </GenericCard>
   </div>
 
