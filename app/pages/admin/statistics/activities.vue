@@ -34,6 +34,7 @@ const {
   lastRefreshDate,
   presenceMetrics,
   presenceMetricsPreviousSeason,
+  previousPeriodInfo,
 } = storeToRefs(metricStore)
 
 // Constants
@@ -281,7 +282,7 @@ watch([previousSeason, dateRange], () => {
 
         <div class="w-full mb-2"></div>
 
-        <UPopover v-model:open="popoverOpen">
+<UPopover v-model:open="popoverOpen">
           <UButton
             icon="i-heroicons-calendar-days-20-solid"
             :label="dateRange ? formatDateRangeReadable(dateRange) || 'Choisir une plage' : 'Choisir une plage'"
@@ -296,6 +297,13 @@ watch([previousSeason, dateRange], () => {
             />
           </template>
         </UPopover>
+
+        <div class="w-full mb-2"></div>
+
+        <div v-if="previousPeriodInfo" class="text-sm text-gray-600 dark:text-gray-400 mt-1 px-1">
+          <span class="font-medium">Période précédente : </span>
+          <span class="ml-1">{{ previousPeriodInfo.description }}</span>
+        </div>
 
         <div class="w-full mb-2"></div>
 

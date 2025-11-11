@@ -5,7 +5,7 @@ import MetricQuery from "~/composables/api/query/MetricQuery";
 import {type DateRange, DateRangeFilter} from "~/types/date";
 import type {Metric} from "~/types/api/item/metric";
 import {useSelfUserStore} from "~/stores/useSelfUser";
-import {formatDateInput} from "~/utils/date";
+import {formatDateInput, formatDateReadable} from "~/utils/date";
 
 export const useMetricStore = defineStore('metric', () => {
   // Filter settings
@@ -25,8 +25,14 @@ export const useMetricStore = defineStore('metric', () => {
   const externalPresenceMetrics: Ref<Metric | undefined> = ref(undefined);
   const externalPresenceMetricsPreviousSeason: Ref<Metric | undefined> = ref(undefined);
 
-  const selfStore = useSelfUserStore();
+const selfStore = useSelfUserStore();
   const { selectedProfile } = storeToRefs(selfStore)
+
+  function getPreviousPeriodDates(currentDateRange: DateRange): { start: dayjs.Dayjs, end: dayjs.Dayjs } {
+    const start = dayjs(currentDateRange.start).subtract(1, 'year');
+    const end = dayjs(currentDateRange.end).subtract(1, 'year');
+    return { start, end };
+  }
 
   // Build query parameters based on current filters
   function buildQueryParams(baseQuery: string, isSuperAdmin: boolean = false, isPreviousSeason: boolean = false): string {
@@ -44,9 +50,9 @@ export const useMetricStore = defineStore('metric', () => {
         let startDate, endDate;
 
         if (isPreviousSeason) {
-          // Subtract one year for previous season
-          startDate = dayjs(dateRangeObj.start).subtract(1, 'year');
-          endDate = dayjs(dateRangeObj.end).subtract(1, 'year');
+          const previousDates = getPreviousPeriodDates(dateRangeObj);
+          startDate = previousDates.start;
+          endDate = previousDates.end;
         } else {
           startDate = dayjs(dateRangeObj.start);
           endDate = dayjs(dateRangeObj.end);
@@ -215,6 +221,33 @@ export const useMetricStore = defineStore('metric', () => {
     dateRange.value = range
   }
 
+  // Calculate what the previous period dates will be
+  const previousPeriodInfo = computed(() => {
+    if (!dateRange.value) return null;
+
+    // If it's a filter (like 'current-season' or 'previous-season'), we can't calculate specific dates
+    if ('value' in dateRange.value) {
+      return {
+        description: 'Saison précédente'
+      };
+    }
+
+    // If it's a specific date range, calculate the previous period dates
+    const currentRange = dateRange.value as DateRange;
+
+    const previousDates = getPreviousPeriodDates(currentRange);
+    const previousStart = previousDates.start;
+    const previousEnd = previousDates.end;
+
+    return {
+      description: `${formatDateReadable(previousStart.format())} - ${formatDateReadable(previousEnd.format())}`,
+      dates: {
+        start: previousStart.toDate(),
+        end: previousEnd.toDate()
+      }
+    };
+  });
+
   return {
     // State
     previousSeason,
@@ -230,6 +263,9 @@ export const useMetricStore = defineStore('metric', () => {
     presenceMetricsPreviousSeason,
     externalPresenceMetrics,
     externalPresenceMetricsPreviousSeason,
+
+    // Computed
+    previousPeriodInfo,
 
     // Actions
     getMetrics,
