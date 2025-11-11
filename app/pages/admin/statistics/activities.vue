@@ -36,6 +36,9 @@ const {
   presenceMetricsPreviousSeason,
 } = storeToRefs(metricStore)
 
+// Constants
+const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+
 const columns = [
   {
     accessorKey: 'dayName',
@@ -67,6 +70,31 @@ const columns = [
   }
 ]
 
+function getDayName(dayNumber: string): string {
+  return dayNames[parseInt(dayNumber)] || `Jour ${dayNumber}`;
+}
+
+function sumTotalFromChildMetrics(childMetrics: any[] | undefined): number {
+  return childMetrics?.reduce((sum, day) => {
+    return sum + parseInt(day.values?.total || '0');
+  }, 0) || 0;
+}
+
+function getActivityMetrics(presenceMetrics: any, activityName: string) {
+  return presenceMetrics?.childMetrics?.find(
+    metric => metric.name === activityName
+  );
+}
+
+function processChartData(metrics: any, label: string): ChartDataField[] {
+  if (!metrics?.childMetrics) return [];
+
+  return metrics.childMetrics.map((cm: any) => ({
+    x: getDayName(cm.name),
+    y: parseFloat(cm.values?.median || '0')
+  }));
+}
+
 // Get available activities from all activities (not filtered by presence metrics)
 const availableActivities = computed(() => {
   if (!selectedProfile.value?.club.presencesEnabled) {
@@ -92,26 +120,14 @@ const activityPresenceMetrics = computed(() => {
   if (!presenceMetrics.value || !selectedActivity.value) {
     return undefined;
   }
-
-  // Filter childMetrics to find the specific activity
-  const activityMetric = presenceMetrics.value.childMetrics?.find(
-    metric => metric.name === selectedActivity.value
-  );
-
-  return activityMetric;
+  return getActivityMetrics(presenceMetrics.value, selectedActivity.value);
 });
 
 const activityPresenceMetricsPreviousSeason = computed(() => {
   if (!presenceMetricsPreviousSeason.value || !selectedActivity.value) {
     return undefined;
   }
-
-  // Filter childMetrics to find the specific activity
-  const activityMetric = presenceMetricsPreviousSeason.value.childMetrics?.find(
-    metric => metric.name === selectedActivity.value
-  );
-
-  return activityMetric;
+  return getActivityMetrics(presenceMetricsPreviousSeason.value, selectedActivity.value);
 });
 
 // Check if selected activity has data for current date range
@@ -132,22 +148,15 @@ const activityStats = computed(() => {
 
   if (activityPresenceMetrics.value) {
     response.loading = false;
-    // Sum up all the total values from each day
-    const currentSeasonTotal = activityPresenceMetrics.value.childMetrics?.reduce((sum, day) => {
-      return sum + parseInt(day.values?.total || '0');
-    }, 0) || 0;
-
+    // Sum up all the total values from each day using helper function
+    const currentSeasonTotal = sumTotalFromChildMetrics(activityPresenceMetrics.value.childMetrics);
     response.currentSeason = currentSeasonTotal;
     response.totalValue = currentSeasonTotal;
   }
 
   if (activityPresenceMetricsPreviousSeason.value) {
-    // Sum up all the total values from each day for previous season
-    const previousSeasonTotal = activityPresenceMetricsPreviousSeason.value.childMetrics?.reduce((sum, day) => {
-      return sum + parseInt(day.values?.total || '0');
-    }, 0) || 0;
-
-    response.previousSeason = previousSeasonTotal;
+    // Sum up all the total values from each day for previous season using helper function
+    response.previousSeason = sumTotalFromChildMetrics(activityPresenceMetricsPreviousSeason.value.childMetrics);
   }
 
   response.isIncreasing = response.currentSeason >= response.previousSeason;
@@ -159,12 +168,9 @@ const activityChildMetrics = computed(() => {
   const currentSeasonMetrics = activityPresenceMetrics.value?.childMetrics || [];
   const previousSeasonMetrics = activityPresenceMetricsPreviousSeason.value?.childMetrics || [];
 
-  // Day names mapping
-  const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-
   return currentSeasonMetrics.map(currentMetric => {
     const previousMetric = previousSeasonMetrics.find(pm => pm.name === currentMetric.name);
-    const dayName = dayNames[parseInt(currentMetric.name)] || `Jour ${currentMetric.name}`;
+    const dayName = getDayName(currentMetric.name);
 
     // Extract total from values object (parse as integer since it might be string)
     const currentTotal = parseInt(currentMetric.values?.total || '0');
@@ -192,46 +198,30 @@ const chartData = computed(() => {
     datasets: [],
   }
 
-  if (activityPresenceMetricsPreviousSeason.value && activityPresenceMetricsPreviousSeason.value.childMetrics) {
-    const data: ChartDataField[] = [];
-
-    activityPresenceMetricsPreviousSeason.value.childMetrics.forEach(cm => {
-      const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-      const dayName = dayNames[parseInt(cm.name)] || `Jour ${cm.name}`;
-
-      data.push({
-        x: dayName,
-        y: parseFloat(cm.values?.median || '0')
-      })
-    })
-
-    response.datasets.push({
-      label: 'Période précédente',
-      data: data,
-    })
+  // Add previous season data if available
+  if (activityPresenceMetricsPreviousSeason.value) {
+    const data = processChartData(activityPresenceMetricsPreviousSeason.value, 'Période précédente');
+    if (data.length > 0) {
+      response.datasets.push({
+        label: 'Période précédente',
+        data: data,
+      });
+    }
   }
 
-  if (activityPresenceMetrics.value && activityPresenceMetrics.value.childMetrics) {
-    const data: ChartDataField[] = [];
-
-    activityPresenceMetrics.value.childMetrics.forEach(cm => {
-      const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-      const dayName = dayNames[parseInt(cm.name)] || `Jour ${cm.name}`;
-
-      data.push({
-        x: dayName,
-        y: parseFloat(cm.values?.median || '0')
-      })
-    })
-
-    response.datasets.push({
-      label: 'Période courante',
-      data: data,
-    })
+  // Add current season data if available
+  if (activityPresenceMetrics.value) {
+    const data = processChartData(activityPresenceMetrics.value, 'Période courante');
+    if (data.length > 0) {
+      response.datasets.push({
+        label: 'Période courante',
+        data: data,
+      });
+    }
   }
 
-  return response
-})
+  return response;
+});
 
 function handleDateRangeUpdate(range: DateRange | DateRangeFilter | undefined) {
   metricStore.setDateRange(range)
