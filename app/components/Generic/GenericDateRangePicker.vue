@@ -2,11 +2,35 @@
 import { DatePicker as VCalendarDatePicker } from 'v-calendar'
 import 'v-calendar/style.css'
 import dayjs from "dayjs";
-import type {DateRange} from "~/types/date";
+import {type DateRange, DateRangeFilter} from "~/types/date";
 
-const date = defineModel<DateRange|undefined>({default: undefined})
+interface Range {
+  label: string,
+  duration: { type: string, value: string|number }
+}
 
-const emit = defineEmits<{ rangeUpdated: [DateRange | undefined] }>()
+const dateRange = ref<DateRange|undefined>(undefined)
+
+const emit = defineEmits<{ rangeUpdated: [DateRange | DateRangeFilter | undefined] }>()
+
+const props = defineProps({
+  seasonSelectors: {
+    type: Boolean,
+    default: true
+  },
+  excludePreviousSeason: {
+    type: Boolean,
+    default: false
+  },
+  dateRange: {
+    type: Object as PropType<DateRange|DateRangeFilter|undefined>,
+    default: undefined
+  }
+});
+
+if (props.dateRange && typeof props.dateRange.label !== 'string') {
+  dateRange.value = props.dateRange as DateRange
+}
 
 const columns = computed(() => {
   return isMobile().value ? 1 : 2
@@ -37,16 +61,48 @@ const ranges = [
   { label: '30 derniers jours', duration: { type: 'day', value: 30 } },
   { label: '3 derniers mois', duration: { type: 'month', value: 3 } },
   { label: '6 derniers mois', duration: { type: 'month', value: 6 } },
-  { label: 'Dernière année', duration: { type: 'year', value: 1 } }
-]
+] as Range[]
 
-function isRangeSelected (duration: { type: string, value: number }) {
-  if (!date.value) return false
-  return dayjs(date.value.start).isSame(dayjs().subtract(duration.value, duration.type), 'day') && dayjs().isSame(date.value.end, 'day')
+if (props.seasonSelectors) {
+  if (props.excludePreviousSeason) {
+    ranges.push({label: 'Dernière année', duration: {type: 'year', value: 1}})
+  }
+
+  ranges.push({ label: 'Saison actuelle', duration: { type: 'filter', value: 'current-season' } })
+
+  if (!props.excludePreviousSeason) {
+    ranges.push({ label: 'Saison précédente', duration: { type: 'filter', value: 'previous-season' } })
+  }
+} else {
+  ranges.push({ label: 'Dernière année', duration: { type: 'year', value: 1 } })
 }
 
-function selectRange (duration: { type: string, value: number }) {
-  date.value = { start: dayjs().subtract(duration.value, duration.type).toDate(), end: new Date() }
+function isRangeSelected(range: Range) {
+  if (!props.dateRange) return false
+
+  const isFilter = typeof range.duration.value === 'string';
+  if (isFilter) {
+    return typeof props.dateRange === 'object' && 'value' in props.dateRange && props.dateRange.value === range.duration.value;
+  }
+
+  return dayjs(props.dateRange.start).isSame(dayjs().subtract(range.duration.value, range.duration.type), 'day') && dayjs().isSame(props.dateRange.end, 'day')
+}
+
+function selectRange(range: Range) {
+  const isFilter = typeof range.duration.value === 'string';
+  if (isFilter) {
+    // props.dateRange = { label: range.label, value: range.duration.value} as DateRangeFilter;
+    dateRange.value = undefined;
+    notify(new DateRangeFilter(range.label, range.duration.value))
+    return;
+  }
+
+  dateRange.value = { start: dayjs().subtract(range.duration.value, range.duration.type).toDate(), end: new Date() }
+  notify({ start: dayjs().subtract(range.duration.value, range.duration.type).toDate(), end: new Date() } as DateRange)
+}
+
+function notify(range: DateRange|DateRangeFilter|undefined) {
+  emit('rangeUpdated', range)
 }
 </script>
 
@@ -57,15 +113,14 @@ function selectRange (duration: { type: string, value: number }) {
           v-for="(range, index) in ranges"
           :key="index"
           :label="range.label"
-          color="neutral"
-          variant="ghost"
+          :color="isRangeSelected(range) ? 'primary' : 'neutral'"
+          :variant="isRangeSelected(range) ? 'soft' : 'ghost'"
           class="rounded-none px-6"
-          :class="[isRangeSelected(range.duration) ? 'bg-gray-100 dark:bg-gray-800' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50']"
           truncate
-          @click="selectRange(range.duration)"
+          @click="selectRange(range)"
       />
     </div>
-    <VCalendarDatePicker v-model.range="date" @update:model-value="emit('rangeUpdated', date)" :columns="columns" v-bind="{ ...attrs, ...$attrs }" />
+    <VCalendarDatePicker v-model.range="dateRange" :columns="columns" v-bind="{ ...attrs, ...$attrs }" />
   </div>
 
 </template>

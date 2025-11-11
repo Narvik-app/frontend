@@ -41,7 +41,7 @@
 
     urlParams.append(`order[${sort.value.column}]`, sort.value.direction);
     urlParams.append(`order[firstname]`, 'asc');
-    urlParams.append('currentSeason[memberSeasons.season]', 'true');
+    urlParams.append('current-season[memberSeasons.season]', 'true');
 
     memberQuery.getAll(urlParams).then(async value => {
       if (value.items) {

@@ -62,6 +62,11 @@
       to: '/admin/presences'
     },
     {
+      label: 'Statistiques',
+      icon: 'i-heroicons-presentation-chart-line',
+      to: '/admin/statistics/activities'
+    },
+    {
       label: 'Trombinoscope',
       icon: 'i-heroicons-face-smile',
       to: '/admin/thrombinoscope'

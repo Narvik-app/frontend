@@ -2,14 +2,14 @@ import type {ExternalPresence} from "~/types/api/item/clubDependent/plugin/prese
 import ExternalPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/ExternalPresenceQuery";
 import dayjs from "dayjs";
 import {defineStore} from "pinia";
-import type {DateRange} from "~/types/date";
+import {type DateRange, DateRangeFilter} from "~/types/date";
 import type { SelectApiItem } from "~/types/select";
 import type { Activity } from "~/types/api/item/clubDependent/plugin/presence/activity";
 
 export const usePresenceStore = defineStore('presence', () => {
   const selectedActivities: Ref<SelectApiItem<Activity>[]> = ref([])
   const selectedDate: Ref<Date|null> = ref(null)
-	const selectedRange: Ref<DateRange|undefined> = ref({ start: dayjs().subtract(30, 'day').toDate(), end: new Date() })
+	const selectedRange: Ref<DateRange|DateRangeFilter|undefined> = ref({ start: dayjs().subtract(30, 'day').toDate(), end: new Date() })
 	const searchQuery: Ref<string> = ref('')
 
 	const totalExternal: Ref<number> = ref(0)
@@ -46,6 +46,10 @@ export const usePresenceStore = defineStore('presence', () => {
 		})
 	}
 
+	function setSelectedRange(range: DateRange|DateRangeFilter|undefined) {
+		selectedRange.value = range
+	}
+
 	return {
 		searchQuery,
 		selectedActivities,
@@ -57,6 +61,7 @@ export const usePresenceStore = defineStore('presence', () => {
 		addItem,
 		refresh,
 		updateItem,
-		deleteItem
+		deleteItem,
+		setSelectedRange,
 	}
 })

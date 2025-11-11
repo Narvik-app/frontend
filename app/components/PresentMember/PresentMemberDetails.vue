@@ -9,13 +9,8 @@ import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
 import type {Member} from "~/types/api/item/clubDependent/member";
 import {formatDateReadable} from "~/utils/date";
 import {useSelfUserStore} from "~/stores/useSelfUser";
-
-import { Chart as ChartJS, Title, Tooltip, Legend, DoughnutController, ArcElement, CategoryScale, LinearScale, Colors } from 'chart.js'
-import { Doughnut } from 'vue-chartjs'
 import MemberPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/MemberPresenceQuery";
 import {convertUuidToUrlUuid} from "~/utils/resource";
-
-ChartJS.register(Title, Tooltip, Legend, DoughnutController, ArcElement, CategoryScale, LinearScale, Colors)
 
 const toast = useToast()
 const selfStore = useSelfUserStore()
@@ -55,11 +50,7 @@ const isLoadingPresences = ref(false)
 const memberPresences: Ref<MemberPresence[]> = ref([])
 const totalMemberPresences = computed(() => memberPresences.value.length)
 
-const chartData: Ref<object|undefined> = ref(undefined)
-const chartOptions = ref({
-  responsive: true,
-  maintainAspectRatio: false,
-})
+const chartData: Ref<ChartDoughnutData|undefined> = ref(undefined)
 
 const updateMemberPresenceModalOpen = ref(false);
 
@@ -290,11 +281,8 @@ async function copyLicence() {
       >
         <div class="text-xl text-center font-bold mb-4">{{ totalMemberPresences }} présences ces 12 derniers mois</div>
 
-        <div class="h-96 mt-4">
-          <Doughnut
-              :data="chartData"
-              :options="chartOptions"
-          />
+        <div v-if="chartData" class="h-96 mt-4">
+          <ChartDoughnut :data="chartData" />
         </div>
       </UCard>
 

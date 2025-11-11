@@ -82,7 +82,7 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
         <UButton icon="i-heroicons-calendar-days-20-solid" :label="selectedRange ? formatDateRangeReadable(selectedRange) || 'Choisir une plage' : 'Choisir une plage'" />
 
         <template #content>
-          <GenericDateRangePicker v-model="selectedRange" @range-updated="popoverOpen = false; saleStore.getSales();" />
+          <GenericDateRangePicker :date-range="selectedRange" @range-updated="(range) => { saleStore.setSelectedRange(range); popoverOpen = false; saleStore.getSales();}" />
         </template>
       </UPopover>
 
