@@ -94,7 +94,7 @@
       <p>Vous ne recevrez plus de newsletter de la part de l'association.</p>
 
       <UFormField label="Email">
-        <UButtonGroup class="w-full" size="lg">
+        <UFieldGroup class="w-full" size="lg">
           <UInput
             v-model="email"
             icon="i-heroicons-envelope"
@@ -106,7 +106,7 @@
             :loading="isLoading"
             @click="unsubscribe"
           />
-        </UButtonGroup>
+        </UFieldGroup>
       </UFormField>
     </div>
   </UCard>

@@ -7,7 +7,7 @@
 
 <template>
   <div>
-    <UButtonGroup orientation="horizontal" size="sm">
+    <UFieldGroup orientation="horizontal" size="sm">
       <UButton
         icon="i-heroicons-sun-20-solid"
         :variant="!isDark ? 'solid': 'outline'"
@@ -22,7 +22,7 @@
       >
         Sombre
       </UButton>
-    </UButtonGroup>
+    </UFieldGroup>
 
 
   </div>
