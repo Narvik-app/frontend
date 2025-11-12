@@ -28,7 +28,7 @@
   if (appConfigStore.config?.appVersion) {
     versions.push({
       label: `Backend ${appConfigStore.config.appVersion}`,
-      to: 'https://github.com/froozeify/narvik-back'
+      to: 'https://github.com/Narvik-app/backend'
     })
   }
 
