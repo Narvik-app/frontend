@@ -279,7 +279,7 @@
         v-model:sort="sort"
         sort-mode="manual"
         @update:sort="getMembers()"
-        @select="onSelect"
+        @select="(evt, row) => onSelect(row, evt)"
         :columns="columns"
         :loading="isLoading"
         :data="members"

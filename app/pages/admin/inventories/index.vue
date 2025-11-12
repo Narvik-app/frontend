@@ -283,7 +283,7 @@
           @update:sorting="getItemsPaginated()"
           :columns="columns"
           :data="apiItems"
-          @select="(row) => rowClicked(row.original)">
+          @select="(evt, row) => rowClicked(row.original)">
           <template #empty>
             <div class="flex flex-col items-center justify-center py-6 gap-3">
               <span class="italic text-sm">Aucun articles.</span>
