@@ -122,7 +122,7 @@ function sortClicked() {
     @update:sorting="sortClicked()"
     :columns="columns"
     :data="props.presences"
-    @select="rowClicked"
+    @select="(evt, row) => rowClicked(row)"
     :ui="{
       tr: 'cursor-pointer'
     }"

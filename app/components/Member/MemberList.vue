@@ -204,7 +204,7 @@ async function downloadCsv() {
         @update:sort="getMembers()"
         :columns="columns"
         :data="members"
-        @select="(evt) => displayMemberPage(evt.original)"
+        @select="(evt, row) => displayMemberPage(row.original)"
         :ui="{
           tr: 'cursor-pointer'
         }"
