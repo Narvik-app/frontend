@@ -97,13 +97,18 @@ function selectRange(range: Range) {
     return;
   }
 
-  dateRange.value = { start: dayjs().subtract(range.duration.value, range.duration.type).toDate(), end: new Date() }
-  notify({ start: dayjs().subtract(range.duration.value, range.duration.type).toDate(), end: new Date() } as DateRange)
+  dateRange.value = { start: dayjs().subtract(range.duration.value, range.duration.type).toDate(), end: new Date(), _trigger: 'selectedRange' }
 }
 
 function notify(range: DateRange|DateRangeFilter|undefined) {
   emit('rangeUpdated', range)
 }
+
+watch(dateRange, (newVal) => {
+  if (newVal && !newVal._trigger) {
+    notify(newVal)
+  }
+})
 </script>
 
 <template>

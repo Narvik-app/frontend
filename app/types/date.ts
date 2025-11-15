@@ -1,6 +1,7 @@
 export interface DateRange {
   start: Date
   end: Date
+  _trigger?: string
 }
 
 interface DateRangeFilterInterface {
