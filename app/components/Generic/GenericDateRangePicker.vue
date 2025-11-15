@@ -91,13 +91,13 @@ function isRangeSelected(range: Range) {
 function selectRange(range: Range) {
   const isFilter = typeof range.duration.value === 'string';
   if (isFilter) {
-    // props.dateRange = { label: range.label, value: range.duration.value} as DateRangeFilter;
     dateRange.value = undefined;
     notify(new DateRangeFilter(range.label, range.duration.value))
     return;
   }
 
   dateRange.value = { start: dayjs().subtract(range.duration.value, range.duration.type).toDate(), end: new Date(), _trigger: 'selectedRange' }
+  // No notify() here as it will be handle from the watch function
 }
 
 function notify(range: DateRange|DateRangeFilter|undefined) {
