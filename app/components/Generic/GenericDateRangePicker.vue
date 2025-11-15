@@ -112,8 +112,8 @@ watch(dateRange, (newVal) => {
 </script>
 
 <template>
-  <div class="flex items-center sm:divide-x divide-gray-200 dark:divide-gray-800">
-    <div class="hidden sm:flex flex-col py-4">
+  <div class="flex flex-col-reverse gap-4 sm:flex-row items-center divide-y sm:divide-y-0 sm:divide-x divide-gray-200 dark:divide-gray-800">
+    <div class="flex flex-col">
       <UButton
           v-for="(range, index) in ranges"
           :key="index"
