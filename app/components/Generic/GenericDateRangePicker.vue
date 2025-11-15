@@ -91,24 +91,29 @@ function isRangeSelected(range: Range) {
 function selectRange(range: Range) {
   const isFilter = typeof range.duration.value === 'string';
   if (isFilter) {
-    // props.dateRange = { label: range.label, value: range.duration.value} as DateRangeFilter;
     dateRange.value = undefined;
     notify(new DateRangeFilter(range.label, range.duration.value))
     return;
   }
 
-  dateRange.value = { start: dayjs().subtract(range.duration.value, range.duration.type).toDate(), end: new Date() }
-  notify({ start: dayjs().subtract(range.duration.value, range.duration.type).toDate(), end: new Date() } as DateRange)
+  dateRange.value = { start: dayjs().subtract(range.duration.value, range.duration.type).toDate(), end: new Date(), _trigger: 'selectedRange' }
+  // No notify() here as it will be handle from the watch function
 }
 
 function notify(range: DateRange|DateRangeFilter|undefined) {
   emit('rangeUpdated', range)
 }
+
+watch(dateRange, (newVal) => {
+  if (newVal && !newVal._trigger) {
+    notify(newVal)
+  }
+})
 </script>
 
 <template>
-  <div class="flex items-center sm:divide-x divide-gray-200 dark:divide-gray-800">
-    <div class="hidden sm:flex flex-col py-4">
+  <div class="flex flex-col-reverse gap-4 sm:flex-row items-center divide-y sm:divide-y-0 sm:divide-x divide-gray-200 dark:divide-gray-800">
+    <div class="flex flex-col">
       <UButton
           v-for="(range, index) in ranges"
           :key="index"
