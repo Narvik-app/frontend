@@ -16,8 +16,9 @@ const publicPaths = [
 
 const supervisorOnlyPaths = [
   "^/admin$",
-  "^/admin/presences",
   "^/admin/members",
+  "^/admin/presences",
+  "^/admin/statistics",
   "^/admin/thrombinoscope",
 
   "^/admin/sales",
