@@ -9,3 +9,35 @@ updates:
       timezone: "Europe/Paris"
     assignees:
       - "froozeify"
+    groups:
+      npm-dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+      time: "03:00"
+      timezone: "Europe/Paris"
+    assignees:
+      - "froozeify"
+    groups:
+      docker-dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+      time: "03:00"
+      timezone: "Europe/Paris"
+    assignees:
+      - "froozeify"
+    groups:
+      github-actions-dependencies:
+        patterns:
+          - "*"
