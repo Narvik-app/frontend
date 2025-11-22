@@ -20,6 +20,8 @@ export function extractDataFromBase64Encoded(base64: string) {
 }
 
 export function base64ToBlob(base64: string, type = "application/octet-stream" ) {
+  if (import.meta.server) return new Blob()
+  
   const data = extractDataFromBase64Encoded(base64)
 
   const binStr = atob( data );
@@ -43,11 +45,15 @@ function createBrowserDownload(filename: string, blob: Blob) {
 }
 
 export function createBrowserCsvDownload(filename: string, data: any) {
+  if (import.meta.server) return
+  
   const blob = new Blob([data], {type: 'text/csv'})
   createBrowserDownload(filename, blob)
 }
 
 export function createBrowserPdfDownload(filename: string, base64: string) {
+  if (import.meta.server) return
+  
   const blob = base64ToBlob(base64, 'application/pdf')
   createBrowserDownload(filename, blob)
 }
