@@ -15,13 +15,16 @@ export const useAppConfigStore = defineStore('appConfig', () => {
 	const logoImage: Ref<string> = ref('')
 	const logoNk: Ref<string> = ref('')
 
-  setLogoImage(isDarkMode().value)
-  setLogoNk(isDarkMode().value)
+  // Only initialize on client side
+  if (import.meta.client) {
+    setLogoImage(isDarkMode().value)
+    setLogoNk(isDarkMode().value)
 
-  watch(isDarkMode(), (value) => {
-    setLogoImage(value)
-    setLogoNk(value)
-  })
+    watch(isDarkMode(), (value) => {
+      setLogoImage(value)
+      setLogoNk(value)
+    })
+  }
 
   function setLogoImage(isDark: boolean) {
     if (isDark) {

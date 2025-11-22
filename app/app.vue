@@ -7,23 +7,25 @@ const runtimeConfig = useRuntimeConfig()
 
 const selfUser = useSelfUserStore()
 
-if (runtimeConfig.public.umamiEnabled) {
-  const { proxy } = useScriptUmamiAnalytics({
-    websiteId: runtimeConfig.public.umamiWebsiteId as string,
-    scriptInput: {
-      src: runtimeConfig.public.umamiScript as string,
-    },
-  })
+if (import.meta.client) {
+  if (runtimeConfig.public.umamiEnabled) {
+    const { proxy } = useScriptUmamiAnalytics({
+      websiteId: runtimeConfig.public.umamiWebsiteId as string,
+      scriptInput: {
+        src: runtimeConfig.public.umamiScript as string,
+      },
+    })
 
-  if (selfUser.isLogged() && selfUser.user?.uuid) {
-    proxy.identify(convertUuidToUrlUuid(selfUser.user.uuid))
-  } else {
-    proxy.identify(undefined)
+    if (selfUser.isLogged() && selfUser.user?.uuid) {
+      proxy.identify(convertUuidToUrlUuid(selfUser.user.uuid))
+    } else {
+      proxy.identify(undefined)
+    }
   }
-}
 
-if (!selfUser.isLegalsAccepted()) {
-  useOverlay().create(ModalLegalsAcceptance).open()
+  if (!selfUser.isLegalsAccepted()) {
+    useOverlay().create(ModalLegalsAcceptance).open()
+  }
 }
 </script>
 

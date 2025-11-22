@@ -8,7 +8,7 @@ export default defineNuxtConfig({
   },
   compatibilityDate: '2024-11-27',
 
-  ssr: false,
+  ssr: true,
 
   modules: [
     '@nuxt/ui',
@@ -81,7 +81,7 @@ export default defineNuxtConfig({
     addValidateEndpoint: false
   },
 
-  // Require ssr, so we disable it
+  // These features are disabled as they're not needed for this application
   ogImage: {
     enabled: false
   },

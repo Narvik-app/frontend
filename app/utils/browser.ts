@@ -1,12 +1,15 @@
 export function verifyCameraIsPresent(): Ref<boolean> {
   const isCameraPresent = ref(false)
-  navigator.mediaDevices.enumerateDevices().then(devices => {
-    devices.forEach(device => {
-      if (device.kind === 'videoinput') {
-        isCameraPresent.value = true
-      }
+  
+  if (import.meta.client && navigator?.mediaDevices) {
+    navigator.mediaDevices.enumerateDevices().then(devices => {
+      devices.forEach(device => {
+        if (device.kind === 'videoinput') {
+          isCameraPresent.value = true
+        }
+      })
     })
-  })
+  }
 
   return isCameraPresent
 }
@@ -29,6 +32,8 @@ export function base64ToBlob(base64: string, type = "application/octet-stream" )
 }
 
 function createBrowserDownload(filename: string, blob: Blob) {
+  if (import.meta.server) return
+  
   const elem = window.document.createElement('a')
   elem.href = window.URL.createObjectURL(blob)
   elem.download = filename
@@ -53,6 +58,8 @@ export function createBrowserPdfDownload(filename: string, base64: string) {
  * The bug should be fixed in nuxt ui v3
  */
 export function isTouchDevice() {
+  if (import.meta.server) return false
+  
   return (('ontouchstart' in window) ||
     (navigator.maxTouchPoints > 0) ||
     (navigator.msMaxTouchPoints > 0));
@@ -60,6 +67,8 @@ export function isTouchDevice() {
 
 export const activeBreakpoint: Ref<string|undefined> = ref(undefined)
 export function watchBreakpoint() {
+  if (import.meta.server) return
+  
   if (window.screen.width >= 1536) {
     activeBreakpoint.value = '2xl'
   } else if (window.screen.width >= 1280) {
@@ -117,5 +126,6 @@ export function isDarkMode() {
  * Otherwise directly in the vue file we got a _ctxt error (window not exist)
  */
 export function print() {
+  if (import.meta.server) return
   window.print()
 }

@@ -14,6 +14,19 @@ export enum ColorName {
 }
 
 export function getColors(): Color[] {
+  if (import.meta.server) {
+    // Return default colors on server side
+    return [
+      { name: ColorName.Primary, value: '' },
+      { name: ColorName.Error, value: '' },
+      { name: ColorName.Success, value: '' },
+      { name: ColorName.Warning, value: '' },
+      { name: ColorName.Orange, value: '' },
+      { name: ColorName.Purple, value: '' },
+      { name: ColorName.Neutral, value: '' },
+    ]
+  }
+  
   return [
     { name: ColorName.Primary, value: getComputedStyle(document.documentElement).getPropertyValue('--ui-primary') },
     { name: ColorName.Error, value: getComputedStyle(document.documentElement).getPropertyValue('--ui-error') },
