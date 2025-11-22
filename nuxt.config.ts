@@ -56,6 +56,13 @@ export default defineNuxtConfig({
     }
   },
 
+  hooks: {
+    'api-party:extend': (options) => {
+      // Override the automatic client-side request enablement when SSR is disabled
+      options.client = false
+    }
+  },
+
   runtimeConfig: {
     public: {
       clientVersion: pkg.version,
