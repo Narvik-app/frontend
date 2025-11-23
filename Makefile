@@ -14,6 +14,17 @@ BUILD_REPO = benoitvignal/narvik-front
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
 
+## —— Local Development 💻 ——————————————————————————————————————————————————————
+generate-local-ssl: ## Generate local SSL certificates using mkcert
+	@if ! command -v mkcert >/dev/null 2>&1; then \
+		echo "\033[31mmkcert is not installed. Please install it from https://github.com/FiloSottile/mkcert\033[0m"; \
+		exit 1; \
+	fi
+	@echo "\033[32mGenerating local SSL certificates...\033[0m"
+	@mkcert localhost
+	@chmod +x localhost.pem localhost-key.pem
+	@echo "\033[32mCertificates generated and permissions set.\033[0m"
+
 ## —— Docker 🐳 ————————————————————————————————————————————————————————————————
 
 build-cloud-latest-only: ## Build using cloud and push it under latest tag (use for preprod testing)
