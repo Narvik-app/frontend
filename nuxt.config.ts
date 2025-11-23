@@ -2,6 +2,13 @@
 import pkg from './package.json'
 
 export default defineNuxtConfig({
+  devServer: {
+    https: {
+      key: './localhost-key.pem',
+      cert: './localhost.pem'
+    }
+  },
+
   devtools: { enabled: true },
   future: {
     compatibilityVersion: 4
