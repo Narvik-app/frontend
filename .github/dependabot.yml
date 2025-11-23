@@ -1,0 +1,93 @@
+# Dependabot configuration for automated dependency updates
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # NPM (JavaScript/Node.js) dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+      time: "03:00"
+    open-pull-requests-limit: 10
+    assignees:
+      - "froozeify"
+    labels:
+      - "dependencies"
+      - "npm"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    # Group dependencies by type and update frequency
+    groups:
+      framework:
+        patterns:
+          - "@nuxt/*"
+          - "nuxt*"
+          - "vue*"
+          - "@vue/*"
+        update-types:
+          - "minor"
+          - "patch"
+      ui-libraries:
+        patterns:
+          - "@headlessui/*"
+          - "@heroicons/*"
+          - "chart.js"
+          - "chartjs-*"
+          - "tailwindcss"
+        update-types:
+          - "minor"
+          - "patch"
+      development:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+      production:
+        dependency-type: "production"
+        update-types:
+          - "patch"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+      time: "03:00"
+    open-pull-requests-limit: 5
+    assignees:
+      - "froozeify"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+      time: "03:00"
+    open-pull-requests-limit: 5
+    assignees:
+      - "froozeify"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    # Group all GitHub Actions updates together
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
