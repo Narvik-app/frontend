@@ -48,18 +48,11 @@ export default defineNuxtConfig({
   },
 
   apiParty: {
-    client: false, // Force server-side proxy even with SSR disabled, for now this doesn't work. Really applied in hooks.api-party:extend
+    client: false, // Force server-side proxy even with SSR disabled
     endpoints: {
       localApi: {
         url: process.env.NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL || 'http://php',
       }
-    }
-  },
-
-  hooks: {
-    'api-party:extend': (options) => {
-      // Override the automatic client-side request enablement when SSR is disabled
-      options.client = false
     }
   },
 
