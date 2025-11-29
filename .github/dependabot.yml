@@ -11,8 +11,6 @@ updates:
       day: "saturday"
       time: "03:00"
     open-pull-requests-limit: 10
-    assignees:
-      - "froozeify"
     labels:
       - "dependencies"
       - "npm"
@@ -57,9 +55,7 @@ updates:
       interval: "weekly"
       day: "saturday"
       time: "03:00"
-    open-pull-requests-limit: 5
-    assignees:
-      - "froozeify"
+    open-pull-requests-limit: 10
     labels:
       - "dependencies"
       - "docker"
@@ -74,9 +70,7 @@ updates:
       interval: "weekly"
       day: "saturday"
       time: "03:00"
-    open-pull-requests-limit: 5
-    assignees:
-      - "froozeify"
+    open-pull-requests-limit: 10
     labels:
       - "dependencies"
       - "github-actions"
