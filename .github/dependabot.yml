@@ -28,6 +28,12 @@ updates:
         update-types:
           - "minor"
           - "patch"
+      tiptap:
+        patterns:
+          - "@tiptap/*"
+        update-types:
+          - "minor"
+          - "patch"
       ui-libraries:
         patterns:
           - "@headlessui/*"
