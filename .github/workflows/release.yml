@@ -54,7 +54,7 @@ jobs:
 
       - name: Download package.json
         if: github.event_name == 'release'
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: package-json
           path: .
