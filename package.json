@@ -18,7 +18,7 @@
     "@nuxt/image": "^2.0.0",
     "@nuxt/scripts": "^0.13.0",
     "@nuxt/ui": "^4.2.1",
-    "@nuxtjs/seo": "^3.2.2",
+    "@nuxtjs/seo": "^3.3.0",
     "@nuxtjs/turnstile": "^1.1.1",
     "@pinia/nuxt": "^0.11.3",
     "@popperjs/core": "^2.11.8",
