@@ -88,21 +88,44 @@
   }
 
   async function move(row: InventoryCategory, modifier: number) {
+    const currentIndex = categories.value.findIndex(c => c.uuid === row.uuid);
+    if (currentIndex === -1) return;
+
+    const targetIndex = currentIndex + modifier;
+    if (targetIndex < 0 || targetIndex >= categories.value.length) return;
+
+    // Snapshot for revert
+    const previousCategories = JSON.parse(JSON.stringify(categories.value));
+
+    // Optimistic Update
+    const newItems = [...categories.value];
+    // Swap
+    [newItems[currentIndex], newItems[targetIndex]] = [newItems[targetIndex], newItems[currentIndex]];
+
+    // Recalculate weights to look consistent locally
+    const weights = newItems.map(i => i.weight).sort((a, b) => (a ?? 0) - (b ?? 0));
+    newItems.forEach((item, index) => {
+        item.weight = weights[index];
+    });
+
+    categories.value = newItems;
+
     isLoading.value = true
-    const { error } = await apiQuery.move(row, modifier === 1 ? 'down' : 'up');
+    const uuids = newItems.map(c => c.uuid as string);
+    const { error } = await apiQuery.reorder(uuids);
     isLoading.value = false
 
     if (error) {
+      // Revert
+      categories.value = previousCategories;
       toast.add({
         color: "error",
         title: "La modification a échouée",
         description: error.message
       });
-      return;
+      // We refresh the list to be sure
+      await getCategoriesPaginated();
     }
-
-    // We refresh the list
-    await getCategoriesPaginated();
   }
 
   async function createCategory() {

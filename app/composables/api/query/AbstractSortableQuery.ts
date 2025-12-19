@@ -7,4 +7,8 @@ export abstract class AbstractSortableQuery<R, W> extends AbstractClubDependentQ
   async move(item: Item, direction: string) {
     return usePut(item["@id"] + "/move", {direction: direction});
   }
+
+  async reorder(uuids: string[]) {
+    return usePut(this.getRootUrl() + "/-/reorder", {uuids: uuids});
+  }
 }
