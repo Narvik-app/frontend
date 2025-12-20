@@ -32,6 +32,7 @@ updates:
         patterns:
           - "@tiptap/*"
         update-types:
+          - "major"
           - "minor"
           - "patch"
       ui-libraries:
@@ -51,6 +52,8 @@ updates:
           - "patch"
       production:
         dependency-type: "production"
+        exclude-patterns:
+          - "@tiptap/*"
         update-types:
           - "patch"
 
