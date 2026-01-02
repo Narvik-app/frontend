@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import {useMetricStore} from "~/stores/useMetricStore";
 import MetricQuery from "~/composables/api/query/MetricQuery";
-import {formatDateRangeReadable, formatDateTimeReadable} from "~/utils/date";
+import {formatDateRangeReadable, formatDateReadable, formatDateTimeReadable} from "~/utils/date";
 import {print} from "~/utils/browser";
 import type {DateRange, DateRangeFilter} from "~/types/date";
 import type {TablePaginateInterface} from "~/types/table";
@@ -41,7 +41,7 @@ const items = ref<MemberPresenceStat[]>([]);
 const totalItems = ref(0);
 const page = ref(1);
 const itemsPerPage = ref(10);
-const order = ref('DESC');
+const order = ref('ASC');
 const popoverOpen = ref(false);
 
 const columns = [
@@ -212,7 +212,7 @@ onMounted(() => {
           :data="items"
         >
            <template #lastPresenceDate-cell="{ row }">
-             {{ formatDateTimeReadable(row.original.lastPresenceDate) }}
+             {{ formatDateReadable(row.original.lastPresenceDate) }}
            </template>
 
            <template #actions-cell="{ row }">
