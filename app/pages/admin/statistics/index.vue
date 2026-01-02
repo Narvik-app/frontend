@@ -16,7 +16,7 @@ const links = [
   },
   {
     title: 'Présence Membres',
-    description: 'Visualiser les statistiques de présence détaillées par membre.',
+    description: 'Récapitulatif de présences par membre pour la saison actuelle.',
     icon: 'i-heroicons-user-group',
     to: '/admin/statistics/member-presence'
   }
@@ -25,14 +25,9 @@ const links = [
 
 <template>
   <div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <NuxtLink
-        v-for="link in links"
-        :key="link.to"
-        :to="link.to"
-        class="block"
-      >
-        <UCard class="h-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer">
+    <div class="flex flex-wrap gap-4 justify-center">
+      <NuxtLink v-for="link in links" :to="link.to" class="basis-full md:basis-1/3">
+        <UCard class="h-full hover:bg-white dark:hover:bg-gray-800 transition-colors cursor-pointer">
           <div class="flex flex-col items-center text-center gap-4">
             <UIcon :name="link.icon" class="w-12 h-12 text-primary-500" />
             <div>
