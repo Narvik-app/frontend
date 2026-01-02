@@ -18,27 +18,42 @@ watchEffect(() => {
 })
 
 
+const route = useRoute()
+
 // We create the custom items props so we can auto close the menu on page change
-const cItems: GroupedNavigationLinks[] = []
-props.items?.forEach(value => {
-  let item : GroupedNavigationLinks = {
-    title: value.title,
-    links: []
-  }
-  value.links.forEach(link => {
-    // We push into the link object our custom onSelect trigger
-    Object.assign(link, {
-      onSelect() {
+const cItems = computed(() => {
+  const items: GroupedNavigationLinks[] = []
+  props.items?.forEach(value => {
+    let item : GroupedNavigationLinks = {
+      title: value.title,
+      links: []
+    }
+    value.links.forEach((link: any) => {
+      // Create a copy to avoid mutating props
+      const newLink = { ...link }
+
+      // We push into the link object our custom onSelect trigger
+      newLink.onSelect = () => {
         if (isDesktopDisplay.value) {
           menuVisible.value = true // On pc it's always open
         } else {
           menuVisible.value = false // We close the menu
         }
-      }})
-    item.links.push(link)
-  })
+      }
 
-  cItems.push(item)
+      // Handle active state for nested routes
+      if (newLink.to) {
+        if (route.path === newLink.to || (route.path.startsWith(newLink.to + '/') && newLink.to !== '/admin')) {
+          newLink.active = true
+        }
+      }
+
+      item.links.push(newLink)
+    })
+
+    items.push(item)
+  })
+  return items
 })
 
 </script>
