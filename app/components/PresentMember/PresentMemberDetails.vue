@@ -163,7 +163,7 @@ async function copyLicence() {
               icon="i-heroicons-pencil-square"
               size="xs"
               variant="soft"
-              label="Editer la présence"
+              label="Éditer la présence"
             />
             <UTooltip v-if="!member.blacklisted || (isSupervisor)" text="Supprimer la présence">
               <UPopover v-model:open="popoverOpen">

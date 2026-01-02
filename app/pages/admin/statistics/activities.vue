@@ -6,6 +6,7 @@ import type {Activity} from "~/types/api/item/clubDependent/plugin/presence/acti
 import type {ChartBarData, ChartDataField} from "~/utils/chart";
 import {type DateRange, DateRangeFilter} from "~/types/date";
 import {formatDateRangeReadable, formatDateTimeReadable} from "~/utils/date";
+import {print} from "~/utils/browser";
 
 definePageMeta({
   layout: "admin"
@@ -268,45 +269,59 @@ watch([previousSeason, dateRange], () => {
   <div>
     <div id="wrapper" class="mx-auto">
 
-      <div class="flex flex-wrap justify-center mb-4">
-        <UButton
-          color="neutral"
-          variant="ghost"
-          size="xs"
-          icon="i-heroicons-arrow-path"
-          :loading="isLoading"
-          @click="refreshMetrics()"
-        >
-          Dernière mise à jour : {{ formatDateTimeReadable(lastRefreshDate.toString()) }}
-        </UButton>
-
-        <div class="w-full mb-2"></div>
-
-<UPopover v-model:open="popoverOpen">
-          <UButton
-            icon="i-heroicons-calendar-days-20-solid"
-            :label="dateRange ? formatDateRangeReadable(dateRange) || 'Choisir une plage' : 'Choisir une plage'"
-          />
-
-          <template #content>
-            <GenericDateRangePicker
-              :date-range="dateRange"
-              @range-updated="(range) => handleDateRangeUpdate(range)"
-              :season-selectors="true"
-              :exclude-previous-season="true"
+      <!-- Toolbox -->
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
+         <div class="w-full md:w-1/3 flex justify-start">
+             <UButton
+              color="neutral"
+              variant="ghost"
+              icon="i-heroicons-arrow-left"
+              to="/admin/statistics"
+              label="Retour"
             />
-          </template>
-        </UPopover>
+         </div>
 
-        <div class="w-full mb-2"></div>
-
-        <div v-if="previousPeriodInfo" class="text-sm text-gray-600 dark:text-gray-400 mt-1 px-1">
-          <span class="font-medium">Période précédente : </span>
-          <span class="ml-1">{{ previousPeriodInfo.description }}</span>
+        <div class="w-full md:w-1/3 flex justify-center">
+            <UButton
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              icon="i-heroicons-arrow-path"
+              :loading="isLoading"
+              @click="refreshMetrics()"
+            >
+              Dernière mise à jour : {{ formatDateTimeReadable(lastRefreshDate.toString()) }}
+            </UButton>
         </div>
 
-        <div class="w-full mb-2"></div>
+        <div class="w-full md:w-1/3 flex justify-center md:justify-end gap-2">
+          <UPopover v-model:open="popoverOpen">
+            <UButton
+              color="primary"
+              icon="i-heroicons-calendar-days"
+              :label="dateRange ? formatDateRangeReadable(dateRange) || 'Choisir une période' : 'Choisir une période'"
+            />
 
+            <template #content>
+              <GenericDateRangePicker
+                :date-range="dateRange"
+                @range-updated="(range) => handleDateRangeUpdate(range)"
+                :season-selectors="true"
+                :exclude-previous-season="true"
+              />
+            </template>
+          </UPopover>
+
+          <UButton :disabled="isLoading" icon="i-heroicons-printer" @click="print()" />
+        </div>
+      </div>
+
+      <div v-if="previousPeriodInfo" class="text-sm text-center md:text-right text-gray-600 dark:text-gray-400 md:-mt-2 mb-2">
+        <span class="font-medium">Période précédente : </span>
+        <span class="ml-1">{{ previousPeriodInfo.description }}</span>
+      </div>
+
+      <div class="text-center mb-4">
         <USelect
           v-model="selectedActivity"
           :items="availableActivities"
