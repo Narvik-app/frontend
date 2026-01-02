@@ -221,8 +221,11 @@ const MAX_ATTACHMENT_SIZE_MB = 15
     }
   }
 
-  getEmailTemplates()
-  loadMemberFromQuery()
+  onMounted(() => {
+    getEmailTemplates()
+    loadMemberFromQuery()
+  })
+
 </script>
 
 <template>
