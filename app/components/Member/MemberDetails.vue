@@ -508,6 +508,14 @@ async function deleteMember() {
 
         <div class="flex justify-between lg:justify-end gap-2">
           <UButton
+            v-if="member.uuid && isAdmin"
+            icon="i-heroicons-envelope"
+            :to="`/admin/email/new?member=${member.uuid}`"
+          >
+            Envoyer un email
+          </UButton>
+
+          <UButton
             v-if="isAdmin"
             icon="i-heroicons-pencil-square"
             @click="itemModalOpen = true"

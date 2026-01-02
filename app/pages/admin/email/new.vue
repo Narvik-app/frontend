@@ -5,6 +5,7 @@ import {useSelfUserStore} from '~/stores/useSelfUser';
 import EmailQuery from "~/composables/api/query/clubDependent/plugin/emailing/EmailQuery";
 import EmailTemplateQuery from "~/composables/api/query/clubDependent/plugin/emailing/EmailTemplateQuery";
 import type { EmailTemplate } from "~/types/api/item/clubDependent/plugin/emailing/emailTemplate";
+import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
 
 const MAX_ATTACHMENT_SIZE_MB = 15
 
@@ -196,7 +197,32 @@ const MAX_ATTACHMENT_SIZE_MB = 15
     return errors
   })
 
+  // Handle member query parameter for prefilling
+  const route = useRoute()
+  const memberQuery = new MemberQuery()
+  
+  async function loadMemberFromQuery() {
+    const memberUuid = route.query.member
+    if (memberUuid && typeof memberUuid === 'string') {
+      const { retrieved, error } = await memberQuery.get(memberUuid)
+      
+      if (error) {
+        toast.add({
+          title: "Une erreur est survenue",
+          description: error.message,
+          color: "error"
+        })
+        return
+      }
+      
+      if (retrieved) {
+        selectedMembers.value = [retrieved]
+      }
+    }
+  }
+
   getEmailTemplates()
+  loadMemberFromQuery()
 </script>
 
 <template>
