@@ -105,6 +105,9 @@ async function fetchMetrics() {
       if (retrieved.pagination) {
         totalItems.value = retrieved.pagination.totalItems;
       }
+      
+      // Update last refresh date in store manually since we bypass the store action
+      lastRefreshDate.value = new Date();
     }
   } catch (e) {
     console.error(e);
@@ -146,44 +149,48 @@ onMounted(() => {
     <div class="flex flex-col gap-4">
 
       <!-- Toolbox -->
-      <div class="flex flex-wrap items-center gap-2 mb-2">
-         <UButton
-          color="neutral"
-          variant="ghost"
-          icon="i-heroicons-arrow-left"
-          to="/admin/statistics"
-          label="Retour"
-        />
-
-        <div class="flex-grow"></div>
-
-        <UButton
-          color="neutral"
-          variant="ghost"
-          size="xs"
-          icon="i-heroicons-arrow-path"
-          :loading="isLoading"
-          @click="refresh"
-        >
-          Dernière mise à jour : {{ formatDateTimeReadable(lastRefreshDate.toString()) }}
-        </UButton>
-
-        <UPopover v-model:open="popoverOpen">
-          <UButton
-            color="primary"
-            icon="i-heroicons-calendar-days"
-            :label="dateRange ? formatDateRangeReadable(dateRange) || 'Choisir une période' : 'Choisir une période'"
-          />
-
-          <template #content>
-            <GenericDateRangePicker
-              :date-range="dateRange"
-              @range-updated="handleDateRangeUpdate"
-              :season-selectors="true"
-              :exclude-previous-season="true"
+      <div class="grid grid-cols-1 sm:grid-cols-3 items-center gap-2 mb-2">
+         <div class="justify-self-start">
+             <UButton
+              color="neutral"
+              variant="ghost"
+              icon="i-heroicons-arrow-left"
+              to="/admin/statistics"
+              label="Retour"
             />
-          </template>
-        </UPopover>
+         </div>
+
+        <div class="justify-self-center order-first sm:order-none w-full sm:w-auto flex justify-center">
+            <UButton
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              icon="i-heroicons-arrow-path"
+              :loading="isLoading"
+              @click="refresh"
+            >
+              Dernière mise à jour : {{ formatDateTimeReadable(lastRefreshDate.toString()) }}
+            </UButton>
+        </div>
+
+        <div class="justify-self-end">
+            <UPopover v-model:open="popoverOpen">
+              <UButton
+                color="primary"
+                icon="i-heroicons-calendar-days"
+                :label="dateRange ? formatDateRangeReadable(dateRange) || 'Choisir une période' : 'Choisir une période'"
+              />
+
+              <template #content>
+                <GenericDateRangePicker
+                  :date-range="dateRange"
+                  @range-updated="handleDateRangeUpdate"
+                  :season-selectors="true"
+                  :exclude-previous-season="true"
+                />
+              </template>
+            </UPopover>
+        </div>
       </div>
 
        <!-- Info Alert -->
@@ -206,13 +213,14 @@ onMounted(() => {
            </template>
 
            <template #actions-cell="{ row }">
-             <UButton
-               size="xs"
-               color="neutral"
-               variant="ghost"
-               icon="i-heroicons-eye"
-               :to="`/admin/members/${row.original.memberId}`"
-             />
+             <div class="text-right">
+               <UButton
+                 size="xs"
+                 icon="i-heroicons-user"
+                 :to="`/admin/members/${convertUuidToUrlUuid(row.original.memberUuid)}`">
+                 Fiche membre
+               </UButton>
+             </div>
            </template>
         </UTable>
 
