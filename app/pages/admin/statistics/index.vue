@@ -15,8 +15,8 @@ const links = [
     to: '/admin/statistics/activities'
   },
   {
-    title: 'Présence Membres',
-    description: 'Récapitulatif de présences par membre pour la saison actuelle.',
+    title: 'Présence membres',
+    description: 'Récapitulatif de présence par membres pour la saison actuelle.',
     icon: 'i-heroicons-user-group',
     to: '/admin/statistics/member-presence'
   }
