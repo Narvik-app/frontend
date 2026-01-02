@@ -149,7 +149,6 @@ onMounted(() => {
   <div>
     <div class="flex flex-col gap-4">
 
-      <!-- Toolbox -->
       <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-2">
          <div class="w-full md:w-1/3 flex justify-start">
              <UButton
@@ -196,7 +195,6 @@ onMounted(() => {
         </div>
       </div>
 
-       <!-- Info Alert -->
        <UAlert
         icon="i-heroicons-information-circle"
         color="primary"
@@ -205,14 +203,32 @@ onMounted(() => {
         description="Ces statistiques ne concernent que les membres licenciés dans la saison courante."
       />
 
-      <GenericCard :title="`Membres (${totalItems})`">
+      <GenericCardWithActions :title="`Membres (${totalItems})`">
+        <template #actions>
+          <div class="flex items-center gap-2">
+            <USelect
+              v-model="order"
+              :items="[
+                { label: 'Moins présents', value: 'ASC' },
+                { label: 'Plus présents', value: 'DESC' }
+              ]"
+              @change="() => { page = 1; fetchMetrics() }"
+            />
+          </div>
+        </template>
+
         <UTable
           :loading="isLoading"
           :columns="columns"
           :data="items"
         >
            <template #lastPresenceDate-cell="{ row }">
-             {{ formatDateReadable(row.original.lastPresenceDate) }}
+             <p v-if="row.original.lastPresenceDate">
+               {{ formatDateReadable(row.original.lastPresenceDate) }}
+             </p>
+             <i v-else>
+               Aucune présences pour cette période
+             </i>
            </template>
 
            <template #actions-cell="{ row }">
@@ -232,7 +248,7 @@ onMounted(() => {
           :total-items="totalItems"
           @paginate="onPaginate"
         />
-      </GenericCard>
+      </GenericCardWithActions>
     </div>
   </div>
 </template>
