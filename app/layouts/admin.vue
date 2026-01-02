@@ -64,7 +64,7 @@
     {
       label: 'Statistiques',
       icon: 'i-heroicons-presentation-chart-line',
-      to: '/admin/statistics/activities'
+      to: '/admin/statistics'
     },
     {
       label: 'Trombinoscope',

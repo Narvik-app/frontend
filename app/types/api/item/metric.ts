@@ -5,4 +5,11 @@ export interface Metric extends Item {
   value?: number;
   values?: object;
   childMetrics: Metric[]
+  pagination?: {
+    currentPage: number,
+    itemsPerPage: number,
+    totalItems: number,
+    totalPages: number,
+    order: string
+  }
 }
