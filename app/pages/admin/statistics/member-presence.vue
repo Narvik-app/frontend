@@ -2,6 +2,7 @@
 import {useMetricStore} from "~/stores/useMetricStore";
 import MetricQuery from "~/composables/api/query/MetricQuery";
 import {formatDateRangeReadable, formatDateTimeReadable} from "~/utils/date";
+import {print} from "~/utils/browser";
 import type {DateRange, DateRangeFilter} from "~/types/date";
 import type {TablePaginateInterface} from "~/types/table";
 import dayjs from "dayjs";
@@ -58,7 +59,7 @@ const columns = [
   },
   {
     accessorKey: 'presenceCount',
-    header: 'Nb. Présences',
+    header: 'Présences',
   },
   {
     accessorKey: 'lastPresenceDate',
@@ -105,7 +106,7 @@ async function fetchMetrics() {
       if (retrieved.pagination) {
         totalItems.value = retrieved.pagination.totalItems;
       }
-      
+
       // Update last refresh date in store manually since we bypass the store action
       lastRefreshDate.value = new Date();
     }
@@ -149,8 +150,8 @@ onMounted(() => {
     <div class="flex flex-col gap-4">
 
       <!-- Toolbox -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 items-center gap-2 mb-2">
-         <div class="justify-self-start">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-2">
+         <div class="w-full md:w-1/3 flex justify-start">
              <UButton
               color="neutral"
               variant="ghost"
@@ -160,7 +161,7 @@ onMounted(() => {
             />
          </div>
 
-        <div class="justify-self-center order-first sm:order-none w-full sm:w-auto flex justify-center">
+        <div class="w-full md:w-1/3 flex justify-center">
             <UButton
               color="neutral"
               variant="ghost"
@@ -173,7 +174,7 @@ onMounted(() => {
             </UButton>
         </div>
 
-        <div class="justify-self-end">
+        <div class="w-full md:w-1/3 flex justify-center md:justify-end gap-2">
             <UPopover v-model:open="popoverOpen">
               <UButton
                 color="primary"
@@ -190,6 +191,8 @@ onMounted(() => {
                 />
               </template>
             </UPopover>
+
+            <UButton :disabled="isLoading" icon="i-heroicons-printer" @click="print()" />
         </div>
       </div>
 
@@ -199,7 +202,7 @@ onMounted(() => {
         color="primary"
         variant="subtle"
         title="Information"
-        description="Ces statistiques ne concernent que les membres présents dans la saison courante."
+        description="Ces statistiques ne concernent que les membres licenciés dans la saison courante."
       />
 
       <GenericCard :title="`Membres (${totalItems})`">
@@ -213,10 +216,9 @@ onMounted(() => {
            </template>
 
            <template #actions-cell="{ row }">
-             <div class="text-right">
+             <div class="text-right print:hidden">
                <UButton
                  size="xs"
-                 icon="i-heroicons-user"
                  :to="`/admin/members/${convertUuidToUrlUuid(row.original.memberUuid)}`">
                  Fiche membre
                </UButton>
