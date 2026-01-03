@@ -182,34 +182,37 @@ function hasPermission(permission: Permission): boolean {
         Seuls les administrateurs peuvent modifier les permissions.
       </div>
 
-      <div v-for="(section, sectionIndex) in permissionSections" :key="section.label">
-        <USeparator :label="section.label" :class="{'mt-2': sectionIndex > 0}" />
+      <!-- Sections grid - 2-3 columns on desktop -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div v-for="(section, sectionIndex) in permissionSections" :key="section.label" class="border border-default rounded-lg p-3">
+          <div class="text-sm font-medium mb-2">{{ section.label }}</div>
 
-        <!-- Header row -->
-        <div class="grid grid-cols-[1fr_auto_auto] gap-2 mt-2 text-xs text-muted font-medium">
-          <span></span>
-          <span class="w-16 text-center">Accès</span>
-          <span class="w-16 text-center">Édition</span>
-        </div>
-
-        <!-- Feature rows -->
-        <div v-for="feature in section.features" :key="feature.name" class="grid grid-cols-[1fr_auto_auto] gap-2 items-center py-1">
-          <span class="text-sm">{{ feature.name }}</span>
-          <div class="w-16 flex justify-center">
-            <USwitch
-              :model-value="hasPermission(feature.accessPermission)"
-              :disabled="!isAdmin || isSaving"
-              size="sm"
-              @update:model-value="toggleAccess(feature.accessPermission, feature.editPermission)"
-            />
+          <!-- Header row -->
+          <div class="grid grid-cols-[1fr_auto_auto] gap-2 text-xs text-muted font-medium">
+            <span></span>
+            <span class="w-14 text-center">Accès</span>
+            <span class="w-14 text-center">Édition</span>
           </div>
-          <div class="w-16 flex justify-center">
-            <USwitch
-              :model-value="hasPermission(feature.editPermission)"
-              :disabled="!isAdmin || isSaving"
-              size="sm"
-              @update:model-value="toggleEdit(feature.accessPermission, feature.editPermission)"
-            />
+
+          <!-- Feature rows -->
+          <div v-for="feature in section.features" :key="feature.name" class="grid grid-cols-[1fr_auto_auto] gap-2 items-center py-1">
+            <span class="text-sm">{{ feature.name }}</span>
+            <div class="w-14 flex justify-center">
+              <USwitch
+                :model-value="hasPermission(feature.accessPermission)"
+                :disabled="!isAdmin || isSaving"
+                size="sm"
+                @update:model-value="toggleAccess(feature.accessPermission, feature.editPermission)"
+              />
+            </div>
+            <div class="w-14 flex justify-center">
+              <USwitch
+                :model-value="hasPermission(feature.editPermission)"
+                :disabled="!isAdmin || isSaving"
+                size="sm"
+                @update:model-value="toggleEdit(feature.accessPermission, feature.editPermission)"
+              />
+            </div>
           </div>
         </div>
       </div>

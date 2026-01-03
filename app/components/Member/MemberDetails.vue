@@ -23,6 +23,7 @@ import type {SelectApiItem} from "~/types/select";
 import {createBrowserCsvDownload} from "~/utils/browser";
 import type {ColumnSort} from "@tanstack/table-core";
 import {getTableSortVal} from "~/utils/table";
+import {Permission} from "~/types/api/permissions";
 
 
 const props = defineProps({
@@ -53,6 +54,7 @@ const loggedUsername = selfStore.member?.email
 const isSuperAdmin = selfStore.isSuperAdmin();
 const isAdmin = selfStore.isAdmin();
 const isSupervisor = selfStore.hasSupervisorRole();
+const canSendEmail = selfStore.can(Permission.EmailEdit)
 
 const addMemberPresenceModal = ref(false)
 const selectedPresence: Ref<MemberPresence | undefined> = ref(undefined)
@@ -558,7 +560,7 @@ async function deleteMember() {
           <div class="flex flex-col gap-4 relative">
             <div class="flex justify-end gap-2">
               <UButton
-                v-if="member.uuid && isAdmin"
+                v-if="member.uuid && canSendEmail"
                 variant="soft"
                 icon="i-heroicons-envelope"
                 :to="`/admin/email/new?member=${convertUuidToUrlUuid(member.uuid)}`"
