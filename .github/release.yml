@@ -1,0 +1,53 @@
+changelog:
+  exclude:
+     labels:
+      - ignore-for-release
+  categories:
+    - title: '🚀 Features'
+      labels:
+        - 'feature'
+        - 'enhancement'
+    - title: '🐛 Bug Fixes'
+      labels:
+        - 'fix'
+        - 'bug'
+    - title: '📝 Documentation'
+      labels:
+        - 'documentation'
+    - title: '🎨 Style'
+      labels:
+        - 'style'
+    - title: '♻️ Refactoring'
+      labels:
+        - 'refactor'
+    - title: '⚡️ Performance'
+      labels:
+        - 'performance'
+    - title: '✅ Tests'
+      labels:
+        - 'test'
+    - title: '🐳 Docker'
+      labels:
+        - 'docker'
+    - title: '📦 NPM'
+      labels:
+        - 'npm'
+    - title: '📦 Composer'
+      labels:
+        - 'composer'
+    - title: '🐙 GitHub Actions'
+      labels:
+        - 'github-actions'
+    - title: '👷 CI'
+      labels:
+        - 'ci'
+    - title: '🔧 Maintenance'
+      labels:
+        - 'build'
+        - 'chore'
+    - title: '📦 Dependencies'
+      labels:
+        - 'dependencies'
+    - title: 'Other Changes'
+      labels:
+        - '*'
