@@ -4,6 +4,7 @@
   import { isDesktop, isTablet, watchBreakpoint} from "~/utils/browser";
   import ModalSelectProfile from "~/components/Modal/ModalSelectProfile.vue";
   import type { DropdownMenuItem } from "#ui/components/DropdownMenu";
+  import {Permission} from "~/types/api/permissions";
 
   const overlay = useOverlay()
 
@@ -18,6 +19,11 @@
   const isBadger = selfStore.isBadger()
   const isSupervisor = computed(() => {
     return selfStore.hasSupervisorRole() && selectedProfile.value
+  })
+
+  // Check email access: admin OR supervisor with EMAIL_SEND permission
+  const canAccessEmail = computed(() => {
+    return isAdmin || selfStore.can(Permission.EmailSend)
   })
 
   const isDesktopDisplay = isDesktop()
@@ -100,7 +106,7 @@
             </template>
           </UButton>
         </div>
-        <div v-if="isAdmin">
+        <div v-if="canAccessEmail">
           <UButton to="/admin/email" icon="i-heroicons-envelope" variant="ghost" color="neutral">
             <template v-if="isDesktopDisplay || isTabletDisplay">
               Email

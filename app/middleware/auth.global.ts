@@ -1,9 +1,10 @@
 import {pathsMatch} from "~/utils/resource";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {useAppConfigStore} from "~/stores/useAppConfig";
+import {Permission} from "~/types/api/permissions";
 
 const pathsAccessibleToAll = [
-  "^/unsubscribe\?.*"
+  "^/unsubscribe\\?.*"
 ]
 
 const publicPaths = [
@@ -22,6 +23,20 @@ const supervisorOnlyPaths = [
   "^/admin/thrombinoscope",
 
   "^/admin/sales",
+]
+
+// Permission-based paths: supervisors need specific permissions to access these
+const permissionPaths: { pattern: string; permission: Permission }[] = [
+  // Email paths
+  { pattern: "^/admin/email$", permission: Permission.EmailSend },
+  { pattern: "^/admin/email/new", permission: Permission.EmailSend },
+  { pattern: "^/admin/email/templates", permission: Permission.EmailTemplate },
+
+  // Import paths
+  { pattern: "^/admin/imports/members", permission: Permission.ImportMembers },
+  { pattern: "^/admin/imports/photos", permission: Permission.ImportPhotos },
+  { pattern: "^/admin/imports/presences", permission: Permission.ImportPresences },
+  { pattern: "^/admin/imports/cerbere", permission: Permission.ImportPresences },
 ]
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
@@ -81,11 +96,26 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       return navigateTo("/self");
     }
 
-    // User is not an admin (so supervisor) got access to only restrain uris
+    // User is not an admin (so supervisor) - check allowed paths
     if (!selfStore.isAdmin()) {
-      if (!pathsMatch(supervisorOnlyPaths, to.fullPath)) {
-        return navigateTo('/admin')
+      // Check if path matches supervisor-only paths (always allowed for supervisors)
+      if (pathsMatch(supervisorOnlyPaths, to.fullPath)) {
+        return;
       }
+
+      // Check if path matches permission-based paths
+      for (const { pattern, permission } of permissionPaths) {
+        if (pathsMatch([pattern], to.fullPath)) {
+          if (selfStore.can(permission)) {
+            return; // Has permission, allow access
+          } else {
+            return navigateTo('/admin'); // No permission, redirect
+          }
+        }
+      }
+
+      // Path is not in any allowed list for supervisors
+      return navigateTo('/admin')
     }
   }
 })

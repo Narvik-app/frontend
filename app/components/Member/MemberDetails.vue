@@ -717,6 +717,11 @@ async function deleteMember() {
         </UCard>
       </div>
 
+      <!-- Member Permissions (visible for supervisors only, when viewing as admin) -->
+      <div v-if="isAdmin && member?.role === ClubRole.Supervisor" class="lg:col-span-9">
+        <MemberPermissions :member="member" />
+      </div>
+
       <div class="lg:col-span-9">
         <GenericCard v-if="totalMemberPresences > 0" :title="`${totalMemberPresences} présences ces 12 derniers mois`">
           <div class="h-96 mt-2">
