@@ -9,6 +9,7 @@ import {useSelfUserStore} from "~/stores/useSelfUser";
 import dayjs from "dayjs";
 import MemberPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/MemberPresenceQuery";
 import {ClubActivity} from "~/types/api/item/club";
+import {Permission} from "~/types/api/permissions";
 
 definePageMeta({
   layout: "admin"
@@ -20,6 +21,7 @@ useHead({
 
 const selfStore = useSelfUserStore()
 const { selectedProfile } = storeToRefs(selfStore)
+const canEdit = selfStore.can(Permission.ImportMembersEdit)
 
 const toast = useToast()
 
@@ -130,7 +132,7 @@ async function importFromEden(event: any) {
 
             <UInput
               :loading="fileUploading"
-              :disabled="fileUploading"
+              :disabled="fileUploading || !canEdit"
               type="file"
               accept="text/csv"
               icon="i-heroicons-document-text"
@@ -154,7 +156,7 @@ async function importFromEden(event: any) {
 
             <UInput
               :loading="fileUploading"
-              :disabled="fileUploading"
+              :disabled="fileUploading || !canEdit"
               type="file"
               accept="text/csv"
               icon="i-heroicons-document-text"
@@ -166,7 +168,7 @@ async function importFromEden(event: any) {
         <div class="flex gap-2">
           <UButton target="_blank" to="https://docs.narvik.app/frontend/docs/import/fftir-itac.html#import-des-membres">Documentation</UButton>
           <div class="flex-1"></div>
-          <UButton @click="migrateExternal()" variant="ghost" color="success" :disabled="((selfStore.selectedProfile?.club.settings.itacSecondaryImportRemaining && selfStore.selectedProfile.club.settings.itacSecondaryImportRemaining) ?? 0) > 0">Migration présence externe vers présence membres</UButton>
+          <UButton @click="migrateExternal()" variant="ghost" color="success" :disabled="!canEdit || ((selfStore.selectedProfile?.club.settings.itacSecondaryImportRemaining && selfStore.selectedProfile.club.settings.itacSecondaryImportRemaining) ?? 0) > 0">Migration présence externe vers présence membres</UButton>
         </div>
 
       </UCard>
@@ -178,7 +180,7 @@ async function importFromEden(event: any) {
         <UInput
           class="my-2"
           :loading="fileUploading"
-          :disabled="fileUploading"
+          :disabled="fileUploading || !canEdit"
           type="file"
           accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           icon="i-heroicons-document-text"

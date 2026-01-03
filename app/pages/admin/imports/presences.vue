@@ -4,6 +4,7 @@ import {displayFileErrorToast, displayFileSuccessToast, getFileFormDataFromUInpu
 import ExternalPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/ExternalPresenceQuery";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {ClubActivity} from "~/types/api/item/club";
+import {Permission} from "~/types/api/permissions";
 
 definePageMeta({
   layout: "admin"
@@ -15,6 +16,7 @@ useHead({
 
 const selfStore = useSelfUserStore();
 const { selectedProfile } = storeToRefs(selfStore)
+const canEdit = selfStore.can(Permission.ImportPresencesEdit)
 
 const apiUploadResponse: Ref<Object|undefined> = ref(undefined);
 const fileUploading = ref(false)
@@ -84,7 +86,7 @@ async function importExternalPresences(event: any) {
           <p class="font-bold">Membres</p>
           <UInput
             :loading="fileUploading"
-            :disabled="fileUploading"
+            :disabled="fileUploading || !canEdit"
             class="my-4"
             type="file"
             accept="text/csv"
@@ -109,7 +111,7 @@ async function importExternalPresences(event: any) {
           <p class="font-bold">Présences externe</p>
           <UInput
             :loading="fileUploading"
-            :disabled="fileUploading"
+            :disabled="fileUploading || !canEdit"
             class="my-4"
             type="file"
             accept="text/csv"

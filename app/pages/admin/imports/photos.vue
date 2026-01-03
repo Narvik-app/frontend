@@ -3,6 +3,7 @@ import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
 import {displayFileErrorToast, displayFileSuccessToast, getFileFormDataFromUInputChangeEvent} from "~/utils/file";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {ClubActivity} from "~/types/api/item/club";
+import {Permission} from "~/types/api/permissions";
 
 definePageMeta({
   layout: "admin"
@@ -14,6 +15,7 @@ useHead({
 
 const selfStore = useSelfUserStore();
 const { selectedProfile } = storeToRefs(selfStore)
+const canEdit = selfStore.can(Permission.ImportPhotosEdit)
 
 const memberQuery = new MemberQuery()
 
@@ -47,7 +49,7 @@ async function getFileObject(event: any) {
 
       <UInput
           :loading="fileUploading"
-          :disabled="fileUploading"
+          :disabled="fileUploading || !canEdit"
           class="my-4"
           type="file"
           accept="application/zip"
