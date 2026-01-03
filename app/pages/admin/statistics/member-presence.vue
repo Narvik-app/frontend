@@ -7,6 +7,7 @@ import type {DateRange, DateRangeFilter} from "~/types/date";
 import type {TablePaginateInterface} from "~/types/table";
 import dayjs from "dayjs";
 import {useSelfUserStore} from "~/stores/useSelfUser";
+import type {ColumnDef} from '@tanstack/vue-table'
 
 definePageMeta({
   layout: "admin"
@@ -48,7 +49,7 @@ const itemsPerPage = ref(10);
 const order = ref('ASC');
 const popoverOpen = ref(false);
 
-const columns = [
+const columns: ColumnDef<MemberPresenceStat>[] = [
   {
     accessorKey: 'firstname',
     header: 'Prénom',
@@ -71,7 +72,12 @@ const columns = [
   },
   {
     accessorKey: 'actions',
-    header: 'Actions'
+    header: 'Actions',
+    meta: {
+      class: {
+        th: 'print:hidden text-right',
+      }
+    }
   }
 ];
 
