@@ -21,9 +21,9 @@
     return selfStore.hasSupervisorRole() && selectedProfile.value
   })
 
-  // Check email access: admin OR supervisor with EMAIL_SEND permission
+  // Check email access - can() already checks for admin status
   const canAccessEmail = computed(() => {
-    return isAdmin || selfStore.can(Permission.EmailSend)
+    return selfStore.can(Permission.EmailAccess)
   })
 
   const isDesktopDisplay = isDesktop()

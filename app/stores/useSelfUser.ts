@@ -373,6 +373,7 @@ export const useSelfUserStore = defineStore('selfUser', () => {
    * Check if the current user has a specific permission.
    * Returns true for admins and super admins (they have all permissions).
    * For supervisors, checks the permissions array from the selected profile.
+   * Hierarchy: EDIT permission implies ACCESS permission.
    */
   function can(permission: Permission): boolean {
     if (!isLogged()) return false;
@@ -382,7 +383,19 @@ export const useSelfUserStore = defineStore('selfUser', () => {
 
     // Check if permission is in the selected profile's permissions
     if (selectedProfile.value && selectedProfile.value.permissions) {
-      return selectedProfile.value.permissions.includes(permission);
+      // Direct match
+      if (selectedProfile.value.permissions.includes(permission)) {
+        return true;
+      }
+
+      // Hierarchy check: EDIT implies ACCESS
+      // If checking for ACCESS and user has the corresponding EDIT, return true
+      if (permission.endsWith('_ACCESS')) {
+        const editPermission = permission.replace('_ACCESS', '_EDIT') as Permission;
+        if (selectedProfile.value.permissions.includes(editPermission)) {
+          return true;
+        }
+      }
     }
 
     return false;

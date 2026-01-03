@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type {PropType, Ref} from "vue";
 import type {Member} from "~/types/api/item/clubDependent/member";
-import {Permission, permissionLabels, permissionGroups} from "~/types/api/permissions";
+import {Permission, permissionSections, getAccessPermission} from "~/types/api/permissions";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {ClubRole} from "~/types/api/item/club";
 import {useFetchList, usePost, useDelete} from "~/composables/api/api";
@@ -75,52 +75,85 @@ async function loadPermissions() {
   }
 }
 
-async function togglePermission(permission: Permission) {
+async function addPermission(permission: Permission) {
+  const memberIri = `/clubs/${selfStore.selectedProfile?.club.uuid}/members/${props.member.uuid}`;
+  const {item, error} = await usePost<PermissionItem>(getPermissionsUrl(), {
+    member: memberIri,
+    permission: permission,
+  });
+
+  if (!error && item) {
+    permissionItems.value.push(item);
+    return true;
+  }
+  return false;
+}
+
+async function removePermission(permission: Permission) {
+  const existingItem = permissionItems.value.find(p => p.permission === permission);
+  if (existingItem) {
+    const {error} = await useDelete(`${getPermissionsUrl()}/${existingItem.uuid}`);
+    if (!error) {
+      permissionItems.value = permissionItems.value.filter(p => p.uuid !== existingItem.uuid);
+      return true;
+    }
+  }
+  return false;
+}
+
+async function toggleAccess(accessPermission: Permission, editPermission: Permission) {
   if (!isAdmin || !props.member.uuid) return;
   isSaving.value = true;
 
   try {
-    if (hasPermission(permission)) {
-      // Remove permission
-      const existingItem = permissionItems.value.find(p => p.permission === permission);
-      if (existingItem) {
-        const {error} = await useDelete(`${getPermissionsUrl()}/${existingItem.uuid}`);
-        if (!error) {
-          permissionItems.value = permissionItems.value.filter(p => p.uuid !== existingItem.uuid);
-          toast.add({
-            color: 'success',
-            title: 'Permission retirée'
-          });
-          emit('updated');
-        } else {
-          toast.add({
-            color: 'error',
-            title: 'Erreur lors de la suppression',
-          });
-        }
-      }
-    } else {
-      // Add permission - include member IRI in payload (API Platform pattern)
-      const memberIri = `/clubs/${selfStore.selectedProfile?.club.uuid}/members/${props.member.uuid}`;
-      const {item, error} = await usePost<PermissionItem>(getPermissionsUrl(), {
-        member: memberIri,
-        permission: permission,
-      });
+    const hasAccess = hasPermission(accessPermission);
+    const hasEdit = hasPermission(editPermission);
 
-      if (!error && item) {
-        permissionItems.value.push(item);
-        toast.add({
-          color: 'success',
-          title: 'Permission ajoutée'
-        });
-        emit('updated');
-      } else {
-        toast.add({
-          color: 'error',
-          title: 'Erreur lors de l\'ajout',
-        });
+    if (hasAccess) {
+      // Removing access: also remove edit if present
+      if (hasEdit) {
+        await removePermission(editPermission);
       }
+      await removePermission(accessPermission);
+      toast.add({ color: 'success', title: 'Permission retirée' });
+    } else {
+      // Adding access
+      await addPermission(accessPermission);
+      toast.add({ color: 'success', title: 'Permission ajoutée' });
     }
+    emit('updated');
+  } catch (error: any) {
+    toast.add({
+      color: 'error',
+      title: 'Erreur lors de la mise à jour',
+      description: error.message || 'Une erreur est survenue'
+    });
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+async function toggleEdit(accessPermission: Permission, editPermission: Permission) {
+  if (!isAdmin || !props.member.uuid) return;
+  isSaving.value = true;
+
+  try {
+    const hasAccess = hasPermission(accessPermission);
+    const hasEdit = hasPermission(editPermission);
+
+    if (hasEdit) {
+      // Removing edit only
+      await removePermission(editPermission);
+      toast.add({ color: 'success', title: 'Permission retirée' });
+    } else {
+      // Adding edit: also add access if not present
+      if (!hasAccess) {
+        await addPermission(accessPermission);
+      }
+      await addPermission(editPermission);
+      toast.add({ color: 'success', title: 'Permission ajoutée' });
+    }
+    emit('updated');
   } catch (error: any) {
     toast.add({
       color: 'error',
@@ -149,15 +182,33 @@ function hasPermission(permission: Permission): boolean {
         Seuls les administrateurs peuvent modifier les permissions.
       </div>
 
-      <div v-for="(group, index) in permissionGroups" :key="group.label">
-        <USeparator :label="group.label" :class="{'mt-2': index > 0}" />
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 gap-x-4 mt-2">
-          <div v-for="permission in group.permissions" :key="permission" class="flex items-center justify-between">
-            <span class="text-sm">{{ permissionLabels[permission] }}</span>
+      <div v-for="(section, sectionIndex) in permissionSections" :key="section.label">
+        <USeparator :label="section.label" :class="{'mt-2': sectionIndex > 0}" />
+
+        <!-- Header row -->
+        <div class="grid grid-cols-[1fr_auto_auto] gap-2 mt-2 text-xs text-muted font-medium">
+          <span></span>
+          <span class="w-16 text-center">Accès</span>
+          <span class="w-16 text-center">Édition</span>
+        </div>
+
+        <!-- Feature rows -->
+        <div v-for="feature in section.features" :key="feature.name" class="grid grid-cols-[1fr_auto_auto] gap-2 items-center py-1">
+          <span class="text-sm">{{ feature.name }}</span>
+          <div class="w-16 flex justify-center">
             <USwitch
-              :model-value="hasPermission(permission)"
+              :model-value="hasPermission(feature.accessPermission)"
               :disabled="!isAdmin || isSaving"
-              @update:model-value="togglePermission(permission)"
+              size="sm"
+              @update:model-value="toggleAccess(feature.accessPermission, feature.editPermission)"
+            />
+          </div>
+          <div class="w-16 flex justify-center">
+            <USwitch
+              :model-value="hasPermission(feature.editPermission)"
+              :disabled="!isAdmin || isSaving"
+              size="sm"
+              @update:model-value="toggleEdit(feature.accessPermission, feature.editPermission)"
             />
           </div>
         </div>
@@ -168,5 +219,3 @@ function hasPermission(permission: Permission): boolean {
 
 <style scoped lang="css">
 </style>
-
-

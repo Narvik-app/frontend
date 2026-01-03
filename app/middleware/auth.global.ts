@@ -26,17 +26,20 @@ const supervisorOnlyPaths = [
 ]
 
 // Permission-based paths: supervisors need specific permissions to access these
+// For viewing pages, ACCESS is enough. For actions, EDIT is required (handled by backend).
 const permissionPaths: { pattern: string; permission: Permission }[] = [
-  // Email paths
-  { pattern: "^/admin/email$", permission: Permission.EmailSend },
-  { pattern: "^/admin/email/new", permission: Permission.EmailSend },
-  { pattern: "^/admin/email/templates", permission: Permission.EmailTemplate },
+  // Email paths - need ACCESS to view
+  { pattern: "^/admin/email$", permission: Permission.EmailAccess },
+  { pattern: "^/admin/email/new", permission: Permission.EmailEdit },
+  { pattern: "^/admin/email/templates$", permission: Permission.EmailTemplateAccess },
+  { pattern: "^/admin/email/templates/new", permission: Permission.EmailTemplateEdit },
+  { pattern: "^/admin/email/templates/edit", permission: Permission.EmailTemplateEdit },
 
-  // Import paths
-  { pattern: "^/admin/imports/members", permission: Permission.ImportMembers },
-  { pattern: "^/admin/imports/photos", permission: Permission.ImportPhotos },
-  { pattern: "^/admin/imports/presences", permission: Permission.ImportPresences },
-  { pattern: "^/admin/imports/cerbere", permission: Permission.ImportPresences },
+  // Import paths - need ACCESS to view, EDIT to run import
+  { pattern: "^/admin/imports/members", permission: Permission.ImportMembersAccess },
+  { pattern: "^/admin/imports/photos", permission: Permission.ImportPhotosAccess },
+  { pattern: "^/admin/imports/presences", permission: Permission.ImportPresencesAccess },
+  { pattern: "^/admin/imports/cerbere", permission: Permission.ImportPresencesAccess },
 ]
 
 export default defineNuxtRouteMiddleware(async (to, from) => {

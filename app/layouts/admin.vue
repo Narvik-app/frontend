@@ -74,23 +74,23 @@
     }
   ]
 
-  // Import section - show for admins or supervisors with specific import permissions
+  // Import section - can() already checks for admin status
   const importSection = [];
-  if (isAdmin || selfStore.can(Permission.ImportMembers)) {
+  if (selfStore.can(Permission.ImportMembersAccess)) {
     importSection.push({
       label: 'Membres',
       icon: 'i-heroicons-users',
       to: '/admin/imports/members'
     })
   }
-  if (isAdmin || selfStore.can(Permission.ImportPhotos)) {
+  if (selfStore.can(Permission.ImportPhotosAccess)) {
     importSection.push({
       label: 'Photos',
       icon: 'i-heroicons-photo',
       to: '/admin/imports/photos'
     })
   }
-  if (selfStore.selectedProfile?.club.presencesEnabled && (isAdmin || selfStore.can(Permission.ImportPresences))) {
+  if (selfStore.selectedProfile?.club.presencesEnabled && selfStore.can(Permission.ImportPresencesAccess)) {
     importSection.push({
       label: 'Présences',
       icon: 'i-heroicons-calendar-days',

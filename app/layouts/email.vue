@@ -10,40 +10,38 @@
   })
 
   const selfStore = useSelfUserStore();
-  const isAdmin = selfStore.isAdmin();
 
-  // Email section - show if admin or has EMAIL_SEND permission
+  // can() already checks for admin status, so no need for explicit isAdmin check
   const mailSection = [];
-  if (isAdmin || selfStore.can(Permission.EmailSend)) {
-    mailSection.push(
-      {
-        label: 'Historique',
-        icon: 'i-heroicons-archive-box',
-        to: '/admin/email'
-      },
-      {
-        label: 'Écrire un mail',
-        icon: 'i-heroicons-pencil',
-        to: '/admin/email/new'
-      }
-    )
+  if (selfStore.can(Permission.EmailAccess)) {
+    mailSection.push({
+      label: 'Historique',
+      icon: 'i-heroicons-archive-box',
+      to: '/admin/email'
+    })
+  }
+  if (selfStore.can(Permission.EmailEdit)) {
+    mailSection.push({
+      label: 'Écrire un mail',
+      icon: 'i-heroicons-pencil',
+      to: '/admin/email/new'
+    })
   }
 
-  // Template section - show if admin or has EMAIL_TEMPLATE permission
   const templateSection = [];
-  if (isAdmin || selfStore.can(Permission.EmailTemplate)) {
-    templateSection.push(
-      {
-        label: 'Bibliothèque',
-        icon: 'i-heroicons-document',
-        to: '/admin/email/templates'
-      },
-      {
-        label: 'Nouveau modèle',
-        icon: 'i-heroicons-document-plus',
-        to: '/admin/email/templates/new'
-      }
-    )
+  if (selfStore.can(Permission.EmailTemplateAccess)) {
+    templateSection.push({
+      label: 'Bibliothèque',
+      icon: 'i-heroicons-document',
+      to: '/admin/email/templates'
+    })
+  }
+  if (selfStore.can(Permission.EmailTemplateEdit)) {
+    templateSection.push({
+      label: 'Nouveau modèle',
+      icon: 'i-heroicons-document-plus',
+      to: '/admin/email/templates/new'
+    })
   }
 
   let links: GroupedNavigationLinks[] = []
