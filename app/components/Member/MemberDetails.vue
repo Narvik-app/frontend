@@ -445,7 +445,7 @@ async function deleteMember() {
       <UTooltip v-if="isSupervisor" text="Liste des membres" class="">
         <UButton
           to="/admin/members"
-          icon="i-heroicons-arrow-left"
+          icon="i-heroicons-queue-list"
           size="xs"
           variant="ghost"
         />
@@ -508,14 +508,6 @@ async function deleteMember() {
 
         <div class="flex justify-between lg:justify-end gap-2">
           <UButton
-            v-if="member.uuid && isAdmin"
-            icon="i-heroicons-envelope"
-            :to="`/admin/email/new?member=${member.uuid}`"
-          >
-            Envoyer un email
-          </UButton>
-
-          <UButton
             v-if="isAdmin"
             icon="i-heroicons-pencil-square"
             @click="itemModalOpen = true"
@@ -564,6 +556,15 @@ async function deleteMember() {
 
         <UCard v-else class="h-full">
           <div class="flex flex-col gap-4 relative">
+            <div class="flex justify-end gap-2">
+              <UButton
+                v-if="member.uuid && isAdmin"
+                variant="soft"
+                icon="i-heroicons-envelope"
+                :to="`/admin/email/new?member=${convertUuidToUrlUuid(member.uuid)}`"
+              >
+              </UButton>
+            </div>
 
             <div class="h-24 w-24 aspect-square self-center">
               <UAvatar

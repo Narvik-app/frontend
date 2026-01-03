@@ -6,6 +6,7 @@ import {print} from "~/utils/browser";
 import type {DateRange, DateRangeFilter} from "~/types/date";
 import type {TablePaginateInterface} from "~/types/table";
 import dayjs from "dayjs";
+import {useSelfUserStore} from "~/stores/useSelfUser";
 
 definePageMeta({
   layout: "admin"
@@ -27,6 +28,8 @@ interface MemberPresenceStat {
 
 // Stores
 const metricStore = useMetricStore()
+const selfStore = useSelfUserStore()
+
 const {
   dateRange,
   lastRefreshDate
@@ -36,6 +39,7 @@ const {
 const metricQuery = new MetricQuery();
 
 // State
+const isAdmin = selfStore.isAdmin();
 const isLoading = ref(false);
 const items = ref<MemberPresenceStat[]>([]);
 const totalItems = ref(0);
@@ -67,7 +71,7 @@ const columns = [
   },
   {
     accessorKey: 'actions',
-    header: ' '
+    header: 'Actions'
   }
 ];
 
@@ -232,11 +236,17 @@ onMounted(() => {
            </template>
 
            <template #actions-cell="{ row }">
-             <div class="text-right print:hidden">
+             <div class="flex gap-2 justify-end print:hidden">
                <UButton
-                 size="xs"
                  :to="`/admin/members/${convertUuidToUrlUuid(row.original.memberUuid)}`">
-                 Fiche membre
+                 Détail
+               </UButton>
+
+               <UButton
+                 v-if="isAdmin"
+                 icon="i-heroicons-envelope"
+                 :to="`/admin/email/new?member=${convertUuidToUrlUuid(row.original.memberUuid)}`"
+               >
                </UButton>
              </div>
            </template>

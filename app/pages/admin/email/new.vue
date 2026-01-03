@@ -6,6 +6,7 @@ import EmailQuery from "~/composables/api/query/clubDependent/plugin/emailing/Em
 import EmailTemplateQuery from "~/composables/api/query/clubDependent/plugin/emailing/EmailTemplateQuery";
 import type { EmailTemplate } from "~/types/api/item/clubDependent/plugin/emailing/emailTemplate";
 import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
+import {decodeUrlUuid} from "~/utils/resource";
 
 const MAX_ATTACHMENT_SIZE_MB = 15
 
@@ -17,8 +18,11 @@ const MAX_ATTACHMENT_SIZE_MB = 15
     title: 'Nouveau mail'
   })
 
+  const route = useRoute()
+
   const selectedMembers: Ref<Member[]> = ref([])
 
+  const memberQuery = new MemberQuery()
   const emailQuery = new EmailQuery()
   const templateQuery = new EmailTemplateQuery()
 
@@ -197,15 +201,11 @@ const MAX_ATTACHMENT_SIZE_MB = 15
     return errors
   })
 
-  // Handle member query parameter for prefilling
-  const route = useRoute()
-  const memberQuery = new MemberQuery()
-  
   async function loadMemberFromQuery() {
     const memberUuid = route.query.member
     if (memberUuid && typeof memberUuid === 'string') {
-      const { retrieved, error } = await memberQuery.get(memberUuid)
-      
+      const { retrieved, error } = await memberQuery.get(decodeUrlUuid(memberUuid))
+
       if (error) {
         toast.add({
           title: "Une erreur est survenue",
@@ -214,7 +214,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
         })
         return
       }
-      
+
       if (retrieved) {
         selectedMembers.value = [retrieved]
       }
