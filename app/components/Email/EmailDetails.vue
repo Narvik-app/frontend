@@ -12,6 +12,11 @@
   const emit = defineEmits(['close'])
 
   const email = ref(props.item)
+
+  const formattedContent = computed(() => {
+    if (!email.value.content) return ''
+    return email.value.content.replace(/<p[^>]*>(?:\s*|&nbsp;|\s*<br\s*\/?>\s*)<\/p>/g, '<br />')
+  })
 </script>
 
 <template>
@@ -25,7 +30,7 @@
         <p>Date : {{ formatDateTimeReadable(email.createdAt) }}</p>
       </div>
       <UCard>
-        <div v-html="email.content" class="email-preview"></div>
+        <div v-html="formattedContent" class="email-preview"></div>
       </UCard>
       <p>Envoyé à {{ email.recipientCount }} {{ email.recipientCount > 1 ? 'membres' : 'membre' }} {{ email.isNewsletter ? '(newsletter)' : '' }}</p>
     </div>
