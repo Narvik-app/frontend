@@ -27,97 +27,141 @@ export const useSelfUserStore = defineStore('selfUser', () => {
 
   // Session Management
   const selfJwtToken: Ref<JwtToken | null> = ref(null)
-  const isRefreshingJwtToken = ref(false);
-  function getSelfJwtToken(): Ref<JwtToken|null> {
-    return selfJwtToken;
+
+  // Promise singleton to prevent race conditions during token refresh
+  let refreshTokenPromise: Promise<Ref<JwtToken | null>> | null = null
+
+  // Mutex to prevent multiple logout calls
+  const isLoggingOut = ref(false)
+
+  function getSelfJwtToken(): Ref<JwtToken | null> {
+    return selfJwtToken
   }
 
   function setSelfJwtToken(payload: JwtToken) {
-    // We update the selfJwtToken ref
     selfJwtToken.value = payload
   }
 
   function delay(time: number) {
-    return new Promise(resolve => setTimeout(resolve, time));
+    return new Promise(resolve => setTimeout(resolve, time))
   }
 
-  function displayJwtError(description: string, redirect: boolean = true) {
-    const toast = useToast()
-    toast.add({
-      color: "error",
-      title: "Erreur d'authentification",
-      description: description
-    })
-    return logJwtError(description, redirect)
+  /**
+   * Check if the access token is still valid.
+   * Handles both Date objects and ISO strings (from localStorage deserialization).
+   */
+  function isAccessTokenValid(token: JwtToken): boolean {
+    if (!token.access?.token || !token.access?.date) {
+      return false
+    }
+    // Parse the date - handles both Date objects and ISO strings from localStorage
+    const expiryDate = dayjs(token.access.date)
+    return expiryDate.isValid() && expiryDate.isAfter(dayjs())
   }
 
-  function logJwtError(description: string, redirect: boolean = true) {
-    console.error('JWT Error: ' + description)
-    logout(redirect)
+  /**
+   * Check if the refresh token is still valid.
+   * Handles both Date objects and ISO strings (from localStorage deserialization).
+   */
+  function isRefreshTokenValid(token: JwtToken): boolean {
+    if (!token.refresh?.token || !token.refresh?.date) {
+      return false
+    }
+    const expiryDate = dayjs(token.refresh.date)
+    return expiryDate.isValid() && expiryDate.isAfter(dayjs())
+  }
+
+  /**
+   * Handle token errors - logs, shows toast if needed, and triggers logout.
+   * Returns ref(null) to allow chaining in async functions.
+   */
+  function handleTokenError(message: string, showToast: boolean = true): Ref<null> {
+    console.error('JWT Error: ' + message)
+
+    if (showToast) {
+      const toast = useToast()
+      toast.add({
+        color: "error",
+        title: "Erreur d'authentification",
+        description: message
+      })
+    }
+
+    logout(showToast) // Only redirect if we're showing the toast
     return ref(null)
   }
 
-  async function enhanceJwtTokenDefined(delayedCalled: number = 0, bigFail: number = 0) {
-    const jwtToken = getSelfJwtToken()
-
-    if (!jwtToken || !jwtToken.value) {
-      return logJwtError("No auth token.")
-    }
-
-    // Access token is expired
-    if (!jwtToken.value.access || !jwtToken.value.access.token || (jwtToken.value.access && dayjs(jwtToken.value.access?.date).isBefore() )) {
-      if (!(jwtToken.value.refresh && jwtToken.value.refresh.token)) {
-        return logJwtError("No refresh access token.", false)
-      }
-
-      // Already refreshing
-      if (isRefreshingJwtToken.value) {
-        // We are already refreshing we wait
-        await delay(100)
-        // Taking to long to refresh we are in timeout
-        if (delayedCalled > 100) { // 10 seconds
-          isRefreshingJwtToken.value = false
-
-          if (bigFail > 5) {
-            return displayJwtError("Trop de tentative de connexion, veuillez-vous reconnecter.", true);
-          }
-
-          displayJwtError("Taking too long to refresh the token.", false);
-          return enhanceJwtTokenDefined(++delayedCalled, ++bigFail)
-        }
-        return enhanceJwtTokenDefined(++delayedCalled, bigFail);
-      }
-
-      isRefreshingJwtToken.value = true
-      const newJwtToken = await useRefreshAccessToken(jwtToken)
-      isRefreshingJwtToken.value = false
-
-      if (!newJwtToken || !jwtToken.value) {
-        return displayJwtError('An error occurred when refreshing the token.')
-      }
-    }
-
-    return jwtToken;
-  }
-
-  async function useRefreshAccessToken(jwtToken: Ref<JwtToken|null>) {
-    if (!jwtToken.value || !jwtToken.value.refresh || !jwtToken.value.refresh.token) {
-      logJwtError("No refresh token defined in the JwtToken", false)
-      return null;
+  /**
+   * Performs the actual token refresh API call.
+   * Returns the new JwtToken on success, null on failure.
+   */
+  async function performTokenRefresh(): Promise<JwtToken | null> {
+    const token = selfJwtToken.value
+    if (!token?.refresh?.token) {
+      return null
     }
 
     const { data, error } = await usePostRawJson("token", {
       grant_type: "refresh_token",
-      refresh_token: jwtToken.value.refresh.token
-    }, jwtToken.value.isBadger);
+      refresh_token: token.refresh.token
+    }, token.isBadger)
 
     if (error) {
-      displayJwtError("An error occured when refreshing the session.")
-      logJwtError(error.message, false)
+      console.error('Token refresh failed:', error.message)
       return null
     }
 
-    return setJwtSelfJwtTokenFromApiResponse(data, jwtToken.value.isBadger);
+    return setJwtSelfJwtTokenFromApiResponse(data, token.isBadger)
+  }
+
+  /**
+   * Ensures a valid JWT token is available for API calls.
+   * Uses a promise singleton pattern to prevent concurrent refresh attempts.
+   */
+  async function enhanceJwtTokenDefined(): Promise<Ref<JwtToken | null>> {
+    const jwtToken = getSelfJwtToken()
+
+    // No token at all
+    if (!jwtToken.value) {
+      return handleTokenError("Aucune session active.")
+    }
+
+    // Access token is still valid
+    if (isAccessTokenValid(jwtToken.value)) {
+      return jwtToken
+    }
+
+    // No refresh token available
+    if (!jwtToken.value.refresh?.token) {
+      return handleTokenError("Session invalide.")
+    }
+
+    // Refresh token has also expired
+    if (!isRefreshTokenValid(jwtToken.value)) {
+      return handleTokenError("Session expirée.")
+    }
+
+    // If already refreshing, wait for that operation to complete
+    if (refreshTokenPromise) {
+      return refreshTokenPromise
+    }
+
+    // Start the refresh operation wrapped in our singleton promise
+    refreshTokenPromise = (async (): Promise<Ref<JwtToken | null>> => {
+      const newToken = await performTokenRefresh()
+
+      if (!newToken) {
+        return handleTokenError("Impossible de rafraîchir la session.")
+      }
+
+      return jwtToken
+    })()
+
+    try {
+      return await refreshTokenPromise
+    } finally {
+      refreshTokenPromise = null
+    }
   }
 
   function setJwtSelfJwtTokenFromApiResponse(data: any, isBadger: boolean = false): JwtToken {
@@ -137,7 +181,6 @@ export const useSelfUserStore = defineStore('selfUser', () => {
 
     return jwtToken;
   }
-
 
 
   // End Session Management
@@ -281,24 +324,34 @@ export const useSelfUserStore = defineStore('selfUser', () => {
   }
 
   function logout(redirect: boolean = true) {
-    if (!selfJwtToken.value && member.value == undefined) return;
+    // Prevent multiple simultaneous logout calls (race condition protection)
+    if (isLoggingOut.value) return
 
+    // Already logged out
+    if (!selfJwtToken.value && member.value === undefined) return
+
+    isLoggingOut.value = true
+
+    // Clear all auth state
     selfJwtToken.value = null
     member.value = undefined
     user.value = undefined
     selectedProfile.value = undefined
 
-    // We refresh the config we got from the api
+    // Refresh the config with logged-out state
     appConfigStore.refresh(false)
 
-    // We stay on same page
-    if (!redirect) return;
+    // Show toast and redirect only if requested
+    if (redirect) {
+      const toast = useToast()
+      toast.add({
+        title: "Vous avez été déconnecté."
+      })
+      navigateTo('/login')
+    }
 
-    const toast = useToast();
-    toast.add({
-      title: "Vous avez été déconnecté."
-    })
-    navigateTo('/login')
+    // Reset mutex after a short delay to allow state to settle
+    setTimeout(() => { isLoggingOut.value = false }, 500)
   }
 
   function isLegalsAccepted() {
@@ -432,8 +485,6 @@ export const useSelfUserStore = defineStore('selfUser', () => {
     selfJwtToken,
     setJwtSelfJwtTokenFromApiResponse,
     enhanceJwtTokenDefined,
-    displayJwtError,
-    logJwtError,
   }
 }, {
   persist: {
