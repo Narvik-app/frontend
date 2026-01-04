@@ -276,6 +276,25 @@ The application uses multiple layouts for different user roles:
   - Presence plugin queries
   - Sale plugin queries
 
+### Permission System
+The frontend supports granular permission checks via `useSelfUser.can(Permission)`:
+
+```typescript
+import {Permission} from '~/types/api/permissions';
+
+const selfStore = useSelfUserStore();
+
+// Check if user can access a feature
+if (selfStore.can(Permission.EmailAccess)) { /* ... */ }
+
+// EDIT implies ACCESS - this returns true for both
+if (selfStore.can(Permission.EmailEdit)) { /* ... */ }
+```
+
+**Hierarchy**: If user has `*_EDIT`, they automatically have `*_ACCESS`.
+
+**Admins**: `can()` returns `true` for all permissions when user is admin or super-admin.
+
 ## Key Features
 
 ### 1. **Multi-Role Interface**
@@ -373,5 +392,5 @@ GNU AGPLv3 License - See [LICENSE](LICENSE) file for details.
 ---
 
 **Created by:** Benoît VIGNAL
-**Version:** 3.12.2
-**Last Updated:** 2025-11-22
+**Version:** 3.15
+**Last Updated:** 2026-01-03

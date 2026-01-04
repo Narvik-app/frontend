@@ -11,6 +11,7 @@ import type {LinkedProfile} from "~/types/api/linkedProfile";
 import type {User} from "~/types/api/item/user";
 import {UserRole} from "~/types/api/item/user";
 import {type Club, ClubRole} from "~/types/api/item/club";
+import {Permission} from "~/types/api/permissions";
 import ClubQuery from "~/composables/api/query/ClubQuery";
 import ClubSettingQuery from "~/composables/api/query/clubDependent/ClubSettingQuery";
 
@@ -368,6 +369,38 @@ export const useSelfUserStore = defineStore('selfUser', () => {
     return false;
   }
 
+  /**
+   * Check if the current user has a specific permission.
+   * Returns true for admins and super admins (they have all permissions).
+   * For supervisors, checks the permissions array from the selected profile.
+   * Hierarchy: EDIT permission implies ACCESS permission.
+   */
+  function can(permission: Permission): boolean {
+    if (!isLogged()) return false;
+
+    // Super admins and admins have all permissions
+    if (isSuperAdmin() || isAdmin()) return true;
+
+    // Check if permission is in the selected profile's permissions
+    if (selectedProfile.value && selectedProfile.value.permissions) {
+      // Direct match
+      if (selectedProfile.value.permissions.includes(permission)) {
+        return true;
+      }
+
+      // Hierarchy check: EDIT implies ACCESS
+      // If checking for ACCESS and user has the corresponding EDIT, return true
+      if (permission.endsWith('_ACCESS')) {
+        const editPermission = permission.replace('_ACCESS', '_EDIT') as Permission;
+        if (selectedProfile.value.permissions.includes(editPermission)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
   return {
     user,
     member,
@@ -393,6 +426,7 @@ export const useSelfUserStore = defineStore('selfUser', () => {
     isBadger,
 
     hasSupervisorRole,
+    can,
 
     // Session management
     selfJwtToken,

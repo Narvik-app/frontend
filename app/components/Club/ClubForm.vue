@@ -3,6 +3,7 @@ import type {PropType, Ref} from "vue";
 import type {FormError, FormErrorEvent} from "#ui/types";
 import ClubQuery from "~/composables/api/query/ClubQuery";
 import type {SelfWriteClub, WriteClub} from "~/types/api/item/club";
+import {clubPlugins} from "~/types/api/item/club";
 import {formatDateReadable} from "~/utils/date";
 
 const props = defineProps({
@@ -166,11 +167,8 @@ async function submitItem() {
         <USeparator label="Modules" />
 
         <div class="grid grid-cols-1 md:grid-cols-2">
-          <UFormField label="Présences" name="presencesEnabled">
-            <USwitch v-model="item.presencesEnabled" :class="props.isList && item.uuid ? 'pointer-events-none' : ''" :tabindex="props.isList && item.uuid ? '-1' : '0'"/>
-          </UFormField>
-          <UFormField label="Vente" name="salesEnabled">
-            <USwitch v-model="item.salesEnabled" :class="props.isList && item.uuid ? 'pointer-events-none' : ''" :tabindex="props.isList && item.uuid ? '-1' : '0'"/>
+          <UFormField v-for="plugin in clubPlugins" :key="plugin.key" :label="plugin.label" :name="plugin.key">
+            <USwitch v-model="item[plugin.key]" :class="props.isList && item.uuid ? 'pointer-events-none' : ''" :tabindex="props.isList && item.uuid ? '-1' : '0'"/>
           </UFormField>
         </div>
 

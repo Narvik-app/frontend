@@ -2,6 +2,7 @@
 
 import type {PropType} from "vue";
 import type {Club} from "~/types/api/item/club";
+import {clubPlugins} from "~/types/api/item/club";
 
 const props = defineProps({
   item: {
@@ -9,6 +10,15 @@ const props = defineProps({
     required: true
   },
 })
+
+// Build subscription list dynamically from clubPlugins
+const subscriptionData = computed(() => [
+  { name: 'Gestion des membres', enabled: true }, // Always enabled
+  ...clubPlugins.map(plugin => ({
+    name: plugin.description || plugin.label,
+    enabled: props.item[plugin.key]
+  }))
+])
 
 </script>
 
@@ -33,20 +43,7 @@ const props = defineProps({
         header: 'Souscrite'
       }
     ]"
-    :data="[
-      {
-        name: 'Gestion des membres',
-        enabled: true
-      },
-      {
-        name: 'Enregistrement des présences',
-        enabled: props.item.presencesEnabled
-      },
-      {
-        name: 'Ventes et gestion des stocks',
-        enabled: props.item.salesEnabled
-      }
-    ]"
+    :data="subscriptionData"
     >
     <template #enabled-cell="{ row }">
       <USwitch class="pointer-events-none" v-model="row.original.enabled" />
@@ -57,3 +54,4 @@ const props = defineProps({
 <style scoped lang="css">
 
 </style>
+

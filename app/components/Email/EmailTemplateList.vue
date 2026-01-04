@@ -3,9 +3,13 @@
   import EmailTemplateQuery from '~/composables/api/query/clubDependent/plugin/emailing/EmailTemplateQuery';
   import type { TablePaginateInterface } from '~/types/table';
   import ModalDeleteConfirmation from '../Modal/ModalDeleteConfirmation.vue';
+  import {useSelfUserStore} from '~/stores/useSelfUser';
+  import {Permission} from '~/types/api/permissions';
 
   const toast = useToast()
   const isLoading = ref(true)
+  const selfStore = useSelfUserStore()
+  const canEdit = selfStore.can(Permission.EmailTemplateEdit)
 
   const page = ref(1)
   const itemsPerPage = ref(10)
@@ -90,7 +94,7 @@
         <div class="text-xl font-bold">Modèles</div>
         <div class="flex-1"></div>
         <div class="flex justify-end">
-          <UButton to="/admin/email/templates/new" icon="i-heroicons-plus" />
+          <UButton v-if="canEdit" to="/admin/email/templates/new" icon="i-heroicons-plus" />
         </div>
       </div>
 
@@ -106,7 +110,7 @@
         </template>
 
         <template #actions-cell="{ row }">
-          <div class="flex gap-2">
+          <div v-if="canEdit" class="flex gap-2">
             <UButton
               icon="i-heroicons-pencil-square"
               color="warning"

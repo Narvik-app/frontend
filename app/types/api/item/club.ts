@@ -81,6 +81,21 @@ export function hasClubSupervisorRole(role: ClubRole|undefined): boolean {
   return role === ClubRole.Supervisor || isClubAdmin(role)
 }
 
+// Club plugin types that can be enabled/disabled per club
+export type ClubPlugin = 'presencesEnabled' | 'salesEnabled';
+
+// Plugin metadata for UI display
+export interface ClubPluginInfo {
+  key: ClubPlugin;
+  label: string;
+  description?: string;
+}
+
+export const clubPlugins: ClubPluginInfo[] = [
+  { key: 'presencesEnabled', label: 'Présences', description: 'Enregistrement des présences' },
+  { key: 'salesEnabled', label: 'Ventes', description: 'Ventes et gestion des stocks' },
+];
+
 interface _Club extends UuidItem, TimestampItem {
   name?: string;
   isActivated?: boolean
