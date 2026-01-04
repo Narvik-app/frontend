@@ -9,6 +9,7 @@ import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.
 import SaleModalEdit from "~/components/Sale/SaleModalEdit.vue";
 import {useSaleStore} from "~/stores/useSaleStore";
 import {convertUuidToUrlUuid, decodeUrlUuid} from "~/utils/resource";
+import {Permission} from "~/types/api/permissions";
 
 definePageMeta({
     layout: "pos"
@@ -21,6 +22,7 @@ definePageMeta({
   const saleStore = useSaleStore()
   const selfStore = useSelfUserStore()
   const isAdmin = selfStore.isAdmin()
+  const canEditSales = selfStore.can(Permission.SaleHistoryEdit)
 
   const toast = useToast()
 
@@ -125,7 +127,7 @@ definePageMeta({
         {{ formatDateTimeReadable(sale?.createdAt) }}
       </div>
 
-      <div v-if="isAdmin || dayjs(dayjs(sale?.createdAt)).isAfter(dayjs().startOf('day'))"
+      <div v-if="canEditSales && (isAdmin || dayjs(dayjs(sale?.createdAt)).isAfter(dayjs().startOf('day')))"
            class="flex justify-between gap-2"
       >
         <UButton v-if="sale"

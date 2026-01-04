@@ -107,50 +107,33 @@ async function removePermission(permission: Permission): Promise<boolean> {
   return false;
 }
 
-async function toggleAccess(accessPermission: Permission, editPermission?: Permission) {
+/**
+ * Toggle a permission on or off
+ * @param permission - The permission to toggle
+ * @param linkedPermission - Optional linked permission (for access: edit to remove; for edit: access to add)
+ * @param isEditToggle - If true, toggles edit permission (adds access if needed); if false, toggles access (removes edit if needed)
+ */
+async function togglePermission(permission: Permission, linkedPermission?: Permission, isEditToggle: boolean = false) {
   if (!isAdmin || !props.member.uuid) return;
   isSaving.value = true;
 
   try {
-    const hasAccess = hasPermission(accessPermission);
+    const hasPerm = hasPermission(permission);
 
-    if (hasAccess) {
-      // Removing access: also remove edit if present
-      if (editPermission && hasPermission(editPermission)) {
-        await removePermission(editPermission);
+    if (hasPerm) {
+      // Removing permission
+      if (!isEditToggle && linkedPermission && hasPermission(linkedPermission)) {
+        // When removing access, also remove edit
+        await removePermission(linkedPermission);
       }
-      await removePermission(accessPermission);
+      await removePermission(permission);
     } else {
-      // Adding access
-      await addPermission(accessPermission);
-    }
-    // Reload permissions to sync with any backend auto-grants
-    await loadPermissions();
-    emit('updated');
-  } catch (error: any) {
-    displayApiError(error);
-  } finally {
-    isSaving.value = false;
-  }
-}
-
-async function toggleEdit(accessPermission: Permission, editPermission: Permission) {
-  if (!isAdmin || !props.member.uuid) return;
-  isSaving.value = true;
-
-  try {
-    const hasAccess = hasPermission(accessPermission);
-    const hasEdit = hasPermission(editPermission);
-
-    if (hasEdit) {
-      // Removing edit only
-      await removePermission(editPermission);
-    } else {
-      // Adding edit: also add access if not present
-      if (!hasAccess) {
-        await addPermission(accessPermission);
+      // Adding permission
+      if (isEditToggle && linkedPermission && !hasPermission(linkedPermission)) {
+        // When adding edit, also add access if not present
+        await addPermission(linkedPermission);
       }
-      await addPermission(editPermission);
+      await addPermission(permission);
     }
     // Reload permissions to sync with any backend auto-grants
     await loadPermissions();
@@ -211,7 +194,7 @@ watch(() => props.member, async () => {
                 :disabled="!isAdmin || isSaving || isLoading"
                 :loading="isLoading || isSaving"
                 size="sm"
-                @update:model-value="toggleAccess(feature.accessPermission, feature.editPermission)"
+                @update:model-value="togglePermission(feature.accessPermission, feature.editPermission, false)"
               />
             </div>
             <!-- Edit column: show editOnly toggle here, hide accessOnly -->
@@ -222,7 +205,7 @@ watch(() => props.member, async () => {
                 :disabled="!isAdmin || isSaving || isLoading"
                 :loading="isLoading || isSaving"
                 size="sm"
-                @update:model-value="toggleAccess(feature.accessPermission)"
+                @update:model-value="togglePermission(feature.accessPermission, undefined, false)"
               />
               <USwitch
                 v-else-if="!feature.accessOnly"
@@ -230,7 +213,7 @@ watch(() => props.member, async () => {
                 :disabled="!isAdmin || isSaving || isLoading"
                 :loading="isLoading || isSaving"
                 size="sm"
-                @update:model-value="toggleEdit(feature.accessPermission, feature.editPermission!)"
+                @update:model-value="togglePermission(feature.editPermission!, feature.accessPermission, true)"
               />
             </div>
           </div>
