@@ -99,7 +99,7 @@
           </UTooltip>
         </NuxtLink>
         <UButton class="-mx-3 hidden lg:block" to="/" variant="ghost" color="neutral">Accueil</UButton>
-        <div v-if="isSupervisor">
+        <div v-if="isSupervisor && selfStore.selectedProfile?.club.salesEnabled">
           <UButton to="/admin/sales/new" icon="i-heroicons-shopping-cart" variant="ghost" color="neutral">
             <template v-if="isDesktopDisplay || isTabletDisplay">
               Vente

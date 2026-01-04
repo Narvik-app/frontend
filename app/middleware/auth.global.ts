@@ -22,7 +22,7 @@ const supervisorOnlyPaths = [
   "^/admin/statistics",
   "^/admin/thrombinoscope",
 
-  "^/admin/sales",
+  "^/admin/sales/new$",
 ]
 
 // Permission-based paths: supervisors need specific permissions to access these
@@ -40,6 +40,17 @@ const permissionPaths: { pattern: string; permission: Permission }[] = [
   { pattern: "^/admin/imports/photos", permission: Permission.ImportPhotosAccess },
   { pattern: "^/admin/imports/presences", permission: Permission.ImportPresencesAccess },
   { pattern: "^/admin/imports/cerbere", permission: Permission.ImportPresencesAccess },
+
+  // Sale paths - need ACCESS to view pages
+  // Note: specific paths must come BEFORE generic [id] pattern to avoid collision
+  { pattern: "^/admin/sales$", permission: Permission.SaleHistoryAccess },
+  { pattern: "^/admin/sales/history", permission: Permission.SaleHistoryAccess },
+  { pattern: "^/admin/sales/payment-modes", permission: Permission.SalePaymentModesAccess },
+  { pattern: "^/admin/sales/import", permission: Permission.SaleImportAccess },
+  { pattern: "^/admin/sales/[^/]+$", permission: Permission.SaleHistoryAccess }, // Sale detail [id] - must be last
+  { pattern: "^/admin/inventories$", permission: Permission.SaleInventoryAccess },
+  { pattern: "^/admin/inventories/items", permission: Permission.SaleInventoryAccess },
+  { pattern: "^/admin/inventories/categories", permission: Permission.SaleCategoriesAccess },
 ]
 
 export default defineNuxtRouteMiddleware(async (to, from) => {

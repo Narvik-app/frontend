@@ -2,6 +2,7 @@
   import {useSelfUserStore} from "~/stores/useSelfUser";
   import FooterCopyright from "~/components/FooterCopyright.vue";
   import type {GroupedNavigationLinks} from "~/types/groupedNavigationLinks";
+  import {Permission} from "~/types/api/permissions";
 
   useHead({
     titleTemplate: (titleChunk) => {
@@ -12,6 +13,13 @@
   const selfStore = useSelfUserStore()
   const isAdmin = selfStore.isAdmin()
   const isSupervisor = selfStore.hasSupervisorRole()
+
+  // Permission checks for conditional navigation
+  const canAccessHistory = selfStore.can(Permission.SaleHistoryAccess)
+  const canAccessInventory = selfStore.can(Permission.SaleInventoryAccess)
+  const canAccessCategories = selfStore.can(Permission.SaleCategoriesAccess)
+  const canAccessPaymentModes = selfStore.can(Permission.SalePaymentModesAccess)
+  const canAccessImport = selfStore.can(Permission.SaleImportAccess)
 
   const salesSection = [
     {
@@ -34,41 +42,60 @@
     }
   ]
 
-  const inventorySection = [
-    {
+  // Build management section based on permissions
+  const managementSection: { label: string; icon: string; to: string }[] = []
+
+  if (canAccessInventory) {
+    managementSection.push({
       label: 'Inventaire',
       icon: 'i-heroicons-calculator',
       to: '/admin/inventories'
-    },
-    {
+    })
+  }
+
+  if (canAccessCategories) {
+    managementSection.push({
       label: 'Catégories',
       icon: 'i-heroicons-tag',
       to: '/admin/inventories/categories'
-    },
-    {
+    })
+  }
+
+  if (canAccessPaymentModes) {
+    managementSection.push({
       label: 'Moyen de paiements',
       icon: 'i-heroicons-credit-card',
       to: '/admin/sales/payment-modes'
-    },{
+    })
+  }
+
+  if (canAccessImport) {
+    managementSection.push({
       label: 'Imports',
       icon: 'i-heroicons-arrow-down-on-square-stack',
       to: '/admin/sales/import'
-    }
-  ]
+    })
+  }
 
   let links: GroupedNavigationLinks[] = [
     {
       links: salesSection
-    }, {
-      title: 'Historique',
-      links: historySection
     }
   ]
 
-  if (isAdmin) {
+  // Add history section if user has access
+  if (canAccessHistory) {
+    links.push({
+      title: 'Historique',
+      links: historySection
+    })
+  }
+
+  // Add management section if any management links are available
+  if (managementSection.length > 0) {
     links.push({
       title: 'Gestion',
-      links: inventorySection
+      links: managementSection
     })
   }
 

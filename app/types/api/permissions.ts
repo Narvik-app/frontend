@@ -18,6 +18,18 @@ export enum Permission {
 
   ImportPresencesAccess = 'IMPORT_PRESENCES_ACCESS',
   ImportPresencesEdit = 'IMPORT_PRESENCES_EDIT',
+
+  // Sale permissions
+  SaleHistoryAccess = 'SALE_HISTORY_ACCESS',
+  SaleHistoryEdit = 'SALE_HISTORY_EDIT',
+  SaleInventoryAccess = 'SALE_INVENTORY_ACCESS',
+  SaleInventoryEdit = 'SALE_INVENTORY_EDIT',
+  SaleCategoriesAccess = 'SALE_CATEGORIES_ACCESS',
+  SaleCategoriesEdit = 'SALE_CATEGORIES_EDIT',
+  SalePaymentModesAccess = 'SALE_PAYMENT_MODES_ACCESS',
+  SalePaymentModesEdit = 'SALE_PAYMENT_MODES_EDIT',
+  SaleImportAccess = 'SALE_IMPORT_ACCESS',
+  SaleImportEdit = 'SALE_IMPORT_EDIT',
 }
 
 // Feature definition with Access and Edit permissions
@@ -71,6 +83,37 @@ export const permissionSections: PermissionSection[] = [
         accessPermission: Permission.ImportPresencesAccess,
         editPermission: Permission.ImportPresencesEdit,
         plugin: 'presencesEnabled',
+      },
+    ],
+  },
+  {
+    label: 'Ventes',
+    plugin: 'salesEnabled',
+    features: [
+      {
+        name: 'Historique',
+        accessPermission: Permission.SaleHistoryAccess,
+        editPermission: Permission.SaleHistoryEdit,
+      },
+      {
+        name: 'Inventaire',
+        accessPermission: Permission.SaleInventoryAccess,
+        editPermission: Permission.SaleInventoryEdit,
+      },
+      {
+        name: 'Catégories',
+        accessPermission: Permission.SaleCategoriesAccess,
+        editPermission: Permission.SaleCategoriesEdit,
+      },
+      {
+        name: 'Moyens de paiement',
+        accessPermission: Permission.SalePaymentModesAccess,
+        editPermission: Permission.SalePaymentModesEdit,
+      },
+      {
+        name: 'Import',
+        accessPermission: Permission.SaleImportAccess,
+        editPermission: Permission.SaleImportEdit,
       },
     ],
   },
