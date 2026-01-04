@@ -60,16 +60,33 @@ export const useSelfUserStore = defineStore('selfUser', () => {
   }
 
   /**
-   * Check if the refresh token is still valid.
-   * Handles both Date objects and ISO strings (from localStorage deserialization).
+   * Check if we should attempt a refresh.
+   * Returns TRUE if we should try, FALSE only if we know for sure it's expired.
+   * If date is missing or invalid, we assume the token might still be valid and try anyway.
    */
-  function isRefreshTokenValid(token: JwtToken): boolean {
-    if (!token.refresh?.token || !token.refresh?.date) {
+  function shouldAttemptRefresh(token: JwtToken): boolean {
+    // No refresh token at all
+    if (!token.refresh?.token) {
       return false
     }
+    
+    // If no date, we can't know if it's expired - try the refresh
+    if (!token.refresh.date) {
+      return true
+    }
+    
     const expiryDate = dayjs(token.refresh.date)
-    return expiryDate.isValid() && expiryDate.isAfter(dayjs())
+    
+    // If date is invalid (parsing failed), try the refresh anyway
+    if (!expiryDate.isValid()) {
+      console.warn('Refresh token date is invalid, attempting refresh anyway')
+      return true
+    }
+    
+    // Only return false if we KNOW the token is expired (date is in the past)
+    return expiryDate.isAfter(dayjs())
   }
+
 
   /**
    * Handle token errors - logs, shows toast if needed, and triggers logout.
@@ -136,8 +153,8 @@ export const useSelfUserStore = defineStore('selfUser', () => {
       return handleTokenError("Session invalide.")
     }
 
-    // Refresh token has also expired
-    if (!isRefreshTokenValid(jwtToken.value)) {
+    // Refresh token is definitely expired (valid date in the past)
+    if (!shouldAttemptRefresh(jwtToken.value)) {
       return handleTokenError("Session expirée.")
     }
 
