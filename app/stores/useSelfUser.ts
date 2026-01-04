@@ -27,10 +27,10 @@ export const useSelfUserStore = defineStore('selfUser', () => {
 
   // Session Management
   const selfJwtToken: Ref<JwtToken | null> = ref(null)
-  
+
   // Promise singleton to prevent race conditions during token refresh
   let refreshTokenPromise: Promise<Ref<JwtToken | null>> | null = null
-  
+
   // Mutex to prevent multiple logout calls
   const isLoggingOut = ref(false)
 
@@ -77,7 +77,7 @@ export const useSelfUserStore = defineStore('selfUser', () => {
    */
   function handleTokenError(message: string, showToast: boolean = true): Ref<null> {
     console.error('JWT Error: ' + message)
-    
+
     if (showToast) {
       const toast = useToast()
       toast.add({
@@ -86,7 +86,7 @@ export const useSelfUserStore = defineStore('selfUser', () => {
         description: message
       })
     }
-    
+
     logout(showToast) // Only redirect if we're showing the toast
     return ref(null)
   }
@@ -123,7 +123,7 @@ export const useSelfUserStore = defineStore('selfUser', () => {
 
     // No token at all
     if (!jwtToken.value) {
-      return handleTokenError("No auth token.")
+      return handleTokenError("Aucune session active.")
     }
 
     // Access token is still valid
@@ -133,12 +133,12 @@ export const useSelfUserStore = defineStore('selfUser', () => {
 
     // No refresh token available
     if (!jwtToken.value.refresh?.token) {
-      return handleTokenError("No refresh token available.", false)
+      return handleTokenError("Session invalide.")
     }
 
     // Refresh token has also expired
     if (!isRefreshTokenValid(jwtToken.value)) {
-      return handleTokenError("Session expired. Please log in again.")
+      return handleTokenError("Session expirée.")
     }
 
     // If already refreshing, wait for that operation to complete
@@ -149,11 +149,11 @@ export const useSelfUserStore = defineStore('selfUser', () => {
     // Start the refresh operation wrapped in our singleton promise
     refreshTokenPromise = (async (): Promise<Ref<JwtToken | null>> => {
       const newToken = await performTokenRefresh()
-      
+
       if (!newToken) {
-        return handleTokenError("Failed to refresh session.")
+        return handleTokenError("Impossible de rafraîchir la session.")
       }
-      
+
       return jwtToken
     })()
 
@@ -163,8 +163,6 @@ export const useSelfUserStore = defineStore('selfUser', () => {
       refreshTokenPromise = null
     }
   }
-
-
 
   function setJwtSelfJwtTokenFromApiResponse(data: any, isBadger: boolean = false): JwtToken {
     const jwtToken = new JwtToken(isBadger);
@@ -183,7 +181,6 @@ export const useSelfUserStore = defineStore('selfUser', () => {
 
     return jwtToken;
   }
-
 
 
   // End Session Management
@@ -329,10 +326,10 @@ export const useSelfUserStore = defineStore('selfUser', () => {
   function logout(redirect: boolean = true) {
     // Prevent multiple simultaneous logout calls (race condition protection)
     if (isLoggingOut.value) return
-    
+
     // Already logged out
     if (!selfJwtToken.value && member.value === undefined) return
-    
+
     isLoggingOut.value = true
 
     // Clear all auth state
@@ -352,7 +349,7 @@ export const useSelfUserStore = defineStore('selfUser', () => {
       })
       navigateTo('/login')
     }
-    
+
     // Reset mutex after a short delay to allow state to settle
     setTimeout(() => { isLoggingOut.value = false }, 500)
   }
