@@ -130,7 +130,7 @@ export abstract class AbstractQuery<R, W> {
   }
 
 	async post(payload: Item) {
-		return useCreateItem<W>(this.getRootUrl(), payload)
+		return useCreateItem<R>(this.getRootUrl(), payload)
 	}
 
 	async patch(item: Item, payload: Item) {

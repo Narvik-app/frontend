@@ -3,6 +3,8 @@
   import MetricQuery from "~/composables/api/query/MetricQuery";
   import type {Metric} from "~/types/api/item/metric";
   import {displayFileErrorToast, displayFileSuccessToast, getFileFormDataFromUInputChangeEvent} from "~/utils/file";
+  import {useSelfUserStore} from "~/stores/useSelfUser";
+  import {Permission} from "~/types/api/permissions";
 
   definePageMeta({
     layout: "admin"
@@ -13,6 +15,9 @@
   })
 
   const toast = useToast()
+  const selfStore = useSelfUserStore()
+  const canEdit = selfStore.can(Permission.ImportPresencesEdit)
+
   const memberPresenceQuery = new MemberPresenceQuery()
   const metricQuery = new MetricQuery()
 
@@ -66,7 +71,7 @@
 
       <UInput
           :loading="fileUploading"
-          :disabled="fileUploading"
+          :disabled="fileUploading || !canEdit"
           class="my-4"
           type="file"
           accept="application/vnd.ms-excel"

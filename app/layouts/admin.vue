@@ -3,6 +3,7 @@
   import type {GroupedNavigationLinks} from "~/types/groupedNavigationLinks";
   import dayjs from "dayjs";
   import {formatDateReadable} from "~/utils/date";
+  import {Permission} from "~/types/api/permissions";
 
   useHead({
     titleTemplate: (titleChunk) => {
@@ -73,19 +74,23 @@
     }
   ]
 
-  const importSection = [
-    {
+  // Import section - can() already checks for admin status
+  const importSection = [];
+  if (selfStore.can(Permission.ImportMembersAccess)) {
+    importSection.push({
       label: 'Membres',
       icon: 'i-heroicons-users',
       to: '/admin/imports/members'
-    },
-    {
+    })
+  }
+  if (selfStore.can(Permission.ImportPhotosAccess)) {
+    importSection.push({
       label: 'Photos',
       icon: 'i-heroicons-photo',
       to: '/admin/imports/photos'
-    },
-  ]
-  if (selfStore.selectedProfile?.club.presencesEnabled) {
+    })
+  }
+  if (selfStore.selectedProfile?.club.presencesEnabled && selfStore.can(Permission.ImportPresencesAccess)) {
     importSection.push({
       label: 'Présences',
       icon: 'i-heroicons-calendar-days',
@@ -103,12 +108,15 @@
     },
   ]
 
-  if (isAdmin) {
+  // Show imports section if user has access to any import
+  if (importSection.length > 0) {
     links.push({
       title: 'Imports',
       links: importSection
     })
+  }
 
+  if (isAdmin) {
     links.push({
       title: 'Paramétrage',
       links: configsSection,

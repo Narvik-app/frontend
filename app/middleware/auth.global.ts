@@ -1,6 +1,7 @@
 import {pathsMatch} from "~/utils/resource";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {useAppConfigStore} from "~/stores/useAppConfig";
+import {Permission} from "~/types/api/permissions";
 
 const pathsAccessibleToAll = [
   "^/unsubscribe\?.*"
@@ -22,6 +23,23 @@ const supervisorOnlyPaths = [
   "^/admin/thrombinoscope",
 
   "^/admin/sales",
+]
+
+// Permission-based paths: supervisors need specific permissions to access these
+// For viewing pages, ACCESS is enough. For actions, EDIT is required (handled by backend).
+const permissionPaths: { pattern: string; permission: Permission }[] = [
+  // Email paths - need ACCESS to view
+  { pattern: "^/admin/email$", permission: Permission.EmailAccess },
+  { pattern: "^/admin/email/new", permission: Permission.EmailEdit },
+  { pattern: "^/admin/email/templates$", permission: Permission.EmailTemplateAccess },
+  { pattern: "^/admin/email/templates/new", permission: Permission.EmailTemplateEdit },
+  { pattern: "^/admin/email/templates/edit", permission: Permission.EmailTemplateEdit },
+
+  // Import paths - need ACCESS to view, EDIT to run import
+  { pattern: "^/admin/imports/members", permission: Permission.ImportMembersAccess },
+  { pattern: "^/admin/imports/photos", permission: Permission.ImportPhotosAccess },
+  { pattern: "^/admin/imports/presences", permission: Permission.ImportPresencesAccess },
+  { pattern: "^/admin/imports/cerbere", permission: Permission.ImportPresencesAccess },
 ]
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
@@ -81,11 +99,26 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       return navigateTo("/self");
     }
 
-    // User is not an admin (so supervisor) got access to only restrain uris
+    // User is not an admin (so supervisor) - check allowed paths
     if (!selfStore.isAdmin()) {
-      if (!pathsMatch(supervisorOnlyPaths, to.fullPath)) {
-        return navigateTo('/admin')
+      // Check if path matches supervisor-only paths (always allowed for supervisors)
+      if (pathsMatch(supervisorOnlyPaths, to.fullPath)) {
+        return;
       }
+
+      // Check if path matches permission-based paths
+      for (const { pattern, permission } of permissionPaths) {
+        if (pathsMatch([pattern], to.fullPath)) {
+          if (selfStore.can(permission)) {
+            return; // Has permission, allow access
+          } else {
+            return navigateTo('/admin'); // No permission, redirect
+          }
+        }
+      }
+
+      // Path is not in any allowed list for supervisors
+      return navigateTo('/admin')
     }
   }
 })

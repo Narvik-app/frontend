@@ -2,10 +2,14 @@
   import type { Email } from '~/types/api/item/clubDependent/plugin/emailing/email';
   import EmailQuery from '~/composables/api/query/clubDependent/plugin/emailing/EmailQuery';
   import type { TableRow } from '@nuxt/ui';
-import type { TablePaginateInterface } from '~/types/table';
+  import type { TablePaginateInterface } from '~/types/table';
+  import {useSelfUserStore} from '~/stores/useSelfUser';
+  import {Permission} from '~/types/api/permissions';
 
   const toast = useToast()
   const isLoading = ref(true)
+  const selfStore = useSelfUserStore()
+  const canEdit = selfStore.can(Permission.EmailEdit)
 
   const modalOpen = ref(false)
   const selectedEmail: Ref<Email | undefined> = ref(undefined)
@@ -89,7 +93,7 @@ import type { TablePaginateInterface } from '~/types/table';
         <div class="text-xl font-bold">Emails</div>
         <div class="flex-1"></div>
         <div class="flex justify-end">
-          <UButton to="/admin/email/new" icon="i-heroicons-plus" />
+          <UButton v-if="canEdit" to="/admin/email/new" icon="i-heroicons-plus" />
         </div>
       </div>
 

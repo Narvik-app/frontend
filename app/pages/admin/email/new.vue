@@ -7,6 +7,7 @@ import EmailTemplateQuery from "~/composables/api/query/clubDependent/plugin/ema
 import type { EmailTemplate } from "~/types/api/item/clubDependent/plugin/emailing/emailTemplate";
 import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
 import {decodeUrlUuid} from "~/utils/resource";
+import {Permission} from "~/types/api/permissions";
 
 const MAX_ATTACHMENT_SIZE_MB = 15
 
@@ -28,6 +29,9 @@ const MAX_ATTACHMENT_SIZE_MB = 15
 
   const selfStore = useSelfUserStore()
   const { selectedProfile } = storeToRefs(selfStore)
+
+  // Permission checks - can() already includes admin check
+  const canAccessTemplates = selfStore.can(Permission.EmailTemplateAccess)
 
   // Redirect to main page if there's no profile
   if (!selectedProfile.value) {
@@ -222,7 +226,10 @@ const MAX_ATTACHMENT_SIZE_MB = 15
   }
 
   onMounted(() => {
-    getEmailTemplates()
+    // Only fetch templates if user has permission
+    if (canAccessTemplates) {
+      getEmailTemplates()
+    }
     loadMemberFromQuery()
   })
 
@@ -298,7 +305,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
         <ContentLink to="https://about.narvik.app/abonnements" target="_blank">Augmentez votre quota</ContentLink>
       </UCard>
 
-      <UCard>
+      <UCard v-if="canAccessTemplates">
         <div class="flex flex-col gap-2">
           <p>Modèles</p>
           <UFieldGroup class="w-full">
