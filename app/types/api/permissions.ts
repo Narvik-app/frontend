@@ -20,21 +20,6 @@ export enum Permission {
   ImportPresencesEdit = 'IMPORT_PRESENCES_EDIT',
 }
 
-export const permissionLabels: Record<Permission, string> = {
-  [Permission.EmailAccess]: 'Accès',
-  [Permission.EmailEdit]: 'Édition',
-  [Permission.EmailTemplateAccess]: 'Accès',
-  [Permission.EmailTemplateEdit]: 'Édition',
-  [Permission.ImportMembersAccess]: 'Accès',
-  [Permission.ImportMembersEdit]: 'Édition',
-  [Permission.ImportPhotosAccess]: 'Accès',
-  [Permission.ImportPhotosEdit]: 'Édition',
-  [Permission.ImportPresencesAccess]: 'Accès',
-  [Permission.ImportPresencesEdit]: 'Édition',
-}
-
-export const allPermissions = Object.values(Permission);
-
 // Feature definition with Access and Edit permissions
 export interface PermissionFeature {
   name: string;
@@ -90,24 +75,3 @@ export const permissionSections: PermissionSection[] = [
     ],
   },
 ];
-
-/**
- * Get the ACCESS permission for an EDIT permission (hierarchy)
- */
-export function getAccessPermission(editPermission: Permission): Permission | null {
-  const mapping: Partial<Record<Permission, Permission>> = {
-    [Permission.EmailEdit]: Permission.EmailAccess,
-    [Permission.EmailTemplateEdit]: Permission.EmailTemplateAccess,
-    [Permission.ImportMembersEdit]: Permission.ImportMembersAccess,
-    [Permission.ImportPhotosEdit]: Permission.ImportPhotosAccess,
-    [Permission.ImportPresencesEdit]: Permission.ImportPresencesAccess,
-  };
-  return mapping[editPermission] ?? null;
-}
-
-/**
- * Check if permission is an EDIT permission
- */
-export function isEditPermission(permission: Permission): boolean {
-  return permission.endsWith('_EDIT');
-}

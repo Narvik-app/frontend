@@ -6,6 +6,7 @@ import {Permission, permissionSections} from "~/types/api/permissions";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {ClubRole} from "~/types/api/item/club";
 import MemberPermissionQuery from "~/composables/api/query/clubDependent/MemberPermissionQuery";
+import {displayApiError} from "~/utils/resource";
 
 const props = defineProps({
   member: {
@@ -129,11 +130,7 @@ async function toggleAccess(accessPermission: Permission, editPermission: Permis
     }
     emit('updated');
   } catch (error: any) {
-    toast.add({
-      color: 'error',
-      title: 'Erreur lors de la mise à jour',
-      description: error.message || 'Une erreur est survenue'
-    });
+    displayApiError(error);
   } finally {
     isSaving.value = false;
   }
@@ -161,11 +158,7 @@ async function toggleEdit(accessPermission: Permission, editPermission: Permissi
     }
     emit('updated');
   } catch (error: any) {
-    toast.add({
-      color: 'error',
-      title: 'Erreur lors de la mise à jour',
-      description: error.message || 'Une erreur est survenue'
-    });
+    displayApiError(error);
   } finally {
     isSaving.value = false;
   }
