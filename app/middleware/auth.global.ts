@@ -21,8 +21,6 @@ const supervisorOnlyPaths = [
   "^/admin/presences",
   "^/admin/statistics",
   "^/admin/thrombinoscope",
-
-  "^/admin/sales/new$",
 ]
 
 // Permission-based paths: supervisors need specific permissions to access these
@@ -43,6 +41,7 @@ const permissionPaths: { pattern: string; permission: Permission }[] = [
 
   // Sale paths - need ACCESS to view pages
   // Note: specific paths must come BEFORE generic [id] pattern to avoid collision
+  { pattern: "^/admin/sales/new$", permission: Permission.SaleNew },
   { pattern: "^/admin/sales$", permission: Permission.SaleHistoryAccess },
   { pattern: "^/admin/sales/history", permission: Permission.SaleHistoryAccess },
   { pattern: "^/admin/sales/payment-modes", permission: Permission.SalePaymentModesAccess },

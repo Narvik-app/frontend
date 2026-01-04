@@ -15,19 +15,22 @@
   const isSupervisor = selfStore.hasSupervisorRole()
 
   // Permission checks for conditional navigation
+  const canAccessSaleNew = selfStore.can(Permission.SaleNew)
   const canAccessHistory = selfStore.can(Permission.SaleHistoryAccess)
   const canAccessInventory = selfStore.can(Permission.SaleInventoryAccess)
   const canAccessCategories = selfStore.can(Permission.SaleCategoriesAccess)
   const canAccessPaymentModes = selfStore.can(Permission.SalePaymentModesAccess)
   const canAccessImport = selfStore.can(Permission.SaleImportAccess)
 
-  const salesSection = [
-    {
+  const salesSection: { label: string; icon: string; to: string }[] = []
+
+  if (canAccessSaleNew) {
+    salesSection.push({
       label: 'Faire une vente',
       icon: 'i-heroicons-banknotes',
       to: '/admin/sales/new'
-    }
-  ]
+    })
+  }
 
   const historySection = [
     {
@@ -77,11 +80,14 @@
     })
   }
 
-  let links: GroupedNavigationLinks[] = [
-    {
+  let links: GroupedNavigationLinks[] = []
+
+  // Add sales section if user can access new sale
+  if (salesSection.length > 0) {
+    links.push({
       links: salesSection
-    }
-  ]
+    })
+  }
 
   // Add history section if user has access
   if (canAccessHistory) {

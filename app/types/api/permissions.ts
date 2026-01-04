@@ -20,6 +20,7 @@ export enum Permission {
   ImportPresencesEdit = 'IMPORT_PRESENCES_EDIT',
 
   // Sale permissions
+  SaleNew = 'SALE_NEW', // Grants ability to make sales, implies History and Inventory read access
   SaleHistoryAccess = 'SALE_HISTORY_ACCESS',
   SaleHistoryEdit = 'SALE_HISTORY_EDIT',
   SaleInventoryAccess = 'SALE_INVENTORY_ACCESS',
@@ -36,7 +37,11 @@ export enum Permission {
 export interface PermissionFeature {
   name: string;
   accessPermission: Permission;
-  editPermission: Permission;
+  editPermission?: Permission;
+  /** If true, only show Access toggle (single toggle in Access column) */
+  accessOnly?: boolean;
+  /** If true, only show Edit toggle (single toggle in Edit column, uses accessPermission) */
+  editOnly?: boolean;
   /** Optional: only show this feature if the specified plugin is enabled for the club */
   plugin?: ClubPlugin;
 }
@@ -90,6 +95,11 @@ export const permissionSections: PermissionSection[] = [
     label: 'Ventes',
     plugin: 'salesEnabled',
     features: [
+      {
+        name: 'Faire une vente',
+        accessPermission: Permission.SaleNew,
+        editOnly: true,
+      },
       {
         name: 'Historique',
         accessPermission: Permission.SaleHistoryAccess,
