@@ -4,7 +4,7 @@ import {useAppConfigStore} from "~/stores/useAppConfig";
 import {Permission} from "~/types/api/permissions";
 
 const pathsAccessibleToAll = [
-  "^/unsubscribe\\?.*"
+  "^/unsubscribe\?.*"
 ]
 
 const publicPaths = [
