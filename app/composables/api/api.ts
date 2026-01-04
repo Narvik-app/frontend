@@ -24,11 +24,11 @@ function getBasicAuthorization(isBadger: boolean = false): string {
   return `Basic ${btoa(bearer)}`
 }
 
-async function useApi<T>(path: string, options: UseApiDataOptions<T> = {}, requireLogin: boolean = true, retry: number = 0, timeout: number = 30000) {
+async function useApi<T>(path: string, options: UseApiDataOptions<T> = {}, requireLogin: boolean = true, timeout: number = 30000): Promise<T | undefined> {
   let overloadedOptions: UseApiDataOptions<T> = {
     mode: "cors",
     cache: false,
-    timeout: timeout, // Doing that otherwise for search user post we get an "array is undefined" error...
+    timeout: timeout,
 
     headers: {
       Accept: MIME_TYPE,
@@ -37,25 +37,19 @@ async function useApi<T>(path: string, options: UseApiDataOptions<T> = {}, requi
 
   if (requireLogin) {
     const selfStore = useSelfUserStore()
-    const jwtToken = await selfStore.enhanceJwtTokenDefined();
-    // We throw an error if at this point we still don't have an access token
+    const jwtToken = await selfStore.enhanceJwtTokenDefined()
+    
+    // enhanceJwtTokenDefined handles token refresh, expiry checks, and logout on failure
+    // If we don't have a valid token at this point, the user is being redirected to login
     if (!jwtToken.value?.access?.token) {
-      retry++;
-
-      if (retry > 5) {
-        selfStore.logJwtError(`No access token. All retry failed`)
-        throw new Error('No access token found')
-      }
-
-      selfStore.logJwtError(`No access token. Retrying ${retry}/5`, false)
-      await selfStore.delay(200)
-      return useApi<T>(path, options, requireLogin, retry)
+      return undefined
     }
+    
     overloadedOptions = mergician({
       headers: {
         Authorization: `Bearer ${jwtToken.value.access.token}`
       }
-    }, options);
+    }, options)
 
     if (selfStore.selectedProfile?.id) {
       overloadedOptions.headers.Profile = `${selfStore.selectedProfile.id}`
@@ -153,9 +147,11 @@ export async function useFetchList<T>(resource: string): Promise<FetchAllData<T>
   try {
     const data = await useApi<PagedCollection<T>>(resource);
 
-    items = data["member"];
-    view = data["view"];
-    totalItems = data["totalItems"];
+    if (data) {
+      items = data["member"];
+      view = data["view"];
+      totalItems = data["totalItems"];
+    }
   } catch (e) {
     error = formatErrorFromApiResponse(e as object) as NuxtError<ItemError>
   }
@@ -264,7 +260,7 @@ export async function useUpdateItem<T>(item: Item, payload: Item) {
 }
 
 export async function useGetCsv(path: string) {
-  let data : string | null = null;
+  let data: string | null | undefined = null;
   let error: NuxtError | undefined = undefined;
 
   try {
@@ -296,7 +292,7 @@ export async function usePost<T>(path: string, payload: object, requireLogin: bo
         Accept: MIME_TYPE,
         "Content-Type": MIME_TYPE,
       },
-    }, requireLogin, 0, 10000);
+    }, requireLogin, 10000);
 
     item = data as T;
   } catch (e) {
