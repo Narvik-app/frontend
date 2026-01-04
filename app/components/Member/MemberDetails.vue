@@ -719,8 +719,7 @@ async function deleteMember() {
         </UCard>
       </div>
 
-      <!-- Member Permissions (visible for supervisors only, when viewing as admin) -->
-      <div v-if="isAdmin && member?.role === ClubRole.Supervisor" class="lg:col-span-9">
+      <div v-if="member?.role === ClubRole.Supervisor" class="lg:col-span-9">
         <MemberPermissions :member="member" />
       </div>
 

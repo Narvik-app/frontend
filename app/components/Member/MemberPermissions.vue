@@ -1,16 +1,11 @@
 <script setup lang="ts">
 import type {PropType, Ref} from "vue";
 import type {Member} from "~/types/api/item/clubDependent/member";
-import {Permission, permissionSections, getAccessPermission} from "~/types/api/permissions";
+import type {MemberPermission} from "~/types/api/item/clubDependent/memberPermission";
+import {Permission, permissionSections} from "~/types/api/permissions";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {ClubRole} from "~/types/api/item/club";
-import {useFetchList, usePost, useDelete} from "~/composables/api/api";
-
-interface PermissionItem {
-  uuid: string;
-  permission: Permission;
-  '@id'?: string;
-}
+import MemberPermissionQuery from "~/composables/api/query/clubDependent/MemberPermissionQuery";
 
 const props = defineProps({
   member: {
@@ -29,7 +24,7 @@ const isAdmin = selfStore.isAdmin();
 
 const isLoading = ref(false);
 const isSaving = ref(false);
-const permissionItems: Ref<PermissionItem[]> = ref([]);
+const permissionItems: Ref<MemberPermission[]> = ref([]);
 
 // Only show for supervisors (admins don't need permissions as they have all)
 const isSupervisor = computed(() => {
@@ -65,30 +60,18 @@ const filteredPermissionSections = computed(() => {
     .filter(section => section.features.length > 0);
 });
 
-// Load permissions on mount
-onMounted(async () => {
-  if (isSupervisor.value) {
-    await loadPermissions();
-  }
+// Create query instance when member changes
+const permissionQuery = computed(() => {
+  if (!props.member) return null;
+  return new MemberPermissionQuery(props.member);
 });
-
-watch(() => props.member, async () => {
-  if (isSupervisor.value) {
-    await loadPermissions();
-  }
-});
-
-function getPermissionsUrl(): string {
-  const clubUuid = selfStore.selectedProfile?.club.uuid;
-  return `/clubs/${clubUuid}/members/${props.member.uuid}/permissions`;
-}
 
 async function loadPermissions() {
-  if (!props.member.uuid) return;
+  if (!props.member.uuid || !permissionQuery.value) return;
   isLoading.value = true;
 
   try {
-    const {items, error} = await useFetchList<PermissionItem>(getPermissionsUrl());
+    const { items, error } = await permissionQuery.value.getAll();
     if (!error) {
       permissionItems.value = items || [];
     }
@@ -99,24 +82,23 @@ async function loadPermissions() {
   }
 }
 
-async function addPermission(permission: Permission) {
-  const memberIri = `/clubs/${selfStore.selectedProfile?.club.uuid}/members/${props.member.uuid}`;
-  const {item, error} = await usePost<PermissionItem>(getPermissionsUrl(), {
-    member: memberIri,
-    permission: permission,
-  });
+async function addPermission(permission: Permission): Promise<boolean> {
+  if (!permissionQuery.value) return false;
 
-  if (!error && item) {
-    permissionItems.value.push(item);
+  const { created, error } = await permissionQuery.value.addPermission(permission);
+  if (!error && created) {
+    permissionItems.value.push(created);
     return true;
   }
   return false;
 }
 
-async function removePermission(permission: Permission) {
+async function removePermission(permission: Permission): Promise<boolean> {
+  if (!permissionQuery.value) return false;
+
   const existingItem = permissionItems.value.find(p => p.permission === permission);
   if (existingItem) {
-    const {error} = await useDelete(`${getPermissionsUrl()}/${existingItem.uuid}`);
+    const { error } = await permissionQuery.value.removePermission(existingItem);
     if (!error) {
       permissionItems.value = permissionItems.value.filter(p => p.uuid !== existingItem.uuid);
       return true;
@@ -192,6 +174,19 @@ async function toggleEdit(accessPermission: Permission, editPermission: Permissi
 function hasPermission(permission: Permission): boolean {
   return currentPermissions.value.includes(permission);
 }
+
+// Load permissions on mount
+onMounted(async () => {
+  if (isSupervisor.value) {
+    await loadPermissions();
+  }
+});
+
+watch(() => props.member, async () => {
+  if (isSupervisor.value) {
+    await loadPermissions();
+  }
+});
 </script>
 
 <template>
