@@ -1,3 +1,5 @@
+import type { ClubPlugin } from '~/types/api/item/club';
+
 export enum Permission {
   // Email permissions
   EmailAccess = 'EMAIL_ACCESS',
@@ -38,12 +40,16 @@ export interface PermissionFeature {
   name: string;
   accessPermission: Permission;
   editPermission: Permission;
+  /** Optional: only show this feature if the specified plugin is enabled for the club */
+  plugin?: ClubPlugin;
 }
 
 // Permission sections for UI grouping
 export interface PermissionSection {
   label: string;
   features: PermissionFeature[];
+  /** Optional: only show this section if the specified plugin is enabled for the club */
+  plugin?: ClubPlugin;
 }
 
 export const permissionSections: PermissionSection[] = [
@@ -79,6 +85,7 @@ export const permissionSections: PermissionSection[] = [
         name: 'Présences',
         accessPermission: Permission.ImportPresencesAccess,
         editPermission: Permission.ImportPresencesEdit,
+        plugin: 'presencesEnabled',
       },
     ],
   },

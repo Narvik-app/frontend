@@ -41,6 +41,30 @@ const currentPermissions = computed(() => {
   return permissionItems.value.map(p => p.permission);
 });
 
+// Filter permission sections and features based on club plugin status
+const filteredPermissionSections = computed(() => {
+  const club = selfStore.selectedProfile?.club;
+  if (!club) return permissionSections;
+
+  return permissionSections
+    .filter(section => {
+      // If no plugin required, always show
+      if (!section.plugin) return true;
+      // Check if the required plugin is enabled for the club
+      return club[section.plugin] === true;
+    })
+    .map(section => ({
+      ...section,
+      // Filter features within each section
+      features: section.features.filter(feature => {
+        if (!feature.plugin) return true;
+        return club[feature.plugin] === true;
+      })
+    }))
+    // Remove sections that have no features after filtering
+    .filter(section => section.features.length > 0);
+});
+
 // Load permissions on mount
 onMounted(async () => {
   if (isSupervisor.value) {
@@ -184,7 +208,7 @@ function hasPermission(permission: Permission): boolean {
 
       <!-- Sections grid - 2-3 columns on desktop -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div v-for="(section, sectionIndex) in permissionSections" :key="section.label" class="border border-default rounded-lg p-3">
+        <div v-for="(section, sectionIndex) in filteredPermissionSections" :key="section.label" class="border border-default rounded-lg p-3">
           <div class="text-sm font-medium mb-2">{{ section.label }}</div>
 
           <!-- Header row -->
