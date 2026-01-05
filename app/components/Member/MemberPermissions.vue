@@ -19,7 +19,6 @@ const emit = defineEmits<{
   updated: []
 }>();
 
-const toast = useToast();
 const selfStore = useSelfUserStore();
 const isAdmin = selfStore.isAdmin();
 
@@ -108,54 +107,36 @@ async function removePermission(permission: Permission): Promise<boolean> {
   return false;
 }
 
-async function toggleAccess(accessPermission: Permission, editPermission: Permission) {
+/**
+ * Toggle a permission on or off
+ * @param permission - The permission to toggle
+ * @param linkedPermission - Optional linked permission (for access: edit to remove; for edit: access to add)
+ * @param isEditToggle - If true, toggles edit permission (adds access if needed); if false, toggles access (removes edit if needed)
+ */
+async function togglePermission(permission: Permission, linkedPermission?: Permission, isEditToggle: boolean = false) {
   if (!isAdmin || !props.member.uuid) return;
   isSaving.value = true;
 
   try {
-    const hasAccess = hasPermission(accessPermission);
-    const hasEdit = hasPermission(editPermission);
+    const hasPerm = hasPermission(permission);
 
-    if (hasAccess) {
-      // Removing access: also remove edit if present
-      if (hasEdit) {
-        await removePermission(editPermission);
+    if (hasPerm) {
+      // Removing permission
+      if (!isEditToggle && linkedPermission && hasPermission(linkedPermission)) {
+        // When removing access, also remove edit
+        await removePermission(linkedPermission);
       }
-      await removePermission(accessPermission);
-      toast.add({ color: 'success', title: 'Permission retirée' });
+      await removePermission(permission);
     } else {
-      // Adding access
-      await addPermission(accessPermission);
-      toast.add({ color: 'success', title: 'Permission ajoutée' });
-    }
-    emit('updated');
-  } catch (error: any) {
-    displayApiError(error);
-  } finally {
-    isSaving.value = false;
-  }
-}
-
-async function toggleEdit(accessPermission: Permission, editPermission: Permission) {
-  if (!isAdmin || !props.member.uuid) return;
-  isSaving.value = true;
-
-  try {
-    const hasAccess = hasPermission(accessPermission);
-    const hasEdit = hasPermission(editPermission);
-
-    if (hasEdit) {
-      // Removing edit only
-      await removePermission(editPermission);
-      toast.add({ color: 'success', title: 'Permission retirée' });
-    } else {
-      // Adding edit: also add access if not present
-      if (!hasAccess) {
-        await addPermission(accessPermission);
+      // Adding permission
+      if (isEditToggle && linkedPermission && !hasPermission(linkedPermission)) {
+        // When adding edit, also add access if not present
+        await addPermission(linkedPermission);
       }
-      await addPermission(editPermission);
-      toast.add({ color: 'success', title: 'Permission ajoutée' });
+      await addPermission(permission);
     }
+    // Reload permissions to sync with any backend auto-grants
+    await loadPermissions();
     emit('updated');
   } catch (error: any) {
     displayApiError(error);
@@ -185,11 +166,7 @@ watch(() => props.member, async () => {
 <template>
   <GenericCard v-if="isSupervisor" title="Permissions">
 
-    <div v-if="isLoading" class="flex justify-center py-4">
-      <USkeleton class="h-4 w-32" />
-    </div>
-
-    <div v-else class="flex flex-col gap-4">
+    <div class="flex flex-col gap-4">
       <div v-if="!isAdmin" class="text-sm text-muted italic">
         Seuls les administrateurs peuvent modifier les permissions.
       </div>
@@ -197,7 +174,7 @@ watch(() => props.member, async () => {
       <!-- Sections grid - 2-3 columns on desktop -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div v-for="(section, sectionIndex) in filteredPermissionSections" :key="section.label" class="border border-default rounded-lg p-3">
-          <div class="text-sm font-medium mb-2">{{ section.label }}</div>
+          <div class="text-md font-semibold mb-2">{{ section.label }}</div>
 
           <!-- Header row -->
           <div class="grid grid-cols-[1fr_auto_auto] gap-2 text-xs text-muted font-medium">
@@ -209,20 +186,34 @@ watch(() => props.member, async () => {
           <!-- Feature rows -->
           <div v-for="feature in section.features" :key="feature.name" class="grid grid-cols-[1fr_auto_auto] gap-2 items-center py-1">
             <span class="text-sm">{{ feature.name }}</span>
+            <!-- Access column: hide if editOnly -->
             <div class="w-14 flex justify-center">
               <USwitch
+                v-if="!feature.editOnly"
                 :model-value="hasPermission(feature.accessPermission)"
-                :disabled="!isAdmin || isSaving"
+                :disabled="!isAdmin || isSaving || isLoading"
+                :loading="isLoading || isSaving"
                 size="sm"
-                @update:model-value="toggleAccess(feature.accessPermission, feature.editPermission)"
+                @update:model-value="togglePermission(feature.accessPermission, feature.editPermission, false)"
               />
             </div>
+            <!-- Edit column: show editOnly toggle here, hide accessOnly -->
             <div class="w-14 flex justify-center">
               <USwitch
-                :model-value="hasPermission(feature.editPermission)"
-                :disabled="!isAdmin || isSaving"
+                v-if="feature.editOnly"
+                :model-value="hasPermission(feature.accessPermission)"
+                :disabled="!isAdmin || isSaving || isLoading"
+                :loading="isLoading || isSaving"
                 size="sm"
-                @update:model-value="toggleEdit(feature.accessPermission, feature.editPermission)"
+                @update:model-value="togglePermission(feature.accessPermission, undefined, false)"
+              />
+              <USwitch
+                v-else-if="!feature.accessOnly"
+                :model-value="hasPermission(feature.editPermission!)"
+                :disabled="!isAdmin || isSaving || isLoading"
+                :loading="isLoading || isSaving"
+                size="sm"
+                @update:model-value="togglePermission(feature.editPermission!, feature.accessPermission, true)"
               />
             </div>
           </div>

@@ -26,6 +26,27 @@
     return selfStore.can(Permission.EmailAccess)
   })
 
+  // Smart sales button: determine target URL and visibility
+  const salesButtonUrl = computed<string | null>(() => {
+    // Only show if club has sales enabled
+    if (!selfStore.selectedProfile?.club.salesEnabled) return null
+
+    // Supervisors need specific permissions, admins always have access
+    if (selfStore.isAdmin()) return '/admin/sales/new'
+
+    // Check for SALE_NEW permission
+    if (selfStore.can(Permission.SaleNew)) return '/admin/sales/new'
+
+    // Check for any other sale access
+    if (selfStore.can(Permission.SaleHistoryAccess)) return '/admin/sales/history'
+    if (selfStore.can(Permission.SaleInventoryAccess)) return '/admin/inventories'
+    if (selfStore.can(Permission.SaleCategoriesAccess)) return '/admin/inventories/categories'
+    if (selfStore.can(Permission.SalePaymentModesAccess)) return '/admin/sales/payment-modes'
+    if (selfStore.can(Permission.SaleImportAccess)) return '/admin/sales/import'
+
+    return null
+  })
+
   const isDesktopDisplay = isDesktop()
   const isTabletDisplay = isTablet()
 
@@ -99,8 +120,8 @@
           </UTooltip>
         </NuxtLink>
         <UButton class="-mx-3 hidden lg:block" to="/" variant="ghost" color="neutral">Accueil</UButton>
-        <div v-if="isSupervisor">
-          <UButton to="/admin/sales/new" icon="i-heroicons-shopping-cart" variant="ghost" color="neutral">
+        <div v-if="isSupervisor && salesButtonUrl">
+          <UButton :to="salesButtonUrl" icon="i-heroicons-shopping-cart" variant="ghost" color="neutral">
             <template v-if="isDesktopDisplay || isTabletDisplay">
               Vente
             </template>
