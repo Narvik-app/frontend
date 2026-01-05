@@ -4,7 +4,8 @@ import type { MemberPermission } from "~/types/api/item/clubDependent/memberPerm
 export interface PermissionTemplate extends Item {
   uuid?: string;
   name: string;
-  permissions: MemberPermission[];
+  permissions?: MemberPermission[];
+  permissionsCount?: number;
 }
 
 export interface PermissionTemplateWrite extends Item {

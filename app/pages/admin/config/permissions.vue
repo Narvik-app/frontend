@@ -7,8 +7,10 @@ import type {ItemError} from "~/types/api/itemError";
 import PermissionTemplateQuery from "~/composables/api/query/clubDependent/PermissionTemplateQuery";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 
+import {Permission} from "~/types/api/permissions";
+
 definePageMeta({
-  layout: "pos"
+  layout: "admin"
 });
 
 useHead({
@@ -26,13 +28,8 @@ const templates: Ref<PermissionTemplate[]> = ref([]);
 const isLoading = ref(true);
 const totalTemplates = ref(0);
 const selectedTemplate: Ref<PermissionTemplate | undefined> = ref(undefined);
-
-// Side menu visible
-const isVisible = ref(false);
-// Watch selected item to close side menu if unselected
-watch(selectedTemplate, (value) => {
-  isVisible.value = value !== undefined;
-});
+const isModalOpen = ref(false);
+const modalPermissions: Ref<Permission[]> = ref([]);
 
 // Table columns
 const columns = [
@@ -66,16 +63,22 @@ async function getTemplates() {
   isLoading.value = false;
 }
 
-function rowClicked(_event: Event, row: TableRow<PermissionTemplate>) {
-  selectedTemplate.value = {...row.original}; // Shallow clone
-  isVisible.value = true;
+async function rowClicked(_event: Event, row: TableRow<PermissionTemplate>) {
+  isLoading.value = true;
+  const permissions = await apiQuery.getTemplatePermissions(row.original);
+  selectedTemplate.value = {...row.original, permissions}; // Shallow clone with permissions
+  modalPermissions.value = permissions.map(p => p.permission) || [];
+  isModalOpen.value = true;
+  isLoading.value = false;
 }
 
 function createTemplate() {
   selectedTemplate.value = {
     name: '',
     permissions: [],
-  };
+  } as PermissionTemplate;
+  modalPermissions.value = [];
+  isModalOpen.value = true;
 }
 
 async function updateTemplate(template: PermissionTemplate) {
@@ -83,51 +86,80 @@ async function updateTemplate(template: PermissionTemplate) {
   isLoading.value = true;
   let error: NuxtError<ItemError> | undefined = undefined;
 
-  const clubIri = selfStore.selectedProfile?.club?.['@id'];
-  if (!clubIri) {
+  try {
+    const clubIri = selfStore.selectedProfile?.club?.['@id'];
+    if (!clubIri) {
+      toast.add({
+        color: "error",
+        title: "Erreur",
+        description: "Club non sélectionné"
+      });
+      return;
+    }
+
+    if (!template.uuid) {
+      // Creation
+      const created = await apiQuery.createTemplate(template.name!, clubIri);
+      if (created) {
+        // Add initial permissions
+        for (const permission of modalPermissions.value) {
+          await apiQuery.addPermission(created, permission);
+        }
+        
+        toast.add({
+          color: "success",
+          title: "Modèle créé"
+        });
+        isModalOpen.value = false;
+      } else {
+        toast.add({
+          color: "error",
+          title: "La création a échoué"
+        });
+      }
+    } else {
+      // Update
+      const updated = await apiQuery.updateTemplate(template as PermissionTemplate, template.name!);
+      if (updated) {
+        // Diff permissions
+        const initialPerms = template.permissions?.map(p => p.permission) || [];
+        const currentPerms = modalPermissions.value;
+        
+        // to add: in current but not in initial
+        const toAdd = currentPerms.filter(p => !initialPerms.includes(p));
+        // to remove: in initial but not in current
+        const toRemove = template.permissions?.filter(p => !currentPerms.includes(p.permission)) || [];
+        
+        for (const permission of toAdd) {
+          await apiQuery.addPermission(updated, permission);
+        }
+        
+        for (const permItem of toRemove) {
+          await apiQuery.removePermission(updated, permItem);
+        }
+        
+        toast.add({
+          color: "success",
+          title: "Modèle modifié"
+        });
+        isModalOpen.value = false;
+      } else {
+        toast.add({
+          color: "error",
+          title: "La modification a échoué"
+        });
+      }
+    }
+  } catch (e: any) {
     toast.add({
       color: "error",
-      title: "Erreur",
-      description: "Club non sélectionné"
+      title: "Une erreur est survenue",
+      description: e.message || "Erreur inconnue"
     });
+  } finally {
     isLoading.value = false;
-    return;
+    await getTemplates();
   }
-
-  if (!template.uuid) {
-    // Creation
-    const created = await apiQuery.createTemplate(template.name!, clubIri);
-    if (created) {
-      selectedTemplate.value = created;
-      toast.add({
-        color: "success",
-        title: "Modèle créé"
-      });
-    } else {
-      toast.add({
-        color: "error",
-        title: "La création a échoué"
-      });
-    }
-  } else {
-    // Update
-    const updated = await apiQuery.updateTemplate(template as PermissionTemplate, template.name!);
-    if (updated) {
-      selectedTemplate.value = updated;
-      toast.add({
-        color: "success",
-        title: "Modèle modifié"
-      });
-    } else {
-      toast.add({
-        color: "error",
-        title: "La modification a échoué"
-      });
-    }
-  }
-
-  isLoading.value = false;
-  await getTemplates();
 }
 
 async function deleteTemplate() {
@@ -141,6 +173,7 @@ async function deleteTemplate() {
       title: "Modèle supprimé"
     });
     selectedTemplate.value = undefined;
+    isModalOpen.value = false;
   } catch (error) {
     toast.add({
       color: "error",
@@ -158,113 +191,117 @@ const validate = (state: any): FormError[] => {
   return errors;
 };
 
-function onPermissionsUpdated() {
-  // Reload templates to get updated permission counts
-  getTemplates();
+function onPermissionsUpdated(permissions: Permission[]) {
+  modalPermissions.value = permissions;
 }
 </script>
 
 <template>
-  <GenericLayoutContentWithStickySide
-    @keyup.esc="isVisible = false; selectedTemplate = undefined;"
-    :has-side-content="isVisible"
-    :mobile-side-title="selectedTemplate?.name || 'Nouveau modèle'"
-    tabindex="-1"
-  >
-    <template #main>
-      <UCard>
-        <div>
-          <div class="flex gap-4 mb-4">
-            <div class="flex-1">
-              <h2 class="text-lg font-semibold">Modèles de permissions</h2>
-              <p class="text-sm text-muted">
-                Définissez des ensembles de permissions réutilisables pour les superviseurs.
-              </p>
-            </div>
-            <UButton @click="createTemplate">
-              Créer un modèle
-            </UButton>
-          </div>
-
-          <UTable
-            class="w-full"
-            :loading="isLoading"
-            :columns="columns"
-            :data="templates"
-            @select="rowClicked"
-          >
-            <template #empty>
-              <div class="flex flex-col items-center justify-center py-6 gap-3">
-                <span class="italic text-sm">Aucun modèle de permissions.</span>
-                <UButton @click="createTemplate" variant="outline">
-                  Créer votre premier modèle
-                </UButton>
-              </div>
-            </template>
-
-            <template #name-cell="{ row }">
-              <div class="font-medium">{{ row.original.name }}</div>
-            </template>
-
-            <template #permissions-cell="{ row }">
-              <UBadge color="neutral" variant="subtle">
-                {{ row.original.permissions?.length || 0 }} permission(s)
-              </UBadge>
-            </template>
-          </UTable>
-        </div>
-      </UCard>
-    </template>
-
-    <template #side>
-      <template v-if="selectedTemplate">
-        <UForm :state="selectedTemplate" @submit="updateTemplate(selectedTemplate)" :validate="validate">
-          <UCard>
-            <div class="flex gap-2 flex-col">
-              <UFormField label="Nom du modèle" name="name">
-                <UInput v-model="selectedTemplate.name" placeholder="Ex: Superviseur ventes" />
-              </UFormField>
-            </div>
-          </UCard>
-
-          <UButton class="mt-4" block type="submit" :loading="isLoading">
-            {{ selectedTemplate.uuid ? 'Enregistrer' : 'Créer le modèle' }}
-          </UButton>
-        </UForm>
-
-        <!-- Permission grid only shown after template is created -->
-        <UCard v-if="selectedTemplate.uuid" class="mt-4">
-          <template #header>
-            <div class="font-medium">Permissions du modèle</div>
-          </template>
-          <PermissionGrid
-            mode="template"
-            :template="selectedTemplate"
-            :can-edit="true"
-            @updated="onPermissionsUpdated"
-          />
-        </UCard>
-
-        <UButton
-          v-if="selectedTemplate.uuid"
-          block
-          color="error"
-          class="mt-4"
-          :loading="isLoading"
-          @click="
-            overlayDeleteConfirmation.open({
-              async onDelete() {
-                await deleteTemplate()
-                overlayDeleteConfirmation.close(true)
-              }
-            })
-          "
-        >
-          Supprimer le modèle
+  <GenericCardWithActions title="Modèles de permissions">
+      <template #actions>
+        <UButton @click="createTemplate">
+          Créer un modèle
         </UButton>
       </template>
-    </template>
-  </GenericLayoutContentWithStickySide>
+
+      <template #default>
+        <UTable
+          class="w-full"
+          :loading="isLoading"
+          :columns="columns"
+          :data="templates"
+          @select="rowClicked"
+        >
+          <template #empty>
+            <div class="flex flex-col items-center justify-center py-6 gap-3">
+              <span class="italic text-sm">Aucun modèle de permissions.</span>
+              <UButton @click="createTemplate" variant="outline">
+                Créer votre premier modèle
+              </UButton>
+            </div>
+          </template>
+
+          <template #name-cell="{ row }">
+            <div class="font-medium">{{ row.original.name }}</div>
+          </template>
+
+          <template #permissions-cell="{ row }">
+            <UBadge color="neutral" variant="subtle">
+              {{ row.original.permissionsCount || 0 }} permission(s)
+            </UBadge>
+          </template>
+        </UTable>
+      </template>
+    </GenericCardWithActions>
+
+    <!-- Template Modal -->
+    <UModal v-model:open="isModalOpen" :ui="{ content: 'w-full sm:max-w-4xl' }">
+      <template #content>
+        <UCard v-if="selectedTemplate">
+          <template #header>
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
+                {{ selectedTemplate.uuid ? 'Modifier le modèle' : 'Nouveau modèle' }}
+              </h3>
+              <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="isModalOpen = false" />
+            </div>
+          </template>
+
+          <UForm :state="selectedTemplate" @submit="updateTemplate(selectedTemplate)" :validate="validate">
+            <div class="flex gap-2 flex-col">
+              <UFormField label="Nom du modèle" name="name">
+                <UInput v-model="selectedTemplate.name" placeholder="Ex: Superviseur ventes" autofocus class="w-full" />
+              </UFormField>
+            </div>
+
+            <!-- Permission grid shown immediately in offline mode -->
+            <div class="mt-6">
+              <div class="font-medium mb-2">Permissions du modèle</div>
+              <div class="max-h-[60vh] overflow-y-auto pr-2">
+                <PermissionGrid
+                  mode="template"
+                  :template="selectedTemplate"
+                  :can-edit="true"
+                  :auto-save="false"
+                  :initial-permissions="modalPermissions"
+                  @update:permissions="onPermissionsUpdated"
+                />
+              </div>
+            </div>
+
+            <div class="mt-6 flex justify-between items-center">
+              <UButton
+                v-if="selectedTemplate.uuid"
+                color="error"
+                variant="ghost"
+                :loading="isLoading"
+                @click="
+                  overlayDeleteConfirmation.open({
+                    async onDelete() {
+                      await deleteTemplate()
+                      overlayDeleteConfirmation.close(true)
+                    }
+                  })
+                "
+              >
+                Supprimer
+              </UButton>
+              <div v-else></div> <!-- Spacer -->
+
+              <div class="flex gap-2">
+                 <UButton color="neutral" variant="ghost" @click="isModalOpen = false">
+                  Annuler
+                </UButton>
+                <UButton type="submit" :loading="isLoading">
+                  {{ selectedTemplate.uuid ? 'Enregistrer' : 'Créer' }}
+                </UButton>
+              </div>
+            </div>
+          </UForm>
+        </UCard>
+      </template>
+    </UModal>
+
 </template>
 
 <style scoped lang="css">

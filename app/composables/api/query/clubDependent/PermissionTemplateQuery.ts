@@ -1,7 +1,9 @@
 import type { PermissionTemplate, PermissionTemplateWrite, PermissionTemplateUpdate } from "~/types/api/item/clubDependent/permissionTemplate";
 import type { MemberPermission, TemplatePermissionWrite } from "~/types/api/item/clubDependent/memberPermission";
 import { AbstractClubDependentQuery } from "~/composables/api/query/AbstractClubDependentQuery";
+import { usePost, useDelete, useFetchList } from "~/composables/api/api";
 import type { Permission } from "~/types/api/permissions";
+import type { Item } from "~/types/api/item";
 
 export default class PermissionTemplateQuery extends AbstractClubDependentQuery<PermissionTemplate, PermissionTemplateWrite> {
   rootPath = "permission-templates";
@@ -14,7 +16,7 @@ export default class PermissionTemplateQuery extends AbstractClubDependentQuery<
       club: clubIri,
       name: name,
     };
-    return this.post(payload);
+    return (await this.post(payload)).created;
   }
 
   /**
@@ -22,14 +24,14 @@ export default class PermissionTemplateQuery extends AbstractClubDependentQuery<
    */
   async updateTemplate(template: PermissionTemplate, name: string): Promise<PermissionTemplate | undefined> {
     const payload: PermissionTemplateUpdate = { name };
-    return this.patch(template, payload);
+    return (await this.patch(template, payload as unknown as Item)).updated;
   }
 
   /**
    * Delete a permission template
    */
   async deleteTemplate(template: PermissionTemplate): Promise<void> {
-    return this.delete(template);
+    await this.delete(template);
   }
 
   /**
@@ -50,7 +52,7 @@ export default class PermissionTemplateQuery extends AbstractClubDependentQuery<
       template: template["@id"]!,
       permission: permission,
     };
-    return this.httpService.post<MemberPermission>(this.getTemplatePermissionsUrl(template), payload);
+    return (await usePost<MemberPermission>(this.getTemplatePermissionsUrl(template), payload)).item;
   }
 
   /**
@@ -58,14 +60,14 @@ export default class PermissionTemplateQuery extends AbstractClubDependentQuery<
    */
   async removePermission(template: PermissionTemplate, permissionItem: MemberPermission): Promise<void> {
     const url = `${this.getTemplatePermissionsUrl(template)}/${permissionItem.uuid}`;
-    return this.httpService.delete(url);
+    await useDelete(url);
   }
 
   /**
    * Get all permissions for a template
    */
   async getTemplatePermissions(template: PermissionTemplate): Promise<MemberPermission[]> {
-    const response = await this.httpService.getCollection<MemberPermission>(this.getTemplatePermissionsUrl(template));
-    return response?.["hydra:member"] ?? [];
+    const response = await useFetchList<MemberPermission>(this.getTemplatePermissionsUrl(template));
+    return response.items;
   }
 }
