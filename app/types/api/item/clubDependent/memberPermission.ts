@@ -10,3 +10,8 @@ export interface MemberPermissionWrite extends Item {
   member: string;
   permission: Permission;
 }
+
+export interface TemplatePermissionWrite extends Item {
+  template: string;
+  permission: Permission;
+}
