@@ -1,21 +1,21 @@
 <script setup lang="ts">
-  import InventoryItemQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryItemQuery";
-  import SalePaymentModeQuery from "~/composables/api/query/clubDependent/plugin/sale/SalePaymentModeQuery";
-  import type {InventoryItem} from "~/types/api/item/clubDependent/plugin/sale/inventoryItem";
-  import {formatMonetary} from "~/utils/string";
-  import SaleQuery from "~/composables/api/query/clubDependent/plugin/sale/SaleQuery";
-  import type {Sale} from "~/types/api/item/clubDependent/plugin/sale/sale";
-  import type {SalePurchasedItem} from "~/types/api/item/clubDependent/plugin/sale/salePurchasedItem";
-  import {useSaleStore} from "~/stores/useSaleStore";
-  import {useCartStore} from "~/stores/useCartStore";
-  import {formatDate} from "~/utils/date";
-  import dayjs from "dayjs";
-  import {convertUuidToUrlUuid} from "~/utils/resource";
-  import {print} from "~/utils/browser";
-  import type {SelectApiItem} from "~/types/select";
-  import type {Member} from "~/types/api/item/clubDependent/member";
+import InventoryItemQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryItemQuery";
+import SalePaymentModeQuery from "~/composables/api/query/clubDependent/plugin/sale/SalePaymentModeQuery";
+import type {InventoryItem} from "~/types/api/item/clubDependent/plugin/sale/inventoryItem";
+import {formatMonetary} from "~/utils/string";
+import SaleQuery from "~/composables/api/query/clubDependent/plugin/sale/SaleQuery";
+import type {Sale} from "~/types/api/item/clubDependent/plugin/sale/sale";
+import type {SalePurchasedItem} from "~/types/api/item/clubDependent/plugin/sale/salePurchasedItem";
+import {useSaleStore} from "~/stores/useSaleStore";
+import {useCartStore} from "~/stores/useCartStore";
+import {formatDate} from "~/utils/date";
+import dayjs from "dayjs";
+import {convertUuidToUrlUuid} from "~/utils/resource";
+import {print} from "~/utils/browser";
+import type {SelectApiItem} from "~/types/select";
+import type {Member} from "~/types/api/item/clubDependent/member";
 
-  definePageMeta({
+definePageMeta({
     layout: "pos"
   });
 

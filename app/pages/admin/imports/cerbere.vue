@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-  import MemberPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/MemberPresenceQuery";
-  import MetricQuery from "~/composables/api/query/MetricQuery";
-  import type {Metric} from "~/types/api/item/metric";
-  import {displayFileErrorToast, displayFileSuccessToast, getFileFormDataFromUInputChangeEvent} from "~/utils/file";
-  import {useSelfUserStore} from "~/stores/useSelfUser";
-  import {Permission} from "~/types/api/permissions";
+import MemberPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/MemberPresenceQuery";
+import MetricQuery from "~/composables/api/query/MetricQuery";
+import type {Metric} from "~/types/api/item/metric";
+import {displayFileErrorToast, displayFileSuccessToast, getFileFormDataFromUInputChangeEvent} from "~/utils/file";
+import {useSelfUserStore} from "~/stores/useSelfUser";
+import {Permission} from "~/types/api/permissions";
 
-  definePageMeta({
+definePageMeta({
     layout: "admin"
   });
 

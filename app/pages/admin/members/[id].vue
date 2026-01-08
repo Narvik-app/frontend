@@ -1,7 +1,7 @@
 <script setup lang="ts">
-  import {decodeUrlUuid} from "~/utils/resource";
+import {decodeUrlUuid} from "~/utils/resource";
 
-  definePageMeta({
+definePageMeta({
     layout: "admin"
   });
 

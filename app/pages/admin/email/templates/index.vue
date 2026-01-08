@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-  import { useSelfUserStore } from '~/stores/useSelfUser';
+import {useSelfUserStore} from '~/stores/useSelfUser';
 
-  definePageMeta({
+definePageMeta({
     layout: "email"
   })
 

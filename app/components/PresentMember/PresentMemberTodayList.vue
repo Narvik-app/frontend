@@ -6,7 +6,7 @@ import MemberPresenceQuery from "~/composables/api/query/clubDependent/plugin/pr
 import type {MemberPresence} from "~/types/api/item/clubDependent/plugin/presence/memberPresence";
 import type {Member} from "~/types/api/item/clubDependent/member";
 import RegisterExternalPresence from "~/components/ExternalPresence/RegisterExternalPresence";
-import { useExternalPresenceStore } from "~/stores/useExternalPresence";
+import {useExternalPresenceStore} from "~/stores/useExternalPresence";
 import type {ExternalPresence} from "~/types/api/item/clubDependent/plugin/presence/externalPresence";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import type {TableRow} from "#ui/types";

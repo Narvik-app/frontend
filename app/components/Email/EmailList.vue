@@ -1,12 +1,12 @@
 <script setup lang="ts">
-  import type { Email } from '~/types/api/item/clubDependent/plugin/emailing/email';
-  import EmailQuery from '~/composables/api/query/clubDependent/plugin/emailing/EmailQuery';
-  import type { TableRow } from '@nuxt/ui';
-  import type { TablePaginateInterface } from '~/types/table';
-  import {useSelfUserStore} from '~/stores/useSelfUser';
-  import {Permission} from '~/types/api/permissions';
+import type {Email} from '~/types/api/item/clubDependent/plugin/emailing/email';
+import EmailQuery from '~/composables/api/query/clubDependent/plugin/emailing/EmailQuery';
+import type {TableRow} from '@nuxt/ui';
+import type {TablePaginateInterface} from '~/types/table';
+import {useSelfUserStore} from '~/stores/useSelfUser';
+import {Permission} from '~/types/api/permissions';
 
-  const toast = useToast()
+const toast = useToast()
   const isLoading = ref(true)
   const selfStore = useSelfUserStore()
   const canEdit = selfStore.can(Permission.EmailEdit)

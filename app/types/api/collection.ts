@@ -1,4 +1,4 @@
-import type { View } from "./view";
+import type {View} from "./view";
 
 export interface PagedCollection<T> {
   "@context"?: string;

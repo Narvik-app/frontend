@@ -4,7 +4,7 @@ import TextEditor from '~/components/TextEditor.vue';
 import {useSelfUserStore} from '~/stores/useSelfUser';
 import EmailQuery from "~/composables/api/query/clubDependent/plugin/emailing/EmailQuery";
 import EmailTemplateQuery from "~/composables/api/query/clubDependent/plugin/emailing/EmailTemplateQuery";
-import type { EmailTemplate } from "~/types/api/item/clubDependent/plugin/emailing/emailTemplate";
+import type {EmailTemplate} from "~/types/api/item/clubDependent/plugin/emailing/emailTemplate";
 import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
 import {decodeUrlUuid} from "~/utils/resource";
 import {Permission} from "~/types/api/permissions";

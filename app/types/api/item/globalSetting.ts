@@ -1,4 +1,4 @@
-import type { Item } from "../item";
+import type {Item} from "../item";
 
 export enum GlobalSettingPublicEnum {
   LEGALS_LAST_UPDATE = 'LEGALS_LAST_UPDATE',

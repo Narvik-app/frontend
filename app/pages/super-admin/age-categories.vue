@@ -2,7 +2,6 @@
 import type {FormError, TableRow} from "#ui/types";
 import type {Club} from "~/types/api/item/club";
 import type {NuxtError} from "#app";
-import {usePaginationValues} from "~/composables/api/list";
 import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
 import AgeCategoryQuery from "~/composables/api/query/AgeCategoryQuery";
 import type {AgeCategory} from "~/types/api/item/ageCategory";

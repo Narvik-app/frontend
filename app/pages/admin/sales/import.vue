@@ -1,10 +1,9 @@
 <script lang="ts" setup>
-  import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
-  import {displayFileErrorToast, displayFileSuccessToast, getFileFormDataFromUInputChangeEvent} from "~/utils/file";
-  import SaleQuery from "~/composables/api/query/clubDependent/plugin/sale/SaleQuery";
-  import InventoryItemQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryItemQuery";
+import {displayFileErrorToast, displayFileSuccessToast, getFileFormDataFromUInputChangeEvent} from "~/utils/file";
+import SaleQuery from "~/composables/api/query/clubDependent/plugin/sale/SaleQuery";
+import InventoryItemQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryItemQuery";
 
-  definePageMeta({
+definePageMeta({
     layout: "pos"
   });
 

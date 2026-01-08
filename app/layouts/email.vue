@@ -1,9 +1,9 @@
 <script setup lang="ts">
-  import type { GroupedNavigationLinks } from '~/types/groupedNavigationLinks';
-  import {useSelfUserStore} from "~/stores/useSelfUser";
-  import {Permission} from "~/types/api/permissions";
+import type {GroupedNavigationLinks} from '~/types/groupedNavigationLinks';
+import {useSelfUserStore} from "~/stores/useSelfUser";
+import {Permission} from "~/types/api/permissions";
 
-  useHead({
+useHead({
     titleTemplate: (titleChunk) => {
       return titleChunk ? `${titleChunk} - Email - Narvik` : 'Email - Narvik';
     }

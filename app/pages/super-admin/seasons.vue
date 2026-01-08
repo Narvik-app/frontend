@@ -2,9 +2,7 @@
 import type {FormError, TableRow} from "#ui/types";
 import type {Club} from "~/types/api/item/club";
 import type {NuxtError} from "#app";
-import {usePaginationValues} from "~/composables/api/list";
 import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
-import {useSelfUserStore} from "~/stores/useSelfUser";
 import SeasonQuery from "~/composables/api/query/SeasonQuery";
 import type {Season} from "~/types/api/item/season";
 

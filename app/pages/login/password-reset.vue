@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type {FormError, TabsItem} from '#ui/types'
 import UserQuery from "~/composables/api/query/UserQuery";
-import {isMobile, isTablet, watchBreakpoint} from "~/utils/browser";
+import {isMobile, watchBreakpoint} from "~/utils/browser";
 import type {NuxtTurnstile} from "#components";
 
 const toast = useToast()

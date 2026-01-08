@@ -1,11 +1,11 @@
 <script setup lang="ts">
-  import {useSelfUserStore} from "~/stores/useSelfUser";
-  import type {GroupedNavigationLinks} from "~/types/groupedNavigationLinks";
-  import dayjs from "dayjs";
-  import {formatDateReadable} from "~/utils/date";
-  import {Permission} from "~/types/api/permissions";
+import {useSelfUserStore} from "~/stores/useSelfUser";
+import type {GroupedNavigationLinks} from "~/types/groupedNavigationLinks";
+import dayjs from "dayjs";
+import {formatDateReadable} from "~/utils/date";
+import {Permission} from "~/types/api/permissions";
 
-  useHead({
+useHead({
     titleTemplate: (titleChunk) => {
       return titleChunk ? `${titleChunk} - Administration - Narvik` : 'Administration - Narvik';
     }

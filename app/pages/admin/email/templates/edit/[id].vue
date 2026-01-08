@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import EmailTemplateQuery from '~/composables/api/query/clubDependent/plugin/emailing/EmailTemplateQuery'
 
-  definePageMeta({
+definePageMeta({
     layout: "email"
   })
 

@@ -1,16 +1,14 @@
 <script setup lang="ts">
-  import InventoryCategoryQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryCategoryQuery";
-  import type {InventoryCategory} from "~/types/api/item/clubDependent/plugin/sale/inventoryCategory";
-  import {usePaginationValues} from "~/composables/api/list";
-  import type {Member} from "~/types/api/item/clubDependent/member";
-  import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
-  import type {FormError, TableRow} from "#ui/types";
-  import {convertUuidToUrlUuid} from "~/utils/resource";
-  import type {NuxtError} from "#app";
-  import type {ItemError} from "~/types/api/itemError";
-  import type {TablePaginateInterface} from "~/types/table";
+import InventoryCategoryQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryCategoryQuery";
+import type {InventoryCategory} from "~/types/api/item/clubDependent/plugin/sale/inventoryCategory";
+import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
+import type {FormError, TableRow} from "#ui/types";
+import {convertUuidToUrlUuid} from "~/utils/resource";
+import type {NuxtError} from "#app";
+import type {ItemError} from "~/types/api/itemError";
+import type {TablePaginateInterface} from "~/types/table";
 
-  definePageMeta({
+definePageMeta({
     layout: "pos"
   });
 

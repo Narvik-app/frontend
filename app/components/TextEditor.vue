@@ -1,10 +1,10 @@
 <script setup lang="ts">
-  import {Editor, EditorContent} from '@tiptap/vue-3'
-  import StarterKit from '@tiptap/starter-kit'
-  import TextAlign from '@tiptap/extension-text-align'
-  import {TextStyle, Color} from '@tiptap/extension-text-style'
+import {Editor, EditorContent} from '@tiptap/vue-3'
+import StarterKit from '@tiptap/starter-kit'
+import TextAlign from '@tiptap/extension-text-align'
+import {Color, TextStyle} from '@tiptap/extension-text-style'
 
-  const props = defineProps(
+const props = defineProps(
     {
       modelValue: {
         type: String

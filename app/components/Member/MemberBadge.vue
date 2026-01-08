@@ -1,10 +1,10 @@
 <script setup lang="ts">
-  import type { PropType } from 'vue';
-  import FileQuery from '~/composables/api/query/FileQuery';
-  import type { Member } from '~/types/api/item/clubDependent/member';
-  import type { ExposedFile } from '~/types/api/item/exposedFile';
+import type {PropType} from 'vue';
+import FileQuery from '~/composables/api/query/FileQuery';
+import type {Member} from '~/types/api/item/clubDependent/member';
+import type {ExposedFile} from '~/types/api/item/exposedFile';
 
-  const props = defineProps({
+const props = defineProps({
     member: {
       type: Object as PropType<Member>,
       required: true

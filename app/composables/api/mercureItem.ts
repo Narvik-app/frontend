@@ -1,8 +1,8 @@
-import { onBeforeUnmount } from "vue";
-import { useRouter } from "vue-router";
-import type { StoreGeneric } from "pinia";
-import { mercureSubscribe } from "../../utils/mercure";
-import type { Item } from "../../types/api/item";
+import {onBeforeUnmount} from "vue";
+import {useRouter} from "vue-router";
+import type {StoreGeneric} from "pinia";
+import {mercureSubscribe} from "../../utils/mercure";
+import type {Item} from "../../types/api/item";
 
 export function useMercureItem({
   store,

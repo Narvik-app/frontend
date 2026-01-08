@@ -1,9 +1,6 @@
 <script lang="ts" setup>
 import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
-import MetricQuery from "~/composables/api/query/MetricQuery";
-import type {Metric} from "~/types/api/item/metric";
-import GlobalSettingQuery from "~/composables/api/query/GlobalSettingQuery";
-import { formatDateReadable } from "~/utils/date";
+import {formatDateReadable} from "~/utils/date";
 import {displayFileErrorToast, displayFileSuccessToast, getFileFormDataFromUInputChangeEvent} from "~/utils/file";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import dayjs from "dayjs";

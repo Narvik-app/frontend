@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import type { PropType } from 'vue';
-  import type { Email } from '~/types/api/item/clubDependent/plugin/emailing/email';
+import type {PropType} from 'vue';
+import type {Email} from '~/types/api/item/clubDependent/plugin/emailing/email';
 
-  const props = defineProps({
+const props = defineProps({
     item: {
       type: Object as PropType<Email>,
       required: true

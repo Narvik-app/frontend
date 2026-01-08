@@ -1,12 +1,12 @@
 <script setup lang="ts">
-  import InventoryItemQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryItemQuery";
-  import type {InventoryItem} from "~/types/api/item/clubDependent/plugin/sale/inventoryItem";
-  import type {InventoryItemHistory} from "~/types/api/item/clubDependent/plugin/sale/inventoryItemHistory";
-  import {formatMonetary} from "~/utils/string";
-  import {convertUuidToUrlUuid, decodeUrlUuid} from "~/utils/resource";
-  import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
+import InventoryItemQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryItemQuery";
+import type {InventoryItem} from "~/types/api/item/clubDependent/plugin/sale/inventoryItem";
+import type {InventoryItemHistory} from "~/types/api/item/clubDependent/plugin/sale/inventoryItemHistory";
+import {formatMonetary} from "~/utils/string";
+import {convertUuidToUrlUuid, decodeUrlUuid} from "~/utils/resource";
+import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
 
-  definePageMeta({
+definePageMeta({
     layout: "pos"
   });
 

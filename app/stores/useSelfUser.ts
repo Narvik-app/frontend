@@ -1,6 +1,6 @@
 import {type Member} from "~/types/api/item/clubDependent/member";
 import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
-import {MIME_TYPE_JSON, usePostRawJson} from "~/composables/api/api";
+import {usePostRawJson} from "~/composables/api/api";
 import {JwtToken} from "~/types/jwtTokens";
 import type {Ref} from "vue";
 import FileQuery from "~/composables/api/query/FileQuery";
@@ -69,20 +69,20 @@ export const useSelfUserStore = defineStore('selfUser', () => {
     if (!token.refresh?.token) {
       return false
     }
-    
+
     // If no date, we can't know if it's expired - try the refresh
     if (!token.refresh.date) {
       return true
     }
-    
+
     const expiryDate = dayjs(token.refresh.date)
-    
+
     // If date is invalid (parsing failed), try the refresh anyway
     if (!expiryDate.isValid()) {
       console.warn('Refresh token date is invalid, attempting refresh anyway')
       return true
     }
-    
+
     // Only return false if we KNOW the token is expired (date is in the past)
     return expiryDate.isAfter(dayjs())
   }

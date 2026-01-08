@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type {InventoryCategory} from "~/types/api/item/clubDependent/plugin/sale/inventoryCategory";
-import {usePaginationValues} from "~/composables/api/list";
 import SalePaymentModeQuery from "~/composables/api/query/clubDependent/plugin/sale/SalePaymentModeQuery";
 import type {SalePaymentMode} from "~/types/api/item/clubDependent/plugin/sale/salePaymentMode";
 import type {FormError, TableRow} from "#ui/types";

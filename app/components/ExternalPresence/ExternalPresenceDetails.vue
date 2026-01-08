@@ -6,7 +6,6 @@ import ExternalPresenceQuery from "~/composables/api/query/clubDependent/plugin/
 import {useSelfUserStore} from "~/stores/useSelfUser";
 
 
-
 const props = defineProps({
   item: {
     type: Object as PropType<ExternalPresence>,

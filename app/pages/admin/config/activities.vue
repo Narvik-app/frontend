@@ -4,7 +4,7 @@ import type {Activity} from "~/types/api/item/clubDependent/plugin/presence/acti
 import type {FormError, TableRow} from "#ui/types";
 import ActivityModalDelete from "~/components/Activity/ActivityModalDelete.vue";
 import ActivityModalMigrate from "~/components/Activity/ActivityModalMigrate.vue";
-import {ClubRole, getAvailableClubRoles} from "~/types/api/item/club";
+import {getAvailableClubRoles} from "~/types/api/item/club";
 import type {SelectApiItem} from "~/types/select";
 
 definePageMeta({

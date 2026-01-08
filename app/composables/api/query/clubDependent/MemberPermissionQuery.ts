@@ -1,7 +1,7 @@
-import type { Member } from "~/types/api/item/clubDependent/member";
-import type { MemberPermission, MemberPermissionWrite } from "~/types/api/item/clubDependent/memberPermission";
-import { AbstractClubDependentQuery } from "~/composables/api/query/AbstractClubDependentQuery";
-import type { Permission } from "~/types/api/permissions";
+import type {Member} from "~/types/api/item/clubDependent/member";
+import type {MemberPermission, MemberPermissionWrite} from "~/types/api/item/clubDependent/memberPermission";
+import {AbstractClubDependentQuery} from "~/composables/api/query/AbstractClubDependentQuery";
+import type {Permission} from "~/types/api/permissions";
 
 export default class MemberPermissionQuery extends AbstractClubDependentQuery<MemberPermission, MemberPermissionWrite> {
   rootPath = "permissions";

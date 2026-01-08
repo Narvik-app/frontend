@@ -3,8 +3,8 @@ import ExternalPresenceQuery from "~/composables/api/query/clubDependent/plugin/
 import dayjs from "dayjs";
 import {defineStore} from "pinia";
 import {type DateRange, DateRangeFilter} from "~/types/date";
-import type { SelectApiItem } from "~/types/select";
-import type { Activity } from "~/types/api/item/clubDependent/plugin/presence/activity";
+import type {SelectApiItem} from "~/types/select";
+import type {Activity} from "~/types/api/item/clubDependent/plugin/presence/activity";
 
 export const usePresenceStore = defineStore('presence', () => {
   const selectedActivities: Ref<SelectApiItem<Activity>[]> = ref([])

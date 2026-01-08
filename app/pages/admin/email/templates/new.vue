@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-  import EmailTemplateQuery from '~/composables/api/query/clubDependent/plugin/emailing/EmailTemplateQuery';
-  import type { EmailTemplate } from '~/types/api/item/clubDependent/plugin/emailing/emailTemplate';
+import EmailTemplateQuery from '~/composables/api/query/clubDependent/plugin/emailing/EmailTemplateQuery';
+import type {EmailTemplate} from '~/types/api/item/clubDependent/plugin/emailing/emailTemplate';
 
-  definePageMeta({
+definePageMeta({
     layout: "email"
   })
 
@@ -11,7 +11,7 @@
   })
 
   const templateQuery = new EmailTemplateQuery()
-  
+
   const selfStore = useSelfUserStore()
   const { selectedProfile } = storeToRefs(selfStore)
 

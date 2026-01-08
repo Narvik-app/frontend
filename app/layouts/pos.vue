@@ -1,10 +1,9 @@
 <script setup lang="ts">
-  import {useSelfUserStore} from "~/stores/useSelfUser";
-  import FooterCopyright from "~/components/FooterCopyright.vue";
-  import type {GroupedNavigationLinks} from "~/types/groupedNavigationLinks";
-  import {Permission} from "~/types/api/permissions";
+import {useSelfUserStore} from "~/stores/useSelfUser";
+import type {GroupedNavigationLinks} from "~/types/groupedNavigationLinks";
+import {Permission} from "~/types/api/permissions";
 
-  useHead({
+useHead({
     titleTemplate: (titleChunk) => {
       return titleChunk ? `${titleChunk} - POS - Narvik` : 'POS - Narvik';
     }

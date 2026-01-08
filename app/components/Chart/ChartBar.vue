@@ -1,15 +1,6 @@
 <script setup lang="ts">
 
-import {
-  BarController,
-  BarElement,
-  CategoryScale,
-  Chart as ChartJS,
-  Legend,
-  LinearScale,
-  Title,
-  Tooltip
-} from 'chart.js'
+import {BarController, BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Title, Tooltip} from 'chart.js'
 
 import {Bar} from 'vue-chartjs'
 import type {PropType} from "vue";

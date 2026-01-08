@@ -1,4 +1,3 @@
-import type {SubmissionErrors} from "./error";
 import type {View} from "./view";
 
 export interface FetchAllData<T> {
