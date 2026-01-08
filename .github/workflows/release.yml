@@ -84,6 +84,8 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          sbom: true
+          provenance: mode=max
           labels: |
             ${{ steps.meta.outputs.labels }}
             org.opencontainers.image.vendor=Benoit VIGNAL
