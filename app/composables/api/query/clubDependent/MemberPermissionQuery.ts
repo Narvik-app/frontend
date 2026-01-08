@@ -21,6 +21,9 @@ export default class MemberPermissionQuery extends AbstractClubDependentQuery<Me
   }
 
   public override getRootUrl(): string {
+    // We access permissions via the member subresource
+    // /clubs/{clubUuid}/members/{memberUuid}/permissions
+    // getActiveMemberIri() returns something like /api/clubs/.../members/{uuid}
     return `${this.getActiveMemberIri()}/${this.rootPath}`;
   }
 

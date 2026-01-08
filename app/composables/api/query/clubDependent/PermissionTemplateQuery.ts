@@ -38,10 +38,9 @@ export default class PermissionTemplateQuery extends AbstractClubDependentQuery<
    * Get permissions URL for a template
    */
   private getTemplatePermissionsUrl(template: PermissionTemplate): string {
-    if (!template["@id"]) {
-      throw new Error("Missing @id for template");
-    }
-    return `${template["@id"]}/permissions`;
+    const clubPath = this.getCurrentClubPath();
+    if (!template.uuid) throw new Error("Template UUID missing");
+    return `${clubPath}/permission-templates/${template.uuid}/permissions`;
   }
 
   /**
@@ -59,8 +58,7 @@ export default class PermissionTemplateQuery extends AbstractClubDependentQuery<
    * Remove a permission from the template
    */
   async removePermission(template: PermissionTemplate, permissionItem: MemberPermission): Promise<void> {
-    const url = `${this.getTemplatePermissionsUrl(template)}/${permissionItem.uuid}`;
-    await useDelete(url);
+    await this.delete(permissionItem);
   }
 
   /**

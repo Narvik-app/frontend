@@ -28,20 +28,11 @@ const props = defineProps({
   canEdit: {
     type: Boolean,
     default: true
-  },
-  autoSave: {
-    type: Boolean,
-    default: true
-  },
-  initialPermissions: {
-    type: Array as PropType<Permission[]>,
-    default: () => []
   }
 });
 
 const emit = defineEmits<{
-  updated: [],
-  'update:permissions': [permissions: Permission[]]
+  updated: []
 }>();
 
 const selfStore = useSelfUserStore();
@@ -51,8 +42,6 @@ const isLoading = ref(false);
 const isSaving = ref(false);
 const permissionItems: Ref<MemberPermission[]> = ref([]);
 const templatePermissionItems: Ref<MemberPermission[]> = ref([]);
-// Local permissions for offline mode
-const localPermissions: Ref<Permission[]> = ref([]);
 
 // For member mode: compute if member has a template and get its permissions
 const memberTemplate = computed(() => {
@@ -62,9 +51,6 @@ const memberTemplate = computed(() => {
 
 // Compute current permission values for easy lookup
 const currentPermissions = computed(() => {
-  if (!props.autoSave) {
-    return localPermissions.value;
-  }
   return permissionItems.value.map(p => p.permission);
 });
 
@@ -133,10 +119,6 @@ async function loadPermissions() {
       // Load template permissions
       const templatePerms = await templateQuery.value.getTemplatePermissions(props.template);
       permissionItems.value = templatePerms || [];
-      
-      if (!props.autoSave) {
-        localPermissions.value = permissionItems.value.map(p => p.permission);
-      }
     }
   } catch (error) {
     console.error('Failed to load permissions', error);
@@ -144,13 +126,6 @@ async function loadPermissions() {
     isLoading.value = false;
   }
 }
-
-// Watch initialPermissions for offline mode
-watch(() => props.initialPermissions, (newPermissions) => {
-  if (!props.autoSave) {
-    localPermissions.value = [...newPermissions];
-  }
-}, { immediate: true });
 
 async function addPermission(permission: Permission): Promise<boolean> {
   if (props.mode === 'member' && memberPermissionQuery.value) {
@@ -187,38 +162,8 @@ async function removePermission(permission: Permission): Promise<boolean> {
   return false;
 }
 
-/**
- * Toggle a permission on or off
- * @param permission - The permission to toggle
- * @param linkedPermission - Optional linked permission (for access: edit to remove; for edit: access to add)
- * @param isEditToggle - If true, toggles edit permission (adds access if needed); if false, toggles access (removes edit if needed)
- */
 async function togglePermission(permission: Permission, linkedPermission?: Permission, isEditToggle: boolean = false) {
   if (!props.canEdit || (!isAdmin && props.mode === 'member')) return;
-  
-  // Offline mode logic
-  if (!props.autoSave) {
-    const hasPerm = hasPermission(permission);
-    let newPermissions = [...localPermissions.value];
-    
-    if (hasPerm) {
-      // Removing permission
-      if (!isEditToggle && linkedPermission && hasPermission(linkedPermission)) {
-        newPermissions = newPermissions.filter(p => p !== linkedPermission);
-      }
-      newPermissions = newPermissions.filter(p => p !== permission);
-    } else {
-      // Adding permission
-      if (isEditToggle && linkedPermission && !hasPermission(linkedPermission)) {
-        newPermissions.push(linkedPermission);
-      }
-      newPermissions.push(permission);
-    }
-    
-    localPermissions.value = newPermissions;
-    emit('update:permissions', newPermissions);
-    return;
-  }
 
   isSaving.value = true;
 
