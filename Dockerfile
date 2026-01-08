@@ -33,4 +33,7 @@ ENV PORT=$PORT
 COPY --from=build /app/.output /app/.output
 COPY --link --chmod=755 docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
 
+# Switch to non-root user (node user already exists in node images)
+USER node
+
 ENTRYPOINT ["docker-entrypoint"]
