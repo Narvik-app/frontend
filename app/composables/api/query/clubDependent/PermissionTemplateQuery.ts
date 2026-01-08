@@ -50,12 +50,15 @@ export default class PermissionTemplateQuery extends AbstractClubDependentQuery<
   /**
    * Add a permission to the template
    */
-  async addPermission(template: PermissionTemplate, permission: Permission): Promise<MemberPermission | undefined> {
+  /**
+   * Add a permission to the template
+   */
+  async addPermission(template: PermissionTemplate, permission: Permission) {
     const payload: TemplatePermissionWrite = {
       template: template["@id"]!,
       permission: permission,
     };
-    return (await usePost<MemberPermission>(this.getTemplatePermissionsUrl(template), payload)).item;
+    return usePost<MemberPermission>(this.getTemplatePermissionsUrl(template), payload);
   }
 
   /**
@@ -68,8 +71,7 @@ export default class PermissionTemplateQuery extends AbstractClubDependentQuery<
   /**
    * Get all permissions for a template
    */
-  async getTemplatePermissions(template: PermissionTemplate): Promise<MemberPermission[]> {
-    const response = await useFetchList<MemberPermission>(this.getTemplatePermissionsUrl(template));
-    return response.items;
+  async getTemplatePermissions(template: PermissionTemplate) {
+    return useFetchList<MemberPermission>(this.getTemplatePermissionsUrl(template));
   }
 }

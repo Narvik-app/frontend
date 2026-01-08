@@ -108,8 +108,8 @@ async function loadPermissions() {
 
       // If member has a template, also load template permissions
       if (memberTemplate.value && memberTemplate.value['@id']) {
-        const templatePerms = await templateQuery.value.getTemplatePermissions(memberTemplate.value);
-        templatePermissionItems.value = templatePerms || [];
+        const { items } = await templateQuery.value.getTemplatePermissions(memberTemplate.value);
+        templatePermissionItems.value = items || [];
       } else {
         templatePermissionItems.value = [];
       }
@@ -119,8 +119,8 @@ async function loadPermissions() {
         return;
       }
       // Load template permissions
-      const templatePerms = await templateQuery.value.getTemplatePermissions(props.template);
-      permissionItems.value = templatePerms || [];
+      const { items } = await templateQuery.value.getTemplatePermissions(props.template);
+      permissionItems.value = items || [];
     }
   } catch (error) {
     console.error('Failed to load permissions', error);
@@ -137,9 +137,9 @@ async function addPermission(permission: Permission): Promise<boolean> {
       return true;
     }
   } else if (props.mode === 'template' && props.template) {
-    const created = await templateQuery.value.addPermission(props.template, permission);
-    if (created) {
-      permissionItems.value.push(created);
+    const { item } = await templateQuery.value.addPermission(props.template, permission);
+    if (item) {
+      permissionItems.value.push(item);
       return true;
     }
   }
