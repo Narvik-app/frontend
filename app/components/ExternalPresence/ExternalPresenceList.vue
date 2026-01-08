@@ -1,16 +1,16 @@
 <script setup lang="ts">
-  import {usePresenceStore} from "~/stores/usePresenceStore";
-  import type {ExternalPresence} from "~/types/api/item/clubDependent/plugin/presence/externalPresence";
-  import ExternalPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/ExternalPresenceQuery";
-  import {formatDateInput} from "~/utils/date";
-  import type {TablePaginateInterface} from "~/types/table";
-  import {useSelfUserStore} from "~/stores/useSelfUser";
-  import {createBrowserCsvDownload} from "~/utils/browser";
-  import type {TableRow} from "#ui/types";
-  import type {ColumnSort} from "@tanstack/table-core";
-  import {getTableSortVal} from "~/utils/table";
+import {usePresenceStore} from "~/stores/usePresenceStore";
+import type {ExternalPresence} from "~/types/api/item/clubDependent/plugin/presence/externalPresence";
+import ExternalPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/ExternalPresenceQuery";
+import {formatDateInput} from "~/utils/date";
+import type {TablePaginateInterface} from "~/types/table";
+import {useSelfUserStore} from "~/stores/useSelfUser";
+import {createBrowserCsvDownload} from "~/utils/browser";
+import type {TableRow} from "#ui/types";
+import type {ColumnSort} from "@tanstack/table-core";
+import {getTableSortVal} from "~/utils/table";
 
-  const props = defineProps({
+const props = defineProps({
     listOnly: {
       type: Boolean,
       required: false,

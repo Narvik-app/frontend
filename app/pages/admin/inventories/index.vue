@@ -1,16 +1,16 @@
 <script setup lang="ts">
-  import InventoryItemQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryItemQuery";
-  import type {InventoryItem} from "~/types/api/item/clubDependent/plugin/sale/inventoryItem";
-  import InventoryCategoryQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryCategoryQuery";
-  import type {InventoryCategory} from "~/types/api/item/clubDependent/plugin/sale/inventoryCategory";
-  import {createBrowserCsvDownload, verifyCameraIsPresent} from "~/utils/browser";
-  import {convertUuidToUrlUuid, decodeUrlUuid} from "~/utils/resource";
-  import type {ColumnSort} from "@tanstack/table-core";
-  import {getTableSortVal} from "~/utils/table";
-  import type {TablePaginateInterface} from "~/types/table";
-  import type {SelectApiItem} from "~/types/select";
+import InventoryItemQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryItemQuery";
+import type {InventoryItem} from "~/types/api/item/clubDependent/plugin/sale/inventoryItem";
+import InventoryCategoryQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryCategoryQuery";
+import type {InventoryCategory} from "~/types/api/item/clubDependent/plugin/sale/inventoryCategory";
+import {createBrowserCsvDownload, verifyCameraIsPresent} from "~/utils/browser";
+import {convertUuidToUrlUuid, decodeUrlUuid} from "~/utils/resource";
+import type {ColumnSort} from "@tanstack/table-core";
+import {getTableSortVal} from "~/utils/table";
+import type {TablePaginateInterface} from "~/types/table";
+import type {SelectApiItem} from "~/types/select";
 
-  definePageMeta({
+definePageMeta({
     layout: "pos"
   });
 

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-  import ActivityQuery from "~/composables/api/query/clubDependent/plugin/presence/ActivityQuery";
-  import {usePresenceStore} from "~/stores/usePresenceStore";
-  import type { Activity } from "~/types/api/item/clubDependent/plugin/presence/activity";
-  import type { SelectApiItem } from "~/types/select";
-  import {formatDateRangeReadable} from "~/utils/date";
+import ActivityQuery from "~/composables/api/query/clubDependent/plugin/presence/ActivityQuery";
+import {usePresenceStore} from "~/stores/usePresenceStore";
+import type {Activity} from "~/types/api/item/clubDependent/plugin/presence/activity";
+import type {SelectApiItem} from "~/types/select";
+import {formatDateRangeReadable} from "~/utils/date";
 
-  const props = defineProps({
+const props = defineProps({
     listOnly: {
       type: Boolean,
       required: false,

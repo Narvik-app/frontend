@@ -2,7 +2,6 @@
 import type {Column} from "@tanstack/table-core";
 import type {PropType} from "vue";
 import type {Item} from "~/types/api/item";
-import * as console from "node:console";
 
 const props = defineProps({
   column: {

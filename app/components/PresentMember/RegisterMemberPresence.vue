@@ -7,12 +7,7 @@ import type {FormSubmitEvent} from "#ui/types";
 import type {MemberPresence} from "~/types/api/item/clubDependent/plugin/presence/memberPresence";
 import MemberPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/MemberPresenceQuery";
 import {formatDateInput, formatDateReadable} from "~/utils/date";
-import {
-  ClubRole,
-  getAvailableClubRole,
-  hasClubSupervisorRole,
-  isClubAdmin
-} from "~/types/api/item/club";
+import {ClubRole, getAvailableClubRole, hasClubSupervisorRole, isClubAdmin} from "~/types/api/item/club";
 
 const props = defineProps({
   member: {

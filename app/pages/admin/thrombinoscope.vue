@@ -1,11 +1,11 @@
 <script setup lang="ts">
-  import type {Member} from "~/types/api/item/clubDependent/member";
-  import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
-  import FileQuery from "~/composables/api/query/FileQuery";
-  import {convertUuidToUrlUuid} from "~/utils/resource";
-  import {print} from "~/utils/browser";
+import type {Member} from "~/types/api/item/clubDependent/member";
+import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
+import FileQuery from "~/composables/api/query/FileQuery";
+import {convertUuidToUrlUuid} from "~/utils/resource";
+import {print} from "~/utils/browser";
 
-  definePageMeta({
+definePageMeta({
     layout: "admin"
   });
 

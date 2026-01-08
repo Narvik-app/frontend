@@ -1,11 +1,11 @@
 <script setup lang="ts">
-  definePageMeta({
-    layout: "pos"
-  });
+definePageMeta({
+  layout: "pos"
+});
 
-  useHead({
-    title: 'Vente'
-  })
+useHead({
+  title: 'Vente'
+})
 </script>
 
 <template>

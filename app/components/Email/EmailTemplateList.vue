@@ -1,12 +1,12 @@
 <script setup lang="ts">
-  import type { EmailTemplate } from '~/types/api/item/clubDependent/plugin/emailing/emailTemplate';
-  import EmailTemplateQuery from '~/composables/api/query/clubDependent/plugin/emailing/EmailTemplateQuery';
-  import type { TablePaginateInterface } from '~/types/table';
-  import ModalDeleteConfirmation from '../Modal/ModalDeleteConfirmation.vue';
-  import {useSelfUserStore} from '~/stores/useSelfUser';
-  import {Permission} from '~/types/api/permissions';
+import type {EmailTemplate} from '~/types/api/item/clubDependent/plugin/emailing/emailTemplate';
+import EmailTemplateQuery from '~/composables/api/query/clubDependent/plugin/emailing/EmailTemplateQuery';
+import type {TablePaginateInterface} from '~/types/table';
+import ModalDeleteConfirmation from '../Modal/ModalDeleteConfirmation.vue';
+import {useSelfUserStore} from '~/stores/useSelfUser';
+import {Permission} from '~/types/api/permissions';
 
-  const toast = useToast()
+const toast = useToast()
   const isLoading = ref(true)
   const selfStore = useSelfUserStore()
   const canEdit = selfStore.can(Permission.EmailTemplateEdit)

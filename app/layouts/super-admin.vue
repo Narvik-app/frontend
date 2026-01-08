@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import {useSelfUserStore} from "~/stores/useSelfUser";
-  import type {GroupedNavigationLinks} from "~/types/groupedNavigationLinks";
+import {useSelfUserStore} from "~/stores/useSelfUser";
+import type {GroupedNavigationLinks} from "~/types/groupedNavigationLinks";
 
-  useHead({
+useHead({
     titleTemplate: (titleChunk) => {
       return titleChunk ? `${titleChunk} - Administration - Narvik` : 'Administration - Narvik';
     }

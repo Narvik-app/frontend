@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import EmailTemplateQuery from '~/composables/api/query/clubDependent/plugin/emailing/EmailTemplateQuery'
-  import type { EmailTemplate } from '~/types/api/item/clubDependent/plugin/emailing/emailTemplate'
+import EmailTemplateQuery from '~/composables/api/query/clubDependent/plugin/emailing/EmailTemplateQuery'
+import type {EmailTemplate} from '~/types/api/item/clubDependent/plugin/emailing/emailTemplate'
 
-  const props = defineProps({
+const props = defineProps({
     templateId: {
       type: String,
       required: false
@@ -161,10 +161,10 @@
           <UFormField label="Nom">
             <UInput v-model="name" :disabled="isLoading" />
           </UFormField>
-  
+
           <UFormField label="Newsletter">
             <UCheckbox v-model="newsletter" :disabled="isLoading" />
-  
+
             <template #help>
               <p v-if="newsletter">Envoyer uniquement aux destinataires ayant donné leur accord.</p>
               <p v-else>Envoyer à tous les destinataires</p>

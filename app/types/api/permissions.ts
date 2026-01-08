@@ -1,4 +1,4 @@
-import type { ClubPlugin } from '~/types/api/item/club';
+import type {ClubPlugin} from '~/types/api/item/club';
 
 export enum Permission {
   // Email permissions

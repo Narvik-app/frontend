@@ -23,14 +23,14 @@ const route = useRoute()
 // We create the custom items props so we can auto close the menu on page change
 const cItems = computed(() => {
   const items: GroupedNavigationLinks[] = []
-  
+
   // First pass: find the longest matching path to avoid multi-activation (e.g. /admin/sales and /admin/sales/history)
   let longestMatchPath = ''
-  
+
   props.items?.forEach(value => {
     value.links.forEach((link: any) => {
       if (!link.to) return
-      
+
       const isMatch = route.path === link.to || (route.path.startsWith(link.to + '/') && link.to !== '/admin')
       if (isMatch && link.to.length > longestMatchPath.length) {
         longestMatchPath = link.to

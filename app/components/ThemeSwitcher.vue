@@ -1,7 +1,7 @@
 <script setup lang="ts">
-  import { isDarkMode } from "~/utils/browser";
+import {isDarkMode} from "~/utils/browser";
 
-  const isDark = isDarkMode()
+const isDark = isDarkMode()
 
 </script>
 

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-  import { usePost } from '~/composables/api/api'
-  import ClubQuery from '~/composables/api/query/ClubQuery'
-  import type { Club } from '~/types/api/item/club'
+import {usePost} from '~/composables/api/api'
+import ClubQuery from '~/composables/api/query/ClubQuery'
+import type {Club} from '~/types/api/item/club'
 
-  const selfUser = useSelfUserStore()
+const selfUser = useSelfUserStore()
   const isLogged = selfUser.isLogged()
 
   const clubQuery = new ClubQuery()

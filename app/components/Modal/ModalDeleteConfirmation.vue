@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type {PropType} from "vue";
-import type {VariantProps} from "tailwind-variants";
 
 const props = defineProps(
   {

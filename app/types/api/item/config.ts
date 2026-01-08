@@ -1,5 +1,5 @@
-import type { Item } from "../item";
-import type { ConfigValue } from "../configValue";
+import type {Item} from "../item";
+import type {ConfigValue} from "../configValue";
 
 export interface Config extends Item {
   id: string;

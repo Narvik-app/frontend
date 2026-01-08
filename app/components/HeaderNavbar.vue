@@ -1,12 +1,12 @@
 <script setup lang="ts">
-  import {useSelfUserStore} from "~/stores/useSelfUser";
-  import {useAppConfigStore} from "~/stores/useAppConfig";
-  import { isDesktop, isTablet, watchBreakpoint} from "~/utils/browser";
-  import ModalSelectProfile from "~/components/Modal/ModalSelectProfile.vue";
-  import type { DropdownMenuItem } from "#ui/components/DropdownMenu";
-  import {Permission} from "~/types/api/permissions";
+import {useSelfUserStore} from "~/stores/useSelfUser";
+import {useAppConfigStore} from "~/stores/useAppConfig";
+import {isDesktop, isTablet, watchBreakpoint} from "~/utils/browser";
+import ModalSelectProfile from "~/components/Modal/ModalSelectProfile.vue";
+import type {DropdownMenuItem} from "#ui/components/DropdownMenu";
+import {Permission} from "~/types/api/permissions";
 
-  const overlay = useOverlay()
+const overlay = useOverlay()
 
   const selfStore = useSelfUserStore();
   const appConfigStore = useAppConfigStore();

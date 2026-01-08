@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 
-  definePageMeta({
-    layout: "super-admin"
-  });
+definePageMeta({
+  layout: "super-admin"
+});
 
 </script>
 

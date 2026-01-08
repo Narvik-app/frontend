@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import {useLoginBadger} from "~/composables/api/api";
-  import {useSelfUserStore} from "~/stores/useSelfUser";
+import {useLoginBadger} from "~/composables/api/api";
+import {useSelfUserStore} from "~/stores/useSelfUser";
 
-  const route = useRoute()
+const route = useRoute()
 
   const selfStore = useSelfUserStore();
 

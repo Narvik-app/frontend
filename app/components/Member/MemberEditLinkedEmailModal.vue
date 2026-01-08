@@ -2,7 +2,6 @@
 
 import type {PropType} from "vue";
 import type {FormError} from "#ui/types";
-import {useSelfUserStore} from "~/stores/useSelfUser";
 import type {Member} from "~/types/api/item/clubDependent/member";
 import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
 

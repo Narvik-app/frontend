@@ -1,7 +1,7 @@
-import type { ClubLinkedItem } from "~/types/api/clubLinkedItem";
-import type { UuidItem } from "~/types/api/uuidItem";
-import type { File } from "~/types/api/item/file";
-import type { TimestampItem } from "~/types/api/timestampItem";
+import type {ClubLinkedItem} from "~/types/api/clubLinkedItem";
+import type {UuidItem} from "~/types/api/uuidItem";
+import type {File} from "~/types/api/item/file";
+import type {TimestampItem} from "~/types/api/timestampItem";
 
 export enum EmailStatus {
     DRAFT = 'DRAFT',

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DatePicker as VCalendarDatePicker } from 'v-calendar'
+import {DatePicker as VCalendarDatePicker} from 'v-calendar'
 import 'v-calendar/style.css'
 import dayjs from "dayjs";
 import {type DateRange, DateRangeFilter} from "~/types/date";

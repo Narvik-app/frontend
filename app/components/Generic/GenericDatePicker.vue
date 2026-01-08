@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import { DatePicker as VCalendarDatePicker } from 'v-calendar'
-  import 'v-calendar/style.css'
+import {DatePicker as VCalendarDatePicker} from 'v-calendar'
+import 'v-calendar/style.css'
 
-  const props = defineProps({
+const props = defineProps({
     modelValue: {
       type: [Date, Object] as PropType<object | null>,
       default: null

@@ -1,10 +1,7 @@
 import type {Ref} from "vue";
 import type {Config} from "~/types/api/item/config";
-import FileQuery from "~/composables/api/query/FileQuery";
 import ConfigQuery from "~/composables/api/query/ConfigQuery";
 import {useSelfUserStore} from "~/stores/useSelfUser";
-import type {ExposedFile} from "~/types/api/item/exposedFile";
-import type {ConfigValue} from "~/types/api/configValue";
 import {defineStore} from "pinia";
 import {isDarkMode} from "~/utils/browser";
 

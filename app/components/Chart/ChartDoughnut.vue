@@ -2,10 +2,9 @@
 
 import {
   ArcElement,
-  BarController,
-  BarElement,
   CategoryScale,
-  Chart as ChartJS, Colors, DoughnutController,
+  Chart as ChartJS,
+  DoughnutController,
   Legend,
   LinearScale,
   Title,
@@ -15,7 +14,7 @@ import {
 import {Doughnut} from 'vue-chartjs'
 import type {PropType} from "vue";
 
-import type {ChartBarData, setChartDefaultBackgroundColors} from "~/utils/chart";
+import type {setChartDefaultBackgroundColors} from "~/utils/chart";
 
 ChartJS.register(Title, Tooltip, Legend, DoughnutController, ArcElement, CategoryScale, LinearScale)
 

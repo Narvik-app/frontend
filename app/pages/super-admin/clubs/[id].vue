@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
-import type {Club, WriteClub} from "~/types/api/item/club";
+import type {Club} from "~/types/api/item/club";
 import ClubQuery from "~/composables/api/query/ClubQuery";
 import ClubSettingQuery from "~/composables/api/query/clubDependent/ClubSettingQuery";
 import FileQuery from "~/composables/api/query/FileQuery";

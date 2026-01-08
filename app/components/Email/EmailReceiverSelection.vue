@@ -1,13 +1,13 @@
 <script setup lang="ts">
-  import type { Member } from '~/types/api/item/clubDependent/member';
-  import type { SelectApiItem } from '~/types/select';
-  import type {TablePaginateInterface} from "~/types/table";
-  import { ClubRole, getAvailableClubRoles } from "~/types/api/item/club";
-  import MemberQuery from '~/composables/api/query/clubDependent/MemberQuery';
-  import { UCheckbox } from '#components';
-  import type { TableColumn, TableRow } from '@nuxt/ui'
+import type {Member} from '~/types/api/item/clubDependent/member';
+import type {SelectApiItem} from '~/types/select';
+import type {TablePaginateInterface} from "~/types/table";
+import {ClubRole, getAvailableClubRoles} from "~/types/api/item/club";
+import MemberQuery from '~/composables/api/query/clubDependent/MemberQuery';
+import {UCheckbox} from '#components';
+import type {TableRow} from '@nuxt/ui'
 
-  const props = defineProps({
+const props = defineProps({
     "newsletterEnabled": {
       type: Boolean,
       required: true

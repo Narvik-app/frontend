@@ -1,18 +1,9 @@
 import type {Member} from "~/types/api/item/clubDependent/member";
-import {
-  useFetchItem,
-  useFetchList,
-  useGetCsv, usePatch, usePatchItem,
-  usePost,
-  usePostRawJson,
-  usePut,
-  useUploadFile
-} from "~/composables/api/api";
+import {useFetchList, useGetCsv, usePatch, usePost, useUploadFile} from "~/composables/api/api";
 import type {MemberPresence} from "~/types/api/item/clubDependent/plugin/presence/memberPresence";
 import type {MemberSeason} from "~/types/api/item/clubDependent/memberSeason";
 import {AbstractClubDependentQuery} from "~/composables/api/query/AbstractClubDependentQuery";
 import type {ClubRole} from "~/types/api/item/club";
-import type {ExternalPresence} from "~/types/api/item/clubDependent/plugin/presence/externalPresence";
 
 export default class MemberQuery extends AbstractClubDependentQuery<Member, Member> {
   rootPath = "members";

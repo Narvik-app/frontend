@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import {useAppConfigStore} from "~/stores/useAppConfig";
-  import dayjs from "dayjs";
+import {useAppConfigStore} from "~/stores/useAppConfig";
+import dayjs from "dayjs";
 
-  const props = defineProps({
+const props = defineProps({
     displayVersion: {
       type: Boolean,
       default: true
