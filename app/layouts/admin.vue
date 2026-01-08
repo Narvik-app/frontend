@@ -43,7 +43,7 @@ useHead({
       to: '/admin/config/activities'
     },
     {
-      label: 'Modèles permissions',
+      label: 'Permissions',
       icon: 'i-heroicons-key',
       to: '/admin/config/permissions'
     },

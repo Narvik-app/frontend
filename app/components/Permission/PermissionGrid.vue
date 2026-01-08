@@ -93,12 +93,7 @@ const templateQuery = computed(() => {
   return new PermissionTemplateQuery();
 });
 
-// Watch for changes to member's permission template and reload
-watch(() => props.member?.permissionTemplate?.['@id'], () => {
-  if (props.mode === 'member' && props.member) {
-    loadPermissions();
-  }
-});
+
 
 async function loadPermissions() {
   isLoading.value = true;
@@ -206,10 +201,7 @@ function hasPermission(permission: Permission): boolean {
   return currentPermissions.value.includes(permission);
 }
 
-// Expose loadPermissions for parent components to trigger reload
-defineExpose({
-  loadPermissions
-});
+
 
 function hasTemplatePermission(permission: Permission): boolean {
   return templatePermissions.value.includes(permission);

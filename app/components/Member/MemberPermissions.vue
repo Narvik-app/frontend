@@ -34,7 +34,6 @@ const isAssigningTemplate = ref(false);
 
 const templateQuery = computed(() => new PermissionTemplateQuery());
 const memberQuery = computed(() => new MemberQuery());
-const permissionGridRef = ref<InstanceType<typeof import('~/components/Permission/PermissionGrid.vue').default> | null>(null);
 
 async function loadTemplates() {
   isLoadingTemplates.value = true;
@@ -80,8 +79,6 @@ async function assignTemplate() {
     await memberQuery.value.patch(props.member, {
       permissionTemplate: selectedTemplateIri.value
     } as Partial<Member>);
-    // Reload permissions grid to reflect template change
-    await permissionGridRef.value?.loadPermissions();
     emit('updated');
   } catch (error) {
     console.error('Failed to assign template', error);
@@ -126,7 +123,6 @@ onMounted(async () => {
 
       <!-- Permission grid -->
       <PermissionGrid
-        ref="permissionGridRef"
         mode="member"
         :member="member"
         :can-edit="isAdmin"

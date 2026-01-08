@@ -13,10 +13,7 @@ export default class MemberPermissionQuery extends AbstractClubDependentQuery<Me
   }
 
   private getActiveMemberIri(): string {
-    if (!this.activeMember["@id"]) {
-      throw new Error("Missing @id for defined member");
-    }
-
+    if (!this.activeMember["@id"]) throw new Error("Missing @id for defined member");
     return this.activeMember["@id"];
   }
 
