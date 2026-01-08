@@ -34,6 +34,7 @@ const isAssigningTemplate = ref(false);
 
 const templateQuery = computed(() => new PermissionTemplateQuery());
 const memberQuery = computed(() => new MemberQuery());
+const permissionGridRef = ref<InstanceType<typeof import('~/components/Permission/PermissionGrid.vue').default> | null>(null);
 
 async function loadTemplates() {
   isLoadingTemplates.value = true;
@@ -49,20 +50,25 @@ async function loadTemplates() {
   }
 }
 
+// Special value for "no template" option (empty string not allowed by USelect)
+const NO_TEMPLATE_VALUE = '__none__';
+
 // Template options for the select dropdown
 const templateOptions = computed(() => {
-  const options = [{ label: 'Aucun modèle', value: '' }];
+  const options = [{ label: 'Aucun modèle', value: NO_TEMPLATE_VALUE }];
   templates.value.forEach(t => {
-    options.push({ label: t.name, value: t['@id'] || '' });
+    if (t['@id']) {
+      options.push({ label: t.name || 'Sans nom', value: t['@id'] });
+    }
   });
   return options;
 });
 
 // Current template selection
 const currentTemplateIri = computed({
-  get: () => props.member.permissionTemplate?.['@id'] || '',
+  get: () => props.member.permissionTemplate?.['@id'] || NO_TEMPLATE_VALUE,
   set: (value: string) => {
-    selectedTemplateIri.value = value || null;
+    selectedTemplateIri.value = value === NO_TEMPLATE_VALUE ? null : value;
   }
 });
 
@@ -72,8 +78,10 @@ async function assignTemplate() {
 
   try {
     await memberQuery.value.patch(props.member, {
-      permissionTemplate: selectedTemplateIri.value || null
-    });
+      permissionTemplate: selectedTemplateIri.value
+    } as Partial<Member>);
+    // Reload permissions grid to reflect template change
+    await permissionGridRef.value?.loadPermissions();
     emit('updated');
   } catch (error) {
     console.error('Failed to assign template', error);
@@ -102,25 +110,23 @@ onMounted(async () => {
         <UFormField label="Modèle de permissions" class="flex-1">
           <USelect
             v-model="currentTemplateIri"
-            :options="templateOptions"
+            :items="templateOptions"
             :loading="isLoadingTemplates"
             placeholder="Sélectionner un modèle..."
-            option-attribute="label"
-            value-attribute="value"
             @update:model-value="assignTemplate"
           />
         </UFormField>
         <UButton
           to="/admin/config/permissions"
-          color="neutral"
-          variant="ghost"
           icon="i-lucide-settings"
-          title="Gérer les modèles"
-        />
+        >
+          Gérer les modèles
+        </UButton>
       </div>
 
       <!-- Permission grid -->
       <PermissionGrid
+        ref="permissionGridRef"
         mode="member"
         :member="member"
         :can-edit="isAdmin"

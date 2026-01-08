@@ -93,6 +93,13 @@ const templateQuery = computed(() => {
   return new PermissionTemplateQuery();
 });
 
+// Watch for changes to member's permission template and reload
+watch(() => props.member?.permissionTemplate?.['@id'], () => {
+  if (props.mode === 'member' && props.member) {
+    loadPermissions();
+  }
+});
+
 async function loadPermissions() {
   isLoading.value = true;
 
@@ -199,6 +206,11 @@ function hasPermission(permission: Permission): boolean {
   return currentPermissions.value.includes(permission);
 }
 
+// Expose loadPermissions for parent components to trigger reload
+defineExpose({
+  loadPermissions
+});
+
 function hasTemplatePermission(permission: Permission): boolean {
   return templatePermissions.value.includes(permission);
 }
@@ -248,12 +260,6 @@ watch([() => props.member, () => props.template], async () => {
       Seuls les administrateurs peuvent modifier les permissions.
     </div>
 
-    <!-- Template indicator for member mode -->
-    <div v-if="mode === 'member' && memberTemplate" class="text-sm text-muted bg-muted/50 rounded-lg p-2">
-      <UIcon name="i-lucide-file-text" class="mr-1" />
-      Modèle appliqué : <strong>{{ memberTemplate.name }}</strong>
-    </div>
-
     <!-- Sections grid - 2-3 columns on desktop -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <div v-for="section in filteredPermissionSections" :key="section.label" class="border border-default rounded-lg p-3">
@@ -275,64 +281,33 @@ watch([() => props.member, () => props.template], async () => {
               <USwitch
                 v-if="!feature.editOnly"
                 :model-value="mode === 'member' ? isEffectivelyGranted(feature.accessPermission) : hasPermission(feature.accessPermission)"
-                :disabled="!canEdit || (!isAdmin && mode === 'member') || isSaving || isLoading"
+                :disabled="!canEdit || (!isAdmin && mode === 'member') || isSaving || isLoading || getInheritanceInfo(feature.accessPermission).isInherited"
                 :loading="isLoading || isSaving"
+                :color="getInheritanceInfo(feature.accessPermission).isInherited ? 'neutral' : undefined"
                 size="sm"
                 @update:model-value="togglePermission(feature.accessPermission, feature.editPermission, false)"
               />
-              <!-- Inheritance indicator for member mode -->
-              <template v-if="mode === 'member' && memberTemplate">
-                <span
-                  v-if="getInheritanceInfo(feature.accessPermission).isInherited"
-                  class="text-xs text-primary/70"
-                  title="Hérité du modèle"
-                >
-                  modèle
-                </span>
-                <span
-                  v-else-if="hasPermission(feature.accessPermission) && getInheritanceInfo(feature.accessPermission).templateValue !== undefined"
-                  class="text-xs text-warning/70"
-                  :title="getInheritanceInfo(feature.accessPermission).templateValue ? 'Personnalisé (modèle: oui)' : 'Personnalisé'"
-                >
-                  perso
-                </span>
-              </template>
             </div>
             <!-- Edit column: show editOnly toggle here, hide accessOnly -->
             <div class="w-14 flex flex-col items-center">
               <USwitch
                 v-if="feature.editOnly"
                 :model-value="mode === 'member' ? isEffectivelyGranted(feature.accessPermission) : hasPermission(feature.accessPermission)"
-                :disabled="!canEdit || (!isAdmin && mode === 'member') || isSaving || isLoading"
+                :disabled="!canEdit || (!isAdmin && mode === 'member') || isSaving || isLoading || getInheritanceInfo(feature.accessPermission).isInherited"
                 :loading="isLoading || isSaving"
+                :color="getInheritanceInfo(feature.accessPermission).isInherited ? 'neutral' : undefined"
                 size="sm"
                 @update:model-value="togglePermission(feature.accessPermission, undefined, false)"
               />
               <USwitch
                 v-else-if="!feature.accessOnly"
                 :model-value="mode === 'member' ? isEffectivelyGranted(feature.editPermission!) : hasPermission(feature.editPermission!)"
-                :disabled="!canEdit || (!isAdmin && mode === 'member') || isSaving || isLoading"
+                :disabled="!canEdit || (!isAdmin && mode === 'member') || isSaving || isLoading || getInheritanceInfo(feature.editPermission!).isInherited"
                 :loading="isLoading || isSaving"
+                :color="getInheritanceInfo(feature.editPermission!).isInherited ? 'neutral' : undefined"
                 size="sm"
                 @update:model-value="togglePermission(feature.editPermission!, feature.accessPermission, true)"
               />
-              <!-- Inheritance indicator for edit permission -->
-              <template v-if="mode === 'member' && memberTemplate && !feature.accessOnly && !feature.editOnly">
-                <span
-                  v-if="getInheritanceInfo(feature.editPermission!).isInherited"
-                  class="text-xs text-primary/70"
-                  title="Hérité du modèle"
-                >
-                  modèle
-                </span>
-                <span
-                  v-else-if="hasPermission(feature.editPermission!) && getInheritanceInfo(feature.editPermission!).templateValue !== undefined"
-                  class="text-xs text-warning/70"
-                  :title="getInheritanceInfo(feature.editPermission!).templateValue ? 'Personnalisé (modèle: oui)' : 'Personnalisé'"
-                >
-                  perso
-                </span>
-              </template>
             </div>
           </div>
         </div>
