@@ -1,7 +1,7 @@
 // import type {ExposedFile} from "~/types/api/item/exposedFile";
 // import {useSelfUserStore} from "~/stores/useSelfUser";
 // import {useAppConfigStore} from "~/stores/useAppConfig";
-// 
+//
 // export function useSetSiteFavicon() {
 // 	const appConfigStore = useAppConfigStore()
 // 	const siteLogo: Ref<Image|null> = appConfigStore.getLogo()
