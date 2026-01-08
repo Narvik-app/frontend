@@ -278,35 +278,50 @@ watch([() => props.member, () => props.template], async () => {
             <span class="text-sm">{{ feature.name }}</span>
             <!-- Access column: hide if editOnly -->
             <div class="w-14 flex flex-col items-center">
-              <USwitch
+              <PermissionSwitch
                 v-if="!feature.editOnly"
-                :model-value="mode === 'member' ? isEffectivelyGranted(feature.accessPermission) : hasPermission(feature.accessPermission)"
-                :disabled="!canEdit || (!isAdmin && mode === 'member') || isSaving || isLoading || getInheritanceInfo(feature.accessPermission).isInherited"
-                :loading="isLoading || isSaving"
-                :color="getInheritanceInfo(feature.accessPermission).isInherited ? 'neutral' : undefined"
-                size="sm"
-                @update:model-value="togglePermission(feature.accessPermission, feature.editPermission, false)"
+                :mode="mode"
+                :permission="feature.accessPermission"
+                :linked-permission="feature.editPermission"
+                :can-edit="canEdit"
+                :is-admin="isAdmin"
+                :is-saving="isSaving"
+                :is-loading="isLoading"
+                :has-permission="hasPermission"
+                :is-effectively-granted="isEffectivelyGranted"
+                :get-inheritance-info="getInheritanceInfo"
+                @toggle="togglePermission"
               />
             </div>
             <!-- Edit column: show editOnly toggle here, hide accessOnly -->
             <div class="w-14 flex flex-col items-center">
-              <USwitch
+              <PermissionSwitch
                 v-if="feature.editOnly"
-                :model-value="mode === 'member' ? isEffectivelyGranted(feature.accessPermission) : hasPermission(feature.accessPermission)"
-                :disabled="!canEdit || (!isAdmin && mode === 'member') || isSaving || isLoading || getInheritanceInfo(feature.accessPermission).isInherited"
-                :loading="isLoading || isSaving"
-                :color="getInheritanceInfo(feature.accessPermission).isInherited ? 'neutral' : undefined"
-                size="sm"
-                @update:model-value="togglePermission(feature.accessPermission, undefined, false)"
+                :mode="mode"
+                :permission="feature.accessPermission"
+                :can-edit="canEdit"
+                :is-admin="isAdmin"
+                :is-saving="isSaving"
+                :is-loading="isLoading"
+                :has-permission="hasPermission"
+                :is-effectively-granted="isEffectivelyGranted"
+                :get-inheritance-info="getInheritanceInfo"
+                @toggle="togglePermission"
               />
-              <USwitch
+              <PermissionSwitch
                 v-else-if="!feature.accessOnly"
-                :model-value="mode === 'member' ? isEffectivelyGranted(feature.editPermission!) : hasPermission(feature.editPermission!)"
-                :disabled="!canEdit || (!isAdmin && mode === 'member') || isSaving || isLoading || getInheritanceInfo(feature.editPermission!).isInherited"
-                :loading="isLoading || isSaving"
-                :color="getInheritanceInfo(feature.editPermission!).isInherited ? 'neutral' : undefined"
-                size="sm"
-                @update:model-value="togglePermission(feature.editPermission!, feature.accessPermission, true)"
+                :mode="mode"
+                :permission="feature.editPermission!"
+                :linked-permission="feature.accessPermission"
+                :is-edit-toggle="true"
+                :can-edit="canEdit"
+                :is-admin="isAdmin"
+                :is-saving="isSaving"
+                :is-loading="isLoading"
+                :has-permission="hasPermission"
+                :is-effectively-granted="isEffectivelyGranted"
+                :get-inheritance-info="getInheritanceInfo"
+                @toggle="togglePermission"
               />
             </div>
           </div>
