@@ -1,5 +1,5 @@
-import type { Item } from "~/types/api/item";
-import type { MemberPermission } from "~/types/api/item/clubDependent/memberPermission";
+import type {Item} from "~/types/api/item";
+import type {MemberPermission} from "~/types/api/item/clubDependent/memberPermission";
 
 export interface PermissionTemplate extends Item {
   uuid?: string;

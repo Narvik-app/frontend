@@ -1,9 +1,13 @@
-import type { PermissionTemplate, PermissionTemplateWrite, PermissionTemplateUpdate } from "~/types/api/item/clubDependent/permissionTemplate";
-import type { MemberPermission, TemplatePermissionWrite } from "~/types/api/item/clubDependent/memberPermission";
-import { AbstractClubDependentQuery } from "~/composables/api/query/AbstractClubDependentQuery";
-import { usePost, useDelete, useFetchList } from "~/composables/api/api";
-import type { Permission } from "~/types/api/permissions";
-import type { Item } from "~/types/api/item";
+import type {
+  PermissionTemplate,
+  PermissionTemplateUpdate,
+  PermissionTemplateWrite
+} from "~/types/api/item/clubDependent/permissionTemplate";
+import type {MemberPermission, TemplatePermissionWrite} from "~/types/api/item/clubDependent/memberPermission";
+import {AbstractClubDependentQuery} from "~/composables/api/query/AbstractClubDependentQuery";
+import {useFetchList, usePost} from "~/composables/api/api";
+import type {Permission} from "~/types/api/permissions";
+import type {Item} from "~/types/api/item";
 
 export default class PermissionTemplateQuery extends AbstractClubDependentQuery<PermissionTemplate, PermissionTemplateWrite> {
   rootPath = "permission-templates";

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { PropType } from 'vue';
-import type { Permission } from '~/types/api/permissions';
+import type {PropType} from 'vue';
+import type {Permission} from '~/types/api/permissions';
 
 type PermissionGridMode = 'member' | 'template';
 
