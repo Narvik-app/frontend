@@ -4,6 +4,7 @@ import type {FormError, TableRow} from "#ui/types";
 import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
 import PermissionTemplateQuery from "~/composables/api/query/clubDependent/PermissionTemplateQuery";
 import {useSelfUserStore} from "~/stores/useSelfUser";
+import {displayApiError} from "~/utils/resource";
 
 definePageMeta({
   layout: "admin"
@@ -89,7 +90,7 @@ async function createTemplate() {
       return;
     }
 
-    const { created } = await apiQuery.createTemplate(newTemplateName.value.trim(), clubIri);
+    const { created, error } = await apiQuery.createTemplate(newTemplateName.value.trim(), clubIri);
     if (created) {
       toast.add({
         color: "success",
@@ -104,18 +105,11 @@ async function createTemplate() {
         selectedTemplate.value = fullTemplate.retrieved;
         isEditModalOpen.value = true;
       }
-    } else {
-      toast.add({
-        color: "error",
-        title: "La création a échoué"
-      });
+    } else if (error) {
+      displayApiError(error, "La création a échoué");
     }
   } catch (e: any) {
-    toast.add({
-      color: "error",
-      title: "Une erreur est survenue",
-      description: e.message || "Erreur inconnue"
-    });
+    displayApiError(e, "Une erreur est survenue");
   } finally {
     isLoading.value = false;
   }
@@ -132,7 +126,7 @@ async function renameTemplate() {
   isLoading.value = true;
 
   try {
-    const { updated } = await apiQuery.updateTemplate(selectedTemplate.value, newTemplateName.value.trim());
+    const { updated, error } = await apiQuery.updateTemplate(selectedTemplate.value, newTemplateName.value.trim());
     if (updated) {
       toast.add({
         color: "success",
@@ -141,18 +135,11 @@ async function renameTemplate() {
       isRenameModalOpen.value = false;
       selectedTemplate.value = updated;
       await getTemplates();
-    } else {
-      toast.add({
-        color: "error",
-        title: "Le renommage a échoué"
-      });
+    } else if (error) {
+      displayApiError(error, "Le renommage a échoué");
     }
   } catch (e: any) {
-    toast.add({
-      color: "error",
-      title: "Une erreur est survenue",
-      description: e.message || "Erreur inconnue"
-    });
+    displayApiError(e, "Une erreur est survenue");
   } finally {
     isLoading.value = false;
   }
@@ -174,11 +161,8 @@ async function deleteTemplate() {
     } else {
       throw error;
     }
-  } catch (error) {
-    toast.add({
-      color: "error",
-      title: "La suppression a échoué"
-    });
+  } catch (error: any) {
+    displayApiError(error, "La suppression a échoué");
   }
 
   isLoading.value = false;
