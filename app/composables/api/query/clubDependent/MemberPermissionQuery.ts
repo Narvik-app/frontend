@@ -13,14 +13,13 @@ export default class MemberPermissionQuery extends AbstractClubDependentQuery<Me
   }
 
   private getActiveMemberIri(): string {
-    if (!this.activeMember["@id"]) {
-      throw new Error("Missing @id for defined member");
-    }
-
+    if (!this.activeMember["@id"]) throw new Error("Missing @id for defined member");
     return this.activeMember["@id"];
   }
 
   public override getRootUrl(): string {
+    // We access permissions via the member subresource
+    // /clubs/{clubUuid}/members/{memberUuid}/permissions
     return `${this.getActiveMemberIri()}/${this.rootPath}`;
   }
 

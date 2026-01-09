@@ -3,6 +3,7 @@ import type {UuidItem} from "~/types/api/uuidItem";
 import type {ClubLinkedItem} from "~/types/api/clubLinkedItem";
 import type {ClubRole} from "~/types/api/item/club";
 import type {File} from "~/types/api/item/file";
+import type {PermissionTemplate} from "~/types/api/item/clubDependent/permissionTemplate";
 
 export interface Member extends UuidItem, ClubLinkedItem {
   profileImage?: File;
@@ -17,6 +18,7 @@ export interface Member extends UuidItem, ClubLinkedItem {
   medicalCertificateExpiration?: Date|null;
   medicalCertificateStatus?: string
   clubNewsletter?: boolean
+  permissionTemplate?: PermissionTemplate | null;
 
   email?: string;
   licence?: string;

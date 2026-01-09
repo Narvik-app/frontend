@@ -720,7 +720,7 @@ async function deleteMember() {
       </div>
 
       <div v-if="member?.role === ClubRole.Supervisor" class="lg:col-span-9">
-        <MemberPermissions :member="member" />
+        <MemberPermissions :member="member" @updated="loadItem" />
       </div>
 
       <div class="lg:col-span-9">

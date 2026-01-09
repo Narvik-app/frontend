@@ -42,6 +42,11 @@ useHead({
       icon: 'i-heroicons-rocket-launch',
       to: '/admin/config/activities'
     },
+    {
+      label: 'Permissions',
+      icon: 'i-heroicons-key',
+      to: '/admin/config/permissions'
+    },
   ]
   if (selfStore.selectedProfile?.club.presencesEnabled) {
     configsSection.push({
