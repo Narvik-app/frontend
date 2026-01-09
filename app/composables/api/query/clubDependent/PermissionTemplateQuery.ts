@@ -15,27 +15,27 @@ export default class PermissionTemplateQuery extends AbstractClubDependentQuery<
   /**
    * Create a new permission template
    */
-  async createTemplate(name: string, clubIri: string): Promise<PermissionTemplate | undefined> {
+  async createTemplate(name: string, clubIri: string) {
     const payload: PermissionTemplateWrite = {
       club: clubIri,
       name: name,
     };
-    return (await this.post(payload)).created;
+    return this.post(payload);
   }
 
   /**
    * Update a permission template name
    */
-  async updateTemplate(template: PermissionTemplate, name: string): Promise<PermissionTemplate | undefined> {
+  async updateTemplate(template: PermissionTemplate, name: string) {
     const payload: PermissionTemplateUpdate = { name };
-    return (await this.patch(template, payload as unknown as Item)).updated;
+    return this.patch(template, payload as unknown as Item);
   }
 
   /**
    * Delete a permission template
    */
-  async deleteTemplate(template: PermissionTemplate): Promise<void> {
-    await this.delete(template);
+  async deleteTemplate(template: PermissionTemplate) {
+    return this.delete(template);
   }
 
   /**
@@ -50,22 +50,20 @@ export default class PermissionTemplateQuery extends AbstractClubDependentQuery<
   /**
    * Add a permission to the template
    */
-  /**
-   * Add a permission to the template
-   */
   async addPermission(template: PermissionTemplate, permission: Permission) {
     const payload: TemplatePermissionWrite = {
       template: template["@id"]!,
       permission: permission,
     };
-    return usePost<MemberPermission>(this.getTemplatePermissionsUrl(template), payload);
+    const { item, error } = await usePost<MemberPermission>(this.getTemplatePermissionsUrl(template), payload);
+    return { created: item, error };
   }
 
   /**
    * Remove a permission from the template
    */
-  async removePermission(template: PermissionTemplate, permissionItem: MemberPermission): Promise<void> {
-    await this.delete(permissionItem);
+  async removePermission(template: PermissionTemplate, permissionItem: MemberPermission) {
+    return this.delete(permissionItem);
   }
 
   /**

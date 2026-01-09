@@ -89,7 +89,7 @@ async function createTemplate() {
       return;
     }
 
-    const created = await apiQuery.createTemplate(newTemplateName.value.trim(), clubIri);
+    const { created } = await apiQuery.createTemplate(newTemplateName.value.trim(), clubIri);
     if (created) {
       toast.add({
         color: "success",
@@ -132,7 +132,7 @@ async function renameTemplate() {
   isLoading.value = true;
 
   try {
-    const updated = await apiQuery.updateTemplate(selectedTemplate.value, newTemplateName.value.trim());
+    const { updated } = await apiQuery.updateTemplate(selectedTemplate.value, newTemplateName.value.trim());
     if (updated) {
       toast.add({
         color: "success",
@@ -163,13 +163,17 @@ async function deleteTemplate() {
   isLoading.value = true;
 
   try {
-    await apiQuery.deleteTemplate(selectedTemplate.value);
-    toast.add({
-      color: "success",
-      title: "Modèle supprimé"
-    });
-    selectedTemplate.value = undefined;
-    isEditModalOpen.value = false;
+    const { error } = await apiQuery.deleteTemplate(selectedTemplate.value);
+    if (!error) {
+      toast.add({
+        color: "success",
+        title: "Modèle supprimé"
+      });
+      selectedTemplate.value = undefined;
+      isEditModalOpen.value = false;
+    } else {
+      throw error;
+    }
   } catch (error) {
     toast.add({
       color: "error",

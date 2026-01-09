@@ -15,7 +15,6 @@ const props = defineProps({
   mode: {
     type: String as PropType<PermissionGridMode>,
     required: true,
-    validator: (value: string) => ['member', 'template'].includes(value)
   },
   member: {
     type: Object as PropType<Member>,
@@ -137,9 +136,9 @@ async function addPermission(permission: Permission): Promise<boolean> {
       return true;
     }
   } else if (props.mode === 'template' && props.template) {
-    const { item } = await templateQuery.value.addPermission(props.template, permission);
-    if (item) {
-      permissionItems.value.push(item);
+    const { created, error } = await templateQuery.value.addPermission(props.template, permission);
+    if (!error && created) {
+      permissionItems.value.push(created);
       return true;
     }
   }
@@ -157,9 +156,11 @@ async function removePermission(permission: Permission): Promise<boolean> {
       return true;
     }
   } else if (props.mode === 'template' && props.template) {
-    await templateQuery.value.removePermission(props.template, existingItem);
-    permissionItems.value = permissionItems.value.filter(p => p.uuid !== existingItem.uuid);
-    return true;
+    const { error } = await templateQuery.value.removePermission(props.template, existingItem);
+    if (!error) {
+      permissionItems.value = permissionItems.value.filter(p => p.uuid !== existingItem.uuid);
+      return true;
+    }
   }
   return false;
 }
