@@ -7,6 +7,8 @@ import {convertUuidToUrlUuid} from "~/utils/resource";
 import type {NuxtError} from "#app";
 import type {ItemError} from "~/types/api/itemError";
 import type {TablePaginateInterface} from "~/types/table";
+import {useSelfUserStore} from "~/stores/useSelfUser";
+import {Permission} from "~/types/api/permissions";
 
 definePageMeta({
     layout: "pos"
@@ -19,6 +21,8 @@ definePageMeta({
   const toast = useToast()
   const overlay = useOverlay()
   const overlayDeleteConfirmation = overlay.create(ModalDeleteConfirmation)
+  const selfStore = useSelfUserStore();
+  const canEdit = computed(() => selfStore.can(Permission.SaleCategoriesEdit));
 
   const apiQuery = new InventoryCategoryQuery();
 
@@ -185,7 +189,7 @@ definePageMeta({
         <div>
           <div class="flex gap-4">
             <div class="flex-1"></div>
-            <UButton @click="createCategory">
+            <UButton v-if="canEdit" @click="createCategory">
               Créer une catégorie
             </UButton>
           </div>
@@ -208,7 +212,7 @@ definePageMeta({
             </template>
 
             <template #actions-cell="{ row }">
-              <div class="flex items-center gap-1">
+              <div v-if="canEdit" class="flex items-center gap-1">
                 <p class="text-xs">{{ row.original.weight }}</p>
                 <GenericStackedUpDown @changed="modifier => { move(row.original, -modifier) }" />
               </div>
@@ -227,7 +231,7 @@ definePageMeta({
     </template>
 
     <template #side>
-      <template v-if="selectedCategory">
+      <template v-if="selectedCategory && canEdit">
         <UForm :state="selectedCategory" @submit="updateCategory(selectedCategory)" :validate="validate" class="flex flex-col gap-4">
           <UCard>
             <div class="flex gap-2 flex-col">

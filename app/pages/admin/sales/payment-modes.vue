@@ -7,6 +7,8 @@ import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.
 import type {NuxtError} from "#app";
 import type {ItemError} from "~/types/api/itemError";
 import type {TablePaginateInterface} from "~/types/table";
+import {useSelfUserStore} from "~/stores/useSelfUser";
+import {Permission} from "~/types/api/permissions";
 
 definePageMeta({
     layout: "pos"
@@ -19,6 +21,8 @@ definePageMeta({
   const toast = useToast()
   const overlay = useOverlay()
   const overlayDeleteConfirmation = overlay.create(ModalDeleteConfirmation)
+  const selfStore = useSelfUserStore();
+  const canEdit = computed(() => selfStore.can(Permission.SalePaymentModesEdit));
 
   const apiQuery = new SalePaymentModeQuery()
 
@@ -194,7 +198,7 @@ definePageMeta({
           <div class="flex gap-4">
 
             <div class="flex-1"></div>
-            <UButton @click="createPaymentMode" >
+            <UButton v-if="canEdit" @click="createPaymentMode" >
               Créer un mode de paiement
             </UButton>
           </div>
@@ -222,7 +226,7 @@ definePageMeta({
             </template>
 
             <template #actions-cell="{ row }">
-              <div class="flex items-center gap-1">
+              <div v-if="canEdit" class="flex items-center gap-1">
                 <p class="text-xs">{{ row.original.weight }}</p>
                 <GenericStackedUpDown @changed="modifier => { move(row.original, -modifier) }" />
               </div>
@@ -241,7 +245,7 @@ definePageMeta({
     </template>
 
     <template #side>
-      <template v-if="selectedPaymentMode">
+      <template v-if="selectedPaymentMode && canEdit">
         <UForm :state="selectedPaymentMode" @submit="updatePaymentMode(selectedPaymentMode)" :validate="validate">
           <UCard>
             <div class="flex gap-2 flex-col">
