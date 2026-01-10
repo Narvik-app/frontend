@@ -9,6 +9,8 @@ import type {ColumnSort} from "@tanstack/table-core";
 import {getTableSortVal} from "~/utils/table";
 import type {TablePaginateInterface} from "~/types/table";
 import type {SelectApiItem} from "~/types/select";
+import {useSelfUserStore} from "~/stores/useSelfUser";
+import {Permission} from "~/types/api/permissions";
 
 definePageMeta({
     layout: "pos"
@@ -19,6 +21,8 @@ definePageMeta({
   })
 
   const queryParams = useRoute().query
+  const selfStore = useSelfUserStore();
+  const canEdit = computed(() => selfStore.can(Permission.SaleInventoryEdit));
 
   const isSideVisible = ref(false)
 
@@ -266,7 +270,7 @@ definePageMeta({
               </template>
             </USelectMenu>
 
-            <UButton @click="selectedItem = undefined; inventoryItemModalOpen = true" icon="i-heroicons-plus" />
+            <UButton v-if="canEdit" @click="selectedItem = undefined; inventoryItemModalOpen = true" icon="i-heroicons-plus" />
           </div>
 
 
@@ -342,11 +346,11 @@ definePageMeta({
       <template v-if="selectedItem">
         <UButton block class="mb-4" :to="'/admin/inventories/items/' + convertUuidToUrlUuid(selectedItem.uuid)">Voir en détail</UButton>
 
-
         <UCard class="overflow-y-auto">
           <InventoryItemForm
             :item="selectedItem"
             :categories="categories"
+            :view-only="!canEdit"
             @updated="onItemUpdated"
           />
         </UCard>

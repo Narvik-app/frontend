@@ -5,6 +5,8 @@ import type {InventoryItemHistory} from "~/types/api/item/clubDependent/plugin/s
 import {formatMonetary} from "~/utils/string";
 import {convertUuidToUrlUuid, decodeUrlUuid} from "~/utils/resource";
 import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
+import {useSelfUserStore} from "~/stores/useSelfUser";
+import {Permission} from "~/types/api/permissions";
 
 definePageMeta({
     layout: "pos"
@@ -14,6 +16,8 @@ definePageMeta({
 
   const toast = useToast()
   const overlay = useOverlay()
+  const selfStore = useSelfUserStore();
+  const canEdit = computed(() => selfStore.can(Permission.SaleInventoryEdit));
 
   const route = useRoute()
   const itemId = decodeUrlUuid(route.params.id.toString());
@@ -146,7 +150,7 @@ definePageMeta({
         </UButton>
       </div>
 
-      <UTooltip text="Modifier">
+      <UTooltip v-if="canEdit" text="Modifier">
         <UButton
           icon="i-heroicons-pencil-square"
           color="warning"
@@ -154,7 +158,7 @@ definePageMeta({
         />
       </UTooltip>
 
-      <UTooltip text="Supprimer">
+      <UTooltip v-if="canEdit" text="Supprimer">
         <UButton
           icon="i-heroicons-trash"
           color="error"
