@@ -23,6 +23,16 @@ definePageMeta({
   const selfStore = useSelfUserStore()
   const isAdmin = selfStore.isAdmin()
   const canEditSales = selfStore.can(Permission.SaleHistoryEdit)
+  const canMakeSales = selfStore.can(Permission.SaleNew)
+
+  // Can edit/delete if:
+  // - Admin or has SaleHistoryEdit (can edit any sale)
+  // - OR has SaleNew permission AND sale was created today
+  const canModifySale = computed(() => {
+    if (isAdmin || canEditSales) return true;
+    if (!canMakeSales || !sale.value?.createdAt) return false;
+    return dayjs(sale.value.createdAt).isAfter(dayjs().startOf('day'));
+  })
 
   const toast = useToast()
 
@@ -127,7 +137,7 @@ definePageMeta({
         {{ formatDateTimeReadable(sale?.createdAt) }}
       </div>
 
-      <div v-if="canEditSales && (isAdmin || dayjs(dayjs(sale?.createdAt)).isAfter(dayjs().startOf('day')))"
+      <div v-if="canModifySale"
            class="flex justify-between gap-2"
       >
         <UButton v-if="sale"
