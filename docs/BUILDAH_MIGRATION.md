@@ -120,6 +120,38 @@ buildah bud --pull --no-cache \
 make build-prod
 ```
 
+**Multi-Platform Build (amd64 and arm64):**
+```bash
+# Using Buildah directly with manifest
+MANIFEST_NAME="narvik-front:temp-manifest"
+buildah manifest create "$MANIFEST_NAME"
+
+# Build for amd64
+buildah bud --platform linux/amd64 \
+  --manifest "$MANIFEST_NAME" \
+  --target run .
+
+# Build for arm64
+buildah bud --platform linux/arm64 \
+  --manifest "$MANIFEST_NAME" \
+  --target run .
+
+# Push multi-platform manifest
+buildah manifest push --all "$MANIFEST_NAME" "docker://narvik-front:latest"
+buildah manifest rm "$MANIFEST_NAME"
+
+# Using Makefile (recommended)
+make build-multiplatform
+```
+
+> **Note:** Multi-platform builds require QEMU for cross-architecture emulation:
+> ```bash
+> # Ubuntu/Debian
+> sudo apt-get install qemu-user-static
+> # Register QEMU binary formats
+> docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+> ```
+
 ### Running Containers
 
 **Using Podman:**
@@ -170,6 +202,34 @@ alias docker=podman
 
 ### 5. **Better CI/CD Integration**
 No privileged mode required in CI/CD pipelines.
+
+### 6. **Multi-Platform Support**
+Buildah supports building images for multiple architectures (amd64, arm64, etc.) using a manifest list, enabling deployment across different hardware platforms.
+
+## Multi-Platform Images
+
+This project now supports multi-platform container images for:
+- **linux/amd64** - Standard x86-64 architecture
+- **linux/arm64** - ARM 64-bit architecture (Apple Silicon, AWS Graviton, etc.)
+
+### Benefits of Multi-Platform Images
+
+- **Flexibility**: Run on different hardware architectures without rebuilding
+- **Cost Optimization**: Use ARM instances (often cheaper in cloud providers)
+- **Development**: Develop on Apple Silicon Macs without compatibility issues
+- **Production**: Deploy to ARM-based servers (AWS Graviton, Azure Cobalt)
+
+### Using Multi-Platform Images
+
+Multi-platform images work transparently - the container runtime automatically selects the correct architecture:
+
+```bash
+# On x86-64 system
+podman run --rm narvik-front:latest  # Uses amd64 image
+
+# On ARM64 system (M1/M2 Mac, Graviton)
+podman run --rm narvik-front:latest  # Uses arm64 image
+```
 
 ## Compatibility
 

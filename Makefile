@@ -13,6 +13,9 @@ VERSION_FULL := $(shell jq -r .version package.json 2>/dev/null || echo "0.0.0")
 VERSION_MAJOR := $(shell echo $(VERSION_FULL) | cut -d. -f1)
 VERSION_MINOR := $(shell echo $(VERSION_FULL) | cut -d. -f1-2)
 
+# Multi-platform support
+PLATFORMS = linux/amd64,linux/arm64
+
 # Misc
 .DEFAULT_GOAL = help
 
@@ -47,6 +50,28 @@ build-prod: ## Build production image with version tags
 		-t $(BUILD_REPO):$(VERSION_MINOR) \
 		-t $(BUILD_REPO):$(VERSION_FULL) \
 		--target run .
+
+build-multiplatform: ## Build multi-platform image (amd64, arm64) and push to registry
+	@echo "\033[32mBuilding multi-platform image for $(PLATFORMS)...\033[0m"
+	@MANIFEST_NAME="$(BUILD_REPO):temp-manifest-$$(date +%s)"; \
+	$(BUILDAH_CMD) manifest create "$$MANIFEST_NAME"; \
+	for platform in $$(echo $(PLATFORMS) | tr ',' ' '); do \
+		echo "\033[33mBuilding for $$platform...\033[0m"; \
+		$(BUILDAH_CMD) bud \
+			--platform $$platform \
+			--pull \
+			--layers \
+			--target run \
+			--manifest "$$MANIFEST_NAME" \
+			.; \
+	done; \
+	echo "\033[32mTagging and pushing multi-platform images...\033[0m"; \
+	$(BUILDAH_CMD) manifest push --all "$$MANIFEST_NAME" "docker://$(BUILD_REPO):latest"; \
+	$(BUILDAH_CMD) manifest push --all "$$MANIFEST_NAME" "docker://$(BUILD_REPO):$(VERSION_MAJOR)"; \
+	$(BUILDAH_CMD) manifest push --all "$$MANIFEST_NAME" "docker://$(BUILD_REPO):$(VERSION_MINOR)"; \
+	$(BUILDAH_CMD) manifest push --all "$$MANIFEST_NAME" "docker://$(BUILD_REPO):$(VERSION_FULL)"; \
+	$(BUILDAH_CMD) manifest rm "$$MANIFEST_NAME"; \
+	echo "\033[32mMulti-platform build complete!\033[0m"
 
 build-cloud-prod:
 	@echo "\033[33mWarning: Cloud builders are not supported with Buildah. Use build-prod instead.\033[0m"
