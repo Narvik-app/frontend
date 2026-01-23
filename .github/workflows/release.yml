@@ -59,37 +59,74 @@ jobs:
           name: package-json
           path: .
 
+      - name: Install Buildah
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y buildah
+
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | buildah login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin docker.io
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Extract version information
+        id: version
+        run: |
+          VERSION=$(jq -r .version package.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          MAJOR=$(echo $VERSION | cut -d. -f1)
+          echo "major=$MAJOR" >> $GITHUB_OUTPUT
+          MINOR=$(echo $VERSION | cut -d. -f1-2)
+          echo "minor=$MINOR" >> $GITHUB_OUTPUT
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/narvik-front
-          tags: |
-            type=semver,pattern={{version}}
-            type=raw,value=dev,enable=${{ github.ref_name == github.event.repository.default_branch || github.event_name == 'release' }}
-            type=raw,value=latest,enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
-            type=semver,pattern={{major}}.{{minor}},enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
-            type=semver,pattern={{major}},enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
-            type=ref,event=branch,pattern=^([0-9]+\.[0-9]+.*)$,group=1,prefix=dev-,enable=${{ github.ref_name != github.event.repository.default_branch }}
+      - name: Determine tags
+        id: tags
+        run: |
+          REPO="${{ secrets.DOCKERHUB_USERNAME }}/narvik-front"
+          TAGS=""
+          
+          # Always add version tag for releases
+          if [ "${{ github.event_name }}" = "release" ]; then
+            TAGS="$REPO:${{ steps.version.outputs.version }}"
+            
+            # Add latest tag for non-prerelease
+            if [ "${{ github.event.release.prerelease }}" != "true" ]; then
+              TAGS="$TAGS $REPO:latest"
+              TAGS="$TAGS $REPO:${{ steps.version.outputs.major }}"
+              TAGS="$TAGS $REPO:${{ steps.version.outputs.minor }}"
+            fi
+          fi
+          
+          # Add dev tag for main branch pushes
+          if [ "${{ github.ref_name }}" = "${{ github.event.repository.default_branch }}" ] && [ "${{ github.event_name }}" != "release" ]; then
+            TAGS="$REPO:dev"
+          fi
+          
+          # Add dev-X.X tag for version branches (not main)
+          if [[ "${{ github.ref_name }}" =~ ^[0-9]+\.[0-9]+.*$ ]] && [ "${{ github.ref_name }}" != "${{ github.event.repository.default_branch }}" ]; then
+            BRANCH_VERSION=$(echo "${{ github.ref_name }}" | grep -oE '^[0-9]+\.[0-9]+[^/]*')
+            TAGS="$REPO:dev-$BRANCH_VERSION"
+          fi
+          
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          sbom: true
-          provenance: mode=max
-          labels: |
-            ${{ steps.meta.outputs.labels }}
-            org.opencontainers.image.vendor=Benoit VIGNAL
-            org.opencontainers.image.url=https://about.narvik.app
+      - name: Build image with Buildah
+        run: |
+          buildah bud \
+            --pull \
+            --layers \
+            --target run \
+            --tag temp-image \
+            --label org.opencontainers.image.vendor="Benoit VIGNAL" \
+            --label org.opencontainers.image.url="https://about.narvik.app" \
+            --label org.opencontainers.image.source="${{ github.server_url }}/${{ github.repository }}" \
+            --label org.opencontainers.image.version="${{ steps.version.outputs.version }}" \
+            --label org.opencontainers.image.revision="${{ github.sha }}" \
+            --label org.opencontainers.image.created="$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            .
+
+      - name: Tag and push images
+        run: |
+          for tag in ${{ steps.tags.outputs.tags }}; do
+            buildah tag temp-image $tag
+            buildah push $tag
+          done
