@@ -42,12 +42,19 @@ jobs:
           path: package.json
 
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     needs: update-version
     if: success() || needs.update-version.result == 'skipped'
     # This job depends on the update-version job.
     # On a push to main, update-version is skipped, but this job will still run.
     # On a release, this job waits for update-version to succeed.
+    strategy:
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -59,13 +66,10 @@ jobs:
           name: package-json
           path: .
 
-      - name: Install Buildah and setup QEMU
+      - name: Install Buildah
         run: |
           sudo apt-get update
           sudo apt-get install -y buildah
-
-      - name: Set up QEMU for multi-platform builds
-        uses: docker/setup-qemu-action@v3
 
       - name: Login to Docker Hub
         run: |
@@ -84,7 +88,7 @@ jobs:
       - name: Determine tags
         id: tags
         run: |
-          REPO="${{ secrets.DOCKERHUB_USERNAME }}/narvik-front"
+          REPO="${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}"
           TAGS=""
           
           # Always add version tag for releases
@@ -114,52 +118,138 @@ jobs:
           
           echo "tags=$TAGS" >> $GITHUB_OUTPUT
 
-      - name: Build multi-platform images with Buildah
+      - name: Build image for ${{ matrix.platform }}
         run: |
-          # Create a manifest list with unique name
+          # Normalize platform name for tagging (linux/amd64 -> amd64)
+          PLATFORM_TAG=$(echo "${{ matrix.platform }}" | sed 's|linux/||')
+          
+          buildah bud \
+            --platform ${{ matrix.platform }} \
+            --pull \
+            --layers \
+            --target run \
+            --tag temp-image-${PLATFORM_TAG} \
+            --label org.opencontainers.image.vendor="Benoit VIGNAL" \
+            --label org.opencontainers.image.url="https://about.narvik.app" \
+            --label org.opencontainers.image.source="${{ github.server_url }}/${{ github.repository }}" \
+            --label org.opencontainers.image.version="${{ steps.version.outputs.version }}" \
+            --label org.opencontainers.image.revision="${{ github.sha }}" \
+            --label org.opencontainers.image.created="$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            .
+          
+          echo "platform_tag=${PLATFORM_TAG}" >> $GITHUB_OUTPUT
+        id: build
+
+      - name: Save image to tarball
+        run: |
+          PLATFORM_TAG="${{ steps.build.outputs.platform_tag }}"
+          buildah push temp-image-${PLATFORM_TAG} oci-archive:image-${PLATFORM_TAG}.tar
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: image-${{ steps.build.outputs.platform_tag }}
+          path: image-${{ steps.build.outputs.platform_tag }}.tar
+          retention-days: 1
+
+  create-manifest-and-push:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download package.json
+        if: github.event_name == 'release'
+        uses: actions/download-artifact@v7
+        with:
+          name: package-json
+          path: .
+
+      - name: Install Buildah
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y buildah
+
+      - name: Login to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | buildah login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin docker.io
+
+      - name: Extract version information
+        id: version
+        run: |
+          VERSION=$(jq -r .version package.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          MAJOR=$(echo $VERSION | cut -d. -f1)
+          echo "major=$MAJOR" >> $GITHUB_OUTPUT
+          MINOR=$(echo $VERSION | cut -d. -f1-2)
+          echo "minor=$MINOR" >> $GITHUB_OUTPUT
+
+      - name: Determine tags
+        id: tags
+        run: |
+          REPO="${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}"
+          TAGS=""
+          
+          # Always add version tag for releases
+          if [ "${{ github.event_name }}" = "release" ]; then
+            TAGS="$REPO:${{ steps.version.outputs.version }}"
+            
+            # Add latest tag for non-prerelease
+            if [ "${{ github.event.release.prerelease }}" != "true" ]; then
+              TAGS="$TAGS $REPO:latest"
+              TAGS="$TAGS $REPO:${{ steps.version.outputs.major }}"
+              TAGS="$TAGS $REPO:${{ steps.version.outputs.minor }}"
+            fi
+          fi
+          
+          # Add dev tag for main branch pushes
+          if [ "${{ github.ref_name }}" = "${{ github.event.repository.default_branch }}" ] && [ "${{ github.event_name }}" != "release" ]; then
+            TAGS="$REPO:dev"
+          fi
+          
+          # Add dev-X.X tag for version branches (not main)
+          if echo "${{ github.ref_name }}" | grep -qE '^[0-9]+\.[0-9]+'; then
+            if [ "${{ github.ref_name }}" != "${{ github.event.repository.default_branch }}" ]; then
+              BRANCH_VERSION=$(echo "${{ github.ref_name }}" | grep -oE '^[0-9]+\.[0-9]+[^/]*')
+              TAGS="$REPO:dev-$BRANCH_VERSION"
+            fi
+          fi
+          
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+
+      - name: Download all image artifacts
+        uses: actions/download-artifact@v7
+        with:
+          pattern: image-*
+          path: ./images
+
+      - name: Load images and create manifest
+        run: |
+          # Create a manifest list
           MANIFEST_NAME="${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:temp-manifest-${{ github.sha }}"
           buildah manifest create "$MANIFEST_NAME"
           
-          # Build for amd64
-          buildah bud \
-            --platform linux/amd64 \
-            --pull \
-            --layers \
-            --target run \
-            --manifest "$MANIFEST_NAME" \
-            --label org.opencontainers.image.vendor="Benoit VIGNAL" \
-            --label org.opencontainers.image.url="https://about.narvik.app" \
-            --label org.opencontainers.image.source="${{ github.server_url }}/${{ github.repository }}" \
-            --label org.opencontainers.image.version="${{ steps.version.outputs.version }}" \
-            --label org.opencontainers.image.revision="${{ github.sha }}" \
-            --label org.opencontainers.image.created="$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
-            .
-          
-          # Build for arm64
-          buildah bud \
-            --platform linux/arm64 \
-            --pull \
-            --layers \
-            --target run \
-            --manifest "$MANIFEST_NAME" \
-            --label org.opencontainers.image.vendor="Benoit VIGNAL" \
-            --label org.opencontainers.image.url="https://about.narvik.app" \
-            --label org.opencontainers.image.source="${{ github.server_url }}/${{ github.repository }}" \
-            --label org.opencontainers.image.version="${{ steps.version.outputs.version }}" \
-            --label org.opencontainers.image.revision="${{ github.sha }}" \
-            --label org.opencontainers.image.created="$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
-            .
+          # Load and add each architecture to the manifest
+          for tarball in ./images/*/image-*.tar; do
+            if [ -f "$tarball" ]; then
+              echo "Loading image from $tarball"
+              buildah pull oci-archive:"$tarball"
+              IMAGE_ID=$(buildah images --format '{{ .ID }}' --filter 'dangling=true' | head -1)
+              buildah manifest add "$MANIFEST_NAME" "$IMAGE_ID"
+            fi
+          done
           
           echo "manifest=$MANIFEST_NAME" >> $GITHUB_OUTPUT
-        id: build
+        id: manifest
 
-      - name: Tag and push multi-platform images
+      - name: Push multi-platform manifest
         run: |
-          MANIFEST_NAME="${{ steps.build.outputs.manifest }}"
+          MANIFEST_NAME="${{ steps.manifest.outputs.manifest }}"
           
-          # Tag and push the manifest with all required tags
+          # Push the manifest with all required tags
           for tag in ${{ steps.tags.outputs.tags }}; do
-            # Copy the manifest to the target tag
+            echo "Pushing manifest to $tag"
             buildah manifest push --all "$MANIFEST_NAME" "docker://$tag"
           done
           

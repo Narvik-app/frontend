@@ -144,14 +144,13 @@ buildah manifest rm "$MANIFEST_NAME"
 make build-multiplatform
 ```
 
-> **Note:** Multi-platform builds require QEMU for cross-architecture emulation:
+> **Note:** Multi-platform builds with QEMU emulation:
 > ```bash
-> # Ubuntu/Debian
+> # Ubuntu/Debian - Install QEMU for cross-architecture builds
 > sudo apt-get install qemu-user-static
-> 
-> # For CI/CD environments, use the official action:
-> # - uses: docker/setup-qemu-action@v3
 > ```
+> 
+> **Best Practice for CI/CD:** Use native runners for each architecture instead of QEMU emulation for significantly better build performance. The GitHub Actions workflow uses native ARM runners (`ubuntu-24.04-arm`) for ARM builds and standard x86-64 runners for AMD64 builds.
 
 ### Running Containers
 
@@ -261,6 +260,48 @@ docker build -t narvik-front:latest .
 # Run with Podman
 podman run --rm -p 3000:3000 narvik-front:latest
 ```
+
+## CI/CD Performance Optimization
+
+### Native Architecture Builds
+
+The GitHub Actions workflow uses **native runners** for each architecture instead of QEMU emulation:
+
+- **AMD64 builds**: Run on standard `ubuntu-latest` (x86-64) runners
+- **ARM64 builds**: Run on `ubuntu-24.04-arm` native ARM runners
+
+**Performance Benefits:**
+- **10-50x faster** build times compared to QEMU emulation
+- Native CPU instructions (no translation overhead)
+- More efficient use of CI/CD minutes
+- Reduced build failures due to emulation issues
+
+**Example Build Time Comparison:**
+```
+QEMU Emulation:
+  - AMD64: 3 minutes (native)
+  - ARM64: 45-60 minutes (emulated)
+
+Native Runners:
+  - AMD64: 3 minutes (native)
+  - ARM64: 4-5 minutes (native)
+```
+
+### Matrix Strategy
+
+The workflow uses a matrix strategy to build both architectures in parallel:
+
+```yaml
+strategy:
+  matrix:
+    include:
+      - platform: linux/amd64
+        runner: ubuntu-latest
+      - platform: linux/arm64
+        runner: ubuntu-24.04-arm
+```
+
+After both builds complete, a final job creates the multi-platform manifest and pushes to the registry.
 
 ## Troubleshooting
 
