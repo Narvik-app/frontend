@@ -9,7 +9,6 @@ import dayjs from "dayjs";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import type {ColumnDef} from '@tanstack/vue-table'
 import {UCheckbox} from '#components';
-import type {TableRow} from '@nuxt/ui'
 
 definePageMeta({
   layout: "admin"
@@ -63,15 +62,8 @@ const columns: ColumnDef<MemberPresenceStat>[] = [
       'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
         if (value) {
           // Select all members in current page
-          const newMembers: MemberPresenceStat[] = []
           const uuidsAlreadySelected = selectedMembers.value.map(member => member.memberUuid)
-
-          items.value.forEach(member => {
-            if (!uuidsAlreadySelected.includes(member.memberUuid)) {
-              newMembers.push(member)
-            }
-          })
-
+          const newMembers = items.value.filter(member => !uuidsAlreadySelected.includes(member.memberUuid))
           selectedMembers.value = [...selectedMembers.value, ...newMembers]
         } else {
           // Only remove members in the current page
@@ -201,22 +193,7 @@ function someMembersSelectedInPage() {
 
 function allMembersSelectedInPage() {
   const uuidsToCheck = items.value.map(member => member.memberUuid)
-  let count = 0
-
-  selectedMembers.value.forEach(member => {
-    if (uuidsToCheck.includes(member.memberUuid)) count++;
-  })
-
-  return count === items.value.length && items.value.length > 0
-}
-
-function onSelect(row: TableRow<MemberPresenceStat>) {
-  const foundMember = selectedMembers.value.some(member => member.memberUuid === row.original.memberUuid)
-  if (!foundMember) {
-    selectedMembers.value = [...selectedMembers.value, row.original]
-  } else {
-    selectedMembers.value = selectedMembers.value.filter(member => member.memberUuid !== row.original.memberUuid)
-  }
+  return selectedMembers.value.filter(member => uuidsToCheck.includes(member.memberUuid)).length === items.value.length && items.value.length > 0
 }
 
 function sendEmailToSelected() {
@@ -339,7 +316,6 @@ onMounted(() => {
           :loading="isLoading"
           :columns="columns"
           :data="items"
-          @select="(evt, row) => onSelect(row, evt)"
         >
            <template #lastPresenceDate-cell="{ row }">
              <p v-if="row.original.lastPresenceDate">
