@@ -8,6 +8,11 @@ NODE_CONT = $(COMPOSE_CMD) exec front
 # Container repo
 BUILD_REPO = benoitvignal/narvik-front
 
+# Version extraction from package.json
+VERSION_FULL := $(shell jq -r .version package.json 2>/dev/null || echo "0.0.0")
+VERSION_MAJOR := $(shell echo $(VERSION_FULL) | cut -d. -f1)
+VERSION_MINOR := $(shell echo $(VERSION_FULL) | cut -d. -f1-2)
+
 # Misc
 .DEFAULT_GOAL = help
 
@@ -38,9 +43,9 @@ build-latest-only: ## Build and push image under latest tag (use for preprod tes
 build-prod: ## Build production image with version tags
 	@$(BUILDAH_CMD) bud --pull --no-cache \
 		-t $(BUILD_REPO):latest \
-		-t $(BUILD_REPO):`cat package.json | grep version | grep '\([0-9]\+\.\?\)\{3\}' -o | grep '^[0-9]\+\+' -o` \
-		-t $(BUILD_REPO):`cat package.json | grep version | grep '\([0-9]\+\.\?\)\{3\}' -o | grep '^[0-9]\+\.[0-9]\+' -o` \
-		-t $(BUILD_REPO):`cat package.json | grep version | grep '\([0-9]\+\.\?\)\{3\}' -o` \
+		-t $(BUILD_REPO):$(VERSION_MAJOR) \
+		-t $(BUILD_REPO):$(VERSION_MINOR) \
+		-t $(BUILD_REPO):$(VERSION_FULL) \
 		--target run .
 
 build-cloud-prod:
@@ -48,9 +53,9 @@ build-cloud-prod:
 
 push-prod: ## Push all production tags to registry
 	@$(BUILDAH_CMD) push $(BUILD_REPO):latest
-	@$(BUILDAH_CMD) push $(BUILD_REPO):`cat package.json | grep version | grep '\([0-9]\+\.\?\)\{3\}' -o | grep '^[0-9]\+\+' -o`
-	@$(BUILDAH_CMD) push $(BUILD_REPO):`cat package.json | grep version | grep '\([0-9]\+\.\?\)\{3\}' -o | grep '^[0-9]\+\.[0-9]\+' -o`
-	@$(BUILDAH_CMD) push $(BUILD_REPO):`cat package.json | grep version | grep '\([0-9]\+\.\?\)\{3\}' -o`
+	@$(BUILDAH_CMD) push $(BUILD_REPO):$(VERSION_MAJOR)
+	@$(BUILDAH_CMD) push $(BUILD_REPO):$(VERSION_MINOR)
+	@$(BUILDAH_CMD) push $(BUILD_REPO):$(VERSION_FULL)
 
 sh: ## Connect to the Node container
 	@$(NODE_CONT) sh

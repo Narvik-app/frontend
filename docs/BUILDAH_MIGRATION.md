@@ -254,5 +254,5 @@ For issues related to this migration, please:
 
 ---
 
-**Migration Date:** January 2026
+**Migration Date:** January 2024
 **Migration Version:** 3.15.1+
