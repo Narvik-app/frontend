@@ -8,6 +8,8 @@ import type {TablePaginateInterface} from "~/types/table";
 import dayjs from "dayjs";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import type {ColumnDef} from '@tanstack/vue-table'
+import {UCheckbox} from '#components';
+import type {TableRow} from '@nuxt/ui'
 
 definePageMeta({
   layout: "admin"
@@ -20,6 +22,7 @@ useHead({
 // Types
 interface MemberPresenceStat {
   memberId: string;
+  memberUuid: string;
   presenceCount: number;
   lastPresenceDate: string;
   firstname: string;
@@ -48,8 +51,53 @@ const page = ref(1);
 const itemsPerPage = ref(10);
 const order = ref('ASC');
 const popoverOpen = ref(false);
+const selectedMembers = ref<MemberPresenceStat[]>([]);
 
 const columns: ColumnDef<MemberPresenceStat>[] = [
+  {
+    accessorKey: 'select',
+    header: ({table}) => h(UCheckbox, {
+      modelValue: someMembersSelectedInPage()
+        ? 'indeterminate'
+        : allMembersSelectedInPage(),
+      'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
+        if (value) {
+          // Select all members in current page
+          let newMembers: MemberPresenceStat[] = []
+          const uuidsAlreadySelected = selectedMembers.value.map(member => member.memberUuid)
+
+          items.value.forEach(member => {
+            if (!uuidsAlreadySelected.includes(member.memberUuid)) {
+              newMembers.push(member)
+            }
+          })
+
+          selectedMembers.value = [...selectedMembers.value, ...newMembers]
+        } else {
+          // Only remove members in the current page
+          const uuidsToRemove = items.value.map(member => member.memberUuid)
+          selectedMembers.value = selectedMembers.value.filter(member => !uuidsToRemove.includes(member.memberUuid))
+        }
+      },
+      disabled: items.value.length === 0
+    }),
+    cell: ({row}) => h(UCheckbox, {
+      modelValue: selectedMembers.value.some(member => member.memberUuid === row.original.memberUuid),
+      'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
+        if (value) {
+          selectedMembers.value = [...selectedMembers.value, row.original]
+        } else {
+          selectedMembers.value = selectedMembers.value.filter(member => member.memberUuid !== row.original.memberUuid)
+        }
+      },
+      key: row.original.memberUuid
+    }),
+    meta: {
+      class: {
+        th: 'print:hidden',
+      }
+    }
+  },
   {
     accessorKey: 'firstname',
     header: 'Prénom',
@@ -144,6 +192,42 @@ function refresh() {
   fetchMetrics();
 }
 
+function someMembersSelectedInPage() {
+  if (allMembersSelectedInPage()) return false;
+
+  const uuidsToCheck = items.value.map(member => member.memberUuid)
+  return selectedMembers.value.some(member => uuidsToCheck.includes(member.memberUuid))
+}
+
+function allMembersSelectedInPage() {
+  const uuidsToCheck = items.value.map(member => member.memberUuid)
+  let count = 0
+
+  selectedMembers.value.forEach(member => {
+    if (uuidsToCheck.includes(member.memberUuid)) count++;
+  })
+
+  return count === items.value.length && items.value.length > 0
+}
+
+function onSelect(row: TableRow<MemberPresenceStat>, e?: Event) {
+  const foundMember = selectedMembers.value.some(member => member.memberUuid === row.original.memberUuid)
+  if (!foundMember) {
+    selectedMembers.value = [...selectedMembers.value, row.original]
+  } else {
+    selectedMembers.value = selectedMembers.value.filter(member => member.memberUuid !== row.original.memberUuid)
+  }
+}
+
+function sendEmailToSelected() {
+  const memberUuids = selectedMembers.value.map(member => convertUuidToUrlUuid(member.memberUuid)).join(',')
+  navigateTo(`/admin/email/new?members=${memberUuids}`)
+}
+
+function clearSelection() {
+  selectedMembers.value = []
+}
+
 // Watchers
 watch(dateRange, () => {
   page.value = 1;
@@ -227,10 +311,35 @@ onMounted(() => {
           </div>
         </template>
 
+        <!-- Action bar for selected members -->
+        <div v-if="selectedMembers.length > 0" class="mb-4 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg flex items-center justify-between print:hidden">
+          <div class="flex items-center gap-2">
+            <span class="font-medium">{{ selectedMembers.length }} membre{{ selectedMembers.length > 1 ? 's' : '' }} sélectionné{{ selectedMembers.length > 1 ? 's' : '' }}</span>
+            <UButton
+              size="xs"
+              variant="ghost"
+              color="neutral"
+              @click="clearSelection"
+            >
+              Tout désélectionner
+            </UButton>
+          </div>
+          <div class="flex items-center gap-2">
+            <UButton
+              v-if="isAdmin"
+              icon="i-heroicons-envelope"
+              @click="sendEmailToSelected"
+            >
+              Envoyer un email
+            </UButton>
+          </div>
+        </div>
+
         <UTable
           :loading="isLoading"
           :columns="columns"
           :data="items"
+          @select="(evt, row) => onSelect(row, evt)"
         >
            <template #lastPresenceDate-cell="{ row }">
              <p v-if="row.original.lastPresenceDate">

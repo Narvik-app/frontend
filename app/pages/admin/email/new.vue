@@ -207,6 +207,9 @@ const MAX_ATTACHMENT_SIZE_MB = 15
 
   async function loadMemberFromQuery() {
     const memberUuid = route.query.member
+    const memberUuids = route.query.members
+    
+    // Handle single member (existing functionality)
     if (memberUuid && typeof memberUuid === 'string') {
       const { retrieved, error } = await memberQuery.get(decodeUrlUuid(memberUuid))
 
@@ -221,6 +224,47 @@ const MAX_ATTACHMENT_SIZE_MB = 15
 
       if (retrieved) {
         selectedMembers.value = [retrieved]
+      }
+    }
+    
+    // Handle multiple members (new functionality)
+    if (memberUuids && typeof memberUuids === 'string') {
+      const uuidList = memberUuids.split(',').filter(uuid => uuid.trim().length > 0)
+      const loadedMembers: Member[] = []
+      
+      for (const encodedUuid of uuidList) {
+        try {
+          const { retrieved, error } = await memberQuery.get(decodeUrlUuid(encodedUuid.trim()))
+          
+          if (error) {
+            console.error(`Error loading member ${encodedUuid}:`, error)
+            continue
+          }
+          
+          if (retrieved) {
+            loadedMembers.push(retrieved)
+          }
+        } catch (e) {
+          console.error(`Failed to load member ${encodedUuid}:`, e)
+        }
+      }
+      
+      if (loadedMembers.length > 0) {
+        selectedMembers.value = loadedMembers
+        
+        if (loadedMembers.length < uuidList.length) {
+          toast.add({
+            title: "Attention",
+            description: `${uuidList.length - loadedMembers.length} membre(s) n'ont pas pu être chargé(s)`,
+            color: "warning"
+          })
+        }
+      } else if (uuidList.length > 0) {
+        toast.add({
+          title: "Erreur",
+          description: "Aucun membre n'a pu être chargé",
+          color: "error"
+        })
       }
     }
   }
