@@ -148,8 +148,9 @@ make build-multiplatform
 > ```bash
 > # Ubuntu/Debian
 > sudo apt-get install qemu-user-static
-> # Register QEMU binary formats
-> docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+> 
+> # For CI/CD environments, use the official action:
+> # - uses: docker/setup-qemu-action@v3
 > ```
 
 ### Running Containers

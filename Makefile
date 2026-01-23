@@ -53,7 +53,7 @@ build-prod: ## Build production image with version tags
 
 build-multiplatform: ## Build multi-platform image (amd64, arm64) and push to registry
 	@echo "\033[32mBuilding multi-platform image for $(PLATFORMS)...\033[0m"
-	@MANIFEST_NAME="$(BUILD_REPO):temp-manifest-$$(date +%s)"; \
+	@MANIFEST_NAME="$(BUILD_REPO):temp-manifest-$$(date +%s)-$$$$"; \
 	$(BUILDAH_CMD) manifest create "$$MANIFEST_NAME"; \
 	for platform in $$(echo $(PLATFORMS) | tr ',' ' '); do \
 		echo "\033[33mBuilding for $$platform...\033[0m"; \
