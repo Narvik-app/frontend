@@ -66,14 +66,12 @@ jobs:
           name: package-json
           path: .
 
-      - name: Install Buildah
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y buildah
-
       - name: Login to Docker Hub
-        run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | buildah login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin docker.io
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Extract version information
         id: version
@@ -166,14 +164,12 @@ jobs:
           name: package-json
           path: .
 
-      - name: Install Buildah
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y buildah
-
       - name: Login to Docker Hub
-        run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | buildah login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin docker.io
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Extract version information
         id: version

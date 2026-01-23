@@ -45,9 +45,11 @@ All Makefile targets have been updated to use Buildah and Podman:
 
 ### 4. GitHub Actions
 
-The CI/CD pipeline now uses Buildah directly instead of Docker GitHub Actions:
-- Installs Buildah on Ubuntu runners
-- Uses `buildah login` for authentication
+The CI/CD pipeline now uses Buildah with official Red Hat actions:
+- Uses `redhat-actions/podman-login@v1` for authentication (automatically installs Buildah/Podman if needed)
+- Uses `buildah bud` for building
+- Uses `buildah push` for pushing images
+- Native ARM runners for optimal multi-platform build performance
 - Uses `buildah bud` for building
 - Uses `buildah push` for pushing images
 
@@ -345,6 +347,35 @@ podman login docker.io
 - [Podman Documentation](https://podman.io/)
 - [OCI Specification](https://opencontainers.org/)
 - [podman-compose](https://github.com/containers/podman-compose)
+- [Red Hat GitHub Actions for Buildah](https://github.com/redhat-actions/buildah-build)
+- [Red Hat Podman Login Action](https://github.com/redhat-actions/podman-login)
+
+## GitHub Actions Integration
+
+### Using Red Hat Actions
+
+The workflow uses official Red Hat actions for cleaner CI/CD integration:
+
+**Authentication:**
+```yaml
+- name: Login to Docker Hub
+  uses: redhat-actions/podman-login@v1
+  with:
+    registry: docker.io
+    username: ${{ secrets.DOCKERHUB_USERNAME }}
+    password: ${{ secrets.DOCKERHUB_TOKEN }}
+```
+
+**Benefits:**
+- Automatically installs Buildah/Podman if not available
+- No need for manual `apt-get update` and `apt-get install`
+- Maintained by Red Hat for reliability
+- Works with both Buildah and Podman
+
+**Available Actions:**
+- `redhat-actions/podman-login@v1` - Login to container registries
+- `redhat-actions/buildah-build@v2` - Build container images with Buildah
+- `redhat-actions/push-to-registry@v2` - Push images to registries
 
 ## Support
 
