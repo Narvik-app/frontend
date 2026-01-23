@@ -108,10 +108,10 @@ app/
 
 ### Build and Deployment
 ```
-├── Dockerfile            # Docker image definition
-├── docker/              # Docker configuration
-│   └── docker-entrypoint.sh # Container entrypoint
-└── Makefile             # Development commands
+├── Dockerfile            # OCI-compliant container image definition
+├── docker/              # Container configuration
+│   └── docker-entrypoint.sh # Container entrypoint script
+└── Makefile             # Build and deployment commands (using Buildah/Podman)
 ```
 
 ## Agent Context Exclusions
@@ -136,9 +136,9 @@ When working with agents, certain files and directories should be excluded from 
 - **`*.bak`** - Backup files
 - **`localhost.pem`** & **`localhost-key.pem`** - SSL certificates
 
-### Docker and Container Files
-- **`docker/`** - Docker configuration and scripts
-- **`Dockerfile`** - Container definition
+### Container Files
+- **`docker/`** - Container configuration and scripts
+- **`Dockerfile`** - OCI-compliant container definition
 
 ### Recommended Agent Focus Areas
 Agents should primarily focus on:
@@ -156,7 +156,7 @@ This ensures agents work with the actual application code while avoiding sensiti
 ### Development Setup
 
 1. **Prerequisites:**
-   - Docker and Docker Compose installed
+   - Buildah and Podman (or Docker for compatibility)
    - PNPM package manager
 
 2. **Quick Start:**
@@ -177,7 +177,21 @@ This ensures agents work with the actual application code while avoiding sensiti
 
    # Preview production build
    pnpm preview
+
+   # Build container image
+   make build-prod
    ```
+
+5. **Container Build:**
+   ```bash
+   # Using Buildah (recommended)
+   buildah bud -t narvik-front:latest --target run .
+
+   # Using Makefile
+   make build-prod
+   ```
+
+   See [Buildah Migration Guide](docs/BUILDAH_MIGRATION.md) for more details.
 
 ### Package Manager Commands
 

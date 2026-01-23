@@ -42,12 +42,19 @@ jobs:
           path: package.json
 
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     needs: update-version
     if: success() || needs.update-version.result == 'skipped'
     # This job depends on the update-version job.
     # On a push to main, update-version is skipped, but this job will still run.
     # On a release, this job waits for update-version to succeed.
+    strategy:
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -60,36 +67,189 @@ jobs:
           path: .
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: redhat-actions/podman-login@v1
         with:
+          registry: docker.io
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Extract version information
+        id: version
+        run: |
+          VERSION=$(jq -r .version package.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          MAJOR=$(echo $VERSION | cut -d. -f1)
+          echo "major=$MAJOR" >> $GITHUB_OUTPUT
+          MINOR=$(echo $VERSION | cut -d. -f1-2)
+          echo "minor=$MINOR" >> $GITHUB_OUTPUT
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/narvik-front
-          tags: |
-            type=semver,pattern={{version}}
-            type=raw,value=dev,enable=${{ github.ref_name == github.event.repository.default_branch || github.event_name == 'release' }}
-            type=raw,value=latest,enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
-            type=semver,pattern={{major}}.{{minor}},enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
-            type=semver,pattern={{major}},enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
-            type=ref,event=branch,pattern=^([0-9]+\.[0-9]+.*)$,group=1,prefix=dev-,enable=${{ github.ref_name != github.event.repository.default_branch }}
+      - name: Determine tags
+        id: tags
+        run: |
+          REPO="${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}"
+          TAGS=""
+          
+          # Always add version tag for releases
+          if [ "${{ github.event_name }}" = "release" ]; then
+            TAGS="$REPO:${{ steps.version.outputs.version }}"
+            
+            # Add latest tag for non-prerelease
+            if [ "${{ github.event.release.prerelease }}" != "true" ]; then
+              TAGS="$TAGS $REPO:latest"
+              TAGS="$TAGS $REPO:${{ steps.version.outputs.major }}"
+              TAGS="$TAGS $REPO:${{ steps.version.outputs.minor }}"
+            fi
+          fi
+          
+          # Add dev tag for main branch pushes
+          if [ "${{ github.ref_name }}" = "${{ github.event.repository.default_branch }}" ] && [ "${{ github.event_name }}" != "release" ]; then
+            TAGS="$REPO:dev"
+          fi
+          
+          # Add dev-X.X tag for version branches (not main)
+          if echo "${{ github.ref_name }}" | grep -qE '^[0-9]+\.[0-9]+'; then
+            if [ "${{ github.ref_name }}" != "${{ github.event.repository.default_branch }}" ]; then
+              BRANCH_VERSION=$(echo "${{ github.ref_name }}" | grep -oE '^[0-9]+\.[0-9]+[^/]*')
+              TAGS="$REPO:dev-$BRANCH_VERSION"
+            fi
+          fi
+          
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
+      - name: Build image for ${{ matrix.platform }}
+        run: |
+          # Normalize platform name for tagging (linux/amd64 -> amd64)
+          PLATFORM_TAG=$(echo "${{ matrix.platform }}" | sed 's|linux/||')
+          
+          buildah bud \
+            --platform ${{ matrix.platform }} \
+            --pull \
+            --layers \
+            --target run \
+            --tag temp-image-${PLATFORM_TAG} \
+            --label org.opencontainers.image.vendor="Benoit VIGNAL" \
+            --label org.opencontainers.image.url="https://about.narvik.app" \
+            --label org.opencontainers.image.source="${{ github.server_url }}/${{ github.repository }}" \
+            --label org.opencontainers.image.version="${{ steps.version.outputs.version }}" \
+            --label org.opencontainers.image.revision="${{ github.sha }}" \
+            --label org.opencontainers.image.created="$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            .
+          
+          echo "platform_tag=${PLATFORM_TAG}" >> $GITHUB_OUTPUT
+        id: build
+
+      - name: Save image to tarball
+        run: |
+          PLATFORM_TAG="${{ steps.build.outputs.platform_tag }}"
+          buildah push temp-image-${PLATFORM_TAG} oci-archive:image-${PLATFORM_TAG}.tar
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v6
         with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          sbom: true
-          provenance: mode=max
-          labels: |
-            ${{ steps.meta.outputs.labels }}
-            org.opencontainers.image.vendor=Benoit VIGNAL
-            org.opencontainers.image.url=https://about.narvik.app
+          name: image-${{ steps.build.outputs.platform_tag }}
+          path: image-${{ steps.build.outputs.platform_tag }}.tar
+          retention-days: 1
+
+  create-manifest-and-push:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download package.json
+        if: github.event_name == 'release'
+        uses: actions/download-artifact@v7
+        with:
+          name: package-json
+          path: .
+
+      - name: Login to Docker Hub
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract version information
+        id: version
+        run: |
+          VERSION=$(jq -r .version package.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          MAJOR=$(echo $VERSION | cut -d. -f1)
+          echo "major=$MAJOR" >> $GITHUB_OUTPUT
+          MINOR=$(echo $VERSION | cut -d. -f1-2)
+          echo "minor=$MINOR" >> $GITHUB_OUTPUT
+
+      - name: Determine tags
+        id: tags
+        run: |
+          REPO="${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}"
+          TAGS=""
+          
+          # Always add version tag for releases
+          if [ "${{ github.event_name }}" = "release" ]; then
+            TAGS="$REPO:${{ steps.version.outputs.version }}"
+            
+            # Add latest tag for non-prerelease
+            if [ "${{ github.event.release.prerelease }}" != "true" ]; then
+              TAGS="$TAGS $REPO:latest"
+              TAGS="$TAGS $REPO:${{ steps.version.outputs.major }}"
+              TAGS="$TAGS $REPO:${{ steps.version.outputs.minor }}"
+            fi
+          fi
+          
+          # Add dev tag for main branch pushes
+          if [ "${{ github.ref_name }}" = "${{ github.event.repository.default_branch }}" ] && [ "${{ github.event_name }}" != "release" ]; then
+            TAGS="$REPO:dev"
+          fi
+          
+          # Add dev-X.X tag for version branches (not main)
+          if echo "${{ github.ref_name }}" | grep -qE '^[0-9]+\.[0-9]+'; then
+            if [ "${{ github.ref_name }}" != "${{ github.event.repository.default_branch }}" ]; then
+              BRANCH_VERSION=$(echo "${{ github.ref_name }}" | grep -oE '^[0-9]+\.[0-9]+[^/]*')
+              TAGS="$REPO:dev-$BRANCH_VERSION"
+            fi
+          fi
+          
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+
+      - name: Download all image artifacts
+        uses: actions/download-artifact@v7
+        with:
+          pattern: image-*
+          path: ./images
+
+      - name: Load images and create manifest
+        run: |
+          # Create a manifest list
+          MANIFEST_NAME="${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:temp-manifest-${{ github.sha }}"
+          buildah manifest create "$MANIFEST_NAME"
+          
+          # Load and add each architecture to the manifest
+          for tarball in ./images/*/image-*.tar; do
+            if [ -f "$tarball" ]; then
+              echo "Loading image from $tarball"
+              # Pull the image and immediately add it to the manifest
+              # This avoids issues with multiple dangling images
+              IMAGE_REF=$(buildah pull oci-archive:"$tarball")
+              echo "Loaded image: $IMAGE_REF"
+              buildah manifest add "$MANIFEST_NAME" "$IMAGE_REF"
+            fi
+          done
+          
+          echo "manifest=$MANIFEST_NAME" >> $GITHUB_OUTPUT
+        id: manifest
+
+      - name: Push multi-platform manifest
+        run: |
+          MANIFEST_NAME="${{ steps.manifest.outputs.manifest }}"
+          
+          # Push the manifest with all required tags
+          for tag in ${{ steps.tags.outputs.tags }}; do
+            echo "Pushing manifest to $tag"
+            buildah manifest push --all "$MANIFEST_NAME" "docker://$tag"
+          done
+          
+          # Clean up the temporary manifest
+          buildah manifest rm "$MANIFEST_NAME" || true
