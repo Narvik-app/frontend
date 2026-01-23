@@ -234,9 +234,11 @@ jobs:
           for tarball in ./images/*/image-*.tar; do
             if [ -f "$tarball" ]; then
               echo "Loading image from $tarball"
-              buildah pull oci-archive:"$tarball"
-              IMAGE_ID=$(buildah images --format '{{ .ID }}' --filter 'dangling=true' | head -1)
-              buildah manifest add "$MANIFEST_NAME" "$IMAGE_ID"
+              # Pull the image and immediately add it to the manifest
+              # This avoids issues with multiple dangling images
+              IMAGE_REF=$(buildah pull oci-archive:"$tarball")
+              echo "Loaded image: $IMAGE_REF"
+              buildah manifest add "$MANIFEST_NAME" "$IMAGE_REF"
             fi
           done
           
