@@ -56,14 +56,14 @@ const selectedMembers = ref<MemberPresenceStat[]>([]);
 const columns: ColumnDef<MemberPresenceStat>[] = [
   {
     accessorKey: 'select',
-    header: ({table}) => h(UCheckbox, {
+    header: () => h(UCheckbox, {
       modelValue: someMembersSelectedInPage()
         ? 'indeterminate'
         : allMembersSelectedInPage(),
       'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
         if (value) {
           // Select all members in current page
-          let newMembers: MemberPresenceStat[] = []
+          const newMembers: MemberPresenceStat[] = []
           const uuidsAlreadySelected = selectedMembers.value.map(member => member.memberUuid)
 
           items.value.forEach(member => {
@@ -210,7 +210,7 @@ function allMembersSelectedInPage() {
   return count === items.value.length && items.value.length > 0
 }
 
-function onSelect(row: TableRow<MemberPresenceStat>, e?: Event) {
+function onSelect(row: TableRow<MemberPresenceStat>) {
   const foundMember = selectedMembers.value.some(member => member.memberUuid === row.original.memberUuid)
   if (!foundMember) {
     selectedMembers.value = [...selectedMembers.value, row.original]
@@ -278,9 +278,9 @@ onMounted(() => {
               <template #content>
                 <GenericDateRangePicker
                   :date-range="dateRange"
-                  @range-updated="handleDateRangeUpdate"
                   :season-selectors="true"
                   :exclude-previous-season="true"
+                  @range-updated="handleDateRangeUpdate"
                 />
               </template>
             </UPopover>
@@ -361,8 +361,7 @@ onMounted(() => {
                  v-if="isAdmin"
                  icon="i-heroicons-envelope"
                  :to="`/admin/email/new?member=${convertUuidToUrlUuid(row.original.memberUuid)}`"
-               >
-               </UButton>
+               />
              </div>
            </template>
         </UTable>
