@@ -22,7 +22,7 @@ export function useMercureList({
 
   let mercureSub: EventSource | null = null;
 
-  store.$subscribe((mutation: any, state: any) => {
+  store.$subscribe((mutation: unknown, state: { hubUrl?: string; items?: Array<{ '@id'?: string }> }) => {
     if (!state.hubUrl) {
       return;
     }
@@ -37,7 +37,7 @@ export function useMercureList({
 
     mercureSub = mercureSubscribe(
       state.hubUrl,
-      state.items.map((i: any) => i["@id"] ?? ""),
+      state.items.map((i) => i["@id"] ?? ""),
       mercureEl
     );
   });

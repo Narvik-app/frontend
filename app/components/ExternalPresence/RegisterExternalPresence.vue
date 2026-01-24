@@ -83,7 +83,14 @@ activityQuery.getAll().then(value => {
       .sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))
 });
 
-async function onSubmit(event: FormSubmitEvent<any>) {
+interface ExternalPresenceFormState {
+  licence?: string;
+  firstname?: string;
+  lastname?: string;
+  activities: { [k: string]: boolean };
+}
+
+async function onSubmit(event: FormSubmitEvent<ExternalPresenceFormState>) {
   isSubmitting.value = true;
 
   const externalPresence: WriteExternalPresence = {

@@ -79,7 +79,12 @@ const activitiesAdmin = computed(() => {
 })
 
 
-async function onSubmit(event: FormSubmitEvent<any>) {
+interface MemberPresenceFormState {
+  member?: Member;
+  activities: { [k: string]: boolean };
+}
+
+async function onSubmit(event: FormSubmitEvent<MemberPresenceFormState>) {
   isSubmitting.value = true;
 
   const memberPresence: { member: string|number|undefined, activities: string[], date: string|undefined } = {

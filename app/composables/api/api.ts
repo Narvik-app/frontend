@@ -14,7 +14,7 @@ export const MIME_TYPE_JSON = "application/json";
 export const MIME_TYPE_JSON_PATCH = "application/merge-patch+json"
 export const MIME_TYPE_CSV = "text/csv"
 
-const CONTENT_TYPE_FORM_DATA = "multipart/form-data"
+const _CONTENT_TYPE_FORM_DATA = "multipart/form-data"
 
 function getBasicAuthorization(isBadger: boolean = false): string {
   let bearer = useRuntimeConfig().public.clientId + ':' + useRuntimeConfig().public.clientSecret
@@ -113,7 +113,7 @@ export async function useLoginBadger(clubId: string, loginToken: string) {
 
 
 export async function usePostRawJson(path: string, payload?: object, isBadger: boolean = false) {
-  let data: any | undefined = undefined;
+  let data: unknown | undefined = undefined;
   let error: NuxtError | undefined = undefined;
 
   try {
@@ -388,7 +388,7 @@ export async function useDeleteItem(item?: Item | null) {
   }
 
   try {
-    const data = await useApi(item["@id"] ?? "", {
+    const _data = await useApi(item["@id"] ?? "", {
       method: "DELETE",
     });
   } catch (e) {

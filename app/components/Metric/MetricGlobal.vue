@@ -66,12 +66,12 @@ const presenceStats = computed(() => {
   if (presenceMetrics.value) {
     response.loading = false;
     response.currentSeason = presenceMetrics.value.value || 0;
-    response.ratioPresenceOpenCurrentSeason = openDaysMetrics.value?.value === (0 || undefined) ? 0 : (Math.round(response.currentSeason/openDaysMetrics.value.value) || 0)
+    response.ratioPresenceOpenCurrentSeason = (!openDaysMetrics.value?.value || openDaysMetrics.value.value === 0) ? 0 : (Math.round(response.currentSeason/openDaysMetrics.value.value) || 0)
   }
 
   if (presenceMetricsPreviousSeason.value) {
     response.previousSeason = presenceMetricsPreviousSeason.value.value || 0;
-    response.ratioPresenceOpenPreviousSeason = openDaysMetricsPreviousSeason.value?.value === (0 || undefined) ? 0 : (Math.round(response.previousSeason/openDaysMetricsPreviousSeason.value.value) || 0)
+    response.ratioPresenceOpenPreviousSeason = (!openDaysMetricsPreviousSeason.value?.value || openDaysMetricsPreviousSeason.value.value === 0) ? 0 : (Math.round(response.previousSeason/openDaysMetricsPreviousSeason.value.value) || 0)
   }
 
   return response
@@ -90,12 +90,12 @@ const externalPresenceStats = computed(() => {
   if (externalPresenceMetrics.value) {
     response.loading = false;
     response.currentSeason = externalPresenceMetrics.value.value || 0;
-    response.ratioPresenceOpenCurrentSeason = openDaysMetrics.value?.value === (0 || undefined) ? 0 : (Math.round(response.currentSeason/openDaysMetrics.value.value) || 0)
+    response.ratioPresenceOpenCurrentSeason = (!openDaysMetrics.value?.value || openDaysMetrics.value.value === 0) ? 0 : (Math.round(response.currentSeason/openDaysMetrics.value.value) || 0)
   }
 
   if (externalPresenceMetricsPreviousSeason.value) {
     response.previousSeason = externalPresenceMetricsPreviousSeason.value.value || 0;
-    response.ratioPresenceOpenPreviousSeason = openDaysMetricsPreviousSeason.value?.value === (0 || undefined) ? 0 : (Math.round(response.previousSeason/openDaysMetricsPreviousSeason.value.value) || 0)
+    response.ratioPresenceOpenPreviousSeason = (!openDaysMetricsPreviousSeason.value?.value || openDaysMetricsPreviousSeason.value.value === 0) ? 0 : (Math.round(response.previousSeason/openDaysMetricsPreviousSeason.value.value) || 0)
   }
 
   return response
