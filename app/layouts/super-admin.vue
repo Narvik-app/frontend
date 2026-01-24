@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import {useSelfUserStore} from "~/stores/useSelfUser";
 import type {GroupedNavigationLinks} from "~/types/groupedNavigationLinks";
 
 useHead({
@@ -7,8 +6,6 @@ useHead({
       return titleChunk ? `${titleChunk} - Administration - Narvik` : 'Administration - Narvik';
     }
   });
-
-  const _selfStore = useSelfUserStore()
 
   const globalSection = [
     {

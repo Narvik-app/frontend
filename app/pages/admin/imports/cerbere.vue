@@ -14,7 +14,6 @@ definePageMeta({
     title: "Import des présences Cerbère"
   })
 
-  const _toast = useToast()
   const selfStore = useSelfUserStore()
   const canEdit = selfStore.can(Permission.ImportPresencesEdit)
 
@@ -29,9 +28,6 @@ definePageMeta({
   })
 
   const fileUploading = ref(false)
-  const _state = reactive({
-    file: undefined
-  })
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
   async function getFileObject(event: any) {
@@ -42,7 +38,7 @@ definePageMeta({
     }
 
     fileUploading.value = true
-    const {created: _created, error} = await memberPresenceQuery.importFromCerbere(formData)
+    const { error } = await memberPresenceQuery.importFromCerbere(formData)
     fileUploading.value = false
 
     if (error) {

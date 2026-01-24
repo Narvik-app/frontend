@@ -10,8 +10,6 @@ useHead({
   });
 
   const selfStore = useSelfUserStore()
-  const _isAdmin = selfStore.isAdmin()
-  const _isSupervisor = selfStore.hasSupervisorRole()
 
   // Permission checks for conditional navigation
   const canAccessSaleNew = selfStore.can(Permission.SaleNew)

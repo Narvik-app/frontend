@@ -135,4 +135,6 @@ export interface WriteClub extends _Club {
   salesEnabled: boolean
 }
 
-export type SelfWriteClub = _Club
+export interface SelfWriteClub extends _Club {
+
+}

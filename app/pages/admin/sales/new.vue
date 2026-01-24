@@ -109,14 +109,6 @@ definePageMeta({
     isLoading.value = false
   }
 
-  async function _loadPaymentModes() {
-    const urlParams = new URLSearchParams({
-      available: 'true',
-    });
-    const { items } = await paymentModeQuery.getAll(urlParams)
-    paymentModes.value = items
-  }
-
   let inputTimer: NodeJS.Timeout;
   async function searchQueryUpdated() {
     clearTimeout(inputTimer);

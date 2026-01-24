@@ -30,7 +30,7 @@ async function getFileObject(event: any) {
   }
 
   fileUploading.value = true
-  const {created: _created, error} = await memberQuery.importPhotosFromItac(formData)
+  const {error} = await memberQuery.importPhotosFromItac(formData)
   fileUploading.value = false
 
   if (error) {

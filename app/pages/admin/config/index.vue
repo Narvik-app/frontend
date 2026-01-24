@@ -53,9 +53,6 @@ const activitiesSelect = computed( () => {
 })
 
 const logoUploading = ref(false)
-const _state = reactive({
-  file: undefined
-})
 
 const monthsSelect: SelectApiItem<Season>[] = [
   {

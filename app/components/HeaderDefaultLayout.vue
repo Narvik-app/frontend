@@ -2,7 +2,7 @@
 
 import {useAppConfigStore} from "~/stores/useAppConfig";
 
-const _props = defineProps({
+const props = defineProps({
   backLoginButton: {
     type: Boolean,
     default: true
@@ -20,7 +20,7 @@ const siteLogo: Ref<string> = appConfigStore.getLogo()
       <NuxtImg :src="siteLogo" class="h-full" />
     </div>
 
-    <div v-if="backLoginButton" class="mb-2">
+    <div v-if="props.backLoginButton" class="mb-2">
       <UButton size="xs" variant="link" to="/login" label="Se connecter" icon="i-heroicons-arrow-uturn-left" />
     </div>
   </div>

@@ -13,6 +13,10 @@ interface _Token {
   date: Date
 }
 
-export type JwtAccessToken = _Token
+export interface JwtAccessToken extends _Token {
 
-export type JwtRefreshToken = _Token
+}
+
+export interface JwtRefreshToken extends _Token {
+
+}

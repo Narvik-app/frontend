@@ -36,7 +36,7 @@ async function importFromItac(event: any) {
   }
 
   fileUploading.value = true
-  const {created: _created1, error} = await memberQuery.importFromItac(formData)
+  const {error} = await memberQuery.importFromItac(formData)
   fileUploading.value = false
 
   if (error) {
@@ -56,7 +56,7 @@ async function importFromItacSecondary(event: any) {
   }
 
   fileUploading.value = true
-  const {created: _created2, error} = await memberQuery.importFromItacSecondary(formData)
+  const {error} = await memberQuery.importFromItacSecondary(formData)
   fileUploading.value = false
 
   if (error) {
@@ -96,7 +96,7 @@ async function importFromEden(event: any) {
   }
 
   fileUploading.value = true
-  const {created: _created3, error} = await memberQuery.importFromEden(formData)
+  const {error} = await memberQuery.importFromEden(formData)
   fileUploading.value = false
 
   if (error) {

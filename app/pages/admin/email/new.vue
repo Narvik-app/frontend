@@ -108,7 +108,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
   }
 
   async function getEmailTemplates() {
-    const { items, totalItems: _totalItems, error } = await templateQuery.getAll()
+    const { items, error } = await templateQuery.getAll()
 
     if (error) {
       toast.add({

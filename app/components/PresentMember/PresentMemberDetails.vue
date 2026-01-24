@@ -14,7 +14,6 @@ import {convertUuidToUrlUuid} from "~/utils/resource";
 
 const toast = useToast()
 const selfStore = useSelfUserStore()
-const _isAdmin = selfStore.isAdmin()
 const isSupervisor = selfStore.hasSupervisorRole()
 const isBadger = selfStore.isBadger()
 

@@ -14,7 +14,7 @@ export const MIME_TYPE_JSON = "application/json";
 export const MIME_TYPE_JSON_PATCH = "application/merge-patch+json"
 export const MIME_TYPE_CSV = "text/csv"
 
-const _CONTENT_TYPE_FORM_DATA = "multipart/form-data"
+const CONTENT_TYPE_FORM_DATA = "multipart/form-data"
 
 function getBasicAuthorization(isBadger: boolean = false): string {
   let bearer = useRuntimeConfig().public.clientId + ':' + useRuntimeConfig().public.clientSecret
@@ -388,7 +388,7 @@ export async function useDeleteItem(item?: Item | null) {
   }
 
   try {
-    const _data = await useApi(item["@id"] ?? "", {
+    const data = await useApi(item["@id"] ?? "", {
       method: "DELETE",
     });
   } catch (e) {
