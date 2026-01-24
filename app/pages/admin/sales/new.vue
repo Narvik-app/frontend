@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import InventoryItemQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryItemQuery";
-import SalePaymentModeQuery from "~/composables/api/query/clubDependent/plugin/sale/SalePaymentModeQuery";
 import type {InventoryItem} from "~/types/api/item/clubDependent/plugin/sale/inventoryItem";
 import {formatMonetary} from "~/utils/string";
 import SaleQuery from "~/composables/api/query/clubDependent/plugin/sale/SaleQuery";
@@ -47,7 +46,6 @@ definePageMeta({
   })
 
   const inventoryItemQuery = new InventoryItemQuery()
-  const paymentModeQuery = new SalePaymentModeQuery()
   const saleQuery = new SaleQuery()
 
   const searchQueryInput: Ref<string> = ref(searchQuery.value)

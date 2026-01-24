@@ -2,8 +2,7 @@
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {useMetricStore} from "~/stores/useMetricStore";
 import type {ChartBarData, ChartDataField} from "~/utils/chart";
-import {DateRangeFilter} from "~/types/date";
-import type {DateRange} from "~/types/date";
+import type {DateRangeFilter, DateRange} from "~/types/date";
 import {formatDateRangeReadable, formatDateTimeReadable} from "~/utils/date";
 
 const props = defineProps({

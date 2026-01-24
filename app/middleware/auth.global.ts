@@ -4,6 +4,7 @@ import {useAppConfigStore} from "~/stores/useAppConfig";
 import {Permission} from "~/types/api/permissions";
 
 const pathsAccessibleToAll = [
+  // eslint-disable-next-line no-useless-escape
   "^/unsubscribe\?.*"
 ]
 
@@ -52,6 +53,7 @@ const permissionPaths: { pattern: string; permission: Permission }[] = [
   { pattern: "^/admin/inventories/categories", permission: Permission.SaleCategoriesAccess },
 ]
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default defineNuxtRouteMiddleware(async (to, from) => {
   // Middleware is not run on server side
   if (import.meta.server) return

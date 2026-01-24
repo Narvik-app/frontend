@@ -14,6 +14,7 @@ export const MIME_TYPE_JSON = "application/json";
 export const MIME_TYPE_JSON_PATCH = "application/merge-patch+json"
 export const MIME_TYPE_CSV = "text/csv"
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const CONTENT_TYPE_FORM_DATA = "multipart/form-data"
 
 function getBasicAuthorization(isBadger: boolean = false): string {
@@ -388,6 +389,7 @@ export async function useDeleteItem(item?: Item | null) {
   }
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const data = await useApi(item["@id"] ?? "", {
       method: "DELETE",
     });

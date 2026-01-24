@@ -135,6 +135,7 @@ export interface WriteClub extends _Club {
   salesEnabled: boolean
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface SelfWriteClub extends _Club {
 
 }

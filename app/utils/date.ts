@@ -1,6 +1,5 @@
 import dayjs from "dayjs";
-import {DateRangeFilter} from "~/types/date";
-import type {DateRange} from "~/types/date";
+import type {DateRangeFilter, DateRange} from "~/types/date";
 
 export function formatDate(date?: string): string | null {
   if (!date) return null;

@@ -2,8 +2,7 @@ import type {ExternalPresence} from "~/types/api/item/clubDependent/plugin/prese
 import ExternalPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/ExternalPresenceQuery";
 import dayjs from "dayjs";
 import {defineStore} from "pinia";
-import {DateRangeFilter} from "~/types/date";
-import type {DateRange} from "~/types/date";
+import type {DateRangeFilter, DateRange} from "~/types/date";
 import type {SelectApiItem} from "~/types/select";
 import type {Activity} from "~/types/api/item/clubDependent/plugin/presence/activity";
 
