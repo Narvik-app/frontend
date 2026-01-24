@@ -8,6 +8,7 @@ import type {TablePaginateInterface} from "~/types/table";
 import dayjs from "dayjs";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import type {ColumnDef} from '@tanstack/vue-table'
+import {UCheckbox} from '#components';
 
 definePageMeta({
   layout: "admin"
@@ -20,6 +21,7 @@ useHead({
 // Types
 interface MemberPresenceStat {
   memberId: string;
+  memberUuid: string;
   presenceCount: number;
   lastPresenceDate: string;
   firstname: string;
@@ -48,19 +50,57 @@ const page = ref(1);
 const itemsPerPage = ref(10);
 const order = ref('ASC');
 const popoverOpen = ref(false);
+const selectedMembers = ref<MemberPresenceStat[]>([]);
 
 const columns: ColumnDef<MemberPresenceStat>[] = [
   {
-    accessorKey: 'firstname',
-    header: 'Prénom',
+    accessorKey: 'select',
+    header: () => h(UCheckbox, {
+      modelValue: someMembersSelectedInPage()
+        ? 'indeterminate'
+        : allMembersSelectedInPage(),
+      'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
+        if (value) {
+          // Select all members in current page
+          const uuidsAlreadySelected = selectedMembers.value.map(member => member.memberUuid)
+          const newMembers = items.value.filter(member => !uuidsAlreadySelected.includes(member.memberUuid))
+          selectedMembers.value = [...selectedMembers.value, ...newMembers]
+        } else {
+          // Only remove members in the current page
+          const uuidsToRemove = items.value.map(member => member.memberUuid)
+          selectedMembers.value = selectedMembers.value.filter(member => !uuidsToRemove.includes(member.memberUuid))
+        }
+      },
+      disabled: items.value.length === 0
+    }),
+    cell: ({row}) => h(UCheckbox, {
+      modelValue: selectedMembers.value.some(member => member.memberUuid === row.original.memberUuid),
+      'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
+        if (value) {
+          selectedMembers.value = [...selectedMembers.value, row.original]
+        } else {
+          selectedMembers.value = selectedMembers.value.filter(member => member.memberUuid !== row.original.memberUuid)
+        }
+      },
+      key: row.original.memberUuid
+    }),
+    meta: {
+      class: {
+        th: 'print:hidden',
+      }
+    }
+  },
+  {
+    accessorKey: 'licence',
+    header: 'Licence',
   },
   {
     accessorKey: 'lastname',
     header: 'Nom',
   },
   {
-    accessorKey: 'licence',
-    header: 'Licence',
+    accessorKey: 'firstname',
+    header: 'Prénom',
   },
   {
     accessorKey: 'presenceCount',
@@ -144,6 +184,27 @@ function refresh() {
   fetchMetrics();
 }
 
+function someMembersSelectedInPage() {
+  if (allMembersSelectedInPage()) return false;
+
+  const uuidsToCheck = items.value.map(member => member.memberUuid)
+  return selectedMembers.value.some(member => uuidsToCheck.includes(member.memberUuid))
+}
+
+function allMembersSelectedInPage() {
+  const uuidsToCheck = items.value.map(member => member.memberUuid)
+  return selectedMembers.value.filter(member => uuidsToCheck.includes(member.memberUuid)).length === items.value.length && items.value.length > 0
+}
+
+function sendEmailToSelected() {
+  const memberUuids = selectedMembers.value.map(member => convertUuidToUrlUuid(member.memberUuid)).join(',')
+  navigateTo(`/admin/email/new?members=${memberUuids}`)
+}
+
+function clearSelection() {
+  selectedMembers.value = []
+}
+
 // Watchers
 watch(dateRange, () => {
   page.value = 1;
@@ -194,9 +255,9 @@ onMounted(() => {
               <template #content>
                 <GenericDateRangePicker
                   :date-range="dateRange"
-                  @range-updated="handleDateRangeUpdate"
                   :season-selectors="true"
                   :exclude-previous-season="true"
+                  @range-updated="handleDateRangeUpdate"
                 />
               </template>
             </UPopover>
@@ -227,6 +288,31 @@ onMounted(() => {
           </div>
         </template>
 
+        <div
+          v-if="selectedMembers.length > 0"
+          class="mb-4 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg flex items-center justify-between print:hidden">
+          <div class="flex items-center gap-2">
+            <span class="font-medium">{{ selectedMembers.length }} membre{{ selectedMembers.length > 1 ? 's' : '' }} sélectionné{{ selectedMembers.length > 1 ? 's' : '' }}</span>
+            <UButton
+              size="xs"
+              variant="ghost"
+              color="neutral"
+              @click="clearSelection"
+            >
+              Tout désélectionner
+            </UButton>
+          </div>
+          <div class="flex items-center gap-2">
+            <UButton
+              v-if="isAdmin"
+              icon="i-heroicons-envelope"
+              @click="sendEmailToSelected"
+            >
+              Envoyer un email
+            </UButton>
+          </div>
+        </div>
+
         <UTable
           :loading="isLoading"
           :columns="columns"
@@ -251,9 +337,8 @@ onMounted(() => {
                <UButton
                  v-if="isAdmin"
                  icon="i-heroicons-envelope"
-                 :to="`/admin/email/new?member=${convertUuidToUrlUuid(row.original.memberUuid)}`"
-               >
-               </UButton>
+                 :to="`/admin/email/new?members=${convertUuidToUrlUuid(row.original.memberUuid)}`"
+               />
              </div>
            </template>
         </UTable>

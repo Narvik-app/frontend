@@ -6,7 +6,7 @@ import EmailQuery from "~/composables/api/query/clubDependent/plugin/emailing/Em
 import EmailTemplateQuery from "~/composables/api/query/clubDependent/plugin/emailing/EmailTemplateQuery";
 import type {EmailTemplate} from "~/types/api/item/clubDependent/plugin/emailing/emailTemplate";
 import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
-import {decodeUrlUuid} from "~/utils/resource";
+import {decodeUrlUuid, displayError} from "~/utils/resource";
 import {Permission} from "~/types/api/permissions";
 
 const MAX_ATTACHMENT_SIZE_MB = 15
@@ -206,21 +206,50 @@ const MAX_ATTACHMENT_SIZE_MB = 15
   })
 
   async function loadMemberFromQuery() {
-    const memberUuid = route.query.member
-    if (memberUuid && typeof memberUuid === 'string') {
-      const { retrieved, error } = await memberQuery.get(decodeUrlUuid(memberUuid))
+    const memberUuids = route.query.members
 
-      if (error) {
-        toast.add({
-          title: "Une erreur est survenue",
-          description: error.message,
-          color: "error"
-        })
-        return
+    // Handle members parameter (supports both single and multiple members)
+    if (memberUuids && typeof memberUuids === 'string') {
+      const uuidList = memberUuids.split(',').filter(uuid => uuid.trim().length > 0)
+      const loadedMembers: Member[] = []
+      let firstErrorMessage = ''
+
+      for (const encodedUuid of uuidList) {
+        try {
+          const { retrieved, error } = await memberQuery.get(decodeUrlUuid(encodedUuid.trim()))
+
+          if (error) {
+            if (!firstErrorMessage) {
+              firstErrorMessage = error.message || 'Erreur de chargement'
+            }
+            continue
+          }
+
+          if (retrieved) {
+            loadedMembers.push(retrieved)
+          }
+        } catch (e) {
+          if (!firstErrorMessage) {
+            firstErrorMessage = e instanceof Error ? e.message : String(e)
+          }
+        }
       }
 
-      if (retrieved) {
-        selectedMembers.value = [retrieved]
+      if (loadedMembers.length > 0) {
+        selectedMembers.value = loadedMembers
+
+        if (loadedMembers.length < uuidList.length) {
+          toast.add({
+            description: `${uuidList.length - loadedMembers.length} membres n'ont pas pu être chargés`,
+            color: "warning"
+          })
+        }
+      } else if (uuidList.length > 0) {
+        // Show the first error message or a generic message
+        displayError(
+          firstErrorMessage || "Aucun membre n'a pu être chargé",
+          "Chargement impossible"
+        )
       }
     }
   }

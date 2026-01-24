@@ -73,12 +73,16 @@ export function formatErrorFromApiResponse(response: any): object {
   return response
 }
 
-export function displayApiError(error: NuxtError, title: string|undefined = undefined) {
+export function displayError(message: string, title: string|undefined = undefined) {
   useToast().add({
     color: "error",
     title: title ?? "Une erreur est survenue",
-    description: error.message
+    description: message
   })
+}
+
+export function displayApiError(error: NuxtError, title: string|undefined = undefined) {
+  displayError(error.message, title)
 }
 
 export function generateBadgerLoginPath(clubUuid: string, token: string) {
