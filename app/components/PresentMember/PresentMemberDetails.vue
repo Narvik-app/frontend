@@ -88,6 +88,7 @@ function loadPresenceHistory() {
       memberPresences.value = presencesResponse.items
 
       // We update the chart
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define chart data type properly
       const data: any = []
 
       const newChartData = {

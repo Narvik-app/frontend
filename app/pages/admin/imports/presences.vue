@@ -24,6 +24,7 @@ const fileUploading = ref(false)
 const memberPresenceQuery = new MemberPresenceQuery()
 const externalPresenceQuery = new ExternalPresenceQuery()
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
 async function importMemberPresences(event: any) {
   const formData = getFileFormDataFromUInputChangeEvent(event);
 
@@ -43,6 +44,7 @@ async function importMemberPresences(event: any) {
   displayFileSuccessToast()
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
 async function importExternalPresences(event: any) {
   const formData = getFileFormDataFromUInputChangeEvent(event);
 

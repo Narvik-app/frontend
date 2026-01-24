@@ -8,7 +8,7 @@ useHead({
     }
   });
 
-  const selfStore = useSelfUserStore()
+  const _selfStore = useSelfUserStore()
 
   const globalSection = [
     {

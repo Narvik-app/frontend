@@ -113,13 +113,16 @@ function generateList() {
 </script>
 
 <template>
-  <UCard v-for="i in Math.floor(Math.random() * 3) + 1" v-if="props.isLoading" :key="`loading-${i}`">
-    <USkeleton class="h-8 w-36 mb-4" />
-    <div class="gap-2 grid grid-flow-row grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-      <USkeleton v-for="j in Math.floor(Math.random() * 5) + 2" :key="`skeleton-${i}-${j}`" class="h-24 w-full" />
-    </div>
-  </UCard>
-  <UCard v-for="(categoryMap, cIndex) in mapping" v-else :key="cIndex">
+  <template v-if="props.isLoading">
+    <UCard v-for="i in Math.floor(Math.random() * 3) + 1" :key="`loading-${i}`">
+      <USkeleton class="h-8 w-36 mb-4" />
+      <div class="gap-2 grid grid-flow-row grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <USkeleton v-for="j in Math.floor(Math.random() * 5) + 2" :key="`skeleton-${i}-${j}`" class="h-24 w-full" />
+      </div>
+    </UCard>
+  </template>
+  <template v-else>
+    <UCard v-for="(categoryMap, cIndex) in mapping" :key="cIndex">
     <div>
       <div class="text-xl font-bold mb-4">{{ categoryMap.name == '000' ? 'Sans catégorie' : categoryMap.name }}</div>
       <div class="gap-2 grid grid-flow-row grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
@@ -149,6 +152,7 @@ v-for="[name, pmMap] in itemMap.counts"
       </div>
     </div>
   </UCard>
+  </template>
 </template>
 
 <style scoped lang="css">

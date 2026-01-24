@@ -24,7 +24,7 @@ const selectedActivity: Ref<Activity | undefined> = ref(undefined)
 
 // Side menu visible
 const isVisible = ref(false);
-watch(selectedActivity, (value, oldValue) => {
+watch(selectedActivity, (value, _oldValue) => {
   isVisible.value = value !== undefined
 })
 
@@ -81,6 +81,7 @@ function rowClicked(row: TableRow<Activity>) {
   isVisible.value = true
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define proper form state type
 const validate = (state: any): FormError[] => {
   const errors = []
   if (!state.name) errors.push({name: 'name', message: 'Champ requis'})

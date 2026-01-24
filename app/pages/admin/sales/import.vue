@@ -16,10 +16,11 @@ definePageMeta({
 
   const apiUploadResponse: Ref<object|undefined> = ref(undefined);
   const fileUploading = ref(false)
-  const state = reactive({
+  const _state = reactive({
     file: undefined
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
   async function importSalesFromCsv(event: any) {
     const formData = getFileFormDataFromUInputChangeEvent(event);
 
@@ -39,6 +40,7 @@ definePageMeta({
     displayFileSuccessToast()
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
   async function importInventoriesFromCsv(event: any) {
     const formData = getFileFormDataFromUInputChangeEvent(event);
 

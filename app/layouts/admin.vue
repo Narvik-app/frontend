@@ -14,7 +14,7 @@ useHead({
   const selfStore = useSelfUserStore()
 
   const isAdmin = selfStore.isAdmin()
-  const isSupervisor = selfStore.hasSupervisorRole()
+  const _isSupervisor = selfStore.hasSupervisorRole()
 
   const globalSection = [
     {

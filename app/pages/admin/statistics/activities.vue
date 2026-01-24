@@ -76,21 +76,25 @@ function getDayName(dayNumber: string): string {
   return dayNames[parseInt(dayNumber)] || `Jour ${dayNumber}`;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric child type properly
 function sumTotalFromChildMetrics(childMetrics: any[] | undefined): number {
   return childMetrics?.reduce((sum, day) => {
     return sum + parseInt(day.values?.total || '0');
   }, 0) || 0;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric type properly
 function getActivityMetrics(presenceMetrics: any, activityName: string) {
   return presenceMetrics?.childMetrics?.find(
     metric => metric.name === activityName
   );
 }
 
-function processChartData(metrics: any, label: string): ChartDataField[] {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric type properly
+function processChartData(metrics: any, _label: string): ChartDataField[] {
   if (!metrics?.childMetrics) return [];
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric child type properly
   return metrics.childMetrics.map((cm: any) => ({
     x: getDayName(cm.name),
     y: parseFloat(cm.values?.median || '0')

@@ -53,7 +53,7 @@ const activitiesSelect = computed( () => {
 })
 
 const logoUploading = ref(false)
-const state = reactive({
+const _state = reactive({
   file: undefined
 })
 
@@ -145,7 +145,7 @@ async function controlShootingUpdated() {
     controlShootingActivity: selectedControlShootingActivity.value? selectedControlShootingActivity.value["@id"] : null
   }
 
-  const { updated, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
+  const { updated: _updated1, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
 
   if (error) {
     displayApiError(error)
@@ -174,7 +174,7 @@ async function ignoredActivitiesDaysUpdated() {
     excludedActivitiesFromOpeningDays: uris
   }
 
-  const { updated, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
+  const { updated: _updated2, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
 
   if (error) {
     displayApiError(error)
@@ -204,7 +204,7 @@ async function uploadLogo(event: Event) {
   }
 
   logoUploading.value = true
-  const { created, error } = await clubSettingQuery.importLogo(selectedProfile.value.club.settings, formData)
+  const { created: _created1, error } = await clubSettingQuery.importLogo(selectedProfile.value.club.settings, formData)
   logoUploading.value = false
 
   if (error) {
@@ -222,7 +222,7 @@ async function deleteLogo() {
 
   const formData = new FormData()
 
-  const { created, error } = await clubSettingQuery.importLogo(selectedProfile.value.club.settings, formData)
+  const { created: _created2, error } = await clubSettingQuery.importLogo(selectedProfile.value.club.settings, formData)
   logoUploading.value = false
 
   if (error) {
@@ -244,7 +244,7 @@ async function seasonEndUpdated() {
     seasonEnd: `${configState.selectedMonth}-${configState.selectedDay}`
   }
 
-  const { updated, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
+  const { updated: _updated3, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
 
   if (error) {
     displayApiError(error)
@@ -268,7 +268,7 @@ async function clubActivityUpdated() {
     activity: configState.activity.value
   }
 
-  const { updated, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
+  const { updated: _updated4, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
 
   if (error) {
     displayApiError(error)
@@ -292,7 +292,7 @@ async function emailReplyToUpdated() {
     emailReplyTo: configState.emailReplyTo
   }
 
-  const { updated, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
+  const { updated: _updated5, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
 
   if (error) {
     displayApiError(error)

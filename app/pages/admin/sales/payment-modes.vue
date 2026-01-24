@@ -34,7 +34,7 @@ definePageMeta({
   // Side menu visible
   const isVisible = ref(false);
   // We watch the selected item so we close the side menu if unselected
-  watch(selectedPaymentMode, (value, oldValue) => {
+  watch(selectedPaymentMode, (value, _oldValue) => {
     isVisible.value = value !== undefined
   })
 
@@ -181,6 +181,7 @@ definePageMeta({
     await getPaymentModesPaginated();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define proper form state type
   const validate = (state: any): FormError[] => {
     const errors = []
     if (!state.name) errors.push({ name: 'name', message: 'Champ requis' })

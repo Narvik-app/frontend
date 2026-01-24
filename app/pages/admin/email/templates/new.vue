@@ -29,7 +29,7 @@ definePageMeta({
   const htmlContent = ref('')
   const newsletter = ref(true)
 
-  const createButtonDisabled = computed(() => {
+  const _createButtonDisabled = computed(() => {
     return reasons.value.length > 0
   })
   const reasons = computed(() => {
@@ -50,7 +50,7 @@ definePageMeta({
     return errors
   })
 
-  async function submitTemplate() {
+  async function _submitTemplate() {
     isCreating.value = true
 
     const template: EmailTemplate = {

@@ -27,6 +27,7 @@ const fileUploading = ref(false)
 const memberQuery = new MemberQuery()
 const memberPresenceQuery = new MemberPresenceQuery()
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
 async function importFromItac(event: any) {
   const formData = getFileFormDataFromUInputChangeEvent(event);
 
@@ -35,7 +36,7 @@ async function importFromItac(event: any) {
   }
 
   fileUploading.value = true
-  const {created, error} = await memberQuery.importFromItac(formData)
+  const {created: _created1, error} = await memberQuery.importFromItac(formData)
   fileUploading.value = false
 
   if (error) {
@@ -46,6 +47,7 @@ async function importFromItac(event: any) {
   selfStore.refreshSelectedClubSettings()
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
 async function importFromItacSecondary(event: any) {
   const formData = getFileFormDataFromUInputChangeEvent(event);
 
@@ -54,7 +56,7 @@ async function importFromItacSecondary(event: any) {
   }
 
   fileUploading.value = true
-  const {created, error} = await memberQuery.importFromItacSecondary(formData)
+  const {created: _created2, error} = await memberQuery.importFromItacSecondary(formData)
   fileUploading.value = false
 
   if (error) {
@@ -85,6 +87,7 @@ async function migrateExternal() {
   })
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
 async function importFromEden(event: any) {
   const formData = getFileFormDataFromUInputChangeEvent(event);
 
@@ -93,7 +96,7 @@ async function importFromEden(event: any) {
   }
 
   fileUploading.value = true
-  const {created, error} = await memberQuery.importFromEden(formData)
+  const {created: _created3, error} = await memberQuery.importFromEden(formData)
   fileUploading.value = false
 
   if (error) {

@@ -83,6 +83,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
     selectedMembers.value = selectedMembers.value.filter(m => m.email !== member.email)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
   function updateAttachment(event: any) {
     const formData = getFileFormDataFromUInputChangeEvent(event)
     if (formData) {
@@ -107,7 +108,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
   }
 
   async function getEmailTemplates() {
-    const { items, totalItems, error } = await templateQuery.getAll()
+    const { items, totalItems: _totalItems, error } = await templateQuery.getAll()
 
     if (error) {
       toast.add({

@@ -108,6 +108,7 @@ async function createTemplate() {
     } else if (error) {
       displayApiError(error, "La création a échoué");
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the error properly
   } catch (e: any) {
     displayApiError(e, "Une erreur est survenue");
   } finally {
@@ -138,6 +139,7 @@ async function renameTemplate() {
     } else if (error) {
       displayApiError(error, "Le renommage a échoué");
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the error properly
   } catch (e: any) {
     displayApiError(e, "Une erreur est survenue");
   } finally {
@@ -161,6 +163,7 @@ async function deleteTemplate() {
     } else {
       throw error;
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the error properly
   } catch (error: any) {
     displayApiError(error, "La suppression a échoué");
   }
@@ -174,12 +177,14 @@ function onPermissionsUpdated() {
   getTemplates();
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define proper form state type
 const validateCreate = (state: any): FormError[] => {
   const errors = [];
   if (!state.newTemplateName?.trim()) errors.push({ name: 'newTemplateName', message: 'Champ requis' });
   return errors;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define proper form state type
 const validateRename = (state: any): FormError[] => {
   const errors = [];
   if (!state.newTemplateName?.trim()) errors.push({ name: 'newTemplateName', message: 'Champ requis' });

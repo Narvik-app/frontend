@@ -4,7 +4,7 @@ import {useAppConfigStore} from "~/stores/useAppConfig";
 import {Permission} from "~/types/api/permissions";
 
 const pathsAccessibleToAll = [
-  "^/unsubscribe\?.*"
+  "^/unsubscribe\\?.*"
 ]
 
 const publicPaths = [
@@ -52,7 +52,7 @@ const permissionPaths: { pattern: string; permission: Permission }[] = [
   { pattern: "^/admin/inventories/categories", permission: Permission.SaleCategoriesAccess },
 ]
 
-export default defineNuxtRouteMiddleware(async (to, from) => {
+export default defineNuxtRouteMiddleware(async (to, _from) => {
   // Middleware is not run on server side
   if (import.meta.server) return
 
