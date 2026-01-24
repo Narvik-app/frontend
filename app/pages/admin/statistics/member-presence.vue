@@ -91,16 +91,16 @@ const columns: ColumnDef<MemberPresenceStat>[] = [
     }
   },
   {
-    accessorKey: 'firstname',
-    header: 'Prénom',
+    accessorKey: 'licence',
+    header: 'Licence',
   },
   {
     accessorKey: 'lastname',
     header: 'Nom',
   },
   {
-    accessorKey: 'licence',
-    header: 'Licence',
+    accessorKey: 'firstname',
+    header: 'Prénom',
   },
   {
     accessorKey: 'presenceCount',
@@ -201,10 +201,6 @@ function sendEmailToSelected() {
   navigateTo(`/admin/email/new?members=${memberUuids}`)
 }
 
-function clearSelection() {
-  selectedMembers.value = []
-}
-
 // Watchers
 watch(dateRange, () => {
   page.value = 1;
@@ -292,14 +288,6 @@ onMounted(() => {
         <div v-if="selectedMembers.length > 0" class="mb-4 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg flex items-center justify-between print:hidden">
           <div class="flex items-center gap-2">
             <span class="font-medium">{{ selectedMembers.length }} membre{{ selectedMembers.length > 1 ? 's' : '' }} sélectionné{{ selectedMembers.length > 1 ? 's' : '' }}</span>
-            <UButton
-              size="xs"
-              variant="ghost"
-              color="neutral"
-              @click="clearSelection"
-            >
-              Tout désélectionner
-            </UButton>
           </div>
           <div class="flex items-center gap-2">
             <UButton
