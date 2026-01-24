@@ -60,7 +60,7 @@ const addMemberPresenceModal = ref(false)
 const selectedPresence: Ref<MemberPresence | undefined> = ref(undefined)
 const memberPresenceModal: Ref<boolean> = ref(false);
 
-const member: Ref<Member | undefined> = ref(undefined)
+const memberRef: Ref<Member | undefined> = ref(undefined)
 const memberProfileImage: Ref<ExposedFile | undefined> = ref(undefined)
 const memberPresences: Ref<MemberPresence[]> = ref([])
 const totalMemberPresences = computed(() => memberPresences.value.length)
@@ -137,18 +137,18 @@ const rolesSelect = computed( () => {
   return items;
 })
 
-watch(member, (newValue, _oldValue) => {
+watch(memberRef, (newValue, _oldValue) => {
   if (newValue) {
-    if (member.value) {
-      memberSeasonQuery = new MemberSeasonQuery(member.value)
+    if (memberRef.value) {
+      memberSeasonQuery = new MemberSeasonQuery(memberRef.value)
 
-      if (member.value.profileImage?.privateUrl) {
-        fileQuery.getFromUrl(member.value.profileImage.privateUrl).then(imageResponse => {
+      if (memberRef.value.profileImage?.privateUrl) {
+        fileQuery.getFromUrl(memberRef.value.profileImage.privateUrl).then(imageResponse => {
           memberProfileImage.value = imageResponse.retrieved
         })
       }
 
-      selectedNewRole.value = member.value.role
+      selectedNewRole.value = memberRef.value.role
 
       // We get the presences
       getMemberPresences()
@@ -161,7 +161,7 @@ loadItem()
 
 function loadItem() {
   if (props.member) {
-    member.value = props.member
+    memberRef.value = props.member
   } else {
     if (!props.memberId) {
       throw new Error("memberId prop should be defined")
@@ -180,16 +180,16 @@ function loadItem() {
       }
 
       if (value.retrieved) {
-        member.value = value.retrieved
+        memberRef.value = value.retrieved
       }
     });
   }
 }
 
 function changeMemberRole() {
-  if (!isAdmin || !member.value || !selectedNewRole.value) return;
+  if (!isAdmin || !memberRef.value || !selectedNewRole.value) return;
 
-  memberQuery.updateRole(member.value, selectedNewRole.value as ClubRole).then(({updated, error}) => {
+  memberQuery.updateRole(memberRef.value, selectedNewRole.value as ClubRole).then(({updated, error}) => {
     if (error) {
       toast.add({
         color: "error",
@@ -204,8 +204,8 @@ function changeMemberRole() {
       title: "Rôle modifié"
     })
 
-    if (member.value && updated) {
-      member.value.role = updated.role
+    if (memberRef.value && updated) {
+      memberRef.value.role = updated.role
     }
 
     changeMemberRoleModalOpen.value = false
@@ -213,9 +213,9 @@ function changeMemberRole() {
 }
 
 async function getMemberSeasons() {
-  if (!member.value || !member.value.uuid) return;
+  if (!memberRef.value || !memberRef.value.uuid) return;
   isLoadingMemberSeasons.value = true
-  const { error, items } = await memberQuery.seasons(member.value.uuid)
+  const { error, items } = await memberQuery.seasons(memberRef.value.uuid)
   isLoadingMemberSeasons.value = false
   if (error) {
     return
@@ -224,7 +224,7 @@ async function getMemberSeasons() {
 }
 
 async function getMemberPresences() {
-  if (!member.value || !member.value.uuid) return;
+  if (!memberRef.value || !memberRef.value.uuid) return;
 
   await getMemberSeasons()
 
@@ -233,7 +233,7 @@ async function getMemberPresences() {
     'date[after]': new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString().slice(0, 10)
   });
 
-  const { totalItems, items } = await memberQuery.presences(member.value.uuid, presenceUrlParams)
+  const { totalItems, items } = await memberQuery.presences(memberRef.value.uuid, presenceUrlParams)
   if (totalItems && totalItems > 0) {
     memberPresences.value = items
 
@@ -270,7 +270,7 @@ async function getMemberPresences() {
 }
 
 async function getMemberPresencesPaginated() {
-  if (!member.value || !member.value.uuid) return;
+  if (!memberRef.value || !memberRef.value.uuid) return;
   isLoadingMemberPresencesPaginated.value = true
 
   const urlParams = new URLSearchParams({
@@ -293,7 +293,7 @@ async function getMemberPresencesPaginated() {
   }
 
   // We make the search
-  const { totalItems, items } = await memberQuery.presences(member.value.uuid, urlParams)
+  const { totalItems, items } = await memberQuery.presences(memberRef.value.uuid, urlParams)
   memberPresencesPaginated.value = items
   if (totalItems) {
     totalMemberPresencesPaginated.value = totalItems
@@ -334,7 +334,7 @@ function presenceUpdated(_presence?: MemberPresence) {
 }
 
 async function downloadCsv() {
-  if (!member.value || !member.value.uuid) return;
+  if (!memberRef.value || !memberRef.value.uuid) return;
   isDownloadingCsv.value = true
 
   const urlParams = new URLSearchParams({
@@ -355,20 +355,20 @@ async function downloadCsv() {
   }
 
   // We make the search
-  const { data } = await memberQuery.presencesCsv(member.value.uuid, urlParams)
+  const { data } = await memberQuery.presencesCsv(memberRef.value.uuid, urlParams)
   isDownloadingCsv.value = false
   // We download in the browser
-  const filename = `${member.value.licence}-presences.csv`
+  const filename = `${memberRef.value.licence}-presences.csv`
   createBrowserCsvDownload(filename, data)
 }
 
 async function addMemberSeason(seasonIri: string, isSecondary: boolean = false, ageCategory: string|undefined = undefined) {
-  if (!memberSeasonQuery || !member.value) {
+  if (!memberSeasonQuery || !memberRef.value) {
     return
   }
 
   const memberSeason: MemberSeasonWrite = {
-    member: member.value["@id"],
+    member: memberRef.value["@id"],
     season: seasonIri,
     isSecondaryClub: isSecondary
   }
@@ -420,9 +420,9 @@ async function deleteMemberSeason(memberSeason: MemberSeason) {
 }
 
 async function deleteMember() {
-  if (!member.value) return
+  if (!memberRef.value) return
 
-  const { error } = await memberQuery.delete(member.value)
+  const { error } = await memberQuery.delete(memberRef.value)
 
   if (error) {
     toast.add({
@@ -455,9 +455,9 @@ async function deleteMember() {
       </UTooltip>
 
       <!-- Admin && not current account -->
-      <template v-if="member">
+      <template v-if="memberRef">
         <UModal
-          v-if="isSuperAdmin || (isAdmin && member.email != loggedUsername)"
+          v-if="isSuperAdmin || (isAdmin && memberRef.email != loggedUsername)"
           v-model:open="changeMemberRoleModalOpen"
         >
           <UButton>
@@ -495,13 +495,13 @@ async function deleteMember() {
             v-if="isAdmin"
             icon="i-heroicons-pencil-square"
             @click="overlay.create(MemberEditLinkedEmailModal).open({
-              member: member,
+              member: memberRef,
               onUpdated() {
                 loadItem()
               }
             })"
           >
-            <template v-if="member.linkedEmail">
+            <template v-if="memberRef.linkedEmail">
               Changer le compte lié
             </template>
             <template v-else>
@@ -520,7 +520,7 @@ async function deleteMember() {
           </UButton>
 
           <UButton
-            v-if="member.uuid && (isSuperAdmin || (isAdmin && member.email != loggedUsername))"
+            v-if="memberRef.uuid && (isSuperAdmin || (isAdmin && memberRef.email != loggedUsername))"
             icon="i-heroicons-trash"
             color="error"
             @click="
@@ -542,7 +542,7 @@ async function deleteMember() {
     <div class="grid grid-cols-1 lg:grid-cols-9 gap-4 w-full">
 
       <div class="lg:col-span-5">
-        <UCard v-if="!member">
+        <UCard v-if="!memberRef">
           <div class="mx-auto my-0 h-24 w-24 aspect-square">
             <USkeleton class="w-full h-full"/>
           </div>
@@ -562,10 +562,10 @@ async function deleteMember() {
           <div class="flex flex-col gap-4 relative">
             <div class="flex justify-end gap-2">
               <UButton
-                v-if="member.uuid && canSendEmail"
+                v-if="memberRef.uuid && canSendEmail"
                 variant="soft"
                 icon="i-heroicons-envelope"
-                :to="`/admin/email/new?members=${convertUuidToUrlUuid(member.uuid)}`"
+                :to="`/admin/email/new?members=${convertUuidToUrlUuid(memberRef.uuid)}`"
               />
             </div>
 
@@ -574,61 +574,61 @@ async function deleteMember() {
                 class="w-full h-full"
                 size="3xl"
                 :src="memberProfileImage?.base64"
-                :alt="member.fullName"
+                :alt="memberRef.fullName"
               />
             </div>
 
             <div class="text-center text-2xl font-bold">
-              {{ member.fullName }}
+              {{ memberRef.fullName }}
             </div>
 
             <div class="flex flex-col items-center justify-center flex-wrap gap-1">
-              <div v-if="member.blacklisted">
+              <div v-if="memberRef.blacklisted">
                 <UButton
                   color="neutral">
                   Blacklisté
                 </UButton>
               </div>
 
-              <div v-if="!member.currentSeason">
+              <div v-if="!memberRef.currentSeason">
                 <UButton
                   color="error">
                   Saison non renouvelée
                 </UButton>
               </div>
 
-              <div v-if="member.medicalCertificateExpiration && member.medicalCertificateStatus !== 'valid'">
+              <div v-if="memberRef.medicalCertificateExpiration && memberRef.medicalCertificateStatus !== 'valid'">
                 <UButton
-                  :color="member.medicalCertificateStatus === 'expired' ? 'error' : 'warning'">
-                  Certificat médical : {{ formatDateReadable(member.medicalCertificateExpiration.toString()) }}
+                  :color="memberRef.medicalCertificateStatus === 'expired' ? 'error' : 'warning'">
+                  Certificat médical : {{ formatDateReadable(memberRef.medicalCertificateExpiration.toString()) }}
                 </UButton>
               </div>
             </div>
 
             <div class="grid grid-cols-1 xl:grid-cols-2 text-sm gap-2">
-              <div v-if="member.lastControlShooting" class="xl:col-span-2 flex items-center">
-                Dernier contrôle : {{ formatDateReadable(member.lastControlShooting.toString()) }}
+              <div v-if="memberRef.lastControlShooting" class="xl:col-span-2 flex items-center">
+                Dernier contrôle : {{ formatDateReadable(memberRef.lastControlShooting.toString()) }}
               </div>
 
-              <MemberDetailsPersonnalInfo icon="i-heroicons-identification" :label="member.licence" to="#" @click.prevent="clipboard.write(member.licence ?? '');toast.add({title: 'Licence copiée'});" />
-              <MemberDetailsPersonnalInfo icon="i-heroicons-at-symbol" :label="member.email" :to="'mailto:' + member.email" />
-              <MemberDetailsPersonnalInfo icon="i-heroicons-phone" :label="member.phone?.match(/.{1,2}/g)?.join(' ')" :to="member.phone ? 'tel:' + member.phone : undefined" />
-              <MemberDetailsPersonnalInfo icon="i-heroicons-phone" :label="member.mobilePhone?.match(/.{1,2}/g)?.join(' ')" :to="member.mobilePhone ? 'tel:' + member.mobilePhone : undefined" />
+              <MemberDetailsPersonnalInfo icon="i-heroicons-identification" :label="memberRef.licence" to="#" @click.prevent="clipboard.write(memberRef.licence ?? '');toast.add({title: 'Licence copiée'});" />
+              <MemberDetailsPersonnalInfo icon="i-heroicons-at-symbol" :label="memberRef.email" :to="'mailto:' + memberRef.email" />
+              <MemberDetailsPersonnalInfo icon="i-heroicons-phone" :label="memberRef.phone?.match(/.{1,2}/g)?.join(' ')" :to="memberRef.phone ? 'tel:' + memberRef.phone : undefined" />
+              <MemberDetailsPersonnalInfo icon="i-heroicons-phone" :label="memberRef.mobilePhone?.match(/.{1,2}/g)?.join(' ')" :to="memberRef.mobilePhone ? 'tel:' + memberRef.mobilePhone : undefined" />
               <MemberDetailsPersonnalInfo
                 :as-link="true"
                 icon="i-heroicons-newspaper"
-                :classes="!member.clubNewsletter ? 'text-error-500 hover:text-error-500' : ''"
-                :label="(member.clubNewsletter ? 'Accepte' : 'Refuse') + ' les newsletters'"
+                :classes="!memberRef.clubNewsletter ? 'text-error-500 hover:text-error-500' : ''"
+                :label="(memberRef.clubNewsletter ? 'Accepte' : 'Refuse') + ' les newsletters'"
               />
 
               <USeparator label="Adresse" class="xl:col-span-2" />
 
               <div class="xl:col-span-2">
-                <p>{{ member.postal1 }}</p>
-                <p>{{ member.postal2 }}</p>
-                <p>{{ member.postal3 }}</p>
-                <p>{{ member.zipCode }} {{ member.city }}</p>
-                <p>{{ member.country }}</p>
+                <p>{{ memberRef.postal1 }}</p>
+                <p>{{ memberRef.postal2 }}</p>
+                <p>{{ memberRef.postal3 }}</p>
+                <p>{{ memberRef.zipCode }} {{ memberRef.city }}</p>
+                <p>{{ memberRef.country }}</p>
               </div>
 
             </div>
@@ -695,7 +695,7 @@ async function deleteMember() {
                     icon="i-heroicons-trash"
                     color="error"
                     @click="overlayDeleteConfirmation.open({
-                      alertTitle: `Suppression de la saison ${row.original.season?.name} pour ${member?.fullName}`,
+                      alertTitle: `Suppression de la saison ${row.original.season?.name} pour ${memberRef?.fullName}`,
                       alertColor: 'error',
                       async onDelete() {
                         await deleteMemberSeason(row.original)
@@ -719,8 +719,8 @@ async function deleteMember() {
         </UCard>
       </div>
 
-      <div v-if="member?.role === ClubRole.Supervisor" class="lg:col-span-9">
-        <MemberPermissions :member="member" @updated="loadItem" />
+      <div v-if="memberRef?.role === ClubRole.Supervisor" class="lg:col-span-9">
+        <MemberPermissions :member="memberRef" @updated="loadItem" />
       </div>
 
       <div class="lg:col-span-9">
@@ -858,7 +858,7 @@ async function deleteMember() {
           <div>
             <UCard>
               <MemberForm
-                :item="member ? {...member} : undefined"
+                :item="memberRef ? {...memberRef} : undefined"
                 @updated="(value) => {itemModalOpen = false; loadItem() }"
               />
             </UCard>
@@ -870,7 +870,7 @@ async function deleteMember() {
         <template #content>
           <div>
             <RegisterMemberPresence
-              :member="member"
+              :member="memberRef"
               :date-editable="true"
               @canceled="addMemberPresenceModal = false"
               @registered="addMemberPresenceModal = false; getMemberPresences()"
