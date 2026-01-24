@@ -6,7 +6,7 @@ import EmailQuery from "~/composables/api/query/clubDependent/plugin/emailing/Em
 import EmailTemplateQuery from "~/composables/api/query/clubDependent/plugin/emailing/EmailTemplateQuery";
 import type {EmailTemplate} from "~/types/api/item/clubDependent/plugin/emailing/emailTemplate";
 import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
-import {decodeUrlUuid} from "~/utils/resource";
+import {decodeUrlUuid, displayApiError} from "~/utils/resource";
 import {Permission} from "~/types/api/permissions";
 
 const MAX_ATTACHMENT_SIZE_MB = 15
@@ -218,15 +218,15 @@ const MAX_ATTACHMENT_SIZE_MB = 15
           const { retrieved, error } = await memberQuery.get(decodeUrlUuid(encodedUuid.trim()))
           
           if (error) {
-            console.error(`Error loading member ${encodedUuid}:`, error)
+            displayApiError(error, "Impossible de charger le membre")
             continue
           }
           
           if (retrieved) {
             loadedMembers.push(retrieved)
           }
-        } catch (e) {
-          console.error(`Failed to load member ${encodedUuid}:`, e)
+        } catch (e: any) {
+          displayApiError(e, "Impossible de charger le membre")
         }
       }
       
@@ -241,11 +241,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
           })
         }
       } else if (uuidList.length > 0) {
-        toast.add({
-          title: "Erreur",
-          description: "Aucun membre n'a pu être chargé",
-          color: "error"
-        })
+        displayApiError({ message: "Aucun membre n'a pu être chargé" } as any, "Chargement impossible")
       }
     }
   }
