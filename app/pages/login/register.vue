@@ -75,7 +75,7 @@ const accountType = ref(queryParams.account_type ?? accountTypes.value[0]?.value
 const accountTypeIcon = computed(() => accountTypes.value.find(item => item.value === accountType.value)?.icon)
 const alreadyAnAccount = ref(false)
 
-const validate = (state: any): FormError[] => {
+const validate = (state: { email?: string; password?: string; securityCode?: string; firstname?: string; lastname?: string; legals?: boolean }): FormError[] => {
   const errors = []
   if (!state.securityCode) errors.push({ name: 'securityCode', message: 'Champ requis' })
   if (!state.email) errors.push({ name: 'email', message: 'Champ requis' })

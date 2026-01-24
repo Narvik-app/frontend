@@ -67,7 +67,7 @@ function getDefaultInventoryItem() {
 
 // Form validation
 
-const validate = (state: any): FormError[] => {
+const validate = (state: InventoryItem): FormError[] => {
   const errors = []
   if (!state.name) errors.push({ name: 'name', message: 'Champ requis' })
   if (!state.sellingPrice) errors.push({ name: 'sellingPrice', message: 'Champ requis' })

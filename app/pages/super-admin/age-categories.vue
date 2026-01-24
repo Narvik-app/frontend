@@ -148,7 +148,7 @@ async function deleteItem() {
   await getItemsPaginated();
 }
 
-const validate = (state: any): FormError[] => {
+const validate = (state: { name?: string; code?: string }): FormError[] => {
   const errors = []
   if (!state.name) errors.push({ name: 'name', message: 'Champ requis' })
   if (!state.code) errors.push({ name: 'code', message: 'Champ requis' })
@@ -180,7 +180,7 @@ const validate = (state: any): FormError[] => {
               </div>
             </template>
 
-            <template #actions-cell="{ row }"/>
+            <template #actions-cell="{ row: _row }"/>
 
           </UTable>
 

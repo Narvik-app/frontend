@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {isDesktop} from "~/utils/browser";
-import type {GroupedNavigationLinks} from "~/types/groupedNavigationLinks";
+import type {GroupedNavigationLinks, NavigationLink} from "~/types/groupedNavigationLinks";
 import type {PropType} from "vue";
 
 const props = defineProps(
@@ -28,7 +28,7 @@ const cItems = computed(() => {
   let longestMatchPath = ''
 
   props.items?.forEach(value => {
-    value.links.forEach((link: any) => {
+    value.links.forEach((link: NavigationLink) => {
       if (!link.to) return
 
       const isMatch = route.path === link.to || (route.path.startsWith(link.to + '/') && link.to !== '/admin')
@@ -44,7 +44,7 @@ const cItems = computed(() => {
       title: value.title,
       links: []
     }
-    value.links.forEach((link: any) => {
+    value.links.forEach((link: NavigationLink) => {
       // Create a copy to avoid mutating props
       const newLink = { ...link }
 

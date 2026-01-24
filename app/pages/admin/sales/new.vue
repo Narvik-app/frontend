@@ -66,14 +66,14 @@ definePageMeta({
           categories.set(item.category.name, [])
         }
 
-        // @ts-expect-error
+        // @ts-expect-error - categories.get is guaranteed to exist after the if check
         categories.get(item.category.name).push(item)
       } else {
         if (!categories.has('Non définie')) {
           categories.set('Non définie', [])
         }
 
-        // @ts-expect-error
+        // @ts-expect-error - categories.get is guaranteed to exist after the if check
         categories.get('Non définie').push(item)
       }
     })
@@ -109,7 +109,7 @@ definePageMeta({
     isLoading.value = false
   }
 
-  async function loadPaymentModes() {
+  async function _loadPaymentModes() {
     const urlParams = new URLSearchParams({
       available: 'true',
     });
@@ -141,7 +141,7 @@ definePageMeta({
     isCreatingSale.value = true
 
     const salePurchasedItems: SalePurchasedItem[] = []
-    cart.value.forEach((item, key) => {
+    cart.value.forEach((item, _key) => {
       const payload: SalePurchasedItem = {
         quantity: item.quantity
       }
@@ -250,10 +250,11 @@ definePageMeta({
         <div class="hidden print:block text-right font-extralight text-xs mb-4">À date du {{ formatDate(dayjs().toString()) }}</div>
 
         <div class="print:columns-2 print:gap-2">
-          <div v-for="[title, items] in orderedItems" class="mb-4 print:mb-1 print:break-inside-avoid-column">
+          <div v-for="[title, items] in orderedItems" :key="title" class="mb-4 print:mb-1 print:break-inside-avoid-column">
             <div class="print:text-base text-xl font-bold mb-2 border-b">{{ title }}</div>
             <div
               v-for="item in items"
+              :key="item.uuid"
               class="flex items-center gap-2 mb-1 hover:bg-neutral-100 dark:hover:bg-neutral-600/50 rounded-md"
             >
               <div class="flex-1 flex flex-col">
@@ -276,7 +277,7 @@ v-if="item.quantityAlert && (item.quantity || item.quantity === 0) && item.quant
           <i>Aucun résultats</i>
         </div>
         <div v-if="isLoading && orderedItems.size < 1" class="text-center">
-          <div v-for="i in (Math.floor(Math.random()*6) + 2)">
+          <div v-for="j in (Math.floor(Math.random()*6) + 2)" :key="j">
             <USkeleton class="h-4 w-32" />
             <USkeleton class="h-4 w-full my-4" />
           </div>
@@ -329,7 +330,7 @@ v-if="item.quantityAlert && (item.quantity || item.quantity === 0) && item.quant
               <i>Aucun articles</i>
             </div>
             <div class="overflow-y-auto max-h-[25vh] mt-2">
-              <div v-for="cartItem in cart" class="flex items-center gap-2 mb-1">
+              <div v-for="cartItem in cart" :key="cartItem.item.uuid" class="flex items-center gap-2 mb-1">
                 <GenericStackedUpDown @changed="modifier => { cartStore.addToCart(cartItem.item, modifier) }" />
 
                 <div class="text-xs bg-neutral-200 dark:bg-neutral-600 p-1 rounded-md">{{ cartItem.quantity }}</div>
@@ -362,6 +363,7 @@ v-if="item.quantityAlert && (item.quantity || item.quantity === 0) && item.quant
             <div class="flex flex-wrap gap-2">
               <UButton
                 v-for="paymentMode in paymentModes"
+                :key="paymentMode.uuid"
                 :variant="selectedPaymentMode?.uuid == paymentMode.uuid ? 'solid' : 'soft'"
                 class="basis-[calc(50%-0.25rem)]">
                 <div class="flex items-center w-full" @click="selectedPaymentMode = selectedPaymentMode === paymentMode ? null : paymentMode">

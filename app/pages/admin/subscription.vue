@@ -27,7 +27,7 @@ async function deleteClub() {
   }
 
   const clubQuery = new ClubQuery()
-  const { updated } = await clubQuery.programDeletion()
+  const { updated: _updated } = await clubQuery.programDeletion()
 
   await selfStore.refreshSelectedClub()
 }

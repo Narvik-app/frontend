@@ -9,6 +9,7 @@ import {useSelfUserStore} from "~/stores/useSelfUser";
 import MemberPermissionQuery from "~/composables/api/query/clubDependent/MemberPermissionQuery";
 import PermissionTemplateQuery from "~/composables/api/query/clubDependent/PermissionTemplateQuery";
 import {displayApiError} from "~/utils/resource";
+import type {NuxtError} from "#app";
 
 type PermissionGridMode = 'member' | 'template';
 
@@ -192,8 +193,8 @@ async function togglePermission(permission: Permission, linkedPermission?: Permi
     // Reload permissions to sync with any backend auto-grants
     await loadPermissions();
     emit('updated');
-  } catch (error: any) {
-    displayApiError(error);
+  } catch (error: unknown) {
+    displayApiError(error as NuxtError);
   } finally {
     isSaving.value = false;
   }

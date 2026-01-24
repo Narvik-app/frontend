@@ -61,7 +61,7 @@ async function loadSmtpSettings() {
   isLoading.value = false
 }
 
-const validate = (state: any): FormError[] => {
+const validate = (state: { host?: string; port?: string; sender?: string }): FormError[] => {
   if (!smtpSetting.value.on) {
     return []
   }
