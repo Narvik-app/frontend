@@ -38,7 +38,8 @@ const emit = defineEmits<{ delete: [boolean], close: [boolean] }>()
 
     <slot>
       <div>
-        <UAlert v-if="alertTitle || alertDescription || alertColor"
+        <UAlert
+v-if="alertTitle || alertDescription || alertColor"
                 class="mb-4"
                 variant="subtle"
                 :color="alertColor"
@@ -54,8 +55,8 @@ const emit = defineEmits<{ delete: [boolean], close: [boolean] }>()
     <template #actions>
       <UButton
         :loading="isDeleting"
-        @click="isDeleting = true; emit('delete', true)"
         color="error"
+        @click="isDeleting = true; emit('delete', true)"
       >
         Supprimer
       </UButton>

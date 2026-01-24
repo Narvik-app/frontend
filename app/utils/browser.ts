@@ -37,7 +37,7 @@ function createBrowserDownload(filename: string, blob: Blob) {
   document.body.removeChild(elem)
 }
 
-export function createBrowserCsvDownload(filename: string, data: any) {
+export function createBrowserCsvDownload(filename: string, data: BlobPart) {
   const blob = new Blob([data], {type: 'text/csv'})
   createBrowserDownload(filename, blob)
 }

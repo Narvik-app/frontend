@@ -145,7 +145,7 @@ async function controlShootingUpdated() {
     controlShootingActivity: selectedControlShootingActivity.value? selectedControlShootingActivity.value["@id"] : null
   }
 
-  let { updated, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
+  const { updated, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
 
   if (error) {
     displayApiError(error)
@@ -174,7 +174,7 @@ async function ignoredActivitiesDaysUpdated() {
     excludedActivitiesFromOpeningDays: uris
   }
 
-  let { updated, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
+  const { updated, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
 
   if (error) {
     displayApiError(error)
@@ -244,7 +244,7 @@ async function seasonEndUpdated() {
     seasonEnd: `${configState.selectedMonth}-${configState.selectedDay}`
   }
 
-  let { updated, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
+  const { updated, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
 
   if (error) {
     displayApiError(error)
@@ -268,7 +268,7 @@ async function clubActivityUpdated() {
     activity: configState.activity.value
   }
 
-  let { updated, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
+  const { updated, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
 
   if (error) {
     displayApiError(error)
@@ -292,7 +292,7 @@ async function emailReplyToUpdated() {
     emailReplyTo: configState.emailReplyTo
   }
 
-  let { updated, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
+  const { updated, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
 
   if (error) {
     displayApiError(error)
@@ -351,10 +351,10 @@ async function emailReplyToUpdated() {
         <div>
           <USelectMenu
             v-model="configState.excludedActivitiesFromOpeningDays"
-            @change="ignoredActivitiesDaysUpdated"
             :items="activitiesSelect"
             value-key="value"
             multiple
+            @change="ignoredActivitiesDaysUpdated"
           >
             <template #default>
             <span v-if="configState.excludedActivitiesFromOpeningDays && activities && configState.excludedActivitiesFromOpeningDays.length" class="truncate">
@@ -375,11 +375,12 @@ async function emailReplyToUpdated() {
 
           <USelect
             v-model="configState.selectedControlShootingActivity"
-            @change="controlShootingUpdated"
             :items="activitiesSelect"
-            placeholder="Aucun contrôle défini" />
+            placeholder="Aucun contrôle défini"
+            @change="controlShootingUpdated" />
 
-          <UButton v-if="configState.selectedControlShootingActivity"
+          <UButton
+v-if="configState.selectedControlShootingActivity"
                    class="w-fit"
                    @click="
                   configState.selectedControlShootingActivity = undefined;
@@ -418,7 +419,7 @@ async function emailReplyToUpdated() {
                 <div class="flex flex-col gap-4">
                   <div class="text-center text-lg font-bold">Êtes-vous certain ?</div>
 
-                  <UButton color="error" @click="deleteLogo" class="mx-auto">
+                  <UButton color="error" class="mx-auto" @click="deleteLogo">
                     Supprimer le logo
                   </UButton>
                 </div>

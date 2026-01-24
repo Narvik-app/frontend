@@ -46,7 +46,7 @@ const subscriptionData = computed(() => [
     :data="subscriptionData"
     >
     <template #enabled-cell="{ row }">
-      <USwitch class="pointer-events-none" v-model="row.original.enabled" />
+      <USwitch v-model="row.original.enabled" class="pointer-events-none" />
     </template>
   </UTable>
 </template>

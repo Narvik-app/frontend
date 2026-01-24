@@ -54,7 +54,7 @@ useHead({
     },
   ]
 
-  let links: GroupedNavigationLinks[] = [
+  const links: GroupedNavigationLinks[] = [
     {
       links: globalSection
     },
@@ -72,7 +72,7 @@ useHead({
 
 <template>
   <GenericLayoutAdmin :items="links">
-    <slot></slot>
+    <slot/>
   </GenericLayoutAdmin>
 </template>
 

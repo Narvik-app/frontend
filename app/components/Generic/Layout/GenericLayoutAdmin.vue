@@ -40,7 +40,7 @@ const cItems = computed(() => {
 
   // Second pass: build items and set active state
   props.items?.forEach(value => {
-    let item : GroupedNavigationLinks = {
+    const item : GroupedNavigationLinks = {
       title: value.title,
       links: []
     }
@@ -86,8 +86,9 @@ const cItems = computed(() => {
               :label="menuVisible ? 'Masquer le menu' : 'Menu'"
               @click="menuVisible = !menuVisible"
             />
-            <template v-if="menuVisible" v-for="groupedLinks in cItems">
-              <USeparator v-if="groupedLinks.title !== undefined"
+            <template v-for="groupedLinks in cItems" v-if="menuVisible">
+              <USeparator
+v-if="groupedLinks.title !== undefined"
                         class="p-2"
                         :label="groupedLinks.title"
               />

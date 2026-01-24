@@ -88,9 +88,9 @@ function loadPresenceHistory() {
       memberPresences.value = presencesResponse.items
 
       // We update the chart
-      let data: any = []
+      const data: any = []
 
-      let newChartData = {
+      const newChartData = {
         labels: [] as string[],
         datasets: [
           {
@@ -148,22 +148,22 @@ async function copyLicence() {
       <UCard class="bg-(--ui-bg)">
         <div class="flex gap-2 mb-2">
           <UButton
-            @click="emit('close')"
             icon="i-heroicons-x-circle"
             color="neutral"
             variant="outline"
             size="xs"
+            @click="emit('close')"
           />
 
           <div class="flex-1"/>
 
           <template v-if="!viewOnly && (isSupervisor || isBadger)">
             <UButton
-              @click="updateMemberPresenceModalOpen = true"
               icon="i-heroicons-pencil-square"
               size="xs"
               variant="soft"
               label="Éditer la présence"
+              @click="updateMemberPresenceModalOpen = true"
             />
             <UTooltip v-if="!member.blacklisted || (isSupervisor)" text="Supprimer la présence">
               <UPopover v-model:open="popoverOpen">
@@ -179,9 +179,9 @@ async function copyLicence() {
                     <div class="text-center text-lg font-bold">Êtes-vous certain ?</div>
 
                     <UButton
-                      @click="deletePresence();"
                       color="error"
                       class="mx-auto"
+                      @click="deletePresence();"
                     >
                       Supprimer
                     </UButton>
@@ -242,7 +242,8 @@ async function copyLicence() {
               Saison non renouvelée
             </UButton>
 
-            <UBadge v-if="member.currentSeason && member.currentSeason.isSecondaryClub"
+            <UBadge
+v-if="member.currentSeason && member.currentSeason.isSecondaryClub"
                     variant="subtle"
                     color="success">
               Club secondaire
@@ -267,8 +268,8 @@ async function copyLicence() {
 
         <div class="flex justify-center">
           <UButton
-            @click="loadPresenceHistory()"
             :loading="isLoadingPresences"
+            @click="loadPresenceHistory()"
           >
             Afficher l'historique de présence
           </UButton>

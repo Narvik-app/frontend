@@ -129,20 +129,20 @@ function onSelect(event: Event) {
 
     <UFormField label="Nom / Licence">
       <GenericBarcodeReader
-        class="mb-4"
         v-model="cameraPreview"
+        class="mb-4"
         @decoded="(value) => {query = value}"
       />
 
       <UInput
-          class="mb-4"
           v-model="query"
+          class="mb-4"
           :loading="searching"
           placeholder="Nom / Licence"
-          @select="onSelect"
           trailing
+          @select="onSelect"
       >
-        <template #trailing v-if="cameraIsPresent || query">
+        <template v-if="cameraIsPresent || query" #trailing>
           <UIcon
             v-if="cameraIsPresent"
             class="cursor-pointer"
@@ -165,10 +165,10 @@ function onSelect(event: Event) {
         class="w-full"
         :columns="columns"
         :data="foundMembers"
-        @select="(evt: Event, row: TableRow<Member>) => rowClicked(row.original)"
         :ui="{
           tr: 'cursor-pointer'
         }"
+        @select="(evt: Event, row: TableRow<Member>) => rowClicked(row.original)"
     >
       <template #empty>
         <div class="flex flex-col items-center justify-center py-6 gap-3">

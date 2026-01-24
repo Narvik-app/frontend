@@ -79,7 +79,7 @@ useHead({
     })
   }
 
-  let links: GroupedNavigationLinks[] = []
+  const links: GroupedNavigationLinks[] = []
 
   // Add sales section if user can access new sale
   if (salesSection.length > 0) {

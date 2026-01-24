@@ -41,7 +41,7 @@ export function pathsMatch(paths: string[], path: string): boolean {
   return pathMatched;
 }
 
-export function formatErrorFromApiResponse(response: any): object {
+export function formatErrorFromApiResponse(response: NuxtError | string | { data?: { description?: string; detail?: string }; message?: string }): object {
   if (typeof response === 'string') {
     return {
       message: response

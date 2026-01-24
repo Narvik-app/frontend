@@ -217,8 +217,8 @@ definePageMeta({
     <template #main>
       <UCard>
         <div class="flex mb-2">
-          <div class="flex-1"></div>
-          <UButton @click="downloadCsv()" icon="i-heroicons-arrow-down-tray" color="success" :loading="isDownloadingCsv">
+          <div class="flex-1"/>
+          <UButton icon="i-heroicons-arrow-down-tray" color="success" :loading="isDownloadingCsv" @click="downloadCsv()">
             CSV
           </UButton>
         </div>
@@ -231,10 +231,10 @@ definePageMeta({
           <div>
             <UInput
               v-model="searchQuery"
-              @update:model-value="searchQueryUpdated()"
               placeholder="Rechercher..."
+              @update:model-value="searchQueryUpdated()"
             >
-              <template #trailing v-if="cameraIsPresent || searchQuery">
+              <template v-if="cameraIsPresent || searchQuery" #trailing>
                 <UIcon
                   v-if="cameraIsPresent"
                   class="cursor-pointer"
@@ -253,12 +253,12 @@ definePageMeta({
           </div>
 
 
-          <div class="flex-1"></div>
+          <div class="flex-1"/>
 
           <div class="flex gap-4 justify-between">
             <USelectMenu
-              class="w-44"
               v-model="filteredCategories"
+              class="w-44"
               :items="categoriesSelect"
               multiple
             >
@@ -270,23 +270,23 @@ definePageMeta({
               </template>
             </USelectMenu>
 
-            <UButton v-if="canEdit" @click="selectedItem = undefined; inventoryItemModalOpen = true" icon="i-heroicons-plus" />
+            <UButton v-if="canEdit" icon="i-heroicons-plus" @click="selectedItem = undefined; inventoryItemModalOpen = true" />
           </div>
 
 
         </div>
 
         <UTable
+          v-model:sorting="sort"
           class="w-full"
           :loading="isLoading"
-          v-model:sorting="sort"
           :sorting-options="{
             manualSorting: true,
             enableMultiSort: false,
           }"
-          @update:sorting="getItemsPaginated()"
           :columns="columns"
           :data="apiItems"
+          @update:sorting="getItemsPaginated()"
           @select="(evt, row) => rowClicked(row.original)">
           <template #empty>
             <div class="flex flex-col items-center justify-center py-6 gap-3">
@@ -313,7 +313,8 @@ definePageMeta({
           </template>
 
           <template #category-cell="{ row }">
-            <UButton v-if="row.original.category"
+            <UButton
+v-if="row.original.category"
               variant="soft"
             >
               {{ row.original.category.name }}

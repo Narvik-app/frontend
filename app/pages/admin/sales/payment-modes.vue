@@ -121,7 +121,7 @@ definePageMeta({
 
   async function updatePaymentMode(paymentMode: SalePaymentMode) {
     isLoading.value = true
-    let payload: SalePaymentMode = {
+    const payload: SalePaymentMode = {
       available: paymentMode.available,
       name: paymentMode.name,
       icon: paymentMode.icon
@@ -134,11 +134,11 @@ definePageMeta({
     // We verify if it's a creation or an update
     let error: NuxtError<ItemError> | undefined = undefined
     if (!paymentMode.uuid) {
-      let { created, error: errorMessage } = await apiQuery.post(payload);
+      const { created, error: errorMessage } = await apiQuery.post(payload);
       error = errorMessage
       selectedPaymentMode.value = created
     } else { // Update
-      let { error: errorMessage } = await apiQuery.patch(paymentMode, payload);
+      const { error: errorMessage } = await apiQuery.patch(paymentMode, payload);
       error = errorMessage
     }
 
@@ -191,13 +191,13 @@ definePageMeta({
 </script>
 
 <template>
-  <GenericLayoutContentWithStickySide @keyup.esc="isVisible = false; selectedPaymentMode = undefined;" :has-side-content="isVisible" :mobile-side-title="selectedPaymentMode?.name" tabindex="-1">
+  <GenericLayoutContentWithStickySide :has-side-content="isVisible" :mobile-side-title="selectedPaymentMode?.name" tabindex="-1" @keyup.esc="isVisible = false; selectedPaymentMode = undefined;">
     <template #main>
       <UCard>
         <div>
           <div class="flex gap-4">
 
-            <div class="flex-1"></div>
+            <div class="flex-1"/>
             <UButton v-if="canEdit" @click="createPaymentMode" >
               Créer un mode de paiement
             </UButton>
@@ -246,7 +246,7 @@ definePageMeta({
 
     <template #side>
       <template v-if="selectedPaymentMode && canEdit">
-        <UForm :state="selectedPaymentMode" @submit="updatePaymentMode(selectedPaymentMode)" :validate="validate">
+        <UForm :state="selectedPaymentMode" :validate="validate" @submit="updatePaymentMode(selectedPaymentMode)">
           <UCard>
             <div class="flex gap-2 flex-col">
               <UFormField label="Disponible" name="available">
@@ -268,7 +268,7 @@ definePageMeta({
                   </ul>
                 </template>
 
-                <template #hint v-if="selectedPaymentMode.icon">
+                <template v-if="selectedPaymentMode.icon" #hint>
                   <UIcon :name="'i-heroicons-' + selectedPaymentMode.icon" />
                 </template>
 
@@ -277,7 +277,7 @@ definePageMeta({
               </UFormField>
 
               <UFormField label="Poids dans la liste" name="weight">
-                <UInput type="number" v-model="selectedPaymentMode.weight" />
+                <UInput v-model="selectedPaymentMode.weight" type="number" />
               </UFormField>
             </div>
 

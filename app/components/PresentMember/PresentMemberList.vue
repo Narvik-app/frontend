@@ -175,10 +175,10 @@ const props = defineProps({
     <div class="flex flex-wrap items-center gap-4">
       <div class="text-xl font-bold mb-4">Présences membres ({{presenceStore.totalMembers}})</div>
 
-      <div class="flex-1"></div>
+      <div class="flex-1"/>
 
       <template v-if="isAdmin">
-        <UButton @click="downloadCsv()" icon="i-heroicons-arrow-down-tray" color="success" :loading="isDownloadingCsv" :disabled="!selectedRange">
+        <UButton icon="i-heroicons-arrow-down-tray" color="success" :loading="isDownloadingCsv" :disabled="!selectedRange" @click="downloadCsv()">
           CSV
         </UButton>
       </template>
@@ -190,7 +190,7 @@ const props = defineProps({
       :can-sort="true"
       :display-no-data-register="false"
       :is-loading="isLoading"
-      @rowClicked="rowClicked"
+      @row-clicked="rowClicked"
       @sort="(object: ColumnSort) => { sort = object; getPresences() }"
       @paginate="(object: TablePaginateInterface) => { page = object.page; itemsPerPage = object.itemsPerPage; getPresences() }"
     />

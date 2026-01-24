@@ -40,7 +40,8 @@ const badgerSetting: Ref<string | undefined> = ref(selectedProfile.value?.club.b
         >
           Générer un nouveau lien
         </UButton>
-        <UButton v-if="badgerSetting"
+        <UButton
+v-if="badgerSetting"
           icon="i-heroicons-key"
           @click="overlay.create(ClubModalBadgerQuickLogin).open()">
           Connexion rapide

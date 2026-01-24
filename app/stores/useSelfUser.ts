@@ -1,4 +1,4 @@
-import {type Member} from "~/types/api/item/clubDependent/member";
+import type {Member} from "~/types/api/item/clubDependent/member";
 import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
 import {usePostRawJson} from "~/composables/api/api";
 import {JwtToken} from "~/types/jwtTokens";
@@ -11,7 +11,7 @@ import type {LinkedProfile} from "~/types/api/linkedProfile";
 import type {User} from "~/types/api/item/user";
 import {UserRole} from "~/types/api/item/user";
 import {type Club, ClubRole} from "~/types/api/item/club";
-import {Permission} from "~/types/api/permissions";
+import type {Permission} from "~/types/api/permissions";
 import ClubQuery from "~/composables/api/query/ClubQuery";
 import ClubSettingQuery from "~/composables/api/query/clubDependent/ClubSettingQuery";
 
@@ -181,7 +181,7 @@ export const useSelfUserStore = defineStore('selfUser', () => {
     }
   }
 
-  function setJwtSelfJwtTokenFromApiResponse(data: any, isBadger: boolean = false): JwtToken {
+  function setJwtSelfJwtTokenFromApiResponse(data: { access_token: string; refresh_token: string; refresh_token_expiration: number }, isBadger: boolean = false): JwtToken {
     const jwtToken = new JwtToken(isBadger);
 
     jwtToken.access = {

@@ -54,8 +54,8 @@ const props = defineProps({
 
         <div>
           <USelectMenu
-            class="w-44"
             v-model="selectedActivities"
+            class="w-44"
             :items="activitiesSelect"
             multiple
           >
@@ -68,7 +68,7 @@ const props = defineProps({
           </USelectMenu>
         </div>
 
-        <div class="flex-1"></div>
+        <div class="flex-1"/>
 
         <UPopover v-model:open="popoverOpen">
           <UButton icon="i-heroicons-calendar-days-20-solid" :label="formatDateRangeReadable(presenceStore.selectedRange) || 'Choisir une date'" />

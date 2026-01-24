@@ -25,10 +25,10 @@ const props = defineProps({
   },
   options: {
     type: Object,
-    default: {
+    default: () => ({
       responsive: true,
       maintainAspectRatio: false,
-    }
+    })
   }
 });
 

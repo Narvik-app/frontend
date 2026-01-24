@@ -88,8 +88,8 @@ definePageMeta({
 
       <UProgress
         v-if="isLoading"
-        class="mb-4"
         v-model="members.length"
+        class="mb-4"
         :max="totalMembers"
         status
       >

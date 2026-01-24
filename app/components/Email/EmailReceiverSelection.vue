@@ -57,7 +57,7 @@ const props = defineProps({
         'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
           if (value) {
             // Select all members
-            let newMembers: Member[] = []
+            const newMembers: Member[] = []
             const emailsAlreadySelected = props.modelValue.map(member => member.email)
 
             members.value.forEach(member => {
@@ -243,23 +243,23 @@ const props = defineProps({
           <UFormField class="sm:col-span-5" label="Recherche">
             <UInput
               v-model="query"
-              @update:model-value="queryUpdated()"
-              placeholder="Rechercher..."  />
+              placeholder="Rechercher..."
+              @update:model-value="queryUpdated()"  />
           </UFormField>
 
           <UFormField label="Rôle" class="sm:col-span-4">
-            <USelect multiple v-model="selectedRoles" :items="rolesSelect" placeholder="Tous" @change="page = 1; getMembers()" />
+            <USelect v-model="selectedRoles" multiple :items="rolesSelect" placeholder="Tous" @change="page = 1; getMembers()" />
           </UFormField>
         </div>
 
-        <div class="sm:col-span-3"></div>
+        <div class="sm:col-span-3"/>
 
         <div class="sm:col-span-4 grid grid-cols-2 gap-2 gap-x-4">
-          <UCheckbox label="Saison actuelle" v-model="onlyCurrentSeason" @change="onlySeasonNotRenewed = false; onlyPreviousSeason = false; page = 1; getMembers()" />
-          <UCheckbox label="Non renouvelée" v-model="onlySeasonNotRenewed" @change="onlyCurrentSeason = false; page = 1; getMembers()" />
-          <UCheckbox label="Saison précédente" v-model="onlyPreviousSeason" @change="onlyCurrentSeason = false; page = 1; getMembers()" />
-          <UCheckbox label="Licence" v-model="onlyWithLicence" @change="page = 1; getMembers()" />
-          <span></span>
+          <UCheckbox v-model="onlyCurrentSeason" label="Saison actuelle" @change="onlySeasonNotRenewed = false; onlyPreviousSeason = false; page = 1; getMembers()" />
+          <UCheckbox v-model="onlySeasonNotRenewed" label="Non renouvelée" @change="onlyCurrentSeason = false; page = 1; getMembers()" />
+          <UCheckbox v-model="onlyPreviousSeason" label="Saison précédente" @change="onlyCurrentSeason = false; page = 1; getMembers()" />
+          <UCheckbox v-model="onlyWithLicence" label="Licence" @change="page = 1; getMembers()" />
+          <span/>
         </div>
       </div>
     </UCard>
@@ -267,22 +267,22 @@ const props = defineProps({
     <UCard>
       <div class="flex flex-row flex-wrap gap-2">
         <div class="text-xl font-bold">Destinataires ({{ modelValue.length }})</div>
-        <div class="flex-1"></div>
-        <div class="flex justify-end" v-if="totalMembers > 0">
-          <UButton v-if="modelValue.length < totalMembers" icon="i-heroicons-list-bullet" label="Tout sélectionner" @click="selectAll()" loading-auto />
+        <div class="flex-1"/>
+        <div v-if="totalMembers > 0" class="flex justify-end">
+          <UButton v-if="modelValue.length < totalMembers" icon="i-heroicons-list-bullet" label="Tout sélectionner" loading-auto @click="selectAll()" />
           <UButton v-else label="Tout désélectionner" icon="i-heroicons-no-symbol" @click="unselectAll()" />
         </div>
       </div>
 
       <UTable
-        class="w-full"
         v-model:sort="sort"
+        class="w-full"
         sort-mode="manual"
-        @update:sort="getMembers()"
-        @select="(evt, row) => onSelect(row, evt)"
         :columns="columns"
         :loading="isLoading"
         :data="members"
+        @update:sort="getMembers()"
+        @select="(evt, row) => onSelect(row, evt)"
       >
         <template #empty>
           <div class="flex flex-col items-center justify-center py-6 gap-3">

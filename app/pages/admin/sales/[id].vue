@@ -137,10 +137,12 @@ definePageMeta({
         {{ formatDateTimeReadable(sale?.createdAt) }}
       </div>
 
-      <div v-if="canModifySale"
+      <div
+v-if="canModifySale"
            class="flex justify-between gap-2"
       >
-        <UButton v-if="sale"
+        <UButton
+v-if="sale"
           icon="i-heroicons-pencil"
           color="warning"
           size="xs"
@@ -169,14 +171,12 @@ definePageMeta({
       <GenericStatCard
         title="Total"
         :value="formatMonetary(sale?.price?.toString())"
-        :loading="isLoading">
-      </GenericStatCard>
+        :loading="isLoading"/>
 
       <GenericStatCard
         title="Articles achetés"
         :value="sale?.salePurchasedItems?.length"
-        :loading="isLoading">
-      </GenericStatCard>
+        :loading="isLoading"/>
 
       <GenericStatCard
         title="Moyen de paiement"
@@ -184,14 +184,12 @@ definePageMeta({
         :top-right="{
           icon: sale?.paymentMode?.icon ? 'i-heroicons-' + sale?.paymentMode?.icon : null
         }"
-        :loading="isLoading">
-      </GenericStatCard>
+        :loading="isLoading"/>
 
       <GenericStatCard
         title="Vendeur"
         :value="sale?.seller?.fullName"
-        :loading="isLoading">
-      </GenericStatCard>
+        :loading="isLoading"/>
     </div>
 
     <GenericCard v-if="sale?.comment" title="Commentaire">
@@ -217,7 +215,8 @@ definePageMeta({
         </template>
 
         <template #itemCategory-cell="{ row }">
-          <UButton v-if="row.original.itemCategory"
+          <UButton
+v-if="row.original.itemCategory"
                    variant="soft"
           >
             {{ row.original.itemCategory }}
@@ -238,7 +237,8 @@ definePageMeta({
         </template>
 
         <template #item-cell="{ row }">
-          <UButton v-if="row.original.item"
+          <UButton
+v-if="row.original.item"
              :to="'/admin/inventories/items/' + convertUuidToUrlUuid(row.original.item.uuid)"
              variant="soft"
           >

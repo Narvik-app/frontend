@@ -92,7 +92,7 @@ const toast = useToast()
     <UCard>
       <div class="flex gap-2 flex-row flex-wrap">
         <div class="text-xl font-bold">Modèles</div>
-        <div class="flex-1"></div>
+        <div class="flex-1"/>
         <div class="flex justify-end">
           <UButton v-if="canEdit" to="/admin/email/templates/new" icon="i-heroicons-plus" />
         </div>

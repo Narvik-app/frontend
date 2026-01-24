@@ -2,7 +2,7 @@
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {useMetricStore} from "~/stores/useMetricStore";
 import type {ChartBarData, ChartDataField} from "~/utils/chart";
-import {type DateRange, DateRangeFilter} from "~/types/date";
+import type { DateRangeFilter,type DateRange} from "~/types/date";
 import {formatDateRangeReadable, formatDateTimeReadable} from "~/utils/date";
 
 const props = defineProps({
@@ -35,7 +35,7 @@ const {
 } = storeToRefs(metricStore)
 
 const memberStats = computed(() => {
-  let response = {
+  const response = {
     loading: true,
     currentSeason: 0,
     previousSeason: 0,
@@ -53,7 +53,7 @@ const memberStats = computed(() => {
 });
 
 const presenceStats = computed(() => {
-  let response = {
+  const response = {
     loading: true,
 
     currentSeason: 0,
@@ -78,7 +78,7 @@ const presenceStats = computed(() => {
 });
 
 const externalPresenceStats = computed(() => {
-  let response = {
+  const response = {
     loading: true,
     currentSeason: 0,
     ratioPresenceOpenCurrentSeason: 0,
@@ -176,13 +176,13 @@ function refreshMetrics() {
           Dernière mise à jour : {{ formatDateTimeReadable(lastRefreshDate.toString()) }}
         </UButton>
 
-        <div class="w-full mb-2"></div>
+        <div class="w-full mb-2"/>
 
         <UPopover v-model:open="popoverOpen">
           <UButton icon="i-heroicons-calendar-days-20-solid" :label="dateRange ? formatDateRangeReadable(dateRange) || 'Choisir une plage' : 'Choisir une plage'" />
 
           <template #content>
-            <GenericDateRangePicker :date-range="dateRange" @range-updated="(range) => handleDateRangeUpdate(range)" :season-selectors="true" :exclude-previous-season="true" />
+            <GenericDateRangePicker :date-range="dateRange" :season-selectors="true" :exclude-previous-season="true" @range-updated="(range) => handleDateRangeUpdate(range)" />
           </template>
         </UPopover>
       </div>
@@ -198,8 +198,7 @@ function refreshMetrics() {
               tooltip: 'Saison précédente',
               value: memberStats.previousSeason,
             }"
-          :loading="memberStats.loading">
-        </GenericStatCard>
+          :loading="memberStats.loading"/>
 
         <template v-if="props.superAdmin || selectedProfile?.club.presencesEnabled">
           <GenericStatCard
@@ -210,8 +209,7 @@ function refreshMetrics() {
               value: openDaysMetricsPreviousSeason?.value,
               tooltip: 'Période précédente'
             }"
-            :loading="presenceStats.loading">
-          </GenericStatCard>
+            :loading="presenceStats.loading"/>
 
           <GenericStatCard
             title="Présences (membres + externes)"
@@ -221,8 +219,7 @@ function refreshMetrics() {
               value: (presenceStats.previousSeason + externalPresenceStats.previousSeason),
               tooltip: 'Période précédente'
             }"
-            :loading="presenceStats.loading && externalPresenceStats.loading">
-          </GenericStatCard>
+            :loading="presenceStats.loading && externalPresenceStats.loading"/>
 
           <GenericStatCard
             title="Présences/ouvertures (membres + externes)"
@@ -233,8 +230,7 @@ function refreshMetrics() {
               value: (presenceStats.ratioPresenceOpenPreviousSeason + externalPresenceStats.ratioPresenceOpenPreviousSeason),
               tooltip: 'Période précédente'
             }"
-            :loading="presenceStats.loading">
-          </GenericStatCard>
+            :loading="presenceStats.loading"/>
 
           <GenericStatCard
             title="Présences"
@@ -244,8 +240,7 @@ function refreshMetrics() {
               value: presenceStats.previousSeason,
               tooltip: 'Période précédente'
             }"
-            :loading="presenceStats.loading">
-          </GenericStatCard>
+            :loading="presenceStats.loading"/>
 
           <GenericStatCard
             title="Présences/ouvertures"
@@ -256,8 +251,7 @@ function refreshMetrics() {
               value: presenceStats.ratioPresenceOpenPreviousSeason,
               tooltip: 'Période précédente'
             }"
-            :loading="presenceStats.loading">
-          </GenericStatCard>
+            :loading="presenceStats.loading"/>
 
           <GenericStatCard
             title="Présences externes"
@@ -267,8 +261,7 @@ function refreshMetrics() {
               value: externalPresenceStats.previousSeason,
               tooltip: 'Période précédente'
             }"
-            :loading="externalPresenceStats.loading">
-          </GenericStatCard>
+            :loading="externalPresenceStats.loading"/>
 
           <GenericStatCard
             title="Présences externes/ouvertures"
@@ -279,8 +272,7 @@ function refreshMetrics() {
               value: externalPresenceStats.ratioPresenceOpenPreviousSeason,
               tooltip: 'Période précédente'
             }"
-            :loading="externalPresenceStats.loading">
-          </GenericStatCard>
+            :loading="externalPresenceStats.loading"/>
         </template>
       </div>
 

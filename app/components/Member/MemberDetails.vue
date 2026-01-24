@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type {PropType} from "vue";
-import {type Member} from "~/types/api/item/clubDependent/member";
+import type {Member} from "~/types/api/item/clubDependent/member";
 import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
 import type {ExposedFile} from "~/types/api/item/exposedFile";
 import FileQuery from "~/composables/api/query/FileQuery";
@@ -238,9 +238,9 @@ async function getMemberPresences() {
     memberPresences.value = items
 
     // We update the chart
-    let data: any = []
+    const data: any = []
 
-    let newChartData = {
+    const newChartData = {
       labels: [] as string[],
       datasets: [
         {
@@ -455,7 +455,8 @@ async function deleteMember() {
 
       <!-- Admin && not current account -->
       <template v-if="member">
-        <UModal v-if="isSuperAdmin || (isAdmin && member.email != loggedUsername)"
+        <UModal
+v-if="isSuperAdmin || (isAdmin && member.email != loggedUsername)"
           v-model:open="changeMemberRoleModalOpen"
         >
           <UButton>
@@ -474,8 +475,8 @@ async function deleteMember() {
                     placeholder="Aucun rôle de défini" />
 
                   <UButton
-                    @click="changeMemberRole()"
                     class="mx-auto"
+                    @click="changeMemberRole()"
                   >
                     Modifier
                   </UButton>
@@ -486,7 +487,7 @@ async function deleteMember() {
 
         </UModal>
 
-        <div class="flex-1"></div>
+        <div class="flex-1"/>
 
         <div>
           <UButton
@@ -564,8 +565,7 @@ async function deleteMember() {
                 variant="soft"
                 icon="i-heroicons-envelope"
                 :to="`/admin/email/new?members=${convertUuidToUrlUuid(member.uuid)}`"
-              >
-              </UButton>
+              />
             </div>
 
             <div class="h-24 w-24 aspect-square self-center">
@@ -641,7 +641,7 @@ async function deleteMember() {
         <UCard>
           <div class="flex flex-col h-full">
             <div v-if="isSupervisor" class="flex gap-4">
-              <div class="flex-1"></div>
+              <div class="flex-1"/>
               <UButton
                 @click="overlay.create(MemberSeasonSelectModal).open({
                   onSelected(seasonIri: string, isSecondary: boolean, ageCategory: string|undefined) {
@@ -701,8 +701,7 @@ async function deleteMember() {
                         overlayDeleteConfirmation.close(true)
                       }
                     })"
-                  >
-                  </UButton>
+                  />
                 </div>
               </template>
 
@@ -739,8 +738,8 @@ async function deleteMember() {
           <div class="flex flex-col">
             <div v-if="isSupervisor" class="flex flex-col-reverse lg:flex-row gap-4">
               <USelectMenu
-                class="w-44"
                 v-model="selectedActivities"
+                class="w-44"
                 :items="activitiesSelect"
                 multiple
               >
@@ -752,17 +751,18 @@ async function deleteMember() {
                 </template>
               </USelectMenu>
 
-              <div class="flex-1"></div>
+              <div class="flex-1"/>
               <UButton @click="addMemberPresenceModal = true" >
                 Ajouter une activité
               </UButton>
 
-              <UButton @click="downloadCsv()" icon="i-heroicons-arrow-down-tray" color="success" :loading="isDownloadingCsv">
+              <UButton icon="i-heroicons-arrow-down-tray" color="success" :loading="isDownloadingCsv" @click="downloadCsv()">
                 CSV
               </UButton>
             </div>
 
             <UTable
+              v-model:sorting="sort"
               :loading="isLoadingMemberPresencesPaginated"
               :columns="[
               {
@@ -783,13 +783,12 @@ async function deleteMember() {
                 header: ''
               }
             ]"
-              v-model:sorting="sort"
               :sorting-options="{
                 manualSorting: true,
                 enableMultiSort: false,
               }"
-              @update:sorting="getMemberPresencesPaginated()"
               :data="memberPresencesPaginated"
+              @update:sorting="getMemberPresencesPaginated()"
             >
 
               <template #empty>

@@ -141,7 +141,7 @@ export async function useFetchList<T>(resource: string): Promise<FetchAllData<T>
   let items: T[] = [];
   let totalItems: number | undefined = undefined;
   let view: View | undefined = undefined;
-  let hubUrl: URL | undefined = undefined;
+  const hubUrl: URL | undefined = undefined;
   let error: NuxtError<ItemError> | undefined = undefined;
 
   try {
@@ -167,7 +167,7 @@ export async function useFetchList<T>(resource: string): Promise<FetchAllData<T>
 
 export async function useFetchItem<T>(path: string, useCache: boolean = false, requireLogin: boolean = true): Promise<FetchItemData<T>> {
   let retrieved: T | undefined = undefined;
-  let hubUrl: URL | undefined = undefined;
+  const hubUrl: URL | undefined = undefined;
   let error: NuxtError<ItemError> | undefined = undefined;
 
   try {
@@ -210,7 +210,7 @@ export async function useCreateItem<T>(resource: string, payload: Item) {
 }
 
 export async function useUploadFile(resource: string, payload: FormData, requireLogin: boolean = true) {
-  let created: Object | undefined = undefined;
+  let created: object | undefined = undefined;
   let error: NuxtError | undefined = undefined;
 
   try {
@@ -223,7 +223,7 @@ export async function useUploadFile(resource: string, payload: FormData, require
       body: payload,
     }, requireLogin);
 
-    created = data as Object;
+    created = data as object;
   } catch (e) {
     error = formatErrorFromApiResponse(e as object) as NuxtError
   }

@@ -97,7 +97,7 @@ function createActivity() {
 async function updateActivity(activity: Activity) {
   isLoading.value = true
 
-  let payload: Activity = {
+  const payload: Activity = {
     name: activity.name,
     isEnabled: activity.isEnabled,
     visibility: activity.visibility
@@ -187,15 +187,16 @@ getActivities()
 </script>
 
 <template>
-  <GenericLayoutContentWithStickySide @keyup.esc="isVisible = false; selectedActivity = undefined;"
-                                      :has-side-content="isVisible" :mobile-side-title="selectedActivity?.name"
-                                      tabindex="-1">
+  <GenericLayoutContentWithStickySide
+:has-side-content="isVisible"
+                                      :mobile-side-title="selectedActivity?.name" tabindex="-1"
+                                      @keyup.esc="isVisible = false; selectedActivity = undefined;">
     <template #main>
       <UCard>
         <div>
           <div class="flex gap-4">
 
-            <div class="flex-1"></div>
+            <div class="flex-1"/>
             <UButton @click="createActivity">
               Créer une nouvelle activité
             </UButton>
@@ -225,8 +226,8 @@ getActivities()
     </template>
 
     <template #side>
-      <div class="flex flex-col gap-4" v-if="selectedActivity">
-        <UForm :state="selectedActivity" @submit="updateActivity(selectedActivity)" :validate="validate">
+      <div v-if="selectedActivity" class="flex flex-col gap-4">
+        <UForm :state="selectedActivity" :validate="validate" @submit="updateActivity(selectedActivity)">
           <UCard>
             <div class="flex gap-2 flex-col">
               <UFormField label="Disponible" name="available">
@@ -250,7 +251,8 @@ getActivities()
           <UButton class="mt-4" block type="submit" :loading="isLoading">Enregistrer</UButton>
         </UForm>
 
-        <UButton v-if="selectedActivity.uuid"
+        <UButton
+v-if="selectedActivity.uuid"
                  block
                  variant="soft"
                  :loading="isLoading"
@@ -265,7 +267,8 @@ getActivities()
           Migrer
         </UButton>
 
-        <UButton v-if="selectedActivity.uuid"
+        <UButton
+v-if="selectedActivity.uuid"
           block
           color="error"
           :loading="isLoading"

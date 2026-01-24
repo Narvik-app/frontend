@@ -19,8 +19,8 @@ const props = defineProps({
       <slot name="title">
         <div v-if="props.title" class="text-xl font-bold">{{ props.title }}</div>
       </slot>
-      <div v-if="spaced" class="flex-1"></div>
-      <slot name="actions"></slot>
+      <div v-if="spaced" class="flex-1"/>
+      <slot name="actions"/>
     </div>
     <slot />
   </UCard>

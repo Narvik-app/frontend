@@ -26,7 +26,7 @@ const props = defineProps(
         <UCard>
           <div class="flex flex-col gap-4">
             <div class="text-xl font-bold text-center">{{ props.title }}</div>
-            <slot></slot>
+            <slot/>
 
             <div class="flex gap-2 justify-between sm:justify-end flex-wrap">
               <slot name="cancel">
@@ -35,7 +35,7 @@ const props = defineProps(
                 </UButton>
               </slot>
 
-              <slot name="actions"></slot>
+              <slot name="actions"/>
             </div>
           </div>
         </UCard>

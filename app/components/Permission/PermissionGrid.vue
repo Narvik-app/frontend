@@ -3,7 +3,8 @@ import type {PropType, Ref} from "vue";
 import type {Member} from "~/types/api/item/clubDependent/member";
 import type {PermissionTemplate} from "~/types/api/item/clubDependent/permissionTemplate";
 import type {MemberPermission} from "~/types/api/item/clubDependent/memberPermission";
-import {Permission, permissionSections} from "~/types/api/permissions";
+import type {Permission} from "~/types/api/permissions";
+import { permissionSections} from "~/types/api/permissions";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import MemberPermissionQuery from "~/composables/api/query/clubDependent/MemberPermissionQuery";
 import PermissionTemplateQuery from "~/composables/api/query/clubDependent/PermissionTemplateQuery";
@@ -260,7 +261,7 @@ watch([() => props.member, () => props.template], async () => {
 
         <!-- Header row -->
         <div class="grid grid-cols-[1fr_auto_auto] gap-2 text-xs text-muted font-medium">
-          <span></span>
+          <span/>
           <span class="w-14 text-center">Accès</span>
           <span class="w-14 text-center">Édition</span>
         </div>

@@ -205,7 +205,7 @@ onBeforeUnmount(() => {
                 <UInput v-model="state.email" type="email" />
               </UFormField>
 
-              <NuxtTurnstile ref="turnstile" v-if="requireTurnstile" v-model="state.turnstileToken" />
+              <NuxtTurnstile v-if="requireTurnstile" ref="turnstile" v-model="state.turnstileToken" />
 
               <UButton type="submit" :loading="isLoading">
                 Créer le compte
@@ -214,7 +214,8 @@ onBeforeUnmount(() => {
         </template>
 
         <template #create>
-          <UAlert v-if="securityEmailSent"
+          <UAlert
+v-if="securityEmailSent"
             icon="i-heroicons-megaphone"
             color="success"
             variant="soft"
@@ -300,7 +301,7 @@ onBeforeUnmount(() => {
             </template>
 
             <UFormField required name="legals">
-              <UCheckbox required v-model="state.legals">
+              <UCheckbox v-model="state.legals" required>
                 <template #label>
                   J'accepte les <ContentLink target="_blank" to="https://about.narvik.app/documents-legaux/cgu">Conditions Générales d’Utilisation</ContentLink>, les <ContentLink target="_blank" to="https://about.narvik.app/documents-legaux/cgv">Conditions Générales de Vente</ContentLink> et la <ContentLink target="_blank" to="https://about.narvik.app/documents-legaux/rgpd">Politique de confidentialité</ContentLink>
                 </template>

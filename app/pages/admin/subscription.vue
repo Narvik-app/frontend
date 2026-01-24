@@ -38,7 +38,8 @@ async function deleteClub() {
   <div class="grid grid-cols-1 lg:grid-cols-6 gap-4">
     <GenericCardWithActions class="lg:col-span-4" title="Information sur l'abonnement">
       <template #actions>
-        <UButton v-if="!selfStore.selectedProfile?.club.deletionDate"
+        <UButton
+v-if="!selfStore.selectedProfile?.club.deletionDate"
           color="error"
           @click="
             overlayDeleteConfirmation.open({
@@ -136,7 +137,8 @@ async function deleteClub() {
       <template #content>
         <div>
           <UCard>
-            <ClubForm v-if="selfStore.selectedProfile"
+            <ClubForm
+v-if="selfStore.selectedProfile"
                       :is-self-edit="true"
                       :item="{...selfStore.selectedProfile.club}"
                       @updated="(value) => {selfClubModalOpen = false; selfStore.refreshSelectedClub() }"

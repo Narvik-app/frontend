@@ -4,7 +4,7 @@ import type {UuidItem} from "~/types/api/uuidItem";
 import type {ClubLinkedItem} from "~/types/api/clubLinkedItem";
 
 interface _ExternalPresence extends UuidItem, ClubLinkedItem, TimestampItem {
-  activities?: Array<any>;
+  activities?: Array<Activity | string>;
   licence?: string;
   firstname: string;
   lastname: string;

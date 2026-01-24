@@ -104,7 +104,7 @@ function rowClicked(row: TableRow<Club>) {
 }
 
 async function createItem() {
-  let item: WriteClub = {
+  const item: WriteClub = {
     name: '',
     isActivated: true,
     presencesEnabled: true,
@@ -132,10 +132,10 @@ async function impersonate(club: Club) {
           <div class="flex gap-4">
             <UInput
               v-model="searchQuery"
-              @update:model-value="searchQueryUpdated()"
               placeholder="Rechercher..."
+              @update:model-value="searchQueryUpdated()"
             >
-              <template #trailing v-if="searchQuery">
+              <template v-if="searchQuery" #trailing>
                 <UIcon
                   v-if="searchQuery"
                   class="cursor-pointer"
@@ -145,9 +145,9 @@ async function impersonate(club: Club) {
               </template>
             </UInput>
 
-            <div class="flex-1"></div>
+            <div class="flex-1"/>
 
-            <UButton @click="createItem" icon="i-heroicons-plus"/>
+            <UButton icon="i-heroicons-plus" @click="createItem"/>
 
           </div>
 
@@ -205,7 +205,7 @@ async function impersonate(club: Club) {
         </UButton>
 
         <UCard>
-          <ClubForm :item="selectedItem" @updated="(value) => {selectedItem = value; getItemsPaginated()}" :isList="true" />
+          <ClubForm :item="selectedItem" :is-list="true" @updated="(value) => {selectedItem = value; getItemsPaginated()}" />
         </UCard>
 
       </div>

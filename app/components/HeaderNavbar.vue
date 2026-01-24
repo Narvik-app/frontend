@@ -152,12 +152,14 @@ const overlay = useOverlay()
             color="neutral"
             :label="(isDesktopDisplay || isTabletDisplay) ? (!isBadger ? (selectedProfile?.displayName ?? user?.fullName) : 'Pointeuse') : undefined">
             <template #trailing>
-              <UAvatar v-if="!isBadger"
+              <UAvatar
+v-if="!isBadger"
                        size="xs"
                        :alt="selfStore.member?.fullName ?? user?.fullName"
                        :src="selfStore.member?.profileImageBase64"
               />
-              <UIcon v-else
+              <UIcon
+v-else
                      name="i-heroicons-clock"
               />
             </template>

@@ -4,7 +4,7 @@ const isOpen = defineModel<boolean>({default: false})
 
 <template>
   <div>
-    <slot name="main"></slot>
+    <slot name="main"/>
     <USlideover v-model:open="isOpen">
       <template #content>
         <div class="flex flex-col h-full max-h-full">
@@ -17,7 +17,7 @@ const isOpen = defineModel<boolean>({default: false})
             @click="isOpen = false"
           />
           <div class="p-4 flex-1 overflow-y-auto">
-            <slot name="side"></slot>
+            <slot name="side"/>
           </div>
         </div>
       </template>

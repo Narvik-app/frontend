@@ -95,7 +95,7 @@ function rowClicked(row: TableRow<User>) {
 }
 
 async function createItem() {
-  let item: User = {
+  const item: User = {
     email: '',
   }
   selectedItem.value = item
@@ -120,10 +120,10 @@ async function impersonate(user: User) {
           <div class="flex gap-4">
             <UInput
               v-model="searchQuery"
-              @update:model-value="searchQueryUpdated()"
               placeholder="Rechercher..."
+              @update:model-value="searchQueryUpdated()"
             >
-              <template #trailing v-if="searchQuery">
+              <template v-if="searchQuery" #trailing>
                 <UIcon
                   v-if="searchQuery"
                   class="cursor-pointer"
@@ -133,9 +133,9 @@ async function impersonate(user: User) {
               </template>
             </UInput>
 
-            <div class="flex-1"></div>
+            <div class="flex-1"/>
 
-            <UButton @click="createItem" icon="i-heroicons-plus"/>
+            <UButton icon="i-heroicons-plus" @click="createItem"/>
 
           </div>
 
@@ -190,7 +190,7 @@ async function impersonate(user: User) {
         </UButton>
 
         <UCard>
-          <UserForm :item="selectedItem" @updated="(value) => {selectedItem = value; getItemsPaginated()}" :isList="true" />
+          <UserForm :item="selectedItem" :is-list="true" @updated="(value) => {selectedItem = value; getItemsPaginated()}" />
         </UCard>
       </div>
     </template>

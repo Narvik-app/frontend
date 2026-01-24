@@ -30,7 +30,7 @@ async function loadSmtpSettings() {
   isLoading.value = true
 
   for (const [key, value] of Object.entries(GLOBAL_SETTINGS_SMTP_BOOLEAN_MAPPING)) {
-    let {retrieved} = await globalSettingQuery.get(value)
+    const {retrieved} = await globalSettingQuery.get(value)
     if (retrieved) {
       let setValue: boolean = false
       if (retrieved.value) {
@@ -47,7 +47,7 @@ async function loadSmtpSettings() {
   }
 
   for (const [key, value] of Object.entries(GLOBAL_SETTINGS_SMTP_STRING_MAPPING)) {
-    let { retrieved } = await globalSettingQuery.get(value)
+    const { retrieved } = await globalSettingQuery.get(value)
     if (retrieved) {
       let setValue: string|null = null
       if (retrieved.value) {
@@ -130,7 +130,7 @@ async function testSmtp() {
         </UButton>
 
         <UProgress v-if="isLoading" animation="swing" class="mb-2" />
-        <UForm v-else class="flex gap-2 flex-col" :state="smtpSetting" :validate="validate" @submit="updateSmtpSetting" @error="onError" autocomplete="off">
+        <UForm v-else class="flex gap-2 flex-col" :state="smtpSetting" :validate="validate" autocomplete="off" @submit="updateSmtpSetting" @error="onError">
           <UFormField label="Activé">
             <USwitch v-model="smtpSetting.on" />
           </UFormField>

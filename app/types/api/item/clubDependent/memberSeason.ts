@@ -5,9 +5,9 @@ import type {Season} from "~/types/api/item/season";
 import type {Member} from "~/types/api/item/clubDependent/member";
 
 export interface _MemberSeason extends UuidItem, ClubLinkedItem {
-  member?: any;
-  season?: any;
-  ageCategory?: any;
+  member?: Member | string;
+  season?: Season | string;
+  ageCategory?: AgeCategory | string;
   isSecondaryClub?: boolean;
 }
 

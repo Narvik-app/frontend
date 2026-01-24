@@ -76,7 +76,7 @@ function rowClicked(row: TableRow<Club>) {
 }
 
 async function createItem() {
-  let item: Season = {
+  const item: Season = {
     name: '20',
   }
   selectedItem.value = item
@@ -87,7 +87,7 @@ async function updateItem(item: Season) {
   isLoading.value = true
 
   // We recreate the payload so we don't edit unwanted fields
-  let payload: Season = {
+  const payload: Season = {
     name: item.name
   }
 
@@ -156,9 +156,9 @@ const validate = (state: any): FormError[] => {
       <UCard>
         <div>
           <div class="flex gap-4">
-            <div class="flex-1"></div>
+            <div class="flex-1"/>
 
-            <UButton @click="createItem" icon="i-heroicons-plus"/>
+            <UButton icon="i-heroicons-plus" @click="createItem"/>
 
           </div>
 
@@ -178,9 +178,7 @@ const validate = (state: any): FormError[] => {
               {{ row.original.name }}
             </template>
 
-            <template #actions-cell="{ row }">
-
-            </template>
+            <template #actions-cell="{ row }"/>
 
           </UTable>
 
@@ -196,7 +194,7 @@ const validate = (state: any): FormError[] => {
 
     <template #side>
       <template v-if="selectedItem">
-        <UForm :state="selectedItem" @submit="updateItem(selectedItem)" :validate="validate" class="flex flex-col gap-4">
+        <UForm :state="selectedItem" :validate="validate" class="flex flex-col gap-4" @submit="updateItem(selectedItem)">
           <UCard>
             <div class="flex gap-2 flex-col relative">
               <UFormField label="Nom" name="name" required>

@@ -112,20 +112,20 @@ function sortClicked() {
 
 <template>
   <UTable
+    v-model:sorting="sort"
     :loading="props.isLoading"
     class="w-full"
-    v-model:sorting="sort"
     :sorting-options="{
       manualSorting: true,
       enableMultiSort: false,
     }"
-    @update:sorting="sortClicked()"
     :columns="columns"
     :data="props.presences"
-    @select="(evt, row) => rowClicked(row)"
     :ui="{
       tr: 'cursor-pointer'
     }"
+    @update:sorting="sortClicked()"
+    @select="(evt, row) => rowClicked(row)"
   >
     <template #empty>
       <div class="flex flex-col items-center justify-center py-6 gap-3">
@@ -134,7 +134,7 @@ function sortClicked() {
       </div>
     </template>
 
-    <template #date-header="{ column }" v-if="props.displayFullDate">
+    <template v-if="props.displayFullDate" #date-header="{ column }">
       <GenericTableSortButton :column="column" />
     </template>
     <template #date-cell="{ row }">
@@ -161,7 +161,8 @@ function sortClicked() {
       </template>
       <template v-else>
         <div v-if="row.original.member" class="flex flex-wrap gap-2">
-          <UBadge v-if="row.original.member.currentSeason && row.original.member.currentSeason.isSecondaryClub"
+          <UBadge
+v-if="row.original.member.currentSeason && row.original.member.currentSeason.isSecondaryClub"
             variant="subtle"
             color="success">
             Club secondaire
@@ -199,7 +200,8 @@ function sortClicked() {
             </UButton>
           </div>
 
-          <div v-if="new Date((new Date()).setFullYear((new Date().getFullYear() - 1))) > new Date(row.original.member.lastControlShooting)"
+          <div
+v-if="new Date((new Date()).setFullYear((new Date().getFullYear() - 1))) > new Date(row.original.member.lastControlShooting)"
                class="basis-full">
             <UButton
                 color="error"
@@ -212,8 +214,9 @@ function sortClicked() {
         <div v-if="row.original.activities.length == 0">
           <i>Aucune activités déclarées</i>
         </div>
-        <UButton v-else
-          v-for="activity in row.original.activities.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))"
+        <UButton
+v-for="activity in row.original.activities.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))"
+          v-else
           :color="props.accentColor"
           :variant="props.isExternalPresences ? 'solid' : 'soft'"
         >
@@ -224,7 +227,8 @@ function sortClicked() {
 
   </UTable>
 
-  <GenericTablePagination v-if="props.hasPagination"
+  <GenericTablePagination
+v-if="props.hasPagination"
     v-model:page="page"
     v-model:items-per-page="itemsPerPage"
     :total-items="props.totalPresences"

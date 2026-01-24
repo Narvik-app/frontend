@@ -9,15 +9,15 @@ export default class MemberQuery extends AbstractClubDependentQuery<Member, Memb
   rootPath = "members";
 
   async updateRole(member: Member, role: ClubRole) {
-    let payload: Member = {
+    const payload: Member = {
       role: role
     }
 
     return usePatch<Member>(`${member["@id"]}/role`, payload)
   }
 
-  async linkWithUser(member: Member, email: String) {
-    let payload = {
+  async linkWithUser(member: Member, email: string) {
+    const payload = {
       email: email
     }
 

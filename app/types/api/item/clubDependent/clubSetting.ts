@@ -6,11 +6,11 @@ import type {Season} from "~/types/api/item/season";
 import type {ClubActivity} from "~/types/api/item/club";
 
 interface _ClubSetting extends UuidItem, ClubLinkedItem {
-  logo?: any
+  logo?: File | string
   logoBase64?: string
   activity?: ClubActivity
-  controlShootingActivity?: any
-  excludedActivitiesFromOpeningDays?: any
+  controlShootingActivity?: Activity | string | null
+  excludedActivitiesFromOpeningDays?: Activity[] | string[]
   seasonEnd?: string
   itacImportDate?: Date
   itacImportRemaining?: number

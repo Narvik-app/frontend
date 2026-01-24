@@ -19,5 +19,5 @@ definePageMeta({
 </script>
 
 <template>
-  <EmailTemplateList v-if="selectedProfile"></EmailTemplateList>
+  <EmailTemplateList v-if="selectedProfile"/>
 </template>

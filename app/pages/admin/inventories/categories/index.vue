@@ -108,7 +108,7 @@ definePageMeta({
   }
 
   async function createCategory() {
-    let category: InventoryCategory = {
+    const category: InventoryCategory = {
       name: ''
     }
     selectedCategory.value = category
@@ -116,7 +116,7 @@ definePageMeta({
 
   async function updateCategory(category: InventoryCategory) {
     isLoading.value = true
-    let payload: InventoryCategory = {
+    const payload: InventoryCategory = {
       name: category.name,
     }
 
@@ -127,11 +127,11 @@ definePageMeta({
     // We verify if it's a creation or an update
     let error: NuxtError<ItemError> | undefined = undefined
     if (!category.uuid) {
-      let { created, error: errorMessage } = await apiQuery.post(payload);
+      const { created, error: errorMessage } = await apiQuery.post(payload);
       error = errorMessage
       selectedCategory.value = created
     } else { // Update
-      let { error: errorMessage } = await apiQuery.patch(category, payload);
+      const { error: errorMessage } = await apiQuery.patch(category, payload);
       error = errorMessage
     }
 
@@ -183,12 +183,12 @@ definePageMeta({
 </script>
 
 <template>
-  <GenericLayoutContentWithStickySide @keyup.esc="isVisible = false; selectedCategory = undefined;" :has-side-content="isVisible" :mobile-side-title="selectedCategory?.name" tabindex="-1">
+  <GenericLayoutContentWithStickySide :has-side-content="isVisible" :mobile-side-title="selectedCategory?.name" tabindex="-1" @keyup.esc="isVisible = false; selectedCategory = undefined;">
     <template #main>
       <UCard>
         <div>
           <div class="flex gap-4">
-            <div class="flex-1"></div>
+            <div class="flex-1"/>
             <UButton v-if="canEdit" @click="createCategory">
               Créer une catégorie
             </UButton>
@@ -232,14 +232,14 @@ definePageMeta({
 
     <template #side>
       <template v-if="selectedCategory && canEdit">
-        <UForm :state="selectedCategory" @submit="updateCategory(selectedCategory)" :validate="validate" class="flex flex-col gap-4">
+        <UForm :state="selectedCategory" :validate="validate" class="flex flex-col gap-4" @submit="updateCategory(selectedCategory)">
           <UCard>
             <div class="flex gap-2 flex-col">
               <UFormField label="Nom" name="name">
                 <UInput v-model="selectedCategory.name" />
               </UFormField>
               <UFormField label="Poids dans la liste" name="weight">
-                <UInput type="number" v-model="selectedCategory.weight" />
+                <UInput v-model="selectedCategory.weight" type="number" />
               </UFormField>
             </div>
 

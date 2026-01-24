@@ -136,7 +136,8 @@ onBeforeUnmount(() => {
         </template>
 
         <template #reset>
-          <UAlert v-if="securityEmailSent"
+          <UAlert
+v-if="securityEmailSent"
             icon="i-heroicons-megaphone"
             color="success"
             variant="soft"

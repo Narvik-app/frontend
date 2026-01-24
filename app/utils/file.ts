@@ -1,4 +1,4 @@
-export function getFileFormDataFromUInputChangeEvent(event: any): FormData | null {
+export function getFileFormDataFromUInputChangeEvent(event: Event | FileList): FormData | null {
   const file = getFileFromUInputChangeEvent(event)
   if (!file) return null;
 
@@ -22,7 +22,7 @@ export function displayFileSuccessToast(title: string = 'Fichier envoyé'): void
   })
 }
 
-function getFileFromUInputChangeEvent(event: any): File | null {
+function getFileFromUInputChangeEvent(event: Event | FileList): File | null {
   let files: FileList;
   if (event instanceof FileList) {
     files = event;

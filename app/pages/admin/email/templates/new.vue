@@ -83,5 +83,5 @@ definePageMeta({
 </script>
 
 <template>
-  <EmailTemplateEditor></EmailTemplateEditor>
+  <EmailTemplateEditor/>
 </template>

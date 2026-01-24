@@ -228,7 +228,8 @@ loadClubUsers()
 
             <div class="text-center text-lg flex flex-row justify-center align-middle gap-2">
               <p>Renouvellement le</p>
-              <UButton icon="i-heroicons-calendar-days-20-solid"
+              <UButton
+icon="i-heroicons-calendar-days-20-solid"
                        size="xs"
                        :color="dayjs().isAfter(dayjs(club.renewDate).subtract(14, 'days')) ? 'error' : 'primary'"
                        :label="formatDateReadable(club.renewDate?.toString()) || 'Choisir une date'"
@@ -247,7 +248,8 @@ loadClubUsers()
 
             <div class="text-center text-lg flex flex-row justify-center align-middle gap-2">
               <p>Suppression programmée le</p>
-              <UButton icon="i-heroicons-calendar-days-20-solid"
+              <UButton
+icon="i-heroicons-calendar-days-20-solid"
                        size="xs"
                        :color="club.deletionDate ? 'error' : 'primary'"
                        :label="formatDateReadable(club.deletionDate?.toString()) || 'Choisir une date'"

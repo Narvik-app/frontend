@@ -36,7 +36,7 @@ watchEffect(() => {
 })
 
 function getDefaultPaymentMapping(): Map<string, PaymentModeCountMapping> {
-  let map = new Map<string, PaymentModeCountMapping>
+  const map = new Map<string, PaymentModeCountMapping>
   paymentModes.value.forEach((pm) => {
     if (!pm.name) return
     map.set(pm.name, {
@@ -90,7 +90,7 @@ function generateList() {
       }
 
       // We update the item count
-      let mappedPaymentMode = salePurchasedItemMap.counts.get(salePaymentMode)
+      const mappedPaymentMode = salePurchasedItemMap.counts.get(salePaymentMode)
       if (!mappedPaymentMode) return
 
       mappedPaymentMode.count += salePurchasedItem.quantity ?? 0
@@ -113,13 +113,13 @@ function generateList() {
 </script>
 
 <template>
-  <UCard v-if="props.isLoading" v-for="i in Math.floor(Math.random() * 3) + 1">
+  <UCard v-for="i in Math.floor(Math.random() * 3) + 1" v-if="props.isLoading">
     <USkeleton class="h-8 w-36 mb-4" />
     <div class="gap-2 grid grid-flow-row grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
       <USkeleton v-for="i in Math.floor(Math.random() * 5) + 2" class="h-24 w-full" />
     </div>
   </UCard>
-  <UCard v-else v-for="categoryMap in mapping">
+  <UCard v-for="categoryMap in mapping" v-else>
     <div>
       <div class="text-xl font-bold mb-4">{{ categoryMap.name == '000' ? 'Sans catégorie' : categoryMap.name }}</div>
       <div class="gap-2 grid grid-flow-row grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
@@ -128,7 +128,8 @@ function generateList() {
             <div class="text-lg font-bold text-center">{{ itemMap.item.itemName }}</div>
 
             <div class="flex flex-col">
-              <div v-for="[name, pmMap] in itemMap.counts"
+              <div
+v-for="[name, pmMap] in itemMap.counts"
                    :class="'grid grid-flow-row grid-cols-3 ' + (pmMap.count < 1 ? 'opacity-20' : '')"
               >
                 <div>

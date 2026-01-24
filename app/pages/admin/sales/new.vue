@@ -59,7 +59,7 @@ definePageMeta({
   const inventoryItems: Ref<InventoryItem[]> = ref([])
   const inventoryItemsLoading: Ref<InventoryItem[]> = ref([])
   const orderedItems = computed( () => {
-    let categories = new Map<string, InventoryItem[]>()
+    const categories = new Map<string, InventoryItem[]>()
     inventoryItems.value.forEach(item => {
       if (item.category && item.category.name) {
         if (!categories.has(item.category.name)) {
@@ -140,9 +140,9 @@ definePageMeta({
   async function createSale() {
     isCreatingSale.value = true
 
-    let salePurchasedItems: SalePurchasedItem[] = []
+    const salePurchasedItems: SalePurchasedItem[] = []
     cart.value.forEach((item, key) => {
-      let payload: SalePurchasedItem = {
+      const payload: SalePurchasedItem = {
         quantity: item.quantity
       }
 
@@ -209,20 +209,20 @@ definePageMeta({
     <template #main>
       <UCard class="print:ring-0 print:shadow-none print:!bg-transparent print:text-black">
         <GenericBarcodeReader
-          class="mb-4"
           v-model="cameraPreview"
+          class="mb-4"
           @decoded="(value) => {searchQuery = value}"
         />
 
         <div class="flex flex-row items-center mb-4 gap-2 print:hidden">
           <UInput
-            class="flex-1"
             v-model="searchQueryInput"
-            @update:model-value="searchQueryUpdated()"
+            class="flex-1"
             :loading="isLoading"
             placeholder="Rechercher..."
+            @update:model-value="searchQueryUpdated()"
           >
-            <template #trailing v-if="cameraIsPresent || searchQueryInput">
+            <template v-if="cameraIsPresent || searchQueryInput" #trailing>
               <UIcon
                 v-if="cameraIsPresent"
                 class="cursor-pointer"
@@ -239,7 +239,7 @@ definePageMeta({
             </template>
           </UInput>
 
-          <UButton @click="cartCustomItemModalOpen = true;" icon="i-heroicons-plus">
+          <UButton icon="i-heroicons-plus" @click="cartCustomItemModalOpen = true;">
             <span class="hidden sm:block">Article personnalisé</span>
           </UButton>
 
@@ -261,7 +261,8 @@ definePageMeta({
                 <div v-if="item.sellingQuantity && item.sellingQuantity != 1" class="text-xs font-bold">Vendu par {{ item.sellingQuantity }}</div>
                 <div v-if="item.description" class="text-xs print:hidden">{{ item.description }}</div>
               </div>
-              <div v-if="item.quantityAlert && (item.quantity || item.quantity === 0) && item.quantity <= item.quantityAlert"
+              <div
+v-if="item.quantityAlert && (item.quantity || item.quantity === 0) && item.quantity <= item.quantityAlert"
                    class="print:hidden text-xs font-bold text-error-600">
                 Stock restant : {{ item.quantity }}
               </div>
@@ -321,7 +322,7 @@ definePageMeta({
           <div class="text-4xl text-center">{{ formatMonetary(cartTotalPrice) }}</div>
           <div class="mt-4">
             <div class="flex text-xs align-center mt-1">
-              <div class="flex-1"></div>
+              <div class="flex-1"/>
               <UButton v-if="cart.length > 0" size="xs" @click="cartStore.emptyCart()">Vider le panier</UButton>
             </div>
             <div v-if="cart.length < 1" class="text-center">
@@ -350,7 +351,7 @@ definePageMeta({
 
         <UCard class="print:hidden">
           <UFormField label="Vendeur" :error="!sellerSelected && 'Un vendeur doit être défini'">
-            <UInputMenu class="w-full" v-model="sellerSelected" :items="sellersSelect" :filter-fields="['item.lastname', 'item.firstname']" @change="sellerUpdated" />
+            <UInputMenu v-model="sellerSelected" class="w-full" :items="sellersSelect" :filter-fields="['item.lastname', 'item.firstname']" @change="sellerUpdated" />
           </UFormField>
 
           <UFormField class="my-2" label="Commentaire" :error="cartComment.length > 249 && 'Longueur maximum atteinte (250)'">

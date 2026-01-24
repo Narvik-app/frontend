@@ -127,7 +127,8 @@ async function submitItem() {
     </div>
 
 
-    <UButton type="submit" v-if="!props.isList || !item.uuid"
+    <UButton
+v-if="!props.isList || !item.uuid" type="submit"
       block
       class="mt-2"
       :loading="isUpdating"
