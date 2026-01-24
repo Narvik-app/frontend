@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type {Member} from "~/types/api/item/clubDependent/member";
+import type {NuxtError} from "#app";
 import TextEditor from '~/components/TextEditor.vue';
 import {useSelfUserStore} from '~/stores/useSelfUser';
 import EmailQuery from "~/composables/api/query/clubDependent/plugin/emailing/EmailQuery";
@@ -212,21 +213,22 @@ const MAX_ATTACHMENT_SIZE_MB = 15
     if (memberUuids && typeof memberUuids === 'string') {
       const uuidList = memberUuids.split(',').filter(uuid => uuid.trim().length > 0)
       const loadedMembers: Member[] = []
+      const errors: Error[] = []
       
       for (const encodedUuid of uuidList) {
         try {
           const { retrieved, error } = await memberQuery.get(decodeUrlUuid(encodedUuid.trim()))
           
           if (error) {
-            displayApiError(error, "Impossible de charger le membre")
+            errors.push(error)
             continue
           }
           
           if (retrieved) {
             loadedMembers.push(retrieved)
           }
-        } catch (e: any) {
-          displayApiError(e, "Impossible de charger le membre")
+        } catch (e) {
+          errors.push(e as Error)
         }
       }
       
@@ -241,7 +243,12 @@ const MAX_ATTACHMENT_SIZE_MB = 15
           })
         }
       } else if (uuidList.length > 0) {
-        displayApiError({ message: "Aucun membre n'a pu être chargé" } as any, "Chargement impossible")
+        // Show the first error or a generic message
+        if (errors.length > 0) {
+          displayApiError(errors[0] as NuxtError, "Chargement impossible")
+        } else {
+          displayApiError({ message: "Aucun membre n'a pu être chargé" } as NuxtError, "Chargement impossible")
+        }
       }
     }
   }
