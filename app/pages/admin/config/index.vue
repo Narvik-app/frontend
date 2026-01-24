@@ -142,7 +142,7 @@ async function controlShootingUpdated() {
     controlShootingActivity: selectedControlShootingActivity.value? selectedControlShootingActivity.value["@id"] : null
   }
 
-  const { updated: _updated1, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
+  const { error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
 
   if (error) {
     displayApiError(error)
@@ -171,7 +171,7 @@ async function ignoredActivitiesDaysUpdated() {
     excludedActivitiesFromOpeningDays: uris
   }
 
-  const { updated: _updated2, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
+  const { error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
 
   if (error) {
     displayApiError(error)
@@ -241,7 +241,7 @@ async function seasonEndUpdated() {
     seasonEnd: `${configState.selectedMonth}-${configState.selectedDay}`
   }
 
-  const { updated: _updated3, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
+  const { error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
 
   if (error) {
     displayApiError(error)
@@ -265,7 +265,7 @@ async function clubActivityUpdated() {
     activity: configState.activity.value
   }
 
-  const { updated: _updated4, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
+  const { error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
 
   if (error) {
     displayApiError(error)
@@ -289,7 +289,7 @@ async function emailReplyToUpdated() {
     emailReplyTo: configState.emailReplyTo
   }
 
-  const { updated: _updated5, error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
+  const { error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
 
   if (error) {
     displayApiError(error)
