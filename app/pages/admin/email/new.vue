@@ -213,14 +213,14 @@ const MAX_ATTACHMENT_SIZE_MB = 15
     if (memberUuids && typeof memberUuids === 'string') {
       const uuidList = memberUuids.split(',').filter(uuid => uuid.trim().length > 0)
       const loadedMembers: Member[] = []
-      const errors: Error[] = []
+      let firstError: Error | null = null
       
       for (const encodedUuid of uuidList) {
         try {
           const { retrieved, error } = await memberQuery.get(decodeUrlUuid(encodedUuid.trim()))
           
           if (error) {
-            errors.push(error)
+            if (!firstError) firstError = error
             continue
           }
           
@@ -228,7 +228,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
             loadedMembers.push(retrieved)
           }
         } catch (e) {
-          errors.push(e as Error)
+          if (!firstError) firstError = e as Error
         }
       }
       
@@ -244,10 +244,14 @@ const MAX_ATTACHMENT_SIZE_MB = 15
         }
       } else if (uuidList.length > 0) {
         // Show the first error or a generic message
-        if (errors.length > 0) {
-          displayApiError(errors[0] as NuxtError, "Chargement impossible")
+        if (firstError) {
+          displayApiError(firstError as NuxtError, "Chargement impossible")
         } else {
-          displayApiError({ message: "Aucun membre n'a pu être chargé" } as NuxtError, "Chargement impossible")
+          toast.add({
+            title: "Chargement impossible",
+            description: "Aucun membre n'a pu être chargé",
+            color: "error"
+          })
         }
       }
     }
