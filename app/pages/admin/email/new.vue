@@ -207,24 +207,24 @@ const MAX_ATTACHMENT_SIZE_MB = 15
 
   async function loadMemberFromQuery() {
     const memberUuids = route.query.members
-    
+
     // Handle members parameter (supports both single and multiple members)
     if (memberUuids && typeof memberUuids === 'string') {
       const uuidList = memberUuids.split(',').filter(uuid => uuid.trim().length > 0)
       const loadedMembers: Member[] = []
       let firstErrorMessage = ''
-      
+
       for (const encodedUuid of uuidList) {
         try {
           const { retrieved, error } = await memberQuery.get(decodeUrlUuid(encodedUuid.trim()))
-          
+
           if (error) {
             if (!firstErrorMessage) {
               firstErrorMessage = error.message || 'Erreur de chargement'
             }
             continue
           }
-          
+
           if (retrieved) {
             loadedMembers.push(retrieved)
           }
@@ -234,14 +234,13 @@ const MAX_ATTACHMENT_SIZE_MB = 15
           }
         }
       }
-      
+
       if (loadedMembers.length > 0) {
         selectedMembers.value = loadedMembers
-        
+
         if (loadedMembers.length < uuidList.length) {
           toast.add({
-            title: "Attention",
-            description: `${uuidList.length - loadedMembers.length} membre(s) n'ont pas pu être chargé(s)`,
+            description: `${uuidList.length - loadedMembers.length} membres n'ont pas pu être chargés`,
             color: "warning"
           })
         }

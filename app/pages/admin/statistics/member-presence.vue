@@ -288,8 +288,9 @@ onMounted(() => {
           </div>
         </template>
 
-        <!-- Action bar for selected members -->
-        <div v-if="selectedMembers.length > 0" class="mb-4 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg flex items-center justify-between print:hidden">
+        <div
+          v-if="selectedMembers.length > 0"
+          class="mb-4 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg flex items-center justify-between print:hidden">
           <div class="flex items-center gap-2">
             <span class="font-medium">{{ selectedMembers.length }} membre{{ selectedMembers.length > 1 ? 's' : '' }} sélectionné{{ selectedMembers.length > 1 ? 's' : '' }}</span>
             <UButton
