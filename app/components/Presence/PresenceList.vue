@@ -34,7 +34,7 @@ const props = defineProps({
   })
 
 
-  watch(selectedActivities, (new_value, old_value) => {
+  watch(selectedActivities, (new_value, _old_value) => {
     presenceStore.selectedActivities = new_value
   })
 

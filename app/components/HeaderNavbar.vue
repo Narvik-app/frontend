@@ -15,7 +15,7 @@ const overlay = useOverlay()
   const { selectedProfile, user } = storeToRefs(selfStore)
 
   // const, to avoid it being reactive and login back user
-  const isAdmin = selfStore.isAdmin()
+  const _isAdmin = selfStore.isAdmin()
   const isBadger = selfStore.isBadger()
   const isSupervisor = computed(() => {
     return selfStore.hasSupervisorRole() && selectedProfile.value

@@ -2,7 +2,7 @@
 
 import {useAppConfigStore} from "~/stores/useAppConfig";
 
-const props = defineProps({
+const _props = defineProps({
   backLoginButton: {
     type: Boolean,
     default: true

@@ -86,7 +86,8 @@ const cItems = computed(() => {
               :label="menuVisible ? 'Masquer le menu' : 'Menu'"
               @click="menuVisible = !menuVisible"
             />
-            <template v-for="groupedLinks in cItems" v-if="menuVisible">
+            <template v-if="menuVisible">
+              <template v-for="(groupedLinks, gIndex) in cItems" :key="gIndex">
               <USeparator
 v-if="groupedLinks.title !== undefined"
                         class="p-2"
@@ -97,6 +98,7 @@ v-if="groupedLinks.title !== undefined"
                 orientation="vertical"
                 :items="groupedLinks.links"
               />
+              </template>
             </template>
 
           </div>

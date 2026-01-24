@@ -547,11 +547,11 @@ v-if="isSuperAdmin || (isAdmin && member.email != loggedUsername)"
           </div>
 
           <div class="space-y-4 w-full mt-4">
-            <div v-for="w in ['w-52 h-8', 'w-36 h-4', 'w-48 h-4']" class="flex justify-center">
+            <div v-for="(w, wIndex) in ['w-52 h-8', 'w-36 h-4', 'w-48 h-4']" :key="wIndex" class="flex justify-center">
               <USkeleton :class="w" />
             </div>
             <div class="flex gap-4 justify-center flex-wrap">
-              <USkeleton v-for="i in (Math.floor(Math.random()*6) + 2)" class="w-14 h-4" />
+              <USkeleton v-for="i in (Math.floor(Math.random()*6) + 2)" :key="i" class="w-14 h-4" />
             </div>
 
           </div>
@@ -812,6 +812,7 @@ v-if="isSuperAdmin || (isAdmin && member.email != loggedUsername)"
                 <div class="flex flex-1 flex-wrap gap-4">
                   <UButton
                     v-for="activity in row.original.activities.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))"
+                    :key="activity.uuid"
                     variant="soft">
                     {{ activity.name }}
                   </UButton>

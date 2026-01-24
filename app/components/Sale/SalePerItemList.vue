@@ -113,23 +113,24 @@ function generateList() {
 </script>
 
 <template>
-  <UCard v-for="i in Math.floor(Math.random() * 3) + 1" v-if="props.isLoading">
+  <UCard v-for="i in Math.floor(Math.random() * 3) + 1" v-if="props.isLoading" :key="`loading-${i}`">
     <USkeleton class="h-8 w-36 mb-4" />
     <div class="gap-2 grid grid-flow-row grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-      <USkeleton v-for="i in Math.floor(Math.random() * 5) + 2" class="h-24 w-full" />
+      <USkeleton v-for="j in Math.floor(Math.random() * 5) + 2" :key="`skeleton-${i}-${j}`" class="h-24 w-full" />
     </div>
   </UCard>
-  <UCard v-for="categoryMap in mapping" v-else>
+  <UCard v-for="(categoryMap, cIndex) in mapping" v-else :key="cIndex">
     <div>
       <div class="text-xl font-bold mb-4">{{ categoryMap.name == '000' ? 'Sans catégorie' : categoryMap.name }}</div>
       <div class="gap-2 grid grid-flow-row grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        <UCard v-for="itemMap in Array.from(categoryMap.items.values()).sort((a, b) => { return (a.item.itemName?.toLowerCase() ?? '') > (b.item.itemName?.toLowerCase() ?? '') ? 1 : -1 })">
+        <UCard v-for="(itemMap, iIndex) in Array.from(categoryMap.items.values()).sort((a, b) => { return (a.item.itemName?.toLowerCase() ?? '') > (b.item.itemName?.toLowerCase() ?? '') ? 1 : -1 })" :key="iIndex">
           <div class="flex flex-col gap-2">
             <div class="text-lg font-bold text-center">{{ itemMap.item.itemName }}</div>
 
             <div class="flex flex-col">
               <div
 v-for="[name, pmMap] in itemMap.counts"
+                   :key="name"
                    :class="'grid grid-flow-row grid-cols-3 ' + (pmMap.count < 1 ? 'opacity-20' : '')"
               >
                 <div>

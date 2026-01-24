@@ -9,7 +9,7 @@ const props = defineProps({
     }
   })
 
-  const emit = defineEmits(['close'])
+  const _emit = defineEmits(['close'])
 
   const email = ref(props.item)
 

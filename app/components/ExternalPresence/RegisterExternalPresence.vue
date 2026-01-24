@@ -158,7 +158,7 @@ function presenceCanceled() {
       <USkeleton class="h-4 w-12 my-4" />
 
       <div class="grid grid-cols-2 gap-4">
-        <div v-for="i in 11" class="h-6 flex gap-4 basis-1/2 w-full">
+        <div v-for="i in 11" :key="i" class="h-6 flex gap-4 basis-1/2 w-full">
           <USkeleton class="w-6" />
           <USkeleton class="w-full" />
         </div>
@@ -199,7 +199,7 @@ function presenceCanceled() {
         <div class="mt-4">Activités</div>
         <div class="my-4">
           <div class="grid grid-cols-2 gap-2 gap-y-2 ">
-            <template v-for="activity in activities">
+            <template v-for="activity in activities" :key="activity.uuid">
               <UCheckbox
 v-if="activity['@id']"
                 v-model="state.activities[activity['@id']]"

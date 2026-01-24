@@ -47,7 +47,7 @@ const props = defineProps({
 
   getPresences();
 
-  watch([searchQuery, selectedRange, selectedActivities], (value) => {
+  watch([searchQuery, selectedRange, selectedActivities], (_value) => {
     page.value = 1
     getPresences()
   })
@@ -121,7 +121,7 @@ const props = defineProps({
     modalOpen.value = true
   }
 
-  function externalPresenceUpdated(externalPresence: ExternalPresence) {
+  function externalPresenceUpdated(_externalPresence: ExternalPresence) {
     getPresences()
   }
 

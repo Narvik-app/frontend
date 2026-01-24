@@ -66,14 +66,14 @@ definePageMeta({
           categories.set(item.category.name, [])
         }
 
-        // @ts-ignore
+        // @ts-expect-error
         categories.get(item.category.name).push(item)
       } else {
         if (!categories.has('Non définie')) {
           categories.set('Non définie', [])
         }
 
-        // @ts-ignore
+        // @ts-expect-error
         categories.get('Non définie').push(item)
       }
     })

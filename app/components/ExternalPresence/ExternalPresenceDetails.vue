@@ -109,6 +109,7 @@ async function deletePresence() {
       <div class="flex gap-4 justify-center flex-wrap">
         <UButton
             v-for="activity in externalPresence?.activities.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))"
+            :key="activity.uuid"
             color="warning"
         >
           {{ activity.name }}

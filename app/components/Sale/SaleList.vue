@@ -104,6 +104,7 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
     <div class="sm:flex sm:gap-4 sm:justify-center sm:flex-wrap">
       <GenericStatCard
         v-for="[name, value] in totalPerPaymentMode"
+        :key="name"
         class="basis-[calc(25%-1rem)]"
         :title="name"
         :is-increasing="true"

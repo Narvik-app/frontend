@@ -41,7 +41,7 @@ async function loadSmtpSettings() {
           }
         }
       }
-      // @ts-ignore
+      // @ts-expect-error - dynamic key access for SMTP settings
       smtpSetting.value[key] = setValue
     }
   }
@@ -53,7 +53,7 @@ async function loadSmtpSettings() {
       if (retrieved.value) {
         setValue = retrieved.value
       }
-      // @ts-ignore
+      // @ts-expect-error - dynamic key access for SMTP settings
       smtpSetting.value[key] = setValue
     }
   }

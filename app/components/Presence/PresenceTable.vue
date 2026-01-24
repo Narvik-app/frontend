@@ -217,6 +217,7 @@ v-if="new Date((new Date()).setFullYear((new Date().getFullYear() - 1))) > new D
         <UButton
 v-for="activity in row.original.activities.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))"
           v-else
+          :key="activity.uuid"
           :color="props.accentColor"
           :variant="props.isExternalPresences ? 'solid' : 'soft'"
         >

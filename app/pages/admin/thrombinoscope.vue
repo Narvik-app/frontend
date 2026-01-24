@@ -103,6 +103,7 @@ definePageMeta({
       <div class="grid grid-flow-row gap-4 grid-cols-1 sm:grid-cols-3 xl:grid-cols-5">
         <NuxtLink
           v-for="member in (members)"
+          :key="member.uuid"
           :to="`/admin/members/${convertUuidToUrlUuid(member.uuid)}`"
           target="_blank"
           class="transition ease-in-out hover:scale-105 duration-300 "
@@ -140,6 +141,7 @@ definePageMeta({
         <template v-if="isLoading">
           <UCard
             v-for="i in (totalMembers - members.length + 7)"
+            :key="i"
             :ui="{
               background: 'bg-white dark:bg-slate-950'
             }"
@@ -149,7 +151,7 @@ definePageMeta({
             </div>
 
             <div class="space-y-4 w-full mt-4">
-              <div v-for="w in ['w-52 h-8', 'w-36 h-4']" class="flex justify-center">
+              <div v-for="(w, wIndex) in ['w-52 h-8', 'w-36 h-4']" :key="wIndex" class="flex justify-center">
                 <USkeleton :class="w" />
               </div>
             </div>
