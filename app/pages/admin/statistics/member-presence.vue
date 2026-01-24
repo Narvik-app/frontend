@@ -336,7 +336,7 @@ onMounted(() => {
                <UButton
                  v-if="isAdmin"
                  icon="i-heroicons-envelope"
-                 :to="`/admin/email/new?member=${convertUuidToUrlUuid(row.original.memberUuid)}`"
+                 :to="`/admin/email/new?members=${convertUuidToUrlUuid(row.original.memberUuid)}`"
                />
              </div>
            </template>

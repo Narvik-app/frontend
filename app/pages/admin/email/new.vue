@@ -206,28 +206,9 @@ const MAX_ATTACHMENT_SIZE_MB = 15
   })
 
   async function loadMemberFromQuery() {
-    const memberUuid = route.query.member
     const memberUuids = route.query.members
     
-    // Handle single member (existing functionality)
-    if (memberUuid && typeof memberUuid === 'string') {
-      const { retrieved, error } = await memberQuery.get(decodeUrlUuid(memberUuid))
-
-      if (error) {
-        toast.add({
-          title: "Une erreur est survenue",
-          description: error.message,
-          color: "error"
-        })
-        return
-      }
-
-      if (retrieved) {
-        selectedMembers.value = [retrieved]
-      }
-    }
-    
-    // Handle multiple members (new functionality)
+    // Handle members parameter (supports both single and multiple members)
     if (memberUuids && typeof memberUuids === 'string') {
       const uuidList = memberUuids.split(',').filter(uuid => uuid.trim().length > 0)
       const loadedMembers: Member[] = []

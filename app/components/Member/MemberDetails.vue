@@ -563,7 +563,7 @@ async function deleteMember() {
                 v-if="member.uuid && canSendEmail"
                 variant="soft"
                 icon="i-heroicons-envelope"
-                :to="`/admin/email/new?member=${convertUuidToUrlUuid(member.uuid)}`"
+                :to="`/admin/email/new?members=${convertUuidToUrlUuid(member.uuid)}`"
               >
               </UButton>
             </div>
