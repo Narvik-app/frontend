@@ -243,7 +243,7 @@ async function getCategories() {
     </UFormField>
 
     <UButton
-v-if="!props.viewOnly" type="submit"
+      v-if="!props.viewOnly" type="submit"
       block
       class="mt-2"
       :loading="isUpdating"

@@ -60,7 +60,7 @@ const addMemberPresenceModal = ref(false)
 const selectedPresence: Ref<MemberPresence | undefined> = ref(undefined)
 const memberPresenceModal: Ref<boolean> = ref(false);
 
-const memberRef: Ref<Member | undefined> = ref(undefined)
+const member: Ref<Member | undefined> = ref(undefined)
 const memberProfileImage: Ref<ExposedFile | undefined> = ref(undefined)
 const memberPresences: Ref<MemberPresence[]> = ref([])
 const totalMemberPresences = computed(() => memberPresences.value.length)
@@ -137,18 +137,18 @@ const rolesSelect = computed( () => {
   return items;
 })
 
-watch(memberRef, (newValue, _oldValue) => {
+watch(member, (newValue, _oldValue) => {
   if (newValue) {
-    if (memberRef.value) {
-      memberSeasonQuery = new MemberSeasonQuery(memberRef.value)
+    if (member.value) {
+      memberSeasonQuery = new MemberSeasonQuery(member.value)
 
-      if (memberRef.value.profileImage?.privateUrl) {
-        fileQuery.getFromUrl(memberRef.value.profileImage.privateUrl).then(imageResponse => {
+      if (member.value.profileImage?.privateUrl) {
+        fileQuery.getFromUrl(member.value.profileImage.privateUrl).then(imageResponse => {
           memberProfileImage.value = imageResponse.retrieved
         })
       }
 
-      selectedNewRole.value = memberRef.value.role
+      selectedNewRole.value = member.value.role
 
       // We get the presences
       getMemberPresences()
@@ -161,7 +161,7 @@ loadItem()
 
 function loadItem() {
   if (props.member) {
-    memberRef.value = props.member
+    member.value = props.member
   } else {
     if (!props.memberId) {
       throw new Error("memberId prop should be defined")
@@ -180,16 +180,16 @@ function loadItem() {
       }
 
       if (value.retrieved) {
-        memberRef.value = value.retrieved
+        member.value = value.retrieved
       }
     });
   }
 }
 
 function changeMemberRole() {
-  if (!isAdmin || !memberRef.value || !selectedNewRole.value) return;
+  if (!isAdmin || !member.value || !selectedNewRole.value) return;
 
-  memberQuery.updateRole(memberRef.value, selectedNewRole.value as ClubRole).then(({updated, error}) => {
+  memberQuery.updateRole(member.value, selectedNewRole.value as ClubRole).then(({updated, error}) => {
     if (error) {
       toast.add({
         color: "error",
@@ -204,8 +204,8 @@ function changeMemberRole() {
       title: "Rôle modifié"
     })
 
-    if (memberRef.value && updated) {
-      memberRef.value.role = updated.role
+    if (member.value && updated) {
+      member.value.role = updated.role
     }
 
     changeMemberRoleModalOpen.value = false
@@ -213,9 +213,9 @@ function changeMemberRole() {
 }
 
 async function getMemberSeasons() {
-  if (!memberRef.value || !memberRef.value.uuid) return;
+  if (!member.value || !member.value.uuid) return;
   isLoadingMemberSeasons.value = true
-  const { error, items } = await memberQuery.seasons(memberRef.value.uuid)
+  const { error, items } = await memberQuery.seasons(member.value.uuid)
   isLoadingMemberSeasons.value = false
   if (error) {
     return
@@ -224,7 +224,7 @@ async function getMemberSeasons() {
 }
 
 async function getMemberPresences() {
-  if (!memberRef.value || !memberRef.value.uuid) return;
+  if (!member.value || !member.value.uuid) return;
 
   await getMemberSeasons()
 
@@ -233,7 +233,7 @@ async function getMemberPresences() {
     'date[after]': new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString().slice(0, 10)
   });
 
-  const { totalItems, items } = await memberQuery.presences(memberRef.value.uuid, presenceUrlParams)
+  const { totalItems, items } = await memberQuery.presences(member.value.uuid, presenceUrlParams)
   if (totalItems && totalItems > 0) {
     memberPresences.value = items
 
@@ -270,7 +270,7 @@ async function getMemberPresences() {
 }
 
 async function getMemberPresencesPaginated() {
-  if (!memberRef.value || !memberRef.value.uuid) return;
+  if (!member.value || !member.value.uuid) return;
   isLoadingMemberPresencesPaginated.value = true
 
   const urlParams = new URLSearchParams({
@@ -293,7 +293,7 @@ async function getMemberPresencesPaginated() {
   }
 
   // We make the search
-  const { totalItems, items } = await memberQuery.presences(memberRef.value.uuid, urlParams)
+  const { totalItems, items } = await memberQuery.presences(member.value.uuid, urlParams)
   memberPresencesPaginated.value = items
   if (totalItems) {
     totalMemberPresencesPaginated.value = totalItems
@@ -334,7 +334,7 @@ function presenceUpdated(_presence?: MemberPresence) {
 }
 
 async function downloadCsv() {
-  if (!memberRef.value || !memberRef.value.uuid) return;
+  if (!member.value || !member.value.uuid) return;
   isDownloadingCsv.value = true
 
   const urlParams = new URLSearchParams({
@@ -355,20 +355,20 @@ async function downloadCsv() {
   }
 
   // We make the search
-  const { data } = await memberQuery.presencesCsv(memberRef.value.uuid, urlParams)
+  const { data } = await memberQuery.presencesCsv(member.value.uuid, urlParams)
   isDownloadingCsv.value = false
   // We download in the browser
-  const filename = `${memberRef.value.licence}-presences.csv`
+  const filename = `${member.value.licence}-presences.csv`
   createBrowserCsvDownload(filename, data)
 }
 
 async function addMemberSeason(seasonIri: string, isSecondary: boolean = false, ageCategory: string|undefined = undefined) {
-  if (!memberSeasonQuery || !memberRef.value) {
+  if (!memberSeasonQuery || !member.value) {
     return
   }
 
   const memberSeason: MemberSeasonWrite = {
-    member: memberRef.value["@id"],
+    member: member.value["@id"],
     season: seasonIri,
     isSecondaryClub: isSecondary
   }
@@ -420,9 +420,9 @@ async function deleteMemberSeason(memberSeason: MemberSeason) {
 }
 
 async function deleteMember() {
-  if (!memberRef.value) return
+  if (!member.value) return
 
-  const { error } = await memberQuery.delete(memberRef.value)
+  const { error } = await memberQuery.delete(member.value)
 
   if (error) {
     toast.add({
@@ -457,7 +457,7 @@ async function deleteMember() {
       <!-- Admin && not current account -->
       <template v-if="member">
         <UModal
-v-if="isSuperAdmin || (isAdmin && member.email != loggedUsername)"
+          v-if="isSuperAdmin || (isAdmin && member.email != loggedUsername)"
           v-model:open="changeMemberRoleModalOpen"
         >
           <UButton>

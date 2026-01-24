@@ -253,8 +253,8 @@ definePageMeta({
                 <div v-if="item.description" class="text-xs print:hidden">{{ item.description }}</div>
               </div>
               <div
-v-if="item.quantityAlert && (item.quantity || item.quantity === 0) && item.quantity <= item.quantityAlert"
-                   class="print:hidden text-xs font-bold text-error-600">
+                v-if="item.quantityAlert && (item.quantity || item.quantity === 0) && item.quantity <= item.quantityAlert"
+                class="print:hidden text-xs font-bold text-error-600">
                 Stock restant : {{ item.quantity }}
               </div>
               <div class="text-xs bg-neutral-200 print:!bg-neutral-200 dark:bg-neutral-600 p-1 rounded-md">{{ formatMonetary(item.sellingPrice) }}</div>
