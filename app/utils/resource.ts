@@ -41,7 +41,8 @@ export function pathsMatch(paths: string[], path: string): boolean {
   return pathMatched;
 }
 
-export function formatErrorFromApiResponse(response: NuxtError | string | { data?: { description?: string; detail?: string }; message?: string }): object {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define proper API response error type
+export function formatErrorFromApiResponse(response: any): object {
   if (typeof response === 'string') {
     return {
       message: response

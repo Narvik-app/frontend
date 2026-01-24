@@ -4,7 +4,8 @@ import {useMetricStore} from "~/stores/useMetricStore";
 import ActivityQuery from "~/composables/api/query/clubDependent/plugin/presence/ActivityQuery";
 import type {Activity} from "~/types/api/item/clubDependent/plugin/presence/activity";
 import type {ChartBarData, ChartDataField} from "~/utils/chart";
-import type { DateRangeFilter,type DateRange} from "~/types/date";
+import {DateRangeFilter} from "~/types/date";
+import type {DateRange} from "~/types/date";
 import {formatDateRangeReadable, formatDateTimeReadable} from "~/utils/date";
 import {print} from "~/utils/browser";
 
@@ -362,8 +363,8 @@ watch([previousSeason, dateRange], () => {
       </div>
 
       <div
-v-if="selectedActivity && hasActivityData"
-           class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-4">
+          v-if="selectedActivity && hasActivityData"
+          class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-4">
         <GenericStatCard
           v-for="metric in activityChildMetrics"
           :key="metric.dayNumber"
@@ -380,9 +381,9 @@ v-if="selectedActivity && hasActivityData"
       </div>
 
       <GenericCard
-v-if="selectedActivity && hasActivityData && chartData && chartData.datasets.length > 0"
-                   class="mt-4"
-                   title="Médiane">
+          v-if="selectedActivity && hasActivityData && chartData && chartData.datasets.length > 0"
+          class="mt-4"
+          title="Médiane">
         <div class="h-[40vh] sm:h-[55vh]">
           <ChartBar :data="chartData"/>
         </div>
@@ -390,9 +391,9 @@ v-if="selectedActivity && hasActivityData && chartData && chartData.datasets.len
 
       <!-- Detailed metrics table with day-of-week breakdown -->
       <GenericCard
-v-if="selectedActivity && hasActivityData && activityChildMetrics.length > 0"
-                   class="mt-4"
-                   title="Statistiques par jour de la semaine">
+          v-if="selectedActivity && hasActivityData && activityChildMetrics.length > 0"
+          class="mt-4"
+          title="Statistiques par jour de la semaine">
         <UTable :columns="columns" :data="activityChildMetrics">
           <template #empty>
             <div class="flex flex-col items-center justify-center py-6 gap-3">
@@ -448,8 +449,8 @@ v-if="selectedActivity && hasActivityData && activityChildMetrics.length > 0"
 
       <!-- Show message if no activities are found but presences are enabled -->
       <div
-v-if="!availableActivities.length && selectedProfile?.club.presencesEnabled && !isLoading"
-           class="text-center py-4">
+          v-if="!availableActivities.length && selectedProfile?.club.presencesEnabled && !isLoading"
+          class="text-center py-4">
         <p class="text-sm text-gray-500">Aucune activité trouvée dans les statistiques de présence.</p>
       </div>
     </div>

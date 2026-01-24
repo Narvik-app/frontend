@@ -147,15 +147,15 @@ v-else
           <div class="col-span-5 space-y-4">
             <p class="font-bold">Club secondaire</p>
             <UAlert
-v-if="selfStore.selectedProfile?.club.settings.itacSecondaryImportDate"
-                    variant="soft"
-                    :title="'Dernier import effectué le ' + formatDateReadable(selfStore.selectedProfile.club.settings.itacSecondaryImportDate.toString())"
-                    :color="dayjs(selfStore.selectedProfile.club.settings.itacSecondaryImportDate).isBefore(dayjs().subtract(1, 'months')) ? 'error' : 'success' "
+                v-if="selfStore.selectedProfile?.club.settings.itacSecondaryImportDate"
+                variant="soft"
+                :title="'Dernier import effectué le ' + formatDateReadable(selfStore.selectedProfile.club.settings.itacSecondaryImportDate.toString())"
+                :color="dayjs(selfStore.selectedProfile.club.settings.itacSecondaryImportDate).isBefore(dayjs().subtract(1, 'months')) ? 'error' : 'success' "
             />
             <UAlert
-v-else
-                    title="Aucun import effectué"
-                    color="error"
+                v-else
+                title="Aucun import effectué"
+                color="error"
             />
 
             <UInput

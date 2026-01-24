@@ -314,8 +314,8 @@ definePageMeta({
 
           <template #category-cell="{ row }">
             <UButton
-v-if="row.original.category"
-              variant="soft"
+                v-if="row.original.category"
+                variant="soft"
             >
               {{ row.original.category.name }}
             </UButton>

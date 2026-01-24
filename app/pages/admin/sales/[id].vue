@@ -138,18 +138,18 @@ definePageMeta({
       </div>
 
       <div
-v-if="canModifySale"
-           class="flex justify-between gap-2"
+          v-if="canModifySale"
+          class="flex justify-between gap-2"
       >
         <UButton
-v-if="sale"
-          icon="i-heroicons-pencil"
-          color="warning"
-          size="xs"
-          label="Modifier"
-          @click="overlay.create(SaleModalEdit).open({
-            sale: sale
-          })"
+            v-if="sale"
+            icon="i-heroicons-pencil"
+            color="warning"
+            size="xs"
+            label="Modifier"
+            @click="overlay.create(SaleModalEdit).open({
+             sale: sale
+           })"
         />
 
         <UButton
@@ -216,8 +216,8 @@ v-if="sale"
 
         <template #itemCategory-cell="{ row }">
           <UButton
-v-if="row.original.itemCategory"
-                   variant="soft"
+              v-if="row.original.itemCategory"
+              variant="soft"
           >
             {{ row.original.itemCategory }}
           </UButton>
@@ -238,9 +238,9 @@ v-if="row.original.itemCategory"
 
         <template #item-cell="{ row }">
           <UButton
-v-if="row.original.item"
-             :to="'/admin/inventories/items/' + convertUuidToUrlUuid(row.original.item.uuid)"
-             variant="soft"
+              v-if="row.original.item"
+              :to="'/admin/inventories/items/' + convertUuidToUrlUuid(row.original.item.uuid)"
+              variant="soft"
           >
             Voir l'article
           </UButton>

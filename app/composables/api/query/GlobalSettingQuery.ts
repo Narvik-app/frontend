@@ -1,5 +1,6 @@
 import {AbstractQuery} from "~/composables/api/query/AbstractQuery";
-import type { GlobalSettingPublicEnum,type GlobalSetting} from "~/types/api/item/globalSetting";
+import {GlobalSettingPublicEnum} from "~/types/api/item/globalSetting";
+import type {GlobalSetting} from "~/types/api/item/globalSetting";
 import {useFetchItem, usePost, useUploadFile} from "~/composables/api/api";
 import type {SmtpConfig} from "~/types/api/smtp";
 import dayjs from "dayjs";

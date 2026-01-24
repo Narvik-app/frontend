@@ -147,9 +147,9 @@ loadLegals()
       />
 
       <UButton
-v-if="legalsCgvLink"
-        class="mt-2"
-        @click="displayPdf('cgv.pdf', legalsCgvLink)"
+          v-if="legalsCgvLink"
+          class="mt-2"
+          @click="displayPdf('cgv.pdf', legalsCgvLink)"
       >
         Afficher le pdf
       </UButton>
@@ -164,9 +164,9 @@ v-if="legalsCgvLink"
       />
 
       <UButton
-v-if="legalsCguLink"
-               class="mt-2"
-               @click="displayPdf('cgu.pdf', legalsCguLink)"
+          v-if="legalsCguLink"
+          class="mt-2"
+          @click="displayPdf('cgu.pdf', legalsCguLink)"
       >
         Afficher le pdf
       </UButton>
@@ -181,9 +181,9 @@ v-if="legalsCguLink"
       />
 
       <UButton
-v-if="legalsPrivacyLink"
-               class="mt-2"
-               @click="displayPdf('politique-confidentialite.pdf', legalsPrivacyLink)"
+          v-if="legalsPrivacyLink"
+          class="mt-2"
+          @click="displayPdf('politique-confidentialite.pdf', legalsPrivacyLink)"
       >
         Afficher le pdf
       </UButton>

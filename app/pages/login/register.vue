@@ -215,12 +215,12 @@ onBeforeUnmount(() => {
 
         <template #create>
           <UAlert
-v-if="securityEmailSent"
-            icon="i-heroicons-megaphone"
-            color="success"
-            variant="soft"
-            title="Un email contenant le code de sécurité vous a été envoyé."
-            description="Celui-ci peut se trouver dans votre dossier SPAM."
+              v-if="securityEmailSent"
+              icon="i-heroicons-megaphone"
+              color="success"
+              variant="soft"
+              title="Un email contenant le code de sécurité vous a été envoyé."
+              description="Celui-ci peut se trouver dans votre dossier SPAM."
           />
           <UForm :state="state" class="space-y-4 mt-4" :validate="validate" @submit="register">
             <UFormField label="Code de sécurité" name="securityCode" help="En cas de code invalide, un nouveau sera envoyé. Seul le dernier code de sécurité reçu est valide." required>

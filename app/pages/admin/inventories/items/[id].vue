@@ -143,9 +143,9 @@ definePageMeta({
         {{ inventoryItem?.name }}
 
         <UButton
-v-if="inventoryItem?.category"
-           :to="'/admin/inventories?category=' + convertUuidToUrlUuid(inventoryItem.category.uuid)"
-           variant="soft"
+            v-if="inventoryItem?.category"
+            :to="'/admin/inventories?category=' + convertUuidToUrlUuid(inventoryItem.category.uuid)"
+            variant="soft"
         >
           {{ inventoryItem.category.name }}
         </UButton>
