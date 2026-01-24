@@ -18,24 +18,24 @@ const emit = defineEmits(['updated', 'close'])
 
 const toast = useToast()
 
-const overlay = useOverlay()
+const _overlay = useOverlay()
 
 const isLoading = ref(false)
 
 const memberQuery = new MemberQuery()
-const member: Member = {...props.member}
+const memberCopy: Member = {...props.member}
 
-const validate = (state: any): FormError[] => {
+const validate = (_state: { linkedEmail?: string }): FormError[] => {
   const errors = []
-  if (!member.linkedEmail) errors.push({ name: 'email', message: 'Champ requis' })
+  if (!memberCopy.linkedEmail) errors.push({ name: 'email', message: 'Champ requis' })
   return errors
 }
 
 async function updateLink() {
-  if (!member.linkedEmail) return;
+  if (!memberCopy.linkedEmail) return;
 
   isLoading.value = true
-  const { updated, error } = await memberQuery.linkWithUser(member, member.linkedEmail)
+  const { updated, error } = await memberQuery.linkWithUser(memberCopy, memberCopy.linkedEmail)
   isLoading.value = false
 
   if (error || !updated) {
@@ -61,10 +61,10 @@ async function updateLink() {
 <template>
   <ModalWithActions title="Changement du compte lié" @close="(state: boolean) => emit('close', state)">
 
-    <UForm class="flex gap-2 flex-col" :state="member" :validate="validate">
+    <UForm class="flex gap-2 flex-col" :state="memberCopy" :validate="validate">
 
       <UFormField label="Adresse mail du compte" name="email">
-        <UInput v-model="member.linkedEmail" placeholder="Email" />
+        <UInput v-model="memberCopy.linkedEmail" placeholder="Email" />
       </UFormField>
     </UForm>
 

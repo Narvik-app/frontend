@@ -35,7 +35,7 @@ function presenceUpdated(newExternalPresence: ExternalPresence) {
   emit('updated', newExternalPresence)
 }
 
-function presenceCanceled(newExternalPresence: ExternalPresence) {
+function presenceCanceled(_newExternalPresence: ExternalPresence) {
   updateExternalPresenceModalOpen.value = false;
   emit('close', false)
 }

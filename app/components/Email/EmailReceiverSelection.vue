@@ -50,7 +50,7 @@ const props = defineProps({
   const columns = [
     {
       accessorKey: 'select',
-      header: ({table}) => h(UCheckbox, {
+      header: ({table: _table}) => h(UCheckbox, {
         modelValue: someMembersSelectedInPage()
         ? 'indeterminate'
         : allMembersSelectedInPage(),
@@ -107,7 +107,7 @@ const props = defineProps({
     }
   ]
 
-  function onSelect(row: TableRow<Member>, e?: Event) {
+  function onSelect(row: TableRow<Member>, _e?: Event) {
     const foundMember = props.modelValue.some(member => member.email === row.original.email)
     if (!foundMember) {
       emit('update:modelValue', [...props.modelValue, row.original])

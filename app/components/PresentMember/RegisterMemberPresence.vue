@@ -145,7 +145,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
       <USkeleton class="h-4 w-12 my-4" />
 
       <div class="grid grid-cols-2 gap-4">
-        <div v-for="i in 11" class="h-6 flex gap-4 basis-1/2 w-full">
+        <div v-for="k in 11" :key="k" class="h-6 flex gap-4 basis-1/2 w-full">
           <USkeleton class="w-6" />
           <USkeleton class="w-full" />
         </div>
@@ -172,7 +172,7 @@ v-if="props.dateEditable"
         <div class="mt-4">Activités</div>
         <div class="my-4">
           <div class="grid grid-cols-2 gap-2 gap-y-2 ">
-            <template v-for="activity in activitiesMember">
+            <template v-for="activity in activitiesMember" :key="activity.uuid">
               <UCheckbox
 v-if="activity['@id']"
                 v-model="state.activities[activity['@id']]"
@@ -186,7 +186,7 @@ v-if="activity['@id']"
             <template v-if="activitiesSupervisor.length > 0 && hasClubSupervisorRole(state.member?.role)">
               <USeparator class="col-span-2" :label="getAvailableClubRole(ClubRole.Supervisor).text" />
 
-              <template v-for="activitySupervisor in activitiesSupervisor">
+              <template v-for="activitySupervisor in activitiesSupervisor" :key="activitySupervisor.uuid">
                 <UCheckbox
 v-if="activitySupervisor['@id']"
                   v-model="state.activities[activitySupervisor['@id']]"
@@ -201,7 +201,7 @@ v-if="activitySupervisor['@id']"
             <template v-if="activitiesAdmin.length > 0 && isClubAdmin(state.member?.role)">
               <USeparator class="col-span-2" :label="getAvailableClubRole(ClubRole.Admin).text" />
 
-              <template v-for="activityAdmin in activitiesAdmin">
+              <template v-for="activityAdmin in activitiesAdmin" :key="activityAdmin.uuid">
                 <UCheckbox
 v-if="activityAdmin['@id']"
                   v-model="state.activities[activityAdmin['@id']]"

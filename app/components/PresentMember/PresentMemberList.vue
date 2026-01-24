@@ -45,7 +45,7 @@ const props = defineProps({
 
   getPresences();
 
-  watch([selectedRange, searchQuery, selectedActivities], (value) => {
+  watch([selectedRange, searchQuery, selectedActivities], (_value) => {
     page.value = 1
     getPresences()
   })

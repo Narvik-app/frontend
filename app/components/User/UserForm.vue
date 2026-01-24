@@ -19,7 +19,7 @@ const props = defineProps({
 
 const item: Ref<User> = props.item ? ref(props.item) : ref(getDefaultItem())
 
-watch(props, async value => {
+watch(props, async (_value) => {
   item.value = props.item ?? getDefaultItem()
 })
 

@@ -26,7 +26,7 @@ const props = defineProps({
 const item: Ref<InventoryItem> = props.item ? ref(props.item) : ref(getDefaultInventoryItem())
 const categories: Ref<InventoryCategory[] | undefined> = ref(props.categories)
 
-watch(props, async value => {
+watch(props, async (_value) => {
   item.value = props.item ?? getDefaultInventoryItem()
   if (!props.categories) {
     await getCategories()

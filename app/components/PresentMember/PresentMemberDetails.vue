@@ -14,7 +14,7 @@ import {convertUuidToUrlUuid} from "~/utils/resource";
 
 const toast = useToast()
 const selfStore = useSelfUserStore()
-const isAdmin = selfStore.isAdmin()
+const _isAdmin = selfStore.isAdmin()
 const isSupervisor = selfStore.hasSupervisorRole()
 const isBadger = selfStore.isBadger()
 
@@ -259,6 +259,7 @@ v-if="member.currentSeason && member.currentSeason.isSecondaryClub"
           <div class="flex gap-4 justify-center flex-wrap">
             <UButton
                 v-for="activity in memberPresence?.activities?.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))"
+                :key="activity.uuid"
                 variant="soft">
               {{ activity.name }}
             </UButton>
@@ -305,11 +306,11 @@ v-if="member.currentSeason && member.currentSeason.isSecondaryClub"
       </div>
 
       <div class="space-y-4 w-full mt-4">
-        <div v-for="w in ['w-52 h-8', 'w-36 h-4', 'w-48 h-4']" class="flex justify-center">
+        <div v-for="(w, wIndex) in ['w-52 h-8', 'w-36 h-4', 'w-48 h-4']" :key="wIndex" class="flex justify-center">
           <USkeleton :class="w" />
         </div>
         <div class="flex gap-4 justify-center flex-wrap">
-          <USkeleton v-for="i in (Math.floor(Math.random()*6) + 2)" class="w-14 h-4" />
+          <USkeleton v-for="j in (Math.floor(Math.random()*6) + 2)" :key="j" class="w-14 h-4" />
         </div>
 
       </div>

@@ -90,7 +90,7 @@ function openAddExternalPresenceModal() {
   addExternalPresenceModal.value = true
 }
 
-watch(searchMemberModalOpen, (value, oldValue) => {
+watch(searchMemberModalOpen, (value, _oldValue) => {
   if (!value) {
     selectedMember.value = null;
     searchQuery.value = '';
@@ -113,13 +113,13 @@ function memberSelectedFromSearch(member: Member) {
   selectedMember.value = member;
 }
 
-function presenceRegistered(memberPresence: MemberPresence) {
+function presenceRegistered(_memberPresence: MemberPresence) {
   getPresences(true)
   searchMemberModalOpen.value = false;
   presentMembers.value = undefined; // We unset the list since we are refreshing it
 }
 
-function externalPresenceRegistered(memberPresence: ExternalPresence) {
+function externalPresenceRegistered(_memberPresence: ExternalPresence) {
   getPresences(true)
   addExternalPresenceModal.value = false;
 }
