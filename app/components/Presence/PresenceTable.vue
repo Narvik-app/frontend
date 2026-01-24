@@ -162,9 +162,9 @@ function sortClicked() {
       <template v-else>
         <div v-if="row.original.member" class="flex flex-wrap gap-2">
           <UBadge
-v-if="row.original.member.currentSeason && row.original.member.currentSeason.isSecondaryClub"
-            variant="subtle"
-            color="success">
+              v-if="row.original.member.currentSeason && row.original.member.currentSeason.isSecondaryClub"
+              variant="subtle"
+              color="success">
             Club secondaire
           </UBadge>
 
@@ -201,8 +201,8 @@ v-if="row.original.member.currentSeason && row.original.member.currentSeason.isS
           </div>
 
           <div
-v-if="new Date((new Date()).setFullYear((new Date().getFullYear() - 1))) > new Date(row.original.member.lastControlShooting)"
-               class="basis-full">
+              v-if="new Date((new Date()).setFullYear((new Date().getFullYear() - 1))) > new Date(row.original.member.lastControlShooting)"
+              class="basis-full">
             <UButton
                 color="error"
             >
@@ -215,11 +215,11 @@ v-if="new Date((new Date()).setFullYear((new Date().getFullYear() - 1))) > new D
           <i>Aucune activités déclarées</i>
         </div>
         <UButton
-v-for="activity in row.original.activities.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))"
-          v-else
-          :key="activity.uuid"
-          :color="props.accentColor"
-          :variant="props.isExternalPresences ? 'solid' : 'soft'"
+            v-for="activity in row.original.activities.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))"
+            v-else
+            :key="activity.uuid"
+            :color="props.accentColor"
+            :variant="props.isExternalPresences ? 'solid' : 'soft'"
         >
           {{ activity.name }}
         </UButton>
@@ -229,11 +229,11 @@ v-for="activity in row.original.activities.sort((a, b) => (a.name.toLowerCase() 
   </UTable>
 
   <GenericTablePagination
-v-if="props.hasPagination"
-    v-model:page="page"
-    v-model:items-per-page="itemsPerPage"
-    :total-items="props.totalPresences"
-    @paginate="(object: TablePaginateInterface) => { emit('paginate', object) }"
+      v-if="props.hasPagination"
+      v-model:page="page"
+      v-model:items-per-page="itemsPerPage"
+      :total-items="props.totalPresences"
+      @paginate="(object: TablePaginateInterface) => { emit('paginate', object) }"
   />
 </template>
 

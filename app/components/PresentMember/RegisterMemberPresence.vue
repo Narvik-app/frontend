@@ -164,9 +164,9 @@ async function onSubmit(event: FormSubmitEvent<MemberPresenceFormState>) {
 
       <UForm :state="state" @submit="onSubmit">
         <UPopover
-v-if="props.dateEditable"
-                  v-model:open="popoverOpen"
-                  class="mt-4">
+            v-if="props.dateEditable"
+            v-model:open="popoverOpen"
+            class="mt-4">
           <UButton icon="i-heroicons-calendar-days-20-solid" :label="formatDateReadable(selectedDate?.toString()) || 'Choisir une date'" />
 
           <template #content>
@@ -179,12 +179,12 @@ v-if="props.dateEditable"
           <div class="grid grid-cols-2 gap-2 gap-y-2 ">
             <template v-for="activity in activitiesMember" :key="activity.uuid">
               <UCheckbox
-v-if="activity['@id']"
-                v-model="state.activities[activity['@id']]"
-                class="w-full"
-                :value="activity"
-                :name="'actvt-' + activity.uuid"
-                :label="activity.name" />
+                  v-if="activity['@id']"
+                  v-model="state.activities[activity['@id']]"
+                  class="w-full"
+                  :value="activity"
+                  :name="'actvt-' + activity.uuid"
+                  :label="activity.name" />
             </template>
 
 
@@ -193,12 +193,12 @@ v-if="activity['@id']"
 
               <template v-for="activitySupervisor in activitiesSupervisor" :key="activitySupervisor.uuid">
                 <UCheckbox
-v-if="activitySupervisor['@id']"
-                  v-model="state.activities[activitySupervisor['@id']]"
-                  class="w-full"
-                  :value="activitySupervisor"
-                  :name="'actvts-' + activitySupervisor.uuid"
-                  :label="activitySupervisor.name" />
+                    v-if="activitySupervisor['@id']"
+                    v-model="state.activities[activitySupervisor['@id']]"
+                    class="w-full"
+                    :value="activitySupervisor"
+                    :name="'actvts-' + activitySupervisor.uuid"
+                    :label="activitySupervisor.name" />
               </template>
 
             </template>
@@ -208,12 +208,12 @@ v-if="activitySupervisor['@id']"
 
               <template v-for="activityAdmin in activitiesAdmin" :key="activityAdmin.uuid">
                 <UCheckbox
-v-if="activityAdmin['@id']"
-                  v-model="state.activities[activityAdmin['@id']]"
-                  class="w-full"
-                  :value="activityAdmin"
-                  :name="'actvta-' + activityAdmin.uuid"
-                  :label="activityAdmin.name" />
+                    v-if="activityAdmin['@id']"
+                    v-model="state.activities[activityAdmin['@id']]"
+                    class="w-full"
+                    :value="activityAdmin"
+                    :name="'actvta-' + activityAdmin.uuid"
+                    :label="activityAdmin.name" />
               </template>
             </template>
 

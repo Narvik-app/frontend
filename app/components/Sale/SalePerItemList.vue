@@ -132,9 +132,9 @@ function generateList() {
 
             <div class="flex flex-col">
               <div
-v-for="[name, pmMap] in itemMap.counts"
-                   :key="name"
-                   :class="'grid grid-flow-row grid-cols-3 ' + (pmMap.count < 1 ? 'opacity-20' : '')"
+                  v-for="[name, pmMap] in itemMap.counts"
+                  :key="name"
+                  :class="'grid grid-flow-row grid-cols-3 ' + (pmMap.count < 1 ? 'opacity-20' : '')"
               >
                 <div>
                   {{ name }}

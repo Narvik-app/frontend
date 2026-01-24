@@ -189,9 +189,9 @@ getActivities()
 
 <template>
   <GenericLayoutContentWithStickySide
-:has-side-content="isVisible"
-                                      :mobile-side-title="selectedActivity?.name" tabindex="-1"
-                                      @keyup.esc="isVisible = false; selectedActivity = undefined;">
+      :has-side-content="isVisible"
+      :mobile-side-title="selectedActivity?.name" tabindex="-1"
+      @keyup.esc="isVisible = false; selectedActivity = undefined;">
     <template #main>
       <UCard>
         <div>
@@ -253,11 +253,11 @@ getActivities()
         </UForm>
 
         <UButton
-v-if="selectedActivity.uuid"
-                 block
-                 variant="soft"
-                 :loading="isLoading"
-                 @click="overlay.create(ActivityModalMigrate).open({
+            v-if="selectedActivity.uuid"
+            block
+            variant="soft"
+            :loading="isLoading"
+            @click="overlay.create(ActivityModalMigrate).open({
                  title: selectedActivity.name,
                  activities: activities,
                  onMigrate(targetId: string) {
@@ -269,11 +269,11 @@ v-if="selectedActivity.uuid"
         </UButton>
 
         <UButton
-v-if="selectedActivity.uuid"
-          block
-          color="error"
-          :loading="isLoading"
-          @click="overlay.create(ActivityModalDelete).open({
+            v-if="selectedActivity.uuid"
+            block
+            color="error"
+            :loading="isLoading"
+            @click="overlay.create(ActivityModalDelete).open({
             title: selectedActivity.name,
             onDelete() {
               deleteActivity()

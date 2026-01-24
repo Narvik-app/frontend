@@ -128,10 +128,10 @@ async function submitItem() {
 
 
     <UButton
-v-if="!props.isList || !item.uuid" type="submit"
-      block
-      class="mt-2"
-      :loading="isUpdating"
+        v-if="!props.isList || !item.uuid" type="submit"
+        block
+        class="mt-2"
+        :loading="isUpdating"
     >
       <template v-if="item.uuid">
         Modifier

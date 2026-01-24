@@ -39,12 +39,12 @@ const emit = defineEmits<{ delete: [boolean], close: [boolean] }>()
     <slot>
       <div>
         <UAlert
-v-if="alertTitle || alertDescription || alertColor"
-                class="mb-4"
-                variant="subtle"
-                :color="alertColor"
-                :title="alertTitle"
-                :description="alertDescription"
+            v-if="alertTitle || alertDescription || alertColor"
+            class="mb-4"
+            variant="subtle"
+            :color="alertColor"
+            :title="alertTitle"
+            :description="alertDescription"
         />
         <div>
           {{ props.description }}

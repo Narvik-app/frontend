@@ -243,9 +243,9 @@ async function copyLicence() {
             </UButton>
 
             <UBadge
-v-if="member.currentSeason && member.currentSeason.isSecondaryClub"
-                    variant="subtle"
-                    color="success">
+                v-if="member.currentSeason && member.currentSeason.isSecondaryClub"
+                variant="subtle"
+                color="success">
               Club secondaire
             </UBadge>
           </div>
