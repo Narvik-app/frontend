@@ -178,7 +178,7 @@ const validate = (state: { name?: string }): FormError[] => {
               {{ row.original.name }}
             </template>
 
-            <template #actions-cell="{ row: _row }"/>
+            <template #actions-cell />
 
           </UTable>
 

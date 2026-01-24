@@ -180,7 +180,7 @@ const validate = (state: { name?: string; code?: string }): FormError[] => {
               </div>
             </template>
 
-            <template #actions-cell="{ row: _row }"/>
+            <template #actions-cell />
 
           </UTable>
 
