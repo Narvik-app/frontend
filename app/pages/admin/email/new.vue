@@ -1,13 +1,12 @@
 <script lang="ts" setup>
 import type {Member} from "~/types/api/item/clubDependent/member";
-import type {NuxtError} from "#app";
 import TextEditor from '~/components/TextEditor.vue';
 import {useSelfUserStore} from '~/stores/useSelfUser';
 import EmailQuery from "~/composables/api/query/clubDependent/plugin/emailing/EmailQuery";
 import EmailTemplateQuery from "~/composables/api/query/clubDependent/plugin/emailing/EmailTemplateQuery";
 import type {EmailTemplate} from "~/types/api/item/clubDependent/plugin/emailing/emailTemplate";
 import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
-import {decodeUrlUuid, displayApiError} from "~/utils/resource";
+import {decodeUrlUuid, displayError} from "~/utils/resource";
 import {Permission} from "~/types/api/permissions";
 
 const MAX_ATTACHMENT_SIZE_MB = 15
@@ -213,14 +212,16 @@ const MAX_ATTACHMENT_SIZE_MB = 15
     if (memberUuids && typeof memberUuids === 'string') {
       const uuidList = memberUuids.split(',').filter(uuid => uuid.trim().length > 0)
       const loadedMembers: Member[] = []
-      let firstError: Error | null = null
+      let firstErrorMessage = ''
       
       for (const encodedUuid of uuidList) {
         try {
           const { retrieved, error } = await memberQuery.get(decodeUrlUuid(encodedUuid.trim()))
           
           if (error) {
-            if (!firstError) firstError = error
+            if (!firstErrorMessage) {
+              firstErrorMessage = error.message || 'Erreur de chargement'
+            }
             continue
           }
           
@@ -228,7 +229,9 @@ const MAX_ATTACHMENT_SIZE_MB = 15
             loadedMembers.push(retrieved)
           }
         } catch (e) {
-          if (!firstError) firstError = e as Error
+          if (!firstErrorMessage) {
+            firstErrorMessage = e instanceof Error ? e.message : String(e)
+          }
         }
       }
       
@@ -243,16 +246,11 @@ const MAX_ATTACHMENT_SIZE_MB = 15
           })
         }
       } else if (uuidList.length > 0) {
-        // Show the first error or a generic message
-        if (firstError) {
-          displayApiError(firstError as NuxtError, "Chargement impossible")
-        } else {
-          toast.add({
-            title: "Chargement impossible",
-            description: "Aucun membre n'a pu être chargé",
-            color: "error"
-          })
-        }
+        // Show the first error message or a generic message
+        displayError(
+          firstErrorMessage || "Aucun membre n'a pu être chargé",
+          "Chargement impossible"
+        )
       }
     }
   }
