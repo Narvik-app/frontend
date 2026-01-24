@@ -29,7 +29,7 @@ const props = defineProps({
 });
 
 if (props.dateRange && typeof props.dateRange.label !== 'string') {
-  dateRange.value = props.dateRange as DateRange
+  selectedDateRange.value = props.dateRange as DateRange
 }
 
 const columns = computed(() => {
