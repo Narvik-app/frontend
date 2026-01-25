@@ -9,7 +9,7 @@ interface Range {
   duration: { type: string, value: string|number }
 }
 
-const dateRange = ref<DateRange|undefined>(undefined)
+const selectedDateRange = ref<DateRange|undefined>(undefined)
 
 const emit = defineEmits<{ rangeUpdated: [DateRange | DateRangeFilter | undefined] }>()
 
@@ -29,7 +29,7 @@ const props = defineProps({
 });
 
 if (props.dateRange && typeof props.dateRange.label !== 'string') {
-  dateRange.value = props.dateRange as DateRange
+  selectedDateRange.value = props.dateRange as DateRange
 }
 
 const columns = computed(() => {
@@ -91,12 +91,12 @@ function isRangeSelected(range: Range) {
 function selectRange(range: Range) {
   const isFilter = typeof range.duration.value === 'string';
   if (isFilter) {
-    dateRange.value = undefined;
+    selectedDateRange.value = undefined;
     notify(new DateRangeFilter(range.label, range.duration.value))
     return;
   }
 
-  dateRange.value = { start: dayjs().subtract(range.duration.value, range.duration.type).toDate(), end: new Date(), _trigger: 'selectedRange' }
+  selectedDateRange.value = { start: dayjs().subtract(range.duration.value, range.duration.type).toDate(), end: new Date(), _trigger: 'selectedRange' }
   // No notify() here as it will be handle from the watch function
 }
 
@@ -104,7 +104,7 @@ function notify(range: DateRange|DateRangeFilter|undefined) {
   emit('rangeUpdated', range)
 }
 
-watch(dateRange, (newVal) => {
+watch(selectedDateRange, (newVal) => {
   if (newVal && !newVal._trigger) {
     notify(newVal)
   }
@@ -125,7 +125,7 @@ watch(dateRange, (newVal) => {
           @click="selectRange(range)"
       />
     </div>
-    <VCalendarDatePicker v-model.range="dateRange" :columns="columns" v-bind="{ ...attrs, ...$attrs }" />
+    <VCalendarDatePicker v-model.range="selectedDateRange" :columns="columns" v-bind="{ ...attrs, ...$attrs }" />
   </div>
 
 </template>

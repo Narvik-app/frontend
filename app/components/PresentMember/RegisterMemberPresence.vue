@@ -79,10 +79,15 @@ const activitiesAdmin = computed(() => {
 })
 
 
-async function onSubmit(event: FormSubmitEvent<any>) {
+interface MemberPresenceFormState {
+  member?: Member;
+  activities: { [k: string]: boolean };
+}
+
+async function onSubmit(event: FormSubmitEvent<MemberPresenceFormState>) {
   isSubmitting.value = true;
 
-  let memberPresence: { member: string|number|undefined, activities: string[], date: string|undefined } = {
+  const memberPresence: { member: string|number|undefined, activities: string[], date: string|undefined } = {
     date: undefined,
     member: undefined,
     activities: []
@@ -110,11 +115,11 @@ async function onSubmit(event: FormSubmitEvent<any>) {
   let error: Error | undefined = undefined;
 
   if (!props.memberPresence) {
-    let { created, error: errorMessage } = await memberPresenceQuery.post(memberPresence);
+    const { created, error: errorMessage } = await memberPresenceQuery.post(memberPresence);
     item = created
     error = errorMessage;
   } else {
-    let { updated, error: errorMessage } = await memberPresenceQuery.patch(props.memberPresence, memberPresence);
+    const { updated, error: errorMessage } = await memberPresenceQuery.patch(props.memberPresence, memberPresence);
     item = updated
     error = errorMessage;
   }
@@ -145,7 +150,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
       <USkeleton class="h-4 w-12 my-4" />
 
       <div class="grid grid-cols-2 gap-4">
-        <div v-for="i in 11" class="h-6 flex gap-4 basis-1/2 w-full">
+        <div v-for="k in 11" :key="k" class="h-6 flex gap-4 basis-1/2 w-full">
           <USkeleton class="w-6" />
           <USkeleton class="w-full" />
         </div>
@@ -158,9 +163,10 @@ async function onSubmit(event: FormSubmitEvent<any>) {
       <div class="text-2xl">Enregistrement pour <b>{{ state.member.fullName }}</b></div>
 
       <UForm :state="state" @submit="onSubmit">
-        <UPopover v-if="props.dateEditable"
-                  v-model:open="popoverOpen"
-                  class="mt-4">
+        <UPopover
+            v-if="props.dateEditable"
+            v-model:open="popoverOpen"
+            class="mt-4">
           <UButton icon="i-heroicons-calendar-days-20-solid" :label="formatDateReadable(selectedDate?.toString()) || 'Choisir une date'" />
 
           <template #content>
@@ -171,26 +177,28 @@ async function onSubmit(event: FormSubmitEvent<any>) {
         <div class="mt-4">Activités</div>
         <div class="my-4">
           <div class="grid grid-cols-2 gap-2 gap-y-2 ">
-            <template v-for="activity in activitiesMember">
-              <UCheckbox v-if="activity['@id']"
-                class="w-full"
-                v-model="state.activities[activity['@id']]"
-                :value="activity"
-                :name="'actvt-' + activity.uuid"
-                :label="activity.name" />
+            <template v-for="activity in activitiesMember" :key="activity.uuid">
+              <UCheckbox
+                  v-if="activity['@id']"
+                  v-model="state.activities[activity['@id']]"
+                  class="w-full"
+                  :value="activity"
+                  :name="'actvt-' + activity.uuid"
+                  :label="activity.name" />
             </template>
 
 
             <template v-if="activitiesSupervisor.length > 0 && hasClubSupervisorRole(state.member?.role)">
               <USeparator class="col-span-2" :label="getAvailableClubRole(ClubRole.Supervisor).text" />
 
-              <template v-for="activitySupervisor in activitiesSupervisor">
-                <UCheckbox v-if="activitySupervisor['@id']"
-                  class="w-full"
-                  v-model="state.activities[activitySupervisor['@id']]"
-                  :value="activitySupervisor"
-                  :name="'actvts-' + activitySupervisor.uuid"
-                  :label="activitySupervisor.name" />
+              <template v-for="activitySupervisor in activitiesSupervisor" :key="activitySupervisor.uuid">
+                <UCheckbox
+                    v-if="activitySupervisor['@id']"
+                    v-model="state.activities[activitySupervisor['@id']]"
+                    class="w-full"
+                    :value="activitySupervisor"
+                    :name="'actvts-' + activitySupervisor.uuid"
+                    :label="activitySupervisor.name" />
               </template>
 
             </template>
@@ -198,13 +206,14 @@ async function onSubmit(event: FormSubmitEvent<any>) {
             <template v-if="activitiesAdmin.length > 0 && isClubAdmin(state.member?.role)">
               <USeparator class="col-span-2" :label="getAvailableClubRole(ClubRole.Admin).text" />
 
-              <template v-for="activityAdmin in activitiesAdmin">
-                <UCheckbox v-if="activityAdmin['@id']"
-                  class="w-full"
-                  v-model="state.activities[activityAdmin['@id']]"
-                  :value="activityAdmin"
-                  :name="'actvta-' + activityAdmin.uuid"
-                  :label="activityAdmin.name" />
+              <template v-for="activityAdmin in activitiesAdmin" :key="activityAdmin.uuid">
+                <UCheckbox
+                    v-if="activityAdmin['@id']"
+                    v-model="state.activities[activityAdmin['@id']]"
+                    class="w-full"
+                    :value="activityAdmin"
+                    :name="'actvta-' + activityAdmin.uuid"
+                    :label="activityAdmin.name" />
               </template>
             </template>
 

@@ -19,7 +19,7 @@ const props = defineProps({
 
 const item: Ref<User> = props.item ? ref(props.item) : ref(getDefaultItem())
 
-watch(props, async value => {
+watch(props, async (_value) => {
   item.value = props.item ?? getDefaultItem()
 })
 
@@ -127,10 +127,11 @@ async function submitItem() {
     </div>
 
 
-    <UButton type="submit" v-if="!props.isList || !item.uuid"
-      block
-      class="mt-2"
-      :loading="isUpdating"
+    <UButton
+        v-if="!props.isList || !item.uuid" type="submit"
+        block
+        class="mt-2"
+        :loading="isUpdating"
     >
       <template v-if="item.uuid">
         Modifier

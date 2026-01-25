@@ -25,7 +25,7 @@ const props = defineProps({
 
 const item: Ref<WriteClub> = props.item ? ref(props.item) : ref(getDefaultItem())
 
-watch(props, async value => {
+watch(props, async (_value) => {
   item.value = props.item ?? getDefaultItem()
 })
 
@@ -50,7 +50,7 @@ function getDefaultItem() {
 }
 
 // Form validation
-const validate = (state: any): FormError[] => {
+const validate = (state: WriteClub): FormError[] => {
   const errors = []
   if (!state.name) errors.push({ name: 'name', message: 'Champ requis' })
   return errors
@@ -75,7 +75,7 @@ async function submitItem() {
     salesEnabled: item.value.salesEnabled,
     isActivated: item.value.isActivated,
     address: item.value.address,
-    zipCode: Number(item.value.zipCode) ?? null,
+    zipCode: Number(item.value.zipCode) || null,
     city: item.value.city,
     siret: item.value.siret,
     vat: item.value.vat,
@@ -215,10 +215,11 @@ async function submitItem() {
       <GenericItemTimestampInfo v-if="!props.isSelfEdit" :item="item" />
     </div>
 
-    <UButton type="submit" v-if="!props.isList || !item.uuid"
-             block
-             class="mt-2"
-             :loading="isUpdating"
+    <UButton
+        v-if="!props.isList || !item.uuid" type="submit"
+        block
+        class="mt-2"
+        :loading="isUpdating"
     >
       <template v-if="item.uuid">
         Modifier

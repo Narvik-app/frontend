@@ -83,6 +83,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
     selectedMembers.value = selectedMembers.value.filter(m => m.email !== member.email)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
   function updateAttachment(event: any) {
     const formData = getFileFormDataFromUInputChangeEvent(event)
     if (formData) {
@@ -107,7 +108,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
   }
 
   async function getEmailTemplates() {
-    const { items, totalItems, error } = await templateQuery.getAll()
+    const { items, error } = await templateQuery.getAll()
 
     if (error) {
       toast.add({
@@ -277,7 +278,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
         <div class="flex flex-col gap-4">
 
           <UFormField class="flex-1" label="Sujet">
-            <UInput size="xl" v-model="title" />
+            <UInput v-model="title" size="xl" />
           </UFormField>
 
           <UFormField class="flex-1" label="Répondre à" help="Par défaut reprendra l'adresse mail configuré par l'administrateur.">
@@ -339,8 +340,8 @@ const MAX_ATTACHMENT_SIZE_MB = 15
           <p>Modèles</p>
           <UFieldGroup class="w-full">
             <USelectMenu
-              :items="templates"
               v-model="selectedTemplate"
+              :items="templates"
               label-key="name"
               placeholder="Rechercher un modèle"
             />
@@ -411,7 +412,7 @@ const MAX_ATTACHMENT_SIZE_MB = 15
             <UButton :label="selectedMembers.length > 0 ? 'Modifier les destinataires' : 'Choisir les destinataires'" />
 
             <template #body>
-              <EmailReceiverSelection :newsletter-enabled="sendAsNewsletter" v-model="selectedMembers" @update:model-value="val => selectedMembers = val" @close="memberSelectionModalOpen = false" />
+              <EmailReceiverSelection v-model="selectedMembers" :newsletter-enabled="sendAsNewsletter" @update:model-value="val => selectedMembers = val" @close="memberSelectionModalOpen = false" />
             </template>
           </UModal>
         </div>

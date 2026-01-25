@@ -27,6 +27,7 @@ const fileUploading = ref(false)
 const memberQuery = new MemberQuery()
 const memberPresenceQuery = new MemberPresenceQuery()
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
 async function importFromItac(event: any) {
   const formData = getFileFormDataFromUInputChangeEvent(event);
 
@@ -35,7 +36,7 @@ async function importFromItac(event: any) {
   }
 
   fileUploading.value = true
-  const {created, error} = await memberQuery.importFromItac(formData)
+  const {error} = await memberQuery.importFromItac(formData)
   fileUploading.value = false
 
   if (error) {
@@ -46,6 +47,7 @@ async function importFromItac(event: any) {
   selfStore.refreshSelectedClubSettings()
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
 async function importFromItacSecondary(event: any) {
   const formData = getFileFormDataFromUInputChangeEvent(event);
 
@@ -54,7 +56,7 @@ async function importFromItacSecondary(event: any) {
   }
 
   fileUploading.value = true
-  const {created, error} = await memberQuery.importFromItacSecondary(formData)
+  const {error} = await memberQuery.importFromItacSecondary(formData)
   fileUploading.value = false
 
   if (error) {
@@ -85,6 +87,7 @@ async function migrateExternal() {
   })
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
 async function importFromEden(event: any) {
   const formData = getFileFormDataFromUInputChangeEvent(event);
 
@@ -93,7 +96,7 @@ async function importFromEden(event: any) {
   }
 
   fileUploading.value = true
-  const {created, error} = await memberQuery.importFromEden(formData)
+  const {error} = await memberQuery.importFromEden(formData)
   fileUploading.value = false
 
   if (error) {
@@ -117,12 +120,14 @@ async function importFromEden(event: any) {
         <div class="grid grid-cols-11 my-4">
           <div class="col-span-5 space-y-4">
             <p class="font-bold">Club principal</p>
-            <UAlert v-if="selfStore.selectedProfile?.club.settings.itacImportDate"
+            <UAlert
+v-if="selfStore.selectedProfile?.club.settings.itacImportDate"
                     variant="soft"
                     :title="'Dernier import effectué le ' + formatDateReadable(selfStore.selectedProfile.club.settings.itacImportDate.toString())"
                     :color="dayjs(selfStore.selectedProfile.club.settings.itacImportDate).isBefore(dayjs().subtract(1, 'months')) ? 'error' : 'success' "
             />
-            <UAlert v-else
+            <UAlert
+v-else
                     title="Aucun import effectué"
                     color="error"
             />
@@ -141,14 +146,16 @@ async function importFromEden(event: any) {
 
           <div class="col-span-5 space-y-4">
             <p class="font-bold">Club secondaire</p>
-            <UAlert v-if="selfStore.selectedProfile?.club.settings.itacSecondaryImportDate"
-                    variant="soft"
-                    :title="'Dernier import effectué le ' + formatDateReadable(selfStore.selectedProfile.club.settings.itacSecondaryImportDate.toString())"
-                    :color="dayjs(selfStore.selectedProfile.club.settings.itacSecondaryImportDate).isBefore(dayjs().subtract(1, 'months')) ? 'error' : 'success' "
+            <UAlert
+                v-if="selfStore.selectedProfile?.club.settings.itacSecondaryImportDate"
+                variant="soft"
+                :title="'Dernier import effectué le ' + formatDateReadable(selfStore.selectedProfile.club.settings.itacSecondaryImportDate.toString())"
+                :color="dayjs(selfStore.selectedProfile.club.settings.itacSecondaryImportDate).isBefore(dayjs().subtract(1, 'months')) ? 'error' : 'success' "
             />
-            <UAlert v-else
-                    title="Aucun import effectué"
-                    color="error"
+            <UAlert
+                v-else
+                title="Aucun import effectué"
+                color="error"
             />
 
             <UInput
@@ -164,8 +171,8 @@ async function importFromEden(event: any) {
 
         <div class="flex gap-2">
           <UButton target="_blank" to="https://docs.narvik.app/frontend/docs/import/fftir-itac.html#import-des-membres">Documentation</UButton>
-          <div class="flex-1"></div>
-          <UButton @click="migrateExternal()" variant="ghost" color="success" :disabled="!canEdit || ((selfStore.selectedProfile?.club.settings.itacSecondaryImportRemaining && selfStore.selectedProfile.club.settings.itacSecondaryImportRemaining) ?? 0) > 0">Migration présence externe vers présence membres</UButton>
+          <div class="flex-1"/>
+          <UButton variant="ghost" color="success" :disabled="!canEdit || ((selfStore.selectedProfile?.club.settings.itacSecondaryImportRemaining && selfStore.selectedProfile.club.settings.itacSecondaryImportRemaining) ?? 0) > 0" @click="migrateExternal()">Migration présence externe vers présence membres</UButton>
         </div>
 
       </UCard>
@@ -187,13 +194,13 @@ async function importFromEden(event: any) {
         <p class="my-2">Exemple</p>
 
         <GenericCode>
-          N° licence | Date d'expiration <br />
+          N° licence | Date d'expiration <br >
           01234578 | 11.11.2024
         </GenericCode>
 
         <div class="flex gap-2 mt-4">
           <UButton target="_blank" to="https://docs.narvik.app/frontend/docs/import/fftir-itac.html#import-des-certificats-medicaux">Documentation</UButton>
-          <div class="flex-1"></div>
+          <div class="flex-1"/>
         </div>
       </GenericCard>
     </template>

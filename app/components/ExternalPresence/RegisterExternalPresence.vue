@@ -83,7 +83,14 @@ activityQuery.getAll().then(value => {
       .sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))
 });
 
-async function onSubmit(event: FormSubmitEvent<any>) {
+interface ExternalPresenceFormState {
+  licence?: string;
+  firstname?: string;
+  lastname?: string;
+  activities: { [k: string]: boolean };
+}
+
+async function onSubmit(event: FormSubmitEvent<ExternalPresenceFormState>) {
   isSubmitting.value = true;
 
   const externalPresence: WriteExternalPresence = {
@@ -106,11 +113,11 @@ async function onSubmit(event: FormSubmitEvent<any>) {
   let error: Error | undefined = undefined;
 
   if (!props.externalPresence) {
-    let { created, error: errorMessage } = await externalPresenceQuery.post(externalPresence);
+    const { created, error: errorMessage } = await externalPresenceQuery.post(externalPresence);
     item = created
     error = errorMessage
   } else {
-    let { updated, error: errorMessage } = await externalPresenceQuery.patch(props.externalPresence, externalPresence);
+    const { updated, error: errorMessage } = await externalPresenceQuery.patch(props.externalPresence, externalPresence);
     isUpdating = true
     item = updated
     error = errorMessage
@@ -158,7 +165,7 @@ function presenceCanceled() {
       <USkeleton class="h-4 w-12 my-4" />
 
       <div class="grid grid-cols-2 gap-4">
-        <div v-for="i in 11" class="h-6 flex gap-4 basis-1/2 w-full">
+        <div v-for="i in 11" :key="i" class="h-6 flex gap-4 basis-1/2 w-full">
           <USkeleton class="w-6" />
           <USkeleton class="w-full" />
         </div>
@@ -171,7 +178,7 @@ function presenceCanceled() {
       <div v-if="state.lastname" class="text-2xl">Enregistrement pour <b>{{ state.lastname.toUpperCase() }} {{ state.firstname }}</b></div>
       <div v-else class="text-2xl">Enregistrement utilisateur externe</div>
 
-      <UForm :state="state" @submit="onSubmit" class="mt-4">
+      <UForm :state="state" class="mt-4" @submit="onSubmit">
         <UFormField label="Licence">
           <UInput
             v-model="state.licence"
@@ -199,10 +206,11 @@ function presenceCanceled() {
         <div class="mt-4">Activités</div>
         <div class="my-4">
           <div class="grid grid-cols-2 gap-2 gap-y-2 ">
-            <template v-for="activity in activities">
-              <UCheckbox v-if="activity['@id']"
-                class="w-full"
+            <template v-for="activity in activities" :key="activity.uuid">
+              <UCheckbox
+v-if="activity['@id']"
                 v-model="state.activities[activity['@id']]"
+                class="w-full"
                 :value="activity"
                 :name="'actvt-' + activity.uuid"
                 :label="activity.name" />

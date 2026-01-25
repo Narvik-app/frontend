@@ -14,7 +14,6 @@ import {convertUuidToUrlUuid} from "~/utils/resource";
 
 const toast = useToast()
 const selfStore = useSelfUserStore()
-const isAdmin = selfStore.isAdmin()
 const isSupervisor = selfStore.hasSupervisorRole()
 const isBadger = selfStore.isBadger()
 
@@ -88,9 +87,10 @@ function loadPresenceHistory() {
       memberPresences.value = presencesResponse.items
 
       // We update the chart
-      let data: any = []
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define chart data type properly
+      const data: any = []
 
-      let newChartData = {
+      const newChartData = {
         labels: [] as string[],
         datasets: [
           {
@@ -148,22 +148,22 @@ async function copyLicence() {
       <UCard class="bg-(--ui-bg)">
         <div class="flex gap-2 mb-2">
           <UButton
-            @click="emit('close')"
             icon="i-heroicons-x-circle"
             color="neutral"
             variant="outline"
             size="xs"
+            @click="emit('close')"
           />
 
           <div class="flex-1"/>
 
           <template v-if="!viewOnly && (isSupervisor || isBadger)">
             <UButton
-              @click="updateMemberPresenceModalOpen = true"
               icon="i-heroicons-pencil-square"
               size="xs"
               variant="soft"
               label="Éditer la présence"
+              @click="updateMemberPresenceModalOpen = true"
             />
             <UTooltip v-if="!member.blacklisted || (isSupervisor)" text="Supprimer la présence">
               <UPopover v-model:open="popoverOpen">
@@ -179,9 +179,9 @@ async function copyLicence() {
                     <div class="text-center text-lg font-bold">Êtes-vous certain ?</div>
 
                     <UButton
-                      @click="deletePresence();"
                       color="error"
                       class="mx-auto"
+                      @click="deletePresence();"
                     >
                       Supprimer
                     </UButton>
@@ -242,9 +242,10 @@ async function copyLicence() {
               Saison non renouvelée
             </UButton>
 
-            <UBadge v-if="member.currentSeason && member.currentSeason.isSecondaryClub"
-                    variant="subtle"
-                    color="success">
+            <UBadge
+                v-if="member.currentSeason && member.currentSeason.isSecondaryClub"
+                variant="subtle"
+                color="success">
               Club secondaire
             </UBadge>
           </div>
@@ -258,6 +259,7 @@ async function copyLicence() {
           <div class="flex gap-4 justify-center flex-wrap">
             <UButton
                 v-for="activity in memberPresence?.activities?.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))"
+                :key="activity.uuid"
                 variant="soft">
               {{ activity.name }}
             </UButton>
@@ -267,8 +269,8 @@ async function copyLicence() {
 
         <div class="flex justify-center">
           <UButton
-            @click="loadPresenceHistory()"
             :loading="isLoadingPresences"
+            @click="loadPresenceHistory()"
           >
             Afficher l'historique de présence
           </UButton>
@@ -304,11 +306,11 @@ async function copyLicence() {
       </div>
 
       <div class="space-y-4 w-full mt-4">
-        <div v-for="w in ['w-52 h-8', 'w-36 h-4', 'w-48 h-4']" class="flex justify-center">
+        <div v-for="(w, wIndex) in ['w-52 h-8', 'w-36 h-4', 'w-48 h-4']" :key="wIndex" class="flex justify-center">
           <USkeleton :class="w" />
         </div>
         <div class="flex gap-4 justify-center flex-wrap">
-          <USkeleton v-for="i in (Math.floor(Math.random()*6) + 2)" class="w-14 h-4" />
+          <USkeleton v-for="j in (Math.floor(Math.random()*6) + 2)" :key="j" class="w-14 h-4" />
         </div>
 
       </div>

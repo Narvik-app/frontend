@@ -28,7 +28,7 @@ const selfUser = useSelfUserStore()
     clubUuid.value = decodeUrlUuid(clubId?.toString())
 
     if (isLogged) {
-      const { retrieved, error } = await clubQuery.get(clubUuid.value)
+      const { retrieved, error: _clubError } = await clubQuery.get(clubUuid.value)
 
       if (!retrieved) {
         errorEncountered.value = true
@@ -47,7 +47,7 @@ const selfUser = useSelfUserStore()
       "email": email.value
     }
 
-    const {item, error} = await usePost("/unsubscribe", payload, false)
+    const {item: _item, error} = await usePost("/unsubscribe", payload, false)
 
     if (error) {
       toast.add({

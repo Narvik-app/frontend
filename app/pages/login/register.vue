@@ -75,7 +75,7 @@ const accountType = ref(queryParams.account_type ?? accountTypes.value[0]?.value
 const accountTypeIcon = computed(() => accountTypes.value.find(item => item.value === accountType.value)?.icon)
 const alreadyAnAccount = ref(false)
 
-const validate = (state: any): FormError[] => {
+const validate = (state: { email?: string; password?: string; securityCode?: string; firstname?: string; lastname?: string; legals?: boolean }): FormError[] => {
   const errors = []
   if (!state.securityCode) errors.push({ name: 'securityCode', message: 'Champ requis' })
   if (!state.email) errors.push({ name: 'email', message: 'Champ requis' })
@@ -205,7 +205,7 @@ onBeforeUnmount(() => {
                 <UInput v-model="state.email" type="email" />
               </UFormField>
 
-              <NuxtTurnstile ref="turnstile" v-if="requireTurnstile" v-model="state.turnstileToken" />
+              <NuxtTurnstile v-if="requireTurnstile" ref="turnstile" v-model="state.turnstileToken" />
 
               <UButton type="submit" :loading="isLoading">
                 Créer le compte
@@ -214,12 +214,13 @@ onBeforeUnmount(() => {
         </template>
 
         <template #create>
-          <UAlert v-if="securityEmailSent"
-            icon="i-heroicons-megaphone"
-            color="success"
-            variant="soft"
-            title="Un email contenant le code de sécurité vous a été envoyé."
-            description="Celui-ci peut se trouver dans votre dossier SPAM."
+          <UAlert
+              v-if="securityEmailSent"
+              icon="i-heroicons-megaphone"
+              color="success"
+              variant="soft"
+              title="Un email contenant le code de sécurité vous a été envoyé."
+              description="Celui-ci peut se trouver dans votre dossier SPAM."
           />
           <UForm :state="state" class="space-y-4 mt-4" :validate="validate" @submit="register">
             <UFormField label="Code de sécurité" name="securityCode" help="En cas de code invalide, un nouveau sera envoyé. Seul le dernier code de sécurité reçu est valide." required>
@@ -300,7 +301,7 @@ onBeforeUnmount(() => {
             </template>
 
             <UFormField required name="legals">
-              <UCheckbox required v-model="state.legals">
+              <UCheckbox v-model="state.legals" required>
                 <template #label>
                   J'accepte les <ContentLink target="_blank" to="https://about.narvik.app/documents-legaux/cgu">Conditions Générales d’Utilisation</ContentLink>, les <ContentLink target="_blank" to="https://about.narvik.app/documents-legaux/cgv">Conditions Générales de Vente</ContentLink> et la <ContentLink target="_blank" to="https://about.narvik.app/documents-legaux/rgpd">Politique de confidentialité</ContentLink>
                 </template>

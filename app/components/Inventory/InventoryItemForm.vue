@@ -26,7 +26,7 @@ const props = defineProps({
 const item: Ref<InventoryItem> = props.item ? ref(props.item) : ref(getDefaultInventoryItem())
 const categories: Ref<InventoryCategory[] | undefined> = ref(props.categories)
 
-watch(props, async value => {
+watch(props, async (_value) => {
   item.value = props.item ?? getDefaultInventoryItem()
   if (!props.categories) {
     await getCategories()
@@ -67,7 +67,7 @@ function getDefaultInventoryItem() {
 
 // Form validation
 
-const validate = (state: any): FormError[] => {
+const validate = (state: InventoryItem): FormError[] => {
   const errors = []
   if (!state.name) errors.push({ name: 'name', message: 'Champ requis' })
   if (!state.sellingPrice) errors.push({ name: 'sellingPrice', message: 'Champ requis' })
@@ -175,7 +175,7 @@ async function getCategories() {
           <span v-else><i>Aucune catégorie</i></span>
         </template>
 
-        <template #trailing v-if="!props.viewOnly && item.category">
+        <template v-if="!props.viewOnly && item.category" #trailing>
           <UIcon
             class="cursor-pointer"
             name="i-heroicons-x-mark"
@@ -195,8 +195,8 @@ async function getCategories() {
 
     <UFormField v-if="!props.viewOnly || item.barcode" label="Code barre">
       <GenericBarcodeReader
-        class="mb-2"
         v-model="cameraPreview"
+        class="mb-2"
         @decoded="onDecoded"
       />
       <UInput
@@ -204,7 +204,7 @@ async function getCategories() {
         :class="props.viewOnly ? 'pointer-events-none' : ''"
         :tabindex="props.viewOnly ? '-1' : '0'"
       >
-        <template #trailing v-if="cameraIsPresent">
+        <template v-if="cameraIsPresent" #trailing>
           <UIcon
             class="cursor-pointer"
             name="i-heroicons-qr-code"
@@ -242,7 +242,8 @@ async function getCategories() {
       <UInput v-model="item.quantityAlert" type="number" :class="props.viewOnly ? 'pointer-events-none' : ''" :tabindex="props.viewOnly ? '-1' : '0'" />
     </UFormField>
 
-    <UButton type="submit" v-if="!props.viewOnly"
+    <UButton
+      v-if="!props.viewOnly" type="submit"
       block
       class="mt-2"
       :loading="isUpdating"

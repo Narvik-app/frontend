@@ -16,7 +16,7 @@ const props = defineProps({
 
   const emit = defineEmits(['clicked'])
 
-  const member: Ref<Member | undefined> = ref(undefined)
+  const memberRef: Ref<Member | undefined> = ref(undefined)
   const memberProfileImage: Ref<ExposedFile | undefined> = ref(undefined)
   const isHovered = ref(false)
 
@@ -24,16 +24,16 @@ const props = defineProps({
 
   function handleClick() {
     if (props.clickable) {
-      emit('clicked', member.value)
+      emit('clicked', memberRef.value)
     }
   }
 
   function load() {
     if (props.member) {
-      member.value = props.member
+      memberRef.value = props.member
 
-      if (member.value.profileImage?.privateUrl) {
-        fileQuery.getFromUrl(member.value.profileImage.privateUrl).then(imageResponse => {
+      if (memberRef.value.profileImage?.privateUrl) {
+        fileQuery.getFromUrl(memberRef.value.profileImage.privateUrl).then(imageResponse => {
           memberProfileImage.value = imageResponse.retrieved
         })
       }
@@ -53,9 +53,9 @@ const props = defineProps({
     <UAvatar
       size="sm"
       :src="memberProfileImage?.base64"
-      :alt="member?.fullName"
+      :alt="memberRef?.fullName"
       :icon="(props.clickable && isHovered) ? 'i-heroicons-x-mark' : undefined"
     />
-    <p class="text-sm">{{ member?.fullName }}</p>
+    <p class="text-sm">{{ memberRef?.fullName }}</p>
   </div>
 </template>

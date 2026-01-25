@@ -18,12 +18,13 @@ const selfStore = useSelfUserStore();
 const { selectedProfile } = storeToRefs(selfStore)
 const canEdit = selfStore.can(Permission.ImportPresencesEdit)
 
-const apiUploadResponse: Ref<Object|undefined> = ref(undefined);
+const apiUploadResponse: Ref<object|undefined> = ref(undefined);
 const fileUploading = ref(false)
 
 const memberPresenceQuery = new MemberPresenceQuery()
 const externalPresenceQuery = new ExternalPresenceQuery()
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
 async function importMemberPresences(event: any) {
   const formData = getFileFormDataFromUInputChangeEvent(event);
 
@@ -43,6 +44,7 @@ async function importMemberPresences(event: any) {
   displayFileSuccessToast()
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
 async function importExternalPresences(event: any) {
   const formData = getFileFormDataFromUInputChangeEvent(event);
 
@@ -97,10 +99,10 @@ async function importExternalPresences(event: any) {
           <p class="">Exemple</p>
 
           <GenericCode>
-            member.licence,date,activities.0.name,activities.1.name <br />
-            01234578,2018-08-03T00:00:00+00:00,50M - Toutes armes,Non existant <br />
-            45678412,2018-08-03T00:00:00+00:00,25M, <br />
-            45678412,2018-08-04T00:00:00+00:00,50M - Toutes armes, <br />
+            member.licence,date,activities.0.name,activities.1.name <br >
+            01234578,2018-08-03T00:00:00+00:00,50M - Toutes armes,Non existant <br >
+            45678412,2018-08-03T00:00:00+00:00,25M, <br >
+            45678412,2018-08-04T00:00:00+00:00,50M - Toutes armes, <br >
             45671134,2018-08-03T00:00:00+00:00,Bureau,
           </GenericCode>
         </div>
@@ -122,10 +124,10 @@ async function importExternalPresences(event: any) {
           <p class="">Exemple</p>
 
           <GenericCode>
-            licence,firstname,lastname,date,activities.0.name,activities.1.name <br />
-            01234578,Jean,NOM,2018-08-03T00:00:00+00:00,50M - Toutes armes,Non existant <br />
-            ,Jean,NOM2,2018-08-03T00:00:00+00:00,25M, <br />
-            ,Jean,NOM3,2018-08-04T00:00:00+00:00,50M - Toutes armes, <br />
+            licence,firstname,lastname,date,activities.0.name,activities.1.name <br >
+            01234578,Jean,NOM,2018-08-03T00:00:00+00:00,50M - Toutes armes,Non existant <br >
+            ,Jean,NOM2,2018-08-03T00:00:00+00:00,25M, <br >
+            ,Jean,NOM3,2018-08-04T00:00:00+00:00,50M - Toutes armes, <br >
             ,Jean,NOM4,2018-08-03T00:00:00+00:00,Bureau,
           </GenericCode>
         </div>
@@ -135,7 +137,7 @@ async function importExternalPresences(event: any) {
 
       <div class="flex gap-2">
         <UButton target="_blank" to="https://docs.narvik.app/frontend/docs/import/narvik-presences.html">Documentation</UButton>
-        <div class="flex-1"></div>
+        <div class="flex-1"/>
         <UButton v-if="selectedProfile?.club.settings.activity === ClubActivity.SPORT_FFTIR" variant="ghost" to="/admin/imports/cerbere">Import depuis cerbère</UButton>
       </div>
 

@@ -228,34 +228,36 @@ loadClubUsers()
 
             <div class="text-center text-lg flex flex-row justify-center align-middle gap-2">
               <p>Renouvellement le</p>
-              <UButton icon="i-heroicons-calendar-days-20-solid"
-                       size="xs"
-                       :color="dayjs().isAfter(dayjs(club.renewDate).subtract(14, 'days')) ? 'error' : 'primary'"
-                       :label="formatDateReadable(club.renewDate?.toString()) || 'Choisir une date'"
-                       @click="overlay.create(ModalClubSelectRenewDate).open({
-                        item: club,
-                        async onSelected(date: Date|undefined) {
-                          if (!club) {
-                            return
-                          }
-                          await clubQuery.patch(club, { renewDate: date ?? null })
-                          await loadItem()
-                        }
-                      })"
+              <UButton
+                  icon="i-heroicons-calendar-days-20-solid"
+                  size="xs"
+                  :color="dayjs().isAfter(dayjs(club.renewDate).subtract(14, 'days')) ? 'error' : 'primary'"
+                  :label="formatDateReadable(club.renewDate?.toString()) || 'Choisir une date'"
+                  @click="overlay.create(ModalClubSelectRenewDate).open({
+                         item: club,
+                         async onSelected(date: Date|undefined) {
+                           if (!club) {
+                             return
+                           }
+                           await clubQuery.patch(club, { renewDate: date ?? null })
+                           await loadItem()
+                         }
+                       })"
               />
             </div>
 
             <div class="text-center text-lg flex flex-row justify-center align-middle gap-2">
               <p>Suppression programmée le</p>
-              <UButton icon="i-heroicons-calendar-days-20-solid"
-                       size="xs"
-                       :color="club.deletionDate ? 'error' : 'primary'"
-                       :label="formatDateReadable(club.deletionDate?.toString()) || 'Choisir une date'"
-                       @click="overlay.create(ModalClubSelectDeletionDate).open({
-                        item: club,
-                        async onSelected(date: Date|undefined) {
-                          if (!club) {
-                            return
+              <UButton
+                  icon="i-heroicons-calendar-days-20-solid"
+                  size="xs"
+                  :color="club.deletionDate ? 'error' : 'primary'"
+                  :label="formatDateReadable(club.deletionDate?.toString()) || 'Choisir une date'"
+                  @click="overlay.create(ModalClubSelectDeletionDate).open({
+                         item: club,
+                         async onSelected(date: Date|undefined) {
+                           if (!club) {
+                             return
                           }
                           await clubQuery.patch(club, { deletionDate: date ?? null })
                           await loadItem()

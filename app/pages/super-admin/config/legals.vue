@@ -146,9 +146,10 @@ loadLegals()
         @change="event => { updateLegalsFile(event, 'cgv') }"
       />
 
-      <UButton v-if="legalsCgvLink"
-        class="mt-2"
-        @click="displayPdf('cgv.pdf', legalsCgvLink)"
+      <UButton
+          v-if="legalsCgvLink"
+          class="mt-2"
+          @click="displayPdf('cgv.pdf', legalsCgvLink)"
       >
         Afficher le pdf
       </UButton>
@@ -162,9 +163,10 @@ loadLegals()
         @change="event => { updateLegalsFile(event, 'cgu') }"
       />
 
-      <UButton v-if="legalsCguLink"
-               class="mt-2"
-               @click="displayPdf('cgu.pdf', legalsCguLink)"
+      <UButton
+          v-if="legalsCguLink"
+          class="mt-2"
+          @click="displayPdf('cgu.pdf', legalsCguLink)"
       >
         Afficher le pdf
       </UButton>
@@ -178,9 +180,10 @@ loadLegals()
         @change="event => { updateLegalsFile(event, 'privacy-policy') }"
       />
 
-      <UButton v-if="legalsPrivacyLink"
-               class="mt-2"
-               @click="displayPdf('politique-confidentialite.pdf', legalsPrivacyLink)"
+      <UButton
+          v-if="legalsPrivacyLink"
+          class="mt-2"
+          @click="displayPdf('politique-confidentialite.pdf', legalsPrivacyLink)"
       >
         Afficher le pdf
       </UButton>

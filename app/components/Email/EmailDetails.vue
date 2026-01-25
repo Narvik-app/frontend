@@ -9,7 +9,7 @@ const props = defineProps({
     }
   })
 
-  const emit = defineEmits(['close'])
+  const _emit = defineEmits(['close'])
 
   const email = ref(props.item)
 
@@ -30,7 +30,7 @@ const props = defineProps({
         <p>Date : {{ formatDateTimeReadable(email.createdAt) }}</p>
       </div>
       <UCard>
-        <div v-html="formattedContent" class="email-preview"></div>
+        <div class="email-preview" v-html="formattedContent"/>
       </UCard>
       <p>Envoyé à {{ email.recipientCount }} {{ email.recipientCount > 1 ? 'membres' : 'membre' }} {{ email.isNewsletter ? '(newsletter)' : '' }}</p>
     </div>

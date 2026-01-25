@@ -24,7 +24,7 @@ const selectedActivity: Ref<Activity | undefined> = ref(undefined)
 
 // Side menu visible
 const isVisible = ref(false);
-watch(selectedActivity, (value, oldValue) => {
+watch(selectedActivity, (value, _oldValue) => {
   isVisible.value = value !== undefined
 })
 
@@ -81,6 +81,7 @@ function rowClicked(row: TableRow<Activity>) {
   isVisible.value = true
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define proper form state type
 const validate = (state: any): FormError[] => {
   const errors = []
   if (!state.name) errors.push({name: 'name', message: 'Champ requis'})
@@ -97,7 +98,7 @@ function createActivity() {
 async function updateActivity(activity: Activity) {
   isLoading.value = true
 
-  let payload: Activity = {
+  const payload: Activity = {
     name: activity.name,
     isEnabled: activity.isEnabled,
     visibility: activity.visibility
@@ -187,15 +188,16 @@ getActivities()
 </script>
 
 <template>
-  <GenericLayoutContentWithStickySide @keyup.esc="isVisible = false; selectedActivity = undefined;"
-                                      :has-side-content="isVisible" :mobile-side-title="selectedActivity?.name"
-                                      tabindex="-1">
+  <GenericLayoutContentWithStickySide
+      :has-side-content="isVisible"
+      :mobile-side-title="selectedActivity?.name" tabindex="-1"
+      @keyup.esc="isVisible = false; selectedActivity = undefined;">
     <template #main>
       <UCard>
         <div>
           <div class="flex gap-4">
 
-            <div class="flex-1"></div>
+            <div class="flex-1"/>
             <UButton @click="createActivity">
               Créer une nouvelle activité
             </UButton>
@@ -225,8 +227,8 @@ getActivities()
     </template>
 
     <template #side>
-      <div class="flex flex-col gap-4" v-if="selectedActivity">
-        <UForm :state="selectedActivity" @submit="updateActivity(selectedActivity)" :validate="validate">
+      <div v-if="selectedActivity" class="flex flex-col gap-4">
+        <UForm :state="selectedActivity" :validate="validate" @submit="updateActivity(selectedActivity)">
           <UCard>
             <div class="flex gap-2 flex-col">
               <UFormField label="Disponible" name="available">
@@ -250,11 +252,12 @@ getActivities()
           <UButton class="mt-4" block type="submit" :loading="isLoading">Enregistrer</UButton>
         </UForm>
 
-        <UButton v-if="selectedActivity.uuid"
-                 block
-                 variant="soft"
-                 :loading="isLoading"
-                 @click="overlay.create(ActivityModalMigrate).open({
+        <UButton
+            v-if="selectedActivity.uuid"
+            block
+            variant="soft"
+            :loading="isLoading"
+            @click="overlay.create(ActivityModalMigrate).open({
                  title: selectedActivity.name,
                  activities: activities,
                  onMigrate(targetId: string) {
@@ -265,11 +268,12 @@ getActivities()
           Migrer
         </UButton>
 
-        <UButton v-if="selectedActivity.uuid"
-          block
-          color="error"
-          :loading="isLoading"
-          @click="overlay.create(ActivityModalDelete).open({
+        <UButton
+            v-if="selectedActivity.uuid"
+            block
+            color="error"
+            :loading="isLoading"
+            @click="overlay.create(ActivityModalDelete).open({
             title: selectedActivity.name,
             onDelete() {
               deleteActivity()

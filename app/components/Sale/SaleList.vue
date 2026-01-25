@@ -45,7 +45,7 @@ const totalPerPaymentMode = computed(() => {
     const paymentModeObject: SalePaymentMode = sale.paymentMode as SalePaymentMode
     if (!sale.paymentMode || !paymentModeObject.name) { return }
 
-    let paymentMode = amountPerPayment.get(paymentModeObject.name)
+    const paymentMode = amountPerPayment.get(paymentModeObject.name)
     if (!paymentMode) {
       return;
     }
@@ -76,7 +76,7 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
         Dernière mise à jour : {{ formatDateTimeReadable(lastRefreshDate.toString()) }}
       </UButton>
 
-      <div class="w-full mb-2"></div>
+      <div class="w-full mb-2"/>
 
       <UPopover v-model:open="popoverOpen">
         <UButton icon="i-heroicons-calendar-days-20-solid" :label="selectedRange ? formatDateRangeReadable(selectedRange) || 'Choisir une plage' : 'Choisir une plage'" />
@@ -93,20 +93,19 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
       <GenericStatCard
         title="Nombres de ventes"
         :value="sales.length"
-        :loading="isLoading">
-      </GenericStatCard>
+        :loading="isLoading"/>
 
       <GenericStatCard
         title="Total"
         :value="formatMonetary(totalAmountSales.toFixed(2))"
-        :loading="isLoading">
-      </GenericStatCard>
+        :loading="isLoading"/>
     </div>
 
     <div class="sm:flex sm:gap-4 sm:justify-center sm:flex-wrap">
       <GenericStatCard
-        class="basis-[calc(25%-1rem)]"
         v-for="[name, value] in totalPerPaymentMode"
+        :key="name"
+        class="basis-[calc(25%-1rem)]"
         :title="name"
         :is-increasing="true"
         :value="formatMonetary(value.amount.toFixed(2))"
@@ -115,8 +114,7 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
           tooltip: value.count + ' ventes en ' + name,
           icon: value.icon ? 'i-heroicons-' + value.icon : null
         }"
-        :loading="isLoading">
-      </GenericStatCard>
+        :loading="isLoading"/>
     </div>
 
     <template v-if="props.perItem">
@@ -129,10 +127,10 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
         <div class="flex flex-wrap items-center gap-4">
           <div class="text-xl font-bold">Ventes</div>
 
-          <div class="flex-1"></div>
+          <div class="flex-1"/>
 
           <template v-if="isAdmin">
-            <UButton @click="saleStore.getSalesCsv()" icon="i-heroicons-arrow-down-tray" color="success" :loading="saleStore.isDownloadingCsv" :disabled="!selectedRange">
+            <UButton icon="i-heroicons-arrow-down-tray" color="success" :loading="saleStore.isDownloadingCsv" :disabled="!selectedRange" @click="saleStore.getSalesCsv()">
               CSV
             </UButton>
           </template>

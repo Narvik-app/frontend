@@ -24,7 +24,7 @@ const props = defineProps({
 
 const item: Ref<Member> = props.item ? ref(props.item) : ref(getDefaultItem())
 
-watch(props, async value => {
+watch(props, async (_value) => {
   item.value = props.item ?? getDefaultItem()
 })
 
@@ -116,7 +116,7 @@ async function submitItem() {
   <UForm class="flex gap-2 flex-col" :state="item" :validate="validate" @submit="submitItem" @error="onError">
     <div class="flex justify-between">
       <UFormField label="Genre" name="gender">
-        <USelect class="min-w-32" v-model="item.gender" :items="[{label: 'Homme', value: 'M'}, {label: 'Femme', value: 'F'}]" option-attribute="name" :class="props.viewOnly ? 'pointer-events-none' : ''" :tabindex="props.viewOnly ? '-1' : '0'" />
+        <USelect v-model="item.gender" class="min-w-32" :items="[{label: 'Homme', value: 'M'}, {label: 'Femme', value: 'F'}]" option-attribute="name" :class="props.viewOnly ? 'pointer-events-none' : ''" :tabindex="props.viewOnly ? '-1' : '0'" />
       </UFormField>
 
       <UFormField label="Newsletter">
@@ -139,7 +139,7 @@ async function submitItem() {
                 <p>Vous pouvez cliquer sur l'année</p>
                 <p>afin de changer celle-ci</p>
               </div>
-              <GenericDatePicker class="!w-full" v-model="item.birthday" mode="date" @close="popoverOpen = false" />
+              <GenericDatePicker v-model="item.birthday" class="!w-full" mode="date" @close="popoverOpen = false" />
             </div>
           </template>
         </UPopover>
@@ -155,7 +155,7 @@ async function submitItem() {
                 <p>Date d'expiration du</p>
                 <p>certificat médical</p>
               </div>
-              <GenericDatePicker class="!w-full" v-model="item.medicalCertificateExpiration" mode="date" @close="popoverMedicalOpen = false" />
+              <GenericDatePicker v-model="item.medicalCertificateExpiration" class="!w-full" mode="date" @close="popoverMedicalOpen = false" />
             </div>
           </template>
         </UPopover>
@@ -214,12 +214,13 @@ async function submitItem() {
 
     <UFormField label="Adresse" name="postal">
       <UInput v-model="item.postal1" placeholder="Adresse ligne 1" :class="props.viewOnly ? 'pointer-events-none' : ''" :tabindex="props.viewOnly ? '-1' : '0'" />
-      <UInput class="my-2" v-model="item.postal2" placeholder="Adresse ligne 2" :class="props.viewOnly ? 'pointer-events-none' : ''" :tabindex="props.viewOnly ? '-1' : '0'" />
+      <UInput v-model="item.postal2" class="my-2" placeholder="Adresse ligne 2" :class="props.viewOnly ? 'pointer-events-none' : ''" :tabindex="props.viewOnly ? '-1' : '0'" />
       <UInput v-model="item.postal3" placeholder="Adresse ligne 3" :class="props.viewOnly ? 'pointer-events-none' : ''" :tabindex="props.viewOnly ? '-1' : '0'" />
     </UFormField>
 
 
-    <UButton type="submit" v-if="!props.viewOnly"
+    <UButton
+v-if="!props.viewOnly" type="submit"
       block
       class="mt-2"
       :loading="isUpdating"

@@ -30,7 +30,7 @@ async function loadSmtpSettings() {
   isLoading.value = true
 
   for (const [key, value] of Object.entries(GLOBAL_SETTINGS_SMTP_BOOLEAN_MAPPING)) {
-    let {retrieved} = await globalSettingQuery.get(value)
+    const {retrieved} = await globalSettingQuery.get(value)
     if (retrieved) {
       let setValue: boolean = false
       if (retrieved.value) {
@@ -41,19 +41,19 @@ async function loadSmtpSettings() {
           }
         }
       }
-      // @ts-ignore
+      // @ts-expect-error - dynamic key access for SMTP settings
       smtpSetting.value[key] = setValue
     }
   }
 
   for (const [key, value] of Object.entries(GLOBAL_SETTINGS_SMTP_STRING_MAPPING)) {
-    let { retrieved } = await globalSettingQuery.get(value)
+    const { retrieved } = await globalSettingQuery.get(value)
     if (retrieved) {
       let setValue: string|null = null
       if (retrieved.value) {
         setValue = retrieved.value
       }
-      // @ts-ignore
+      // @ts-expect-error - dynamic key access for SMTP settings
       smtpSetting.value[key] = setValue
     }
   }
@@ -61,7 +61,7 @@ async function loadSmtpSettings() {
   isLoading.value = false
 }
 
-const validate = (state: any): FormError[] => {
+const validate = (state: { host?: string; port?: string; sender?: string }): FormError[] => {
   if (!smtpSetting.value.on) {
     return []
   }
@@ -130,7 +130,7 @@ async function testSmtp() {
         </UButton>
 
         <UProgress v-if="isLoading" animation="swing" class="mb-2" />
-        <UForm v-else class="flex gap-2 flex-col" :state="smtpSetting" :validate="validate" @submit="updateSmtpSetting" @error="onError" autocomplete="off">
+        <UForm v-else class="flex gap-2 flex-col" :state="smtpSetting" :validate="validate" autocomplete="off" @submit="updateSmtpSetting" @error="onError">
           <UFormField label="Activé">
             <USwitch v-model="smtpSetting.on" />
           </UFormField>

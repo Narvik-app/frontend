@@ -14,12 +14,13 @@ definePageMeta({
   const saleQuery = new SaleQuery()
   const inventoryItemQuery = new InventoryItemQuery()
 
-  const apiUploadResponse: Ref<Object|undefined> = ref(undefined);
+  const apiUploadResponse: Ref<object|undefined> = ref(undefined);
   const fileUploading = ref(false)
-  const state = reactive({
+  const _state = reactive({
     file: undefined
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
   async function importSalesFromCsv(event: any) {
     const formData = getFileFormDataFromUInputChangeEvent(event);
 
@@ -39,6 +40,7 @@ definePageMeta({
     displayFileSuccessToast()
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
   async function importInventoriesFromCsv(event: any) {
     const formData = getFileFormDataFromUInputChangeEvent(event);
 
@@ -88,8 +90,8 @@ definePageMeta({
 
           <p class="">Exemple</p>
           <GenericCode>
-            name,description,purchasePrice,canBeSold,sellingPrice,sellingQuantity,category.name <br />
-            Carabine 10M,sed laboriosam molestiae aliquid quia et,2.89,0,13.41,2,Cibles <br />
+            name,description,purchasePrice,canBeSold,sellingPrice,sellingQuantity,category.name <br >
+            Carabine 10M,sed laboriosam molestiae aliquid quia et,2.89,0,13.41,2,Cibles <br >
             Cible C50,,1.47,1,14.31,1,Cibles
           </GenericCode>
         </div>
@@ -113,7 +115,7 @@ definePageMeta({
           <p class="">Exemple</p>
 
           <GenericCode>
-            seller.licence,paymentMode.name,price,comment,item.0.name,item.0.category,item.0.price,item.0.quantity,uuid,createdAt <br />
+            seller.licence,paymentMode.name,price,comment,item.0.name,item.0.category,item.0.price,item.0.quantity,uuid,createdAt <br >
             31394762,Espèces,14.31,test,"Cible C50",Cibles,14.31,1,01950394-b472-7135-beb6-f138d91d624c,2025-02-14T08:30:32+00:00
           </GenericCode>
         </div>

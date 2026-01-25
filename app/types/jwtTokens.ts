@@ -13,10 +13,12 @@ interface _Token {
   date: Date
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface JwtAccessToken extends _Token {
 
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface JwtRefreshToken extends _Token {
 
 }

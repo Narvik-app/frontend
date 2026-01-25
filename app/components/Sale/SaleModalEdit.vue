@@ -50,6 +50,7 @@ if (saleStore.paymentModes.length < 1) {
   saleStore.getPaymentModes()
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define proper form state type
 const validate = (state: any): FormError[] => {
   const errors = []
   if (!state.createdAt) errors.push({ name: 'createdAt', message: 'Champ requis' })
@@ -94,8 +95,11 @@ async function updateSale() {
   }
 
   // We update the sale with the api update item
+  // eslint-disable-next-line vue/no-mutating-props -- TODO: Use emit to update parent instead of prop mutation
   props.sale.createdAt = updated.createdAt
+  // eslint-disable-next-line vue/no-mutating-props -- TODO: Use emit to update parent instead of prop mutation
   props.sale.comment = updated.comment
+  // eslint-disable-next-line vue/no-mutating-props -- TODO: Use emit to update parent instead of prop mutation
   props.sale.paymentMode = updated.paymentMode
 
   toast.add({

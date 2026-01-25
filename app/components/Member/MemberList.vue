@@ -160,26 +160,26 @@ async function downloadCsv() {
           <UFormField class="sm:col-span-5" label="Recherche">
             <UInput
               v-model="query"
-              @update:model-value="queryUpdated()"
-              placeholder="Rechercher..."  />
+              placeholder="Rechercher..."
+              @update:model-value="queryUpdated()"  />
           </UFormField>
 
           <UFormField label="Rôle" class="sm:col-span-4">
-            <USelect multiple v-model="selectedRoles" :items="rolesSelect" placeholder="Tous" @change="page = 1; getMembers()" />
+            <USelect v-model="selectedRoles" multiple :items="rolesSelect" placeholder="Tous" @change="page = 1; getMembers()" />
           </UFormField>
         </div>
 
-        <div class="sm:col-span-2"></div>
+        <div class="sm:col-span-2"/>
 
         <div class="sm:col-span-4 grid grid-cols-2 gap-2 gap-x-4">
-          <UCheckbox label="Saison actuelle" v-model="onlyCurrentSeason" @change="onlySeasonNotRenewed = false; onlyPreviousSeason = false; page = 1; getMembers()" />
-          <UCheckbox label="Non renouvelée" v-model="onlySeasonNotRenewed" @change="onlyCurrentSeason = false; page = 1; getMembers()" />
-          <UCheckbox label="Saison précédente" v-model="onlyPreviousSeason" @change="onlyCurrentSeason = false; page = 1; getMembers()" />
-          <UCheckbox label="Licence" v-model="onlyWithLicence" @change="page = 1; getMembers()" />
+          <UCheckbox v-model="onlyCurrentSeason" label="Saison actuelle" @change="onlySeasonNotRenewed = false; onlyPreviousSeason = false; page = 1; getMembers()" />
+          <UCheckbox v-model="onlySeasonNotRenewed" label="Non renouvelée" @change="onlyCurrentSeason = false; page = 1; getMembers()" />
+          <UCheckbox v-model="onlyPreviousSeason" label="Saison précédente" @change="onlyCurrentSeason = false; page = 1; getMembers()" />
+          <UCheckbox v-model="onlyWithLicence" label="Licence" @change="page = 1; getMembers()" />
         </div>
 
         <div class="text-right">
-          <UButton @click="downloadCsv()" icon="i-heroicons-arrow-down-tray" color="success" :loading="isDownloadingCsv">
+          <UButton icon="i-heroicons-arrow-down-tray" color="success" :loading="isDownloadingCsv" @click="downloadCsv()">
             CSV
           </UButton>
         </div>
@@ -190,24 +190,24 @@ async function downloadCsv() {
     <UCard>
       <div class="flex gap-2 flex-row flex-wrap">
         <div class="text-xl font-bold">Membres ({{ totalMembers }})</div>
-        <div class="flex-1"></div>
+        <div class="flex-1"/>
         <div class="flex justify-end">
-          <UButton @click="createMemberModal = true" icon="i-heroicons-plus"></UButton>
+          <UButton icon="i-heroicons-plus" @click="createMemberModal = true"/>
         </div>
       </div>
 
       <UTable
+        v-model:sort="sort"
         :loading="isLoading"
         class="w-full"
-        v-model:sort="sort"
         sort-mode="manual"
-        @update:sort="getMembers()"
         :columns="columns"
         :data="members"
-        @select="(evt, row) => displayMemberPage(row.original)"
         :ui="{
           tr: 'cursor-pointer'
         }"
+        @update:sort="getMembers()"
+        @select="(evt, row) => displayMemberPage(row.original)"
       >
         <template #empty>
           <div class="flex flex-col items-center justify-center py-6 gap-3">

@@ -54,8 +54,8 @@ async function applyProfile() {
     <template #actions>
       <UButton
         :loading="isLoading"
-        @click="applyProfile"
         color="warning"
+        @click="applyProfile"
       >
         Changer
       </UButton>

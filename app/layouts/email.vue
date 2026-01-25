@@ -44,7 +44,7 @@ useHead({
     })
   }
 
-  let links: GroupedNavigationLinks[] = []
+  const links: GroupedNavigationLinks[] = []
 
   if (mailSection.length > 0) {
     links.push({

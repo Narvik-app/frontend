@@ -21,5 +21,5 @@ definePageMeta({
 </script>
 
 <template>
-  <EmailTemplateEditor :template-id="templateId"></EmailTemplateEditor>
+  <EmailTemplateEditor :template-id="templateId"/>
 </template>

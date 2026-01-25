@@ -27,7 +27,7 @@ async function deleteClub() {
   }
 
   const clubQuery = new ClubQuery()
-  const { updated } = await clubQuery.programDeletion()
+  const { updated: _updated } = await clubQuery.programDeletion()
 
   await selfStore.refreshSelectedClub()
 }
@@ -38,15 +38,16 @@ async function deleteClub() {
   <div class="grid grid-cols-1 lg:grid-cols-6 gap-4">
     <GenericCardWithActions class="lg:col-span-4" title="Information sur l'abonnement">
       <template #actions>
-        <UButton v-if="!selfStore.selectedProfile?.club.deletionDate"
-          color="error"
-          @click="
-            overlayDeleteConfirmation.open({
-              title: 'Nous sommes désolés de vous voir partir',
-              alertDescription: 'Afin de vous permettre de récupérer vos données, l\'association sera automatiquement supprimé un mois après la fin de votre abonnement.',
-              alertColor: 'error',
-              async onDelete() {
-                await deleteClub()
+        <UButton
+            v-if="!selfStore.selectedProfile?.club.deletionDate"
+            color="error"
+            @click="
+             overlayDeleteConfirmation.open({
+               title: 'Nous sommes désolés de vous voir partir',
+               alertDescription: 'Afin de vous permettre de récupérer vos données, l\'association sera automatiquement supprimé un mois après la fin de votre abonnement.',
+               alertColor: 'error',
+               async onDelete() {
+                 await deleteClub()
                 overlayDeleteConfirmation.close(true)
               }
             })
@@ -136,10 +137,11 @@ async function deleteClub() {
       <template #content>
         <div>
           <UCard>
-            <ClubForm v-if="selfStore.selectedProfile"
-                      :is-self-edit="true"
-                      :item="{...selfStore.selectedProfile.club}"
-                      @updated="(value) => {selfClubModalOpen = false; selfStore.refreshSelectedClub() }"
+            <ClubForm
+                v-if="selfStore.selectedProfile"
+                :is-self-edit="true"
+                :item="{...selfStore.selectedProfile.club}"
+                @updated="(value) => {selfClubModalOpen = false; selfStore.refreshSelectedClub() }"
             />
           </UCard>
         </div>

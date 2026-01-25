@@ -47,7 +47,7 @@ const props = defineProps({
 
   getPresences();
 
-  watch([searchQuery, selectedRange, selectedActivities], (value) => {
+  watch([searchQuery, selectedRange, selectedActivities], (_value) => {
     page.value = 1
     getPresences()
   })
@@ -121,7 +121,7 @@ const props = defineProps({
     modalOpen.value = true
   }
 
-  function externalPresenceUpdated(externalPresence: ExternalPresence) {
+  function externalPresenceUpdated(_externalPresence: ExternalPresence) {
     getPresences()
   }
 
@@ -177,10 +177,10 @@ const props = defineProps({
     <div class="flex flex-wrap items-center gap-4">
       <div class="text-xl font-bold mb-4">Présences externe</div>
 
-      <div class="flex-1"></div>
+      <div class="flex-1"/>
 
       <template v-if="isAdmin">
-        <UButton @click="downloadCsv()" icon="i-heroicons-arrow-down-tray" color="success" :loading="isDownloadingCsv" :disabled="!selectedRange">
+        <UButton icon="i-heroicons-arrow-down-tray" color="success" :loading="isDownloadingCsv" :disabled="!selectedRange" @click="downloadCsv()">
           CSV
         </UButton>
       </template>
@@ -194,7 +194,7 @@ const props = defineProps({
       :display-no-data-register="false"
       :is-loading="isLoading"
       accent-color="warning"
-      @rowClicked="rowClicked"
+      @row-clicked="rowClicked"
       @sort="(object: ColumnSort) => { sort = object; getPresences() }"
       @paginate="(object: TablePaginateInterface) => { page = object.page; itemsPerPage = object.itemsPerPage; getPresences() }"
     />

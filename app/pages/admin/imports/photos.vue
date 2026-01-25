@@ -21,6 +21,7 @@ const memberQuery = new MemberQuery()
 
 const fileUploading = ref(false)
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
 async function getFileObject(event: any) {
   const formData = getFileFormDataFromUInputChangeEvent(event);
 
@@ -29,7 +30,7 @@ async function getFileObject(event: any) {
   }
 
   fileUploading.value = true
-  const {created, error} = await memberQuery.importPhotosFromItac(formData)
+  const {error} = await memberQuery.importPhotosFromItac(formData)
   fileUploading.value = false
 
   if (error) {

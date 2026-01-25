@@ -24,7 +24,7 @@ let refreshInterval: NodeJS.Timeout
 getPresences()
 
 const presenceList = computed(() => {
-  let response = {
+  const response = {
     loading: true,
     presentMembers: Array.of<MemberPresence>()
   }
@@ -48,14 +48,14 @@ const selectedMember: Ref<Member | null> = ref(null)
 
 refreshNight()
 function refreshNight() {
-  var now = new Date();
-  var night = new Date(
+  const now = new Date();
+  const night = new Date(
       now.getFullYear(),
       now.getMonth(),
       now.getDate() + 1,
       3, 0, 0
   );
-  var msToMidnight = night.getTime() - now.getTime();
+  const msToMidnight = night.getTime() - now.getTime();
   if (msToMidnight > 0) {
     setTimeout(function() {
       getPresences(true);
@@ -90,7 +90,7 @@ function openAddExternalPresenceModal() {
   addExternalPresenceModal.value = true
 }
 
-watch(searchMemberModalOpen, (value, oldValue) => {
+watch(searchMemberModalOpen, (value, _oldValue) => {
   if (!value) {
     selectedMember.value = null;
     searchQuery.value = '';
@@ -113,13 +113,13 @@ function memberSelectedFromSearch(member: Member) {
   selectedMember.value = member;
 }
 
-function presenceRegistered(memberPresence: MemberPresence) {
+function presenceRegistered(_memberPresence: MemberPresence) {
   getPresences(true)
   searchMemberModalOpen.value = false;
   presentMembers.value = undefined; // We unset the list since we are refreshing it
 }
 
-function externalPresenceRegistered(memberPresence: ExternalPresence) {
+function externalPresenceRegistered(_memberPresence: ExternalPresence) {
   getPresences(true)
   addExternalPresenceModal.value = false;
 }
@@ -176,7 +176,7 @@ onUnmounted(() => {
         @click="historyModal = true"
       />
 
-      <span class="flex-1"></span>
+      <span class="flex-1"/>
 
       <UButton variant="soft" color="warning" label="Enregistrement utilisateur externe" @click="openAddExternalPresenceModal()"/>
       <UButton label="S'enregistrer" @click="openAddPresenceModal()"/>
@@ -191,7 +191,7 @@ onUnmounted(() => {
         <p class="font-bold">Membres enregistrés aujourd'hui : {{ presenceList.presentMembers.length }}</p>
 
 
-        <div class="flex-1"></div>
+        <div class="flex-1"/>
 
         <div class="inline-flex">
           <UTooltip text="Rafraichir">
@@ -215,7 +215,7 @@ onUnmounted(() => {
         :has-pagination="false"
         :is-loading="presenceList.loading || isRefreshing"
         @register="openAddPresenceModal()"
-        @rowClicked="rowClicked"
+        @row-clicked="rowClicked"
       />
 
     </UCard>

@@ -108,6 +108,7 @@ async function createTemplate() {
     } else if (error) {
       displayApiError(error, "La création a échoué");
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the error properly
   } catch (e: any) {
     displayApiError(e, "Une erreur est survenue");
   } finally {
@@ -138,6 +139,7 @@ async function renameTemplate() {
     } else if (error) {
       displayApiError(error, "Le renommage a échoué");
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the error properly
   } catch (e: any) {
     displayApiError(e, "Une erreur est survenue");
   } finally {
@@ -161,6 +163,7 @@ async function deleteTemplate() {
     } else {
       throw error;
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the error properly
   } catch (error: any) {
     displayApiError(error, "La suppression a échoué");
   }
@@ -174,12 +177,14 @@ function onPermissionsUpdated() {
   getTemplates();
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define proper form state type
 const validateCreate = (state: any): FormError[] => {
   const errors = [];
   if (!state.newTemplateName?.trim()) errors.push({ name: 'newTemplateName', message: 'Champ requis' });
   return errors;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define proper form state type
 const validateRename = (state: any): FormError[] => {
   const errors = [];
   if (!state.newTemplateName?.trim()) errors.push({ name: 'newTemplateName', message: 'Champ requis' });
@@ -206,7 +211,7 @@ const validateRename = (state: any): FormError[] => {
         <template #empty>
           <div class="flex flex-col items-center justify-center py-6 gap-3">
             <span class="italic text-sm">Aucun modèle de permissions.</span>
-            <UButton @click="openCreateModal" variant="outline">
+            <UButton variant="outline" @click="openCreateModal">
               Créer votre premier modèle
             </UButton>
           </div>
@@ -238,7 +243,7 @@ const validateRename = (state: any): FormError[] => {
           </div>
         </template>
 
-        <UForm :state="{ newTemplateName }" @submit="createTemplate" :validate="validateCreate">
+        <UForm :state="{ newTemplateName }" :validate="validateCreate" @submit="createTemplate">
           <UFormField label="Nom du modèle" name="newTemplateName">
             <UInput v-model="newTemplateName" placeholder="Ex: Superviseur ventes" autofocus class="w-full" />
           </UFormField>
@@ -266,7 +271,7 @@ const validateRename = (state: any): FormError[] => {
               <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
                 {{ selectedTemplate.name }}
               </h3>
-              <UButton color="neutral" variant="ghost" icon="i-lucide-pencil" size="xs" @click="openRenameModal" title="Renommer" />
+              <UButton color="neutral" variant="ghost" icon="i-lucide-pencil" size="xs" title="Renommer" @click="openRenameModal" />
             </div>
             <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="isEditModalOpen = false" />
           </div>
@@ -322,7 +327,7 @@ const validateRename = (state: any): FormError[] => {
           </div>
         </template>
 
-        <UForm :state="{ newTemplateName }" @submit="renameTemplate" :validate="validateRename">
+        <UForm :state="{ newTemplateName }" :validate="validateRename" @submit="renameTemplate">
           <UFormField label="Nouveau nom" name="newTemplateName">
             <UInput v-model="newTemplateName" placeholder="Nom du modèle" autofocus class="w-full" />
           </UFormField>

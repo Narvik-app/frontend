@@ -40,7 +40,7 @@ const items = ref<TabsItem[]>([{
   icon: 'i-heroicons-envelope-open',
 }])
 
-const validate = (state: any): FormError[] => {
+const validate = (state: { email?: string; password?: string; securityCode?: string }): FormError[] => {
   const errors = []
   if (!state.email) errors.push({ name: 'email', message: 'Champ requis' })
   if (!state.password || state.password.length < 8) errors.push({ name: 'password', message: 'Champ requis (8 caractères minimum)' })
@@ -136,7 +136,8 @@ onBeforeUnmount(() => {
         </template>
 
         <template #reset>
-          <UAlert v-if="securityEmailSent"
+          <UAlert
+v-if="securityEmailSent"
             icon="i-heroicons-megaphone"
             color="success"
             variant="soft"

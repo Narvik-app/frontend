@@ -26,7 +26,7 @@ const links = [
 <template>
   <div>
     <div class="flex flex-wrap gap-4 justify-center">
-      <NuxtLink v-for="link in links" :to="link.to" class="basis-full md:basis-1/3">
+      <NuxtLink v-for="link in links" :key="link.to" :to="link.to" class="basis-full md:basis-1/3">
         <UCard class="h-full hover:bg-white dark:hover:bg-gray-800 transition-colors cursor-pointer">
           <div class="flex flex-col items-center text-center gap-4">
             <UIcon :name="link.icon" class="w-12 h-12 text-primary-500" />

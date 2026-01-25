@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import {useSelfUserStore} from "~/stores/useSelfUser";
 import type {GroupedNavigationLinks} from "~/types/groupedNavigationLinks";
 
 useHead({
@@ -7,8 +6,6 @@ useHead({
       return titleChunk ? `${titleChunk} - Administration - Narvik` : 'Administration - Narvik';
     }
   });
-
-  const selfStore = useSelfUserStore()
 
   const globalSection = [
     {
@@ -54,7 +51,7 @@ useHead({
     },
   ]
 
-  let links: GroupedNavigationLinks[] = [
+  const links: GroupedNavigationLinks[] = [
     {
       links: globalSection
     },
@@ -72,7 +69,7 @@ useHead({
 
 <template>
   <GenericLayoutAdmin :items="links">
-    <slot></slot>
+    <slot/>
   </GenericLayoutAdmin>
 </template>
 

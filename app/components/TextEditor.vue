@@ -140,8 +140,8 @@ const props = defineProps(
 <template>
   <div class="ring ring-inset ring-accented rounded-xl p-4 space-y-2">
     <div class="flex flex-wrap gap-2 mb-2">
-      <UButton icon="i-heroicons-arrow-uturn-left" size="sm" @click="editor.chain().focus().undo().run()" :disabled="props.disabled" />
-      <UButton icon="i-heroicons-arrow-uturn-right" size="sm" @click="editor.chain().focus().redo().run()" :disabled="props.disabled" />
+      <UButton icon="i-heroicons-arrow-uturn-left" size="sm" :disabled="props.disabled" @click="editor.chain().focus().undo().run()" />
+      <UButton icon="i-heroicons-arrow-uturn-right" size="sm" :disabled="props.disabled" @click="editor.chain().focus().redo().run()" />
 
       <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
 
@@ -166,37 +166,37 @@ const props = defineProps(
             :text="color.name"
           >
             <UButton variant="ghost" @click="setTextColor(color.hex)">
-              <span :style="{ backgroundColor: color.hex }" class="size-3 rounded-full"></span>
+              <span :style="{ backgroundColor: color.hex }" class="size-3 rounded-full"/>
             </UButton>
           </UTooltip>
 
           <UTooltip text="Autre couleur">
             <input
               type="color"
-              @input="setTextColor($event.target.value)"
               :value="editor.getAttributes('textStyle').color"
-              class="w-4 h-4 rouded-full" >
+              class="w-4 h-4 rouded-full"
+              @input="setTextColor($event.target.value)" >
           </UTooltip>
         </template>
       </UPopover>
 
       <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
 
-      <UButton icon="i-heroicons-bold" size="sm" @click="editor.chain().focus().toggleBold().run()" :disabled="props.disabled" />
-      <UButton icon="i-heroicons-italic" size="sm" @click="editor.chain().focus().toggleItalic().run()" :disabled="props.disabled" />
-      <UButton icon="i-heroicons-underline" size="sm" @click="editor.chain().focus().toggleUnderline().run()" :disabled="props.disabled" />
-      <UButton icon="i-heroicons-strikethrough" size="sm" @click="editor.chain().focus().toggleStrike().run()" :disabled="props.disabled" />
+      <UButton icon="i-heroicons-bold" size="sm" :disabled="props.disabled" @click="editor.chain().focus().toggleBold().run()" />
+      <UButton icon="i-heroicons-italic" size="sm" :disabled="props.disabled" @click="editor.chain().focus().toggleItalic().run()" />
+      <UButton icon="i-heroicons-underline" size="sm" :disabled="props.disabled" @click="editor.chain().focus().toggleUnderline().run()" />
+      <UButton icon="i-heroicons-strikethrough" size="sm" :disabled="props.disabled" @click="editor.chain().focus().toggleStrike().run()" />
 
       <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
 
-      <UButton icon="i-heroicons-list-bullet" size="sm" @click="editor.chain().focus().toggleBulletList().run()" :disabled="props.disabled" />
-      <UButton icon="i-heroicons-numbered-list" size="sm" @click="editor.chain().focus().toggleOrderedList().run()" :disabled="props.disabled" />
+      <UButton icon="i-heroicons-list-bullet" size="sm" :disabled="props.disabled" @click="editor.chain().focus().toggleBulletList().run()" />
+      <UButton icon="i-heroicons-numbered-list" size="sm" :disabled="props.disabled" @click="editor.chain().focus().toggleOrderedList().run()" />
 
       <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
 
-      <UButton icon="i-heroicons-bars-3-bottom-left" color="primary" size="sm" @click="editor.chain().focus().setTextAlign('left').run()" :disabled="props.disabled" />
-      <UButton icon="i-heroicons-bars-3" color="primary" size="sm" @click="editor.chain().focus().setTextAlign('center').run()" :disabled="props.disabled" />
-      <UButton icon="i-heroicons-bars-3-bottom-right" color="primary" size="sm" @click="editor.chain().focus().setTextAlign('right').run()" :disabled="props.disabled" />
+      <UButton icon="i-heroicons-bars-3-bottom-left" color="primary" size="sm" :disabled="props.disabled" @click="editor.chain().focus().setTextAlign('left').run()" />
+      <UButton icon="i-heroicons-bars-3" color="primary" size="sm" :disabled="props.disabled" @click="editor.chain().focus().setTextAlign('center').run()" />
+      <UButton icon="i-heroicons-bars-3-bottom-right" color="primary" size="sm" :disabled="props.disabled" @click="editor.chain().focus().setTextAlign('right').run()" />
     </div>
 
     <EditorContent

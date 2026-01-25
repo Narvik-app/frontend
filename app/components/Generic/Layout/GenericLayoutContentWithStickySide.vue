@@ -56,7 +56,7 @@ watchEffect(() => {
 <template>
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
     <div class="lg:col-span-2">
-      <slot name="main"></slot>
+      <slot name="main"/>
     </div>
 
     <div v-if="props.displaySide" :class="sideClasses">
@@ -74,7 +74,7 @@ watchEffect(() => {
       </div>
       <div v-if="sideMobileVisible" class="overflow-y-auto">
         <div class="p-1 flex flex-col gap-4">
-          <slot name="side"></slot>
+          <slot name="side"/>
         </div>
       </div>
     </div>

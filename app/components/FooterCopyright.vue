@@ -65,7 +65,7 @@ const props = defineProps({
         <div><ContentLink to="https://github.com/Narvik-app" target="_blank">Github</ContentLink></div>
       </div>
       <div class="flex flex-col gap-1 justify-center items-center lg:items-end text-xs">
-        <template v-for="(val, index) in externalLinks">
+        <template v-for="(val, index) in externalLinks" :key="index">
           <div><ContentLink class="text-(--ui-text) dark:text-white dark:hover:text-white" :to="val.to" target="_blank" >{{ val.label }}</ContentLink></div>
         </template>
 
@@ -73,7 +73,7 @@ const props = defineProps({
       </div>
 
       <div v-if="props.displayVersion" class="-mt-2 lg:-mt-4 lg:col-span-3 transition opacity-40 hover:opacity-70 flex flex-row justify-center lg:justify-end  text-[.6rem] gap-1">
-        <template v-for="(val, index) in versions">
+        <template v-for="(val, index) in versions" :key="index">
           <span v-if="index !== 0"> - </span>
           <NuxtLink :to="val.to" target="_blank" >{{ val.label }}</NuxtLink>
         </template>

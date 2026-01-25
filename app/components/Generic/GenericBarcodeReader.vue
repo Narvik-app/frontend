@@ -21,12 +21,13 @@ function onDetect(firstDetectedCode: Array<DetectedBarcode>) {
   <div v-if="enabled" class="flex flex-wrap flex-col w-full">
     <QrcodeStream
       class="flex-1"
-      @detect="onDetect"
       :formats="[
         'linear_codes'
       ]"
+      @detect="onDetect"
     />
-    <UButton block
+    <UButton
+block
       class="mt-2"
       label="Fermer"
       @click="enabled = false; emit('aborted');"

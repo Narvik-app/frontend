@@ -30,9 +30,10 @@ const props = defineProps({
   <div class="flex gap-2 items-center">
     <UIcon :name="props.icon" />
 
-    <ULink v-if="props.to || props.asLink"
-           :to="props.to"
-           :class="'text-primary-500 hover:text-primary-600 hover:underline dark:text-primary-400 dark:hover:text-primary-500 underline-offset-4 ' + props.classes"
+    <ULink
+      v-if="props.to || props.asLink"
+     :to="props.to"
+     :class="'text-primary-500 hover:text-primary-600 hover:underline dark:text-primary-400 dark:hover:text-primary-500 underline-offset-4 ' + props.classes"
     >
       {{ props.label ?? 'Non défini' }}
     </ULink>

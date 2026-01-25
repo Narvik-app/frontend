@@ -18,14 +18,12 @@ const emit = defineEmits(['updated', 'close'])
 
 const toast = useToast()
 
-const overlay = useOverlay()
-
 const isLoading = ref(false)
 
 const memberQuery = new MemberQuery()
 const member: Member = {...props.member}
 
-const validate = (state: any): FormError[] => {
+const validate = (_state: { linkedEmail?: string }): FormError[] => {
   const errors = []
   if (!member.linkedEmail) errors.push({ name: 'email', message: 'Champ requis' })
   return errors

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {isDesktop} from "~/utils/browser";
-import type {GroupedNavigationLinks} from "~/types/groupedNavigationLinks";
+import type {GroupedNavigationLinks, NavigationLink} from "~/types/groupedNavigationLinks";
 import type {PropType} from "vue";
 
 const props = defineProps(
@@ -28,7 +28,7 @@ const cItems = computed(() => {
   let longestMatchPath = ''
 
   props.items?.forEach(value => {
-    value.links.forEach((link: any) => {
+    value.links.forEach((link: NavigationLink) => {
       if (!link.to) return
 
       const isMatch = route.path === link.to || (route.path.startsWith(link.to + '/') && link.to !== '/admin')
@@ -40,11 +40,11 @@ const cItems = computed(() => {
 
   // Second pass: build items and set active state
   props.items?.forEach(value => {
-    let item : GroupedNavigationLinks = {
+    const item : GroupedNavigationLinks = {
       title: value.title,
       links: []
     }
-    value.links.forEach((link: any) => {
+    value.links.forEach((link: NavigationLink) => {
       // Create a copy to avoid mutating props
       const newLink = { ...link }
 
@@ -86,8 +86,10 @@ const cItems = computed(() => {
               :label="menuVisible ? 'Masquer le menu' : 'Menu'"
               @click="menuVisible = !menuVisible"
             />
-            <template v-if="menuVisible" v-for="groupedLinks in cItems">
-              <USeparator v-if="groupedLinks.title !== undefined"
+            <template v-if="menuVisible">
+              <template v-for="(groupedLinks, gIndex) in cItems" :key="gIndex">
+              <USeparator
+v-if="groupedLinks.title !== undefined"
                         class="p-2"
                         :label="groupedLinks.title"
               />
@@ -96,6 +98,7 @@ const cItems = computed(() => {
                 orientation="vertical"
                 :items="groupedLinks.links"
               />
+              </template>
             </template>
 
           </div>

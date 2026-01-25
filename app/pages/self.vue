@@ -86,7 +86,7 @@ async function deleteUser() {
     <div v-if="user" class="mb-4">
       <div class="flex flex-col md:flex-row justify-between mb-4 gap-2">
         <div class="text-3xl font-bold">Mon compte</div>
-        <div class="flex-1"></div>
+        <div class="flex-1"/>
 
         <UModal>
           <UButton icon="i-heroicons-lock-closed" >
@@ -169,7 +169,7 @@ async function deleteUser() {
 
     <div class="flex flex-col md:flex-row justify-between mb-4">
       <div v-if="selectedProfile?.club" class="text-3xl font-bold">{{ selectedProfile?.club.name }}</div>
-      <div class="flex-1"></div>
+      <div class="flex-1"/>
       <UButton
         v-if="(user?.linkedProfiles?.length ?? 0) > 1"
         color="warning"

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import InventoryItemQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryItemQuery";
-import SalePaymentModeQuery from "~/composables/api/query/clubDependent/plugin/sale/SalePaymentModeQuery";
 import type {InventoryItem} from "~/types/api/item/clubDependent/plugin/sale/inventoryItem";
 import {formatMonetary} from "~/utils/string";
 import SaleQuery from "~/composables/api/query/clubDependent/plugin/sale/SaleQuery";
@@ -47,7 +46,6 @@ definePageMeta({
   })
 
   const inventoryItemQuery = new InventoryItemQuery()
-  const paymentModeQuery = new SalePaymentModeQuery()
   const saleQuery = new SaleQuery()
 
   const searchQueryInput: Ref<string> = ref(searchQuery.value)
@@ -59,21 +57,21 @@ definePageMeta({
   const inventoryItems: Ref<InventoryItem[]> = ref([])
   const inventoryItemsLoading: Ref<InventoryItem[]> = ref([])
   const orderedItems = computed( () => {
-    let categories = new Map<string, InventoryItem[]>()
+    const categories = new Map<string, InventoryItem[]>()
     inventoryItems.value.forEach(item => {
       if (item.category && item.category.name) {
         if (!categories.has(item.category.name)) {
           categories.set(item.category.name, [])
         }
 
-        // @ts-ignore
+        // @ts-expect-error - categories.get is guaranteed to exist after the if check
         categories.get(item.category.name).push(item)
       } else {
         if (!categories.has('Non définie')) {
           categories.set('Non définie', [])
         }
 
-        // @ts-ignore
+        // @ts-expect-error - categories.get is guaranteed to exist after the if check
         categories.get('Non définie').push(item)
       }
     })
@@ -109,14 +107,6 @@ definePageMeta({
     isLoading.value = false
   }
 
-  async function loadPaymentModes() {
-    const urlParams = new URLSearchParams({
-      available: 'true',
-    });
-    const { items } = await paymentModeQuery.getAll(urlParams)
-    paymentModes.value = items
-  }
-
   let inputTimer: NodeJS.Timeout;
   async function searchQueryUpdated() {
     clearTimeout(inputTimer);
@@ -140,9 +130,9 @@ definePageMeta({
   async function createSale() {
     isCreatingSale.value = true
 
-    let salePurchasedItems: SalePurchasedItem[] = []
-    cart.value.forEach((item, key) => {
-      let payload: SalePurchasedItem = {
+    const salePurchasedItems: SalePurchasedItem[] = []
+    cart.value.forEach((item, _key) => {
+      const payload: SalePurchasedItem = {
         quantity: item.quantity
       }
 
@@ -209,20 +199,20 @@ definePageMeta({
     <template #main>
       <UCard class="print:ring-0 print:shadow-none print:!bg-transparent print:text-black">
         <GenericBarcodeReader
-          class="mb-4"
           v-model="cameraPreview"
+          class="mb-4"
           @decoded="(value) => {searchQuery = value}"
         />
 
         <div class="flex flex-row items-center mb-4 gap-2 print:hidden">
           <UInput
-            class="flex-1"
             v-model="searchQueryInput"
-            @update:model-value="searchQueryUpdated()"
+            class="flex-1"
             :loading="isLoading"
             placeholder="Rechercher..."
+            @update:model-value="searchQueryUpdated()"
           >
-            <template #trailing v-if="cameraIsPresent || searchQueryInput">
+            <template v-if="cameraIsPresent || searchQueryInput" #trailing>
               <UIcon
                 v-if="cameraIsPresent"
                 class="cursor-pointer"
@@ -239,7 +229,7 @@ definePageMeta({
             </template>
           </UInput>
 
-          <UButton @click="cartCustomItemModalOpen = true;" icon="i-heroicons-plus">
+          <UButton icon="i-heroicons-plus" @click="cartCustomItemModalOpen = true;">
             <span class="hidden sm:block">Article personnalisé</span>
           </UButton>
 
@@ -250,10 +240,11 @@ definePageMeta({
         <div class="hidden print:block text-right font-extralight text-xs mb-4">À date du {{ formatDate(dayjs().toString()) }}</div>
 
         <div class="print:columns-2 print:gap-2">
-          <div v-for="[title, items] in orderedItems" class="mb-4 print:mb-1 print:break-inside-avoid-column">
+          <div v-for="[title, items] in orderedItems" :key="title" class="mb-4 print:mb-1 print:break-inside-avoid-column">
             <div class="print:text-base text-xl font-bold mb-2 border-b">{{ title }}</div>
             <div
               v-for="item in items"
+              :key="item.uuid"
               class="flex items-center gap-2 mb-1 hover:bg-neutral-100 dark:hover:bg-neutral-600/50 rounded-md"
             >
               <div class="flex-1 flex flex-col">
@@ -261,8 +252,9 @@ definePageMeta({
                 <div v-if="item.sellingQuantity && item.sellingQuantity != 1" class="text-xs font-bold">Vendu par {{ item.sellingQuantity }}</div>
                 <div v-if="item.description" class="text-xs print:hidden">{{ item.description }}</div>
               </div>
-              <div v-if="item.quantityAlert && (item.quantity || item.quantity === 0) && item.quantity <= item.quantityAlert"
-                   class="print:hidden text-xs font-bold text-error-600">
+              <div
+                v-if="item.quantityAlert && (item.quantity || item.quantity === 0) && item.quantity <= item.quantityAlert"
+                class="print:hidden text-xs font-bold text-error-600">
                 Stock restant : {{ item.quantity }}
               </div>
               <div class="text-xs bg-neutral-200 print:!bg-neutral-200 dark:bg-neutral-600 p-1 rounded-md">{{ formatMonetary(item.sellingPrice) }}</div>
@@ -275,7 +267,7 @@ definePageMeta({
           <i>Aucun résultats</i>
         </div>
         <div v-if="isLoading && orderedItems.size < 1" class="text-center">
-          <div v-for="i in (Math.floor(Math.random()*6) + 2)">
+          <div v-for="j in (Math.floor(Math.random()*6) + 2)" :key="j">
             <USkeleton class="h-4 w-32" />
             <USkeleton class="h-4 w-full my-4" />
           </div>
@@ -321,14 +313,14 @@ definePageMeta({
           <div class="text-4xl text-center">{{ formatMonetary(cartTotalPrice) }}</div>
           <div class="mt-4">
             <div class="flex text-xs align-center mt-1">
-              <div class="flex-1"></div>
+              <div class="flex-1"/>
               <UButton v-if="cart.length > 0" size="xs" @click="cartStore.emptyCart()">Vider le panier</UButton>
             </div>
             <div v-if="cart.length < 1" class="text-center">
               <i>Aucun articles</i>
             </div>
             <div class="overflow-y-auto max-h-[25vh] mt-2">
-              <div v-for="cartItem in cart" class="flex items-center gap-2 mb-1">
+              <div v-for="cartItem in cart" :key="cartItem.item.uuid" class="flex items-center gap-2 mb-1">
                 <GenericStackedUpDown @changed="modifier => { cartStore.addToCart(cartItem.item, modifier) }" />
 
                 <div class="text-xs bg-neutral-200 dark:bg-neutral-600 p-1 rounded-md">{{ cartItem.quantity }}</div>
@@ -350,7 +342,7 @@ definePageMeta({
 
         <UCard class="print:hidden">
           <UFormField label="Vendeur" :error="!sellerSelected && 'Un vendeur doit être défini'">
-            <UInputMenu class="w-full" v-model="sellerSelected" :items="sellersSelect" :filter-fields="['item.lastname', 'item.firstname']" @change="sellerUpdated" />
+            <UInputMenu v-model="sellerSelected" class="w-full" :items="sellersSelect" :filter-fields="['item.lastname', 'item.firstname']" @change="sellerUpdated" />
           </UFormField>
 
           <UFormField class="my-2" label="Commentaire" :error="cartComment.length > 249 && 'Longueur maximum atteinte (250)'">
@@ -361,6 +353,7 @@ definePageMeta({
             <div class="flex flex-wrap gap-2">
               <UButton
                 v-for="paymentMode in paymentModes"
+                :key="paymentMode.uuid"
                 :variant="selectedPaymentMode?.uuid == paymentMode.uuid ? 'solid' : 'soft'"
                 class="basis-[calc(50%-0.25rem)]">
                 <div class="flex items-center w-full" @click="selectedPaymentMode = selectedPaymentMode === paymentMode ? null : paymentMode">

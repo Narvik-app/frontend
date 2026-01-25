@@ -12,25 +12,26 @@ export interface ChartData<TType extends ChartType = ChartType> {
 
 // Type of charts
 
-export interface ChartBarData extends ChartData<'bar'> { }
+export type ChartBarData = ChartData<'bar'>
 
-export interface ChartPieData extends ChartData<'pie'> { }
+export type ChartPieData = ChartData<'pie'>
 
-export interface ChartLineData extends ChartData<'line'> { }
+export type ChartLineData = ChartData<'line'>
 
-export interface ChartRadarData extends ChartData<'radar'> { }
+export type ChartRadarData = ChartData<'radar'>
 
-export interface ChartDoughnutData extends ChartData<'doughnut'> { }
+export type ChartDoughnutData = ChartData<'doughnut'>
 
-export interface ChartPolarAreaData extends ChartData<'polarArea'> { }
+export type ChartPolarAreaData = ChartData<'polarArea'>
 
-export interface ChartBubbleData extends ChartData<'bubble'> { }
+export type ChartBubbleData = ChartData<'bubble'>
 
-export interface ChartScatterData extends ChartData<'scatter'> { }
+export type ChartScatterData = ChartData<'scatter'>
 
 export function setChartDefaultBackgroundColors(chartData: ChartData, isXY = true, propname: string = 'backgroundColor') {
   let notFoundColorIndex = 0;
-  for (let itemKey of Object.keys(chartData.datasets)) {
+  for (const key of Object.keys(chartData.datasets)) {
+    const itemKey = key
     const index = Number(itemKey)
     if (isNaN(index) || chartData.datasets[index] === undefined) {
       console.error(`Invalid dataset index: ${index} - ${itemKey}`)

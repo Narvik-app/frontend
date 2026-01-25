@@ -41,6 +41,7 @@ export function pathsMatch(paths: string[], path: string): boolean {
   return pathMatched;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define proper API response error type
 export function formatErrorFromApiResponse(response: any): object {
   if (typeof response === 'string') {
     return {

@@ -35,7 +35,7 @@ function presenceUpdated(newExternalPresence: ExternalPresence) {
   emit('updated', newExternalPresence)
 }
 
-function presenceCanceled(newExternalPresence: ExternalPresence) {
+function presenceCanceled(_newExternalPresence: ExternalPresence) {
   updateExternalPresenceModalOpen.value = false;
   emit('close', false)
 }
@@ -54,25 +54,25 @@ async function deletePresence() {
   <UCard class="bg-orange-50 dark:bg-orange-950">
     <div class="flex gap-2">
       <UButton
-        @click="emit('close', false)"
         icon="i-heroicons-x-circle"
         color="warning"
         variant="ghost"
         size="xs"
+        @click="emit('close', false)"
       />
 
-      <div class="flex-1"></div>
+      <div class="flex-1"/>
 
       <UButton
-          @click="updateExternalPresenceModalOpen = true"
           icon="i-heroicons-pencil-square"
           size="xs"
           color="warning"
           variant="solid"
           label="Editer"
+          @click="updateExternalPresenceModalOpen = true"
       />
 
-      <UTooltip text="Supprimer" v-if="isSupervisor || isBadger">
+      <UTooltip v-if="isSupervisor || isBadger" text="Supprimer">
         <UPopover v-model:open="popoverOpen">
           <UButton
               icon="i-heroicons-trash"
@@ -86,9 +86,9 @@ async function deletePresence() {
               <div class="text-center text-lg font-bold">Êtes-vous certain ?</div>
 
               <UButton
-                  @click="deletePresence();"
                   color="error"
                   class="mx-auto"
+                  @click="deletePresence();"
               >
                 Supprimer
               </UButton>
@@ -109,6 +109,7 @@ async function deletePresence() {
       <div class="flex gap-4 justify-center flex-wrap">
         <UButton
             v-for="activity in externalPresence?.activities.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))"
+            :key="activity.uuid"
             color="warning"
         >
           {{ activity.name }}

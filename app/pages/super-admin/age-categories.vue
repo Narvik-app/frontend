@@ -79,7 +79,7 @@ function rowClicked(row: TableRow<Club>) {
 }
 
 async function createItem() {
-  let item: AgeCategory = {
+  const item: AgeCategory = {
     name: '',
     code: ''
   }
@@ -91,7 +91,7 @@ async function updateItem(item: AgeCategory) {
   isLoading.value = true
 
   // We recreate the payload so we don't edit unwanted fields
-  let payload: AgeCategory = {
+  const payload: AgeCategory = {
     name: item.name,
     code: item.code
   }
@@ -148,7 +148,7 @@ async function deleteItem() {
   await getItemsPaginated();
 }
 
-const validate = (state: any): FormError[] => {
+const validate = (state: { name?: string; code?: string }): FormError[] => {
   const errors = []
   if (!state.name) errors.push({ name: 'name', message: 'Champ requis' })
   if (!state.code) errors.push({ name: 'code', message: 'Champ requis' })
@@ -162,9 +162,9 @@ const validate = (state: any): FormError[] => {
       <UCard>
         <div>
           <div class="flex gap-4">
-            <div class="flex-1"></div>
+            <div class="flex-1"/>
 
-            <UButton @click="createItem" icon="i-heroicons-plus"/>
+            <UButton icon="i-heroicons-plus" @click="createItem"/>
 
           </div>
 
@@ -180,9 +180,7 @@ const validate = (state: any): FormError[] => {
               </div>
             </template>
 
-            <template #actions-cell="{ row }">
-
-            </template>
+            <template #actions-cell />
 
           </UTable>
 
@@ -198,7 +196,7 @@ const validate = (state: any): FormError[] => {
 
     <template #side>
       <template v-if="selectedItem">
-        <UForm :state="selectedItem" @submit="updateItem(selectedItem)" :validate="validate" class="flex flex-col gap-4">
+        <UForm :state="selectedItem" :validate="validate" class="flex flex-col gap-4" @submit="updateItem(selectedItem)">
           <UCard>
             <div class="flex gap-2 flex-col relative">
               <UFormField label="Nom" name="name" required>

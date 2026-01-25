@@ -40,7 +40,7 @@ function externalPresenceUpdated(externalPresence: ExternalPresence) {
     <div class="flex px-3 py-3.5 border-b border-gray-200 dark:border-gray-700 items-center">
       <p class="font-bold dark:text-white">Licenciés autre club / non licenciés : {{ externalPresenceStore.list.length}}</p>
 
-      <div class="flex-1"></div>
+      <div class="flex-1"/>
 
       <div class="inline-flex">
         <UTooltip text="Rafraichir">
@@ -65,7 +65,7 @@ function externalPresenceUpdated(externalPresence: ExternalPresence) {
       :has-pagination="false"
       :is-loading="isRefreshing"
       accent-color="warning"
-      @rowClicked="rowClicked"
+      @row-clicked="rowClicked"
     />
   </UCard>
 

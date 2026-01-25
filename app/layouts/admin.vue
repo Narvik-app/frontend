@@ -14,7 +14,6 @@ useHead({
   const selfStore = useSelfUserStore()
 
   const isAdmin = selfStore.isAdmin()
-  const isSupervisor = selfStore.hasSupervisorRole()
 
   const globalSection = [
     {
@@ -103,7 +102,7 @@ useHead({
     })
   }
 
-  let links: GroupedNavigationLinks[] = [
+  const links: GroupedNavigationLinks[] = [
     {
       links: globalSection
     },
@@ -149,7 +148,7 @@ useHead({
       title="Votre abonnement se termine bientôt."
       :description="`Veuillez penser à le renouveler avant le ${formatDateReadable(selfStore.selectedProfile.club.renewDate.toString())}.`"
     />
-    <slot></slot>
+    <slot/>
   </GenericLayoutAdmin>
 </template>
 

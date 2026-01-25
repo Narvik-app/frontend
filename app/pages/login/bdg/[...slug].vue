@@ -14,7 +14,7 @@ const route = useRoute()
         navigateTo('/login')
       }
       await useLoginBadger(route.params.slug[0], route.params.slug[1]);
-    } catch (e) {
+    } catch {
       navigateTo('/login')
     }
 
@@ -23,8 +23,7 @@ const route = useRoute()
 </script>
 
 <template>
-  <div>
-  </div>
+  <div/>
 </template>
 
 <style lang="css" scoped>

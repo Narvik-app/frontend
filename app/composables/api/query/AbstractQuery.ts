@@ -4,6 +4,7 @@ import type {Item} from "~/types/api/item";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import type {NuxtError} from "#app";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export abstract class AbstractQuery<R, W> {
 	protected abstract rootPath: string;
 	public clubPath: string | undefined = undefined;
@@ -52,9 +53,9 @@ export abstract class AbstractQuery<R, W> {
       return useGetCsv(url)
     }
 
-    let data = '';
-    let error: NuxtError | undefined = undefined;
-    let response = {
+    const data = '';
+    const error: NuxtError | undefined = undefined;
+    const response = {
       data,
       error
     }
@@ -62,6 +63,7 @@ export abstract class AbstractQuery<R, W> {
     // No disabled pagination, we are guessing the number of pages to request
     urlParams.set('page', '1')
     urlParams.set('itemsPerPage', '1') // We just want the total items so we can do the pagination
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { totalItems, view } = await this.getAll(urlParams)
     if (!totalItems) {
       return response
@@ -110,7 +112,7 @@ export abstract class AbstractQuery<R, W> {
       let attempt = 1
 
       while (!fetched) {
-        let { items } = await this.getAll(urlParams)
+        const { items } = await this.getAll(urlParams)
         if (items) {
           data.push(...items)
           fetched = true

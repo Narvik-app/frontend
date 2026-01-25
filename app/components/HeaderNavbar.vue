@@ -15,7 +15,6 @@ const overlay = useOverlay()
   const { selectedProfile, user } = storeToRefs(selfStore)
 
   // const, to avoid it being reactive and login back user
-  const isAdmin = selfStore.isAdmin()
   const isBadger = selfStore.isBadger()
   const isSupervisor = computed(() => {
     return selfStore.hasSupervisorRole() && selectedProfile.value
@@ -152,13 +151,15 @@ const overlay = useOverlay()
             color="neutral"
             :label="(isDesktopDisplay || isTabletDisplay) ? (!isBadger ? (selectedProfile?.displayName ?? user?.fullName) : 'Pointeuse') : undefined">
             <template #trailing>
-              <UAvatar v-if="!isBadger"
-                       size="xs"
-                       :alt="selfStore.member?.fullName ?? user?.fullName"
-                       :src="selfStore.member?.profileImageBase64"
+              <UAvatar
+                  v-if="!isBadger"
+                  size="xs"
+                  :alt="selfStore.member?.fullName ?? user?.fullName"
+                  :src="selfStore.member?.profileImageBase64"
               />
-              <UIcon v-else
-                     name="i-heroicons-clock"
+              <UIcon
+                  v-else
+                  name="i-heroicons-clock"
               />
             </template>
           </UButton>

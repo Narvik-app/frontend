@@ -79,9 +79,9 @@ definePageMeta({
 
 
 
-    let labels: string[] = [];
-    let dataPurchasePrice: string[] = [];
-    let dataSellingPrice: string[] = [];
+    const labels: string[] = [];
+    const dataPurchasePrice: string[] = [];
+    const dataSellingPrice: string[] = [];
 
     items.reverse().forEach(value => {
       labels.push(formatDate(value.createdAt) ?? '')
@@ -142,9 +142,10 @@ definePageMeta({
       <div class="flex-1 text-center font-bold text-2xl flex justify-center gap-2 ">
         {{ inventoryItem?.name }}
 
-        <UButton v-if="inventoryItem?.category"
-           :to="'/admin/inventories?category=' + convertUuidToUrlUuid(inventoryItem.category.uuid)"
-           variant="soft"
+        <UButton
+            v-if="inventoryItem?.category"
+            :to="'/admin/inventories?category=' + convertUuidToUrlUuid(inventoryItem.category.uuid)"
+            variant="soft"
         >
           {{ inventoryItem.category.name }}
         </UButton>
@@ -177,21 +178,18 @@ definePageMeta({
       <GenericStatCard
         title="Prix d'achat"
         :value="formatMonetary(inventoryItem?.purchasePrice)"
-        :loading="isLoading">
-      </GenericStatCard>
+        :loading="isLoading"/>
 
       <GenericStatCard
         title="Prix de vente"
         :value="formatMonetary(inventoryItem?.sellingPrice)"
-        :loading="isLoading">
-      </GenericStatCard>
+        :loading="isLoading"/>
 
       <GenericStatCard
         title="En stock"
         :value="inventoryItem?.quantity ?? '∞' "
         :value-class="inventoryItem?.quantityAlert && (inventoryItem?.quantity || inventoryItem?.quantity === 0) && inventoryItem?.quantity <= inventoryItem?.quantityAlert ? 'text-error-600' : ''"
-        :loading="isLoading">
-      </GenericStatCard>
+        :loading="isLoading"/>
 
       <GenericStatCard
         :title="inventoryItem?.canBeSold ? 'Vente activée' : 'Vente désactivée' "

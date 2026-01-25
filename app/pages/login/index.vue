@@ -21,7 +21,7 @@ const state = reactive({
 
 const selfStore = useSelfUserStore();
 
-const validate = (state: any): FormError[] => {
+const validate = (state: { email?: string; password?: string }): FormError[] => {
   const errors = []
   if (!state.email) errors.push({ name: 'email', message: 'Champ requis' })
   if (!state.password) errors.push({ name: 'password', message: 'Champ requis' })

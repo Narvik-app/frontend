@@ -21,22 +21,22 @@ let inputTimer: NodeJS.Timeout;
 const searching = ref(false);
 const memberSelected = ref();
 const foundMembers: Ref<Member[]> = ref([])
-const query: Ref<string|undefined> = ref(undefined)
+const searchQuery: Ref<string|undefined> = ref(undefined)
 
 // Camera detection setup
 
 const cameraPreview = ref(false)
 const cameraIsPresent = verifyCameraIsPresent()
 
-watch(query, (value) => {
+watch(searchQuery, (value) => {
   search(value)
 })
 
 if (props.query) {
-  query.value = props.query
+  searchQuery.value = props.query
 }
 
-async function search(query: any, replayCount: number = 0) {
+async function search(query: string | undefined | null, replayCount: number = 0) {
   clearTimeout(inputTimer);
   inputTimer = setTimeout(async () => {
     if (query === null || query.trim() === "") {
@@ -129,20 +129,20 @@ function onSelect(event: Event) {
 
     <UFormField label="Nom / Licence">
       <GenericBarcodeReader
-        class="mb-4"
         v-model="cameraPreview"
-        @decoded="(value) => {query = value}"
+        class="mb-4"
+        @decoded="(value) => {searchQuery = value}"
       />
 
       <UInput
+          v-model="searchQuery"
           class="mb-4"
-          v-model="query"
           :loading="searching"
           placeholder="Nom / Licence"
-          @select="onSelect"
           trailing
+          @select="onSelect"
       >
-        <template #trailing v-if="cameraIsPresent || query">
+        <template v-if="cameraIsPresent || searchQuery" #trailing>
           <UIcon
             v-if="cameraIsPresent"
             class="cursor-pointer"
@@ -151,10 +151,10 @@ function onSelect(event: Event) {
           />
 
           <UIcon
-            v-if="query"
+            v-if="searchQuery"
             class="cursor-pointer"
             name="i-heroicons-x-mark"
-            @click="query = '';"
+            @click="searchQuery = '';"
           />
         </template>
       </UInput>
@@ -165,10 +165,10 @@ function onSelect(event: Event) {
         class="w-full"
         :columns="columns"
         :data="foundMembers"
-        @select="(evt: Event, row: TableRow<Member>) => rowClicked(row.original)"
         :ui="{
           tr: 'cursor-pointer'
         }"
+        @select="(evt: Event, row: TableRow<Member>) => rowClicked(row.original)"
     >
       <template #empty>
         <div class="flex flex-col items-center justify-center py-6 gap-3">

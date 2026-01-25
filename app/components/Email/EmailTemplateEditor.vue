@@ -142,14 +142,14 @@ const props = defineProps({
 
         <div class="flex flex-col gap-4">
           <UFormField class="flex-1" label="Sujet">
-            <UInput size="xl" v-model="title" :disabled="isLoading" />
+            <UInput v-model="title" size="xl" :disabled="isLoading" />
           </UFormField>
 
           <TextEditor
             :model-value="htmlContent"
+            :disabled="isLoading"
             @update:model-value="htmlContent = $event"
             @update:editor="editor = $event"
-            :disabled="isLoading"
           />
         </div>
       </GenericCardWithActions>

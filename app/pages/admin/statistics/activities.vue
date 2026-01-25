@@ -4,7 +4,7 @@ import {useMetricStore} from "~/stores/useMetricStore";
 import ActivityQuery from "~/composables/api/query/clubDependent/plugin/presence/ActivityQuery";
 import type {Activity} from "~/types/api/item/clubDependent/plugin/presence/activity";
 import type {ChartBarData, ChartDataField} from "~/utils/chart";
-import {type DateRange, DateRangeFilter} from "~/types/date";
+import type {DateRangeFilter, DateRange} from "~/types/date";
 import {formatDateRangeReadable, formatDateTimeReadable} from "~/utils/date";
 import {print} from "~/utils/browser";
 
@@ -76,21 +76,25 @@ function getDayName(dayNumber: string): string {
   return dayNames[parseInt(dayNumber)] || `Jour ${dayNumber}`;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric child type properly
 function sumTotalFromChildMetrics(childMetrics: any[] | undefined): number {
   return childMetrics?.reduce((sum, day) => {
     return sum + parseInt(day.values?.total || '0');
   }, 0) || 0;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric type properly
 function getActivityMetrics(presenceMetrics: any, activityName: string) {
   return presenceMetrics?.childMetrics?.find(
     metric => metric.name === activityName
   );
 }
 
-function processChartData(metrics: any, label: string): ChartDataField[] {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric type properly
+function processChartData(metrics: any, _label: string): ChartDataField[] {
   if (!metrics?.childMetrics) return [];
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric child type properly
   return metrics.childMetrics.map((cm: any) => ({
     x: getDayName(cm.name),
     y: parseFloat(cm.values?.median || '0')
@@ -140,7 +144,7 @@ const hasActivityData = computed(() => {
 });
 
 const activityStats = computed(() => {
-  let response = {
+  const response = {
     loading: true,
     currentSeason: 0,
     previousSeason: 0,
@@ -305,9 +309,9 @@ watch([previousSeason, dateRange], () => {
             <template #content>
               <GenericDateRangePicker
                 :date-range="dateRange"
-                @range-updated="(range) => handleDateRangeUpdate(range)"
                 :season-selectors="true"
                 :exclude-previous-season="true"
+                @range-updated="(range) => handleDateRangeUpdate(range)"
               />
             </template>
           </UPopover>
@@ -342,8 +346,7 @@ watch([previousSeason, dateRange], () => {
             value: activityStats.previousSeason,
             useDefaultIcon: true
           }"
-          :loading="activityStats.loading">
-        </GenericStatCard>
+          :loading="activityStats.loading"/>
 
         <GenericStatCard
           title="Évolution"
@@ -355,12 +358,12 @@ watch([previousSeason, dateRange], () => {
             value: activityStats.previousSeason > 0 ? Math.round(((activityStats.currentSeason - activityStats.previousSeason) / activityStats.previousSeason) * 100) + '%' : 'N/A',
             useDefaultIcon: true
           }"
-          :loading="activityStats.loading">
-        </GenericStatCard>
+          :loading="activityStats.loading"/>
       </div>
 
-      <div v-if="selectedActivity && hasActivityData"
-           class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-4">
+      <div
+          v-if="selectedActivity && hasActivityData"
+          class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-4">
         <GenericStatCard
           v-for="metric in activityChildMetrics"
           :key="metric.dayNumber"
@@ -373,22 +376,23 @@ watch([previousSeason, dateRange], () => {
             value: metric.previousValue,
             useDefaultIcon: true
           }"
-          :loading="false">
-        </GenericStatCard>
+          :loading="false"/>
       </div>
 
-      <GenericCard v-if="selectedActivity && hasActivityData && chartData && chartData.datasets.length > 0"
-                   class="mt-4"
-                   title="Médiane">
+      <GenericCard
+          v-if="selectedActivity && hasActivityData && chartData && chartData.datasets.length > 0"
+          class="mt-4"
+          title="Médiane">
         <div class="h-[40vh] sm:h-[55vh]">
           <ChartBar :data="chartData"/>
         </div>
       </GenericCard>
 
       <!-- Detailed metrics table with day-of-week breakdown -->
-      <GenericCard v-if="selectedActivity && hasActivityData && activityChildMetrics.length > 0"
-                   class="mt-4"
-                   title="Statistiques par jour de la semaine">
+      <GenericCard
+          v-if="selectedActivity && hasActivityData && activityChildMetrics.length > 0"
+          class="mt-4"
+          title="Statistiques par jour de la semaine">
         <UTable :columns="columns" :data="activityChildMetrics">
           <template #empty>
             <div class="flex flex-col items-center justify-center py-6 gap-3">
@@ -443,8 +447,9 @@ watch([previousSeason, dateRange], () => {
       </div>
 
       <!-- Show message if no activities are found but presences are enabled -->
-      <div v-if="!availableActivities.length && selectedProfile?.club.presencesEnabled && !isLoading"
-           class="text-center py-4">
+      <div
+          v-if="!availableActivities.length && selectedProfile?.club.presencesEnabled && !isLoading"
+          class="text-center py-4">
         <p class="text-sm text-gray-500">Aucune activité trouvée dans les statistiques de présence.</p>
       </div>
     </div>

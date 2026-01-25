@@ -35,7 +35,7 @@ const selfStore = useSelfUserStore();
   }
 
   // Build query parameters based on current filters
-  function buildQueryParams(baseQuery: string, isSuperAdmin: boolean = false, isPreviousSeason: boolean = false): string {
+  function buildQueryParams(baseQuery: string, _isSuperAdmin: boolean = false, isPreviousSeason: boolean = false): string {
     const urlParams = new URLSearchParams();
 
     if (dateRange.value) {
