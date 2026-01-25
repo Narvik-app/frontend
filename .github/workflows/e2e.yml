@@ -28,6 +28,22 @@ jobs:
           path: backend
           token: ${{ secrets.GH_PAT }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend (Cached)
+        uses: docker/bake-action@v6
+        with:
+          workdir: backend
+          files: |
+            compose.yaml
+            .github/compose.ci.yaml
+          load: true
+          set: |
+            *.cache-from=type=gha,scope=${{ github.ref }}
+            *.cache-from=type=gha,scope=refs/heads/main
+            *.cache-to=type=gha,scope=${{ github.ref }},mode=max
+
       - name: Start Backend (Dev Mode)
         working-directory: backend
         run: |
@@ -51,10 +67,10 @@ jobs:
                 MERCURE_PUBLISHER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
                 MERCURE_SUBSCRIBER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
           EOF
-
-          # Build and start using backend's dev config
+          
+          # Start using pre-built image from cache
           # compose.yaml (base) + .github/compose.ci.yaml (dev build + mounts) + override (ports)
-          docker compose -f compose.yaml -f .github/compose.ci.yaml -f compose.e2e.override.yaml up -d --wait --build
+          docker compose -f compose.yaml -f .github/compose.ci.yaml -f compose.e2e.override.yaml up -d --wait --no-build
 
       - name: Setup database and fixtures
         working-directory: backend
