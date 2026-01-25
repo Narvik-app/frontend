@@ -1,4 +1,4 @@
-import { test as setup, expect, type Page } from '@playwright/test';
+import { test as setup, expect } from '@playwright/test';
 import { login, logout } from "./utils/auth";
 import path from 'path';
 import { fileURLToPath } from 'url';

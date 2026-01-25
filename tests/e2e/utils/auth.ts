@@ -1,5 +1,6 @@
 import path from 'path';
-import { fileURLToPath } from 'url';
+import {fileURLToPath} from 'url';
+import {expect, type Page} from '@playwright/test';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,8 +14,6 @@ export const STORAGE_STATE = {
   MEMBER: path.join(AUTH_DIR, 'member.json'),
   BADGER: path.join(AUTH_DIR, 'badger.json'),
 };
-
-import { type Page, expect } from '@playwright/test';
 
 /**
  * Logs out the current user via the UI.
@@ -47,7 +46,7 @@ export async function login(page: Page, email: string, pass: string, storagePath
   await page.getByLabel('Mot de passe').fill(pass);
   await page.getByRole('button', { name: 'Connexion', exact: true }).click();
   await expect(page).not.toHaveURL(/\/login/);
-  
+
   if (storagePath) {
     await page.context().storageState({ path: storagePath });
   }
