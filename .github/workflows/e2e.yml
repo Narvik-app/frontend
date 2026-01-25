@@ -81,12 +81,18 @@ jobs:
               ports:
                 - "8080:80"
               environment:
-                SERVER_NAME: localhost:8080
+                # Use :80 to force HTTP on port 80 inside the container
+                SERVER_NAME: :80
                 DATABASE_URL: postgresql://app:app@database:5432/app?serverVersion=15
                 APP_ENV: dev
+                APP_SECRET: ChangeMeTheSecretForE2E
                 CORS_ALLOW_ORIGIN: "^https?://localhost(:[0-9]+)?$"
                 TRUSTED_HOSTS: ^localhost|backend$$
                 OAUTH_PASSPHRASE: changeme
+                # Mercure secrets usually required if bundle installed
+                MERCURE_JWT_SECRET: '!ChangeThisMercureHubJWTSecretKey!'
+                MERCURE_PUBLISHER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
+                MERCURE_SUBSCRIBER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
               depends_on:
                 database:
                   condition: service_healthy
