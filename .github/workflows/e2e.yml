@@ -26,6 +26,7 @@ jobs:
         with:
           repository: ${{ vars.BACKEND_REPOSITORY || 'Narvik-app/backend' }}
           path: backend
+          token: ${{ secrets.GH_PAT }}
 
       - name: Start Backend (Dev Mode)
         working-directory: backend
