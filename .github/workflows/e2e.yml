@@ -1,0 +1,130 @@
+name: E2E Tests
+
+on:
+  push:
+    branches:
+      - main
+      - '[0-9]+.[0-9]+*'
+  pull_request: ~
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: Playwright E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Checkout Backend
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ vars.BACKEND_REPOSITORY || 'Narvik-app/backend' }}
+          path: backend
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Debug Backend Files
+        run: ls -la backend
+
+      - name: Build Backend (Cached)
+        working-directory: backend
+        run: |
+          docker buildx bake \
+            -f compose.yaml \
+            -f .github/compose.ci.yaml \
+            --set "*.cache-from=type=gha,scope=${{ github.ref }}" \
+            --set "*.cache-from=type=gha,scope=refs/heads/main" \
+            --set "*.cache-to=type=gha,scope=${{ github.ref }},mode=max" \
+            --load
+
+      - name: Start Backend (Dev Mode)
+        working-directory: backend
+        run: |
+          # Create an override to map ports and set E2E secrets
+          cat > compose.e2e.override.yaml << 'EOF'
+          services:
+            php:
+              ports:
+                - "80:80"
+              environment:
+                APP_SECRET: ChangeMeTheSecretForE2E
+                # Ensure we use dev env
+                APP_ENV: dev
+                # Caddy config for HTTP
+                SERVER_NAME: :80
+                # CORS for frontend
+                CORS_ALLOW_ORIGIN: "^https?://localhost(:[0-9]+)?$"
+                TRUSTED_HOSTS: ^localhost|php$$
+                OAUTH_PASSPHRASE: changeme
+                MERCURE_JWT_SECRET: '!ChangeThisMercureHubJWTSecretKey!'
+                MERCURE_PUBLISHER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
+                MERCURE_SUBSCRIBER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
+          EOF
+
+          # Start using pre-built image from cache
+          # compose.yaml (base) + .github/compose.ci.yaml (dev build + mounts) + override (ports)
+          docker compose -f compose.yaml -f .github/compose.ci.yaml -f compose.e2e.override.yaml up -d --wait --no-build
+
+      - name: Setup database and fixtures
+        working-directory: backend
+        run: |
+          docker compose exec -T php composer reload-fixture
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Generate SSL Certificates
+        run: |
+          openssl req -x509 -newkey rsa:4096 -keyout localhost-key.pem -out localhost.pem -days 365 -nodes -subj '/CN=localhost'
+
+      - name: Build Nuxt application
+        run: pnpm build
+        env:
+          NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL: http://localhost:80
+
+      - name: Run Playwright tests
+        run: pnpm test:e2e:ci --project=chromium
+        env:
+          PLAYWRIGHT_BASE_URL: https://localhost:3000
+          NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL: http://localhost:80
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v6
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v6
+        if: ${{ !cancelled() }}
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 7
+
+      - name: Stop services
+        if: always()
+        working-directory: backend
+        run: docker compose -f compose.yaml -f .github/compose.ci.yaml -f compose.e2e.override.yaml down -v
