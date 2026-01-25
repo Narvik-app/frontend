@@ -100,13 +100,13 @@ jobs:
       - name: Build Nuxt application
         run: pnpm build
         env:
-          NUXT_PUBLIC_API_BASE_URL: http://localhost:80
+          NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL: http://localhost:80
 
       - name: Run Playwright tests
         run: pnpm test:e2e:ci --project=chromium
         env:
           PLAYWRIGHT_BASE_URL: https://localhost:3000
-          NUXT_PUBLIC_API_BASE_URL: http://localhost:80
+          NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL: http://localhost:80
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v6
