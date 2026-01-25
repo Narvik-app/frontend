@@ -95,6 +95,10 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
+      - name: Generate SSL Certificates
+        run: |
+          openssl req -x509 -newkey rsa:4096 -keyout localhost-key.pem -out localhost.pem -days 365 -nodes -subj '/CN=localhost'
+
       - name: Build Nuxt application
         run: pnpm build
         env:
