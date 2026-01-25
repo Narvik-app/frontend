@@ -34,7 +34,7 @@ jobs:
       - name: Build Backend (Cached)
         uses: docker/bake-action@v6
         with:
-          workdir: backend
+          source: backend
           files: |
             compose.yaml
             .github/compose.ci.yaml
