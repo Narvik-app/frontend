@@ -35,17 +35,15 @@ jobs:
         run: ls -la backend
 
       - name: Build Backend (Cached)
-        uses: docker/bake-action@v6
-        with:
-          files: |
-            backend/compose.yaml
-            backend/.github/compose.ci.yaml
-          load: true
-          set: |
-            *.context=backend
-            *.cache-from=type=gha,scope=${{ github.ref }}
-            *.cache-from=type=gha,scope=refs/heads/main
-            *.cache-to=type=gha,scope=${{ github.ref }},mode=max
+        working-directory: backend
+        run: |
+          docker buildx bake \
+            -f compose.yaml \
+            -f .github/compose.ci.yaml \
+            --set "*.cache-from=type=gha,scope=${{ github.ref }}" \
+            --set "*.cache-from=type=gha,scope=refs/heads/main" \
+            --set "*.cache-to=type=gha,scope=${{ github.ref }},mode=max" \
+            --load
 
       - name: Start Backend (Dev Mode)
         working-directory: backend
