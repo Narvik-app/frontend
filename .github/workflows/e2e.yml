@@ -53,7 +53,7 @@ jobs:
           services:
             php:
               ports:
-                - "8080:80"
+                - "80:80"
               environment:
                 APP_SECRET: ChangeMeTheSecretForE2E
                 # Ensure we use dev env
@@ -100,13 +100,13 @@ jobs:
       - name: Build Nuxt application
         run: pnpm build
         env:
-          NUXT_PUBLIC_API_BASE_URL: http://localhost:8080
+          NUXT_PUBLIC_API_BASE_URL: http://localhost:80
 
       - name: Run Playwright tests
         run: pnpm test:e2e:ci --project=chromium
         env:
           PLAYWRIGHT_BASE_URL: https://localhost:3000
-          NUXT_PUBLIC_API_BASE_URL: http://localhost:8080
+          NUXT_PUBLIC_API_BASE_URL: http://localhost:80
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v6
