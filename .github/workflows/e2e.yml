@@ -21,106 +21,47 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
+      - name: Checkout Backend
+        uses: actions/checkout@v6
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ vars.BACKEND_REPOSITORY || 'Narvik-app/backend' }}
+          path: backend
 
-      - name: Determine backend image tag
-        id: backend-tag
+      - name: Start Backend (Dev Mode)
+        working-directory: backend
         run: |
-          # Default to 'dev' tag
-          TAG="dev"
-
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            # For PRs, use the target branch to determine the tag
-            TARGET_BRANCH="${{ github.base_ref }}"
-            if [[ "$TARGET_BRANCH" =~ ^[0-9]+\.[0-9]+ ]]; then
-              # Target is a version branch, try dev-X.Y tag
-              TAG="dev-${TARGET_BRANCH}"
-            fi
-          elif [[ "${{ github.ref_name }}" =~ ^[0-9]+\.[0-9]+ ]]; then
-            # Push to version branch
-            TAG="dev-${{ github.ref_name }}"
-          fi
-
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "Backend image tag: $TAG"
-
-      - name: Check if version-specific image exists
-        id: check-image
-        run: |
-          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/narvik-back:${{ steps.backend-tag.outputs.tag }}"
-          if docker manifest inspect "$IMAGE" > /dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "Image $IMAGE exists"
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-            echo "Image $IMAGE does not exist, will fallback to dev"
-          fi
-
-      - name: Set final backend image
-        id: backend-image
-        run: |
-          if [[ "${{ steps.check-image.outputs.exists }}" == "true" ]]; then
-            TAG="${{ steps.backend-tag.outputs.tag }}"
-          else
-            TAG="dev"
-          fi
-          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/narvik-back:${TAG}"
-          echo "image=$IMAGE" >> $GITHUB_OUTPUT
-          echo "Using backend image: $IMAGE"
-
-      - name: Create docker-compose for E2E
-        run: |
-          cat > docker-compose.e2e.yml << 'EOF'
+          # Create an override to map ports and set E2E secrets
+          cat > compose.e2e.override.yaml << 'EOF'
           services:
-            backend:
-              image: ${{ steps.backend-image.outputs.image }}
+            php:
               ports:
                 - "8080:80"
               environment:
-                # Use :80 to force HTTP on port 80 inside the container
-                SERVER_NAME: :80
-                DATABASE_URL: postgresql://app:app@database:5432/app?serverVersion=15
-                # Image is built for prod (no dev dependencies like WebProfiler), so we must run in prod mode
-                APP_ENV: prod
                 APP_SECRET: ChangeMeTheSecretForE2E
+                # Ensure we use dev env
+                APP_ENV: dev
+                # Caddy config for HTTP
+                SERVER_NAME: :80
+                # CORS for frontend
                 CORS_ALLOW_ORIGIN: "^https?://localhost(:[0-9]+)?$"
-                TRUSTED_HOSTS: ^localhost|backend$$
+                TRUSTED_HOSTS: ^localhost|php$$
                 OAUTH_PASSPHRASE: changeme
-                # Mercure secrets usually required if bundle installed
                 MERCURE_JWT_SECRET: '!ChangeThisMercureHubJWTSecretKey!'
                 MERCURE_PUBLISHER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
                 MERCURE_SUBSCRIBER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
-              depends_on:
-                database:
-                  condition: service_healthy
-
-            database:
-              image: postgres:15-alpine
-              environment:
-                POSTGRES_DB: app
-                POSTGRES_USER: app
-                POSTGRES_PASSWORD: app
-              healthcheck:
-                test: ["CMD-SHELL", "pg_isready -U app -d app"]
-                interval: 5s
-                timeout: 5s
-                retries: 5
           EOF
 
-      - name: Start backend services
-        shell: bash
-        run: docker compose -f docker-compose.e2e.yml up --wait
+          # Build and start using backend's dev config
+          # compose.yaml (base) + .github/compose.ci.yaml (dev build + mounts) + override (ports)
+          docker compose -f compose.yaml -f .github/compose.ci.yaml -f compose.e2e.override.yaml up -d --wait --build
 
       - name: Setup database and fixtures
+        working-directory: backend
         run: |
-          docker compose -f docker-compose.e2e.yml exec -T backend bin/console doctrine:database:create --if-not-exists
-          docker compose -f docker-compose.e2e.yml exec -T backend bin/console doctrine:migrations:migrate --no-interaction
-          docker compose -f docker-compose.e2e.yml exec -T backend bin/console install:oauth
-          docker compose -f docker-compose.e2e.yml exec -T backend composer reload-fixture
+          docker compose exec -T php bin/console doctrine:database:create --if-not-exists
+          docker compose exec -T php bin/console doctrine:migrations:migrate --no-interaction
+          docker compose exec -T php bin/console install:oauth
+          docker compose exec -T php composer reload-fixture
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -174,8 +115,10 @@ jobs:
 
       - name: Print Docker logs
         if: failure()
-        run: docker compose -f docker-compose.e2e.yml logs
+        working-directory: backend
+        run: docker compose -f compose.yaml -f .github/compose.ci.yaml -f compose.e2e.override.yaml logs
 
       - name: Stop services
         if: always()
-        run: docker compose -f docker-compose.e2e.yml down -v
+        working-directory: backend
+        run: docker compose -f compose.yaml -f .github/compose.ci.yaml -f compose.e2e.override.yaml down -v
