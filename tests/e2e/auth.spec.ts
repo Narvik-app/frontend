@@ -1,12 +1,8 @@
 import { test, expect } from '@playwright/test';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { STORAGE_STATE } from './utils/auth';
 
 // Use authenticated state from setup
-test.use({ storageState: path.join(__dirname, '.auth/admin.json') });
+test.use({ storageState: STORAGE_STATE.ADMIN });
 
 test.describe('Authentication', () => {
   test('logged in user can access admin dashboard', async ({ page }) => {
@@ -28,6 +24,18 @@ test.describe('Authentication', () => {
       await membersLink.click();
       await expect(page).toHaveURL(/\/admin\/members/);
     }
+  });
+
+  test('can logout', async ({ page }) => {
+    await page.goto('/');
+    
+    // Use the helper
+    const { logout } = await import('./utils/auth');
+    await logout(page);
+    
+    // Should be on login page
+    await expect(page).toHaveURL(/\/login/);
+    await expect(page.getByRole('button', { name: 'Connexion' })).toBeVisible();
   });
 });
 
