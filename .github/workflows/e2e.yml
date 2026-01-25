@@ -106,19 +106,20 @@ jobs:
         env:
           NUXT_PUBLIC_API_BASE_URL: http://localhost:8080
 
-      - name: Start Nuxt server
-        run: |
-          pnpm preview &
-          echo "Waiting for Nuxt to be ready..."
-          timeout 60 bash -c 'until curl -sf http://localhost:3000 > /dev/null 2>&1; do sleep 2; done'
-          echo "Nuxt is ready!"
-        env:
-          NUXT_PUBLIC_API_BASE_URL: http://localhost:8080
+#      - name: Start Nuxt server
+#        run: |
+#          pnpm preview &
+#          echo "Waiting for Nuxt to be ready..."
+#          timeout 60 bash -c 'until curl -sf http://localhost:3000 > /dev/null 2>&1; do sleep 2; done'
+#          echo "Nuxt is ready!"
+#        env:
+#          NUXT_PUBLIC_API_BASE_URL: http://localhost:8080
 
       - name: Run Playwright tests
         run: pnpm test:e2e:ci --project=chromium
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:3000
+          NUXT_PUBLIC_API_BASE_URL: http://localhost:8080
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v6
