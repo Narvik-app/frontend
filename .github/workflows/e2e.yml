@@ -111,14 +111,14 @@ jobs:
           EOF
 
       - name: Start backend services
-        run: |
-          docker compose -f docker-compose.e2e.yml up -d --wait
+        shell: bash
+        run: docker compose -f docker-compose.e2e.yml up --wait
 
       - name: Setup database and fixtures
         run: |
-#          docker compose -f docker-compose.e2e.yml exec -T backend bin/console doctrine:database:create --if-not-exists
-#          docker compose -f docker-compose.e2e.yml exec -T backend bin/console doctrine:migrations:migrate --no-interaction
-#          docker compose -f docker-compose.e2e.yml exec -T backend bin/console install:oauth
+          docker compose -f docker-compose.e2e.yml exec -T backend bin/console doctrine:database:create --if-not-exists
+          docker compose -f docker-compose.e2e.yml exec -T backend bin/console doctrine:migrations:migrate --no-interaction
+          docker compose -f docker-compose.e2e.yml exec -T backend bin/console install:oauth
           docker compose -f docker-compose.e2e.yml exec -T backend composer reload-fixture
 
       - name: Install pnpm
