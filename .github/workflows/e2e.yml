@@ -96,12 +96,6 @@ jobs:
               depends_on:
                 database:
                   condition: service_healthy
-              healthcheck:
-                test: ["CMD", "curl", "-f", "http://localhost:80"]
-                interval: 10s
-                timeout: 5s
-                retries: 10
-                start_period: 30s
 
             database:
               image: postgres:15-alpine
