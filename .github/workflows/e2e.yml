@@ -76,7 +76,6 @@ jobs:
       - name: Setup database and fixtures
         working-directory: backend
         run: |
-          docker compose exec -T php bin/console doctrine:database:create --if-not-exists
           docker compose exec -T php composer reload-fixture
 
       - name: Install pnpm
