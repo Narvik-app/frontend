@@ -84,7 +84,8 @@ jobs:
                 # Use :80 to force HTTP on port 80 inside the container
                 SERVER_NAME: :80
                 DATABASE_URL: postgresql://app:app@database:5432/app?serverVersion=15
-                APP_ENV: dev
+                # Image is built for prod (no dev dependencies like WebProfiler), so we must run in prod mode
+                APP_ENV: prod
                 APP_SECRET: ChangeMeTheSecretForE2E
                 CORS_ALLOW_ORIGIN: "^https?://localhost(:[0-9]+)?$"
                 TRUSTED_HOSTS: ^localhost|backend$$
@@ -170,6 +171,10 @@ jobs:
           name: test-results
           path: test-results/
           retention-days: 7
+
+      - name: Print Docker logs
+        if: failure()
+        run: docker compose -f docker-compose.e2e.yml logs
 
       - name: Stop services
         if: always()
