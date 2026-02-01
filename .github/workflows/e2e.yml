@@ -106,16 +106,6 @@ jobs:
 
       - name: Build Nuxt application
         run: pnpm build
-        env:
-          NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL: http://127.0.0.1:80
-          NUXT_SESSION_PASSWORD: 'test-session-password-at-least-32-chars-long'
-          NUXT_PUBLIC_CLIENT_ID: 'test'
-          NUXT_PUBLIC_CLIENT_SECRET: 'secretTestOnly'
-          NUXT_PUBLIC_BADGER_CLIENT_ID: 'badger'
-          NUXT_PUBLIC_BADGER_CLIENT_SECRET: 'secretTestOnly'
-          NUXT_PUBLIC_CLIENT_TURNSTILE: 'false'
-          NUXT_PUBLIC_TURNSTILE_SITE_KEY: '1x00000000000000000000AA'
-          NUXT_TURNSTILE_SITE_KEY: '1x0000000000000000000000000000000AA'
 
       - name: Create .env for E2E
         run: |
@@ -141,18 +131,6 @@ jobs:
 
       - name: Run Playwright tests
         run: pnpm test:e2e:ci --project=chromium
-        env:
-          PLAYWRIGHT_BASE_URL: https://localhost:3000
-          NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL: http://127.0.0.1:80
-          NODE_TLS_REJECT_UNAUTHORIZED: '0'
-          NUXT_SESSION_PASSWORD: 'test-session-password-at-least-32-chars-long'
-          NUXT_PUBLIC_CLIENT_ID: 'test'
-          NUXT_PUBLIC_CLIENT_SECRET: 'secretTestOnly'
-          NUXT_PUBLIC_BADGER_CLIENT_ID: 'badger'
-          NUXT_PUBLIC_BADGER_CLIENT_SECRET: 'secretTestOnly'
-          NUXT_PUBLIC_CLIENT_TURNSTILE: 'false'
-          NUXT_PUBLIC_TURNSTILE_SITE_KEY: '1x00000000000000000000AA'
-          NUXT_TURNSTILE_SITE_KEY: '1x0000000000000000000000000000000AA'
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v6
