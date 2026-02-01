@@ -78,6 +78,7 @@ export default defineConfig({
     ignoreHTTPSErrors: true,
     env: {
       NUXT_PUBLIC_TURNSTILE_SITE_KEY: '1x00000000000000000000AA', // Dummy key for testing
+      NUXT_TURNSTILE_SITE_KEY: '1x0000000000000000000000000000000AA', // Dummy key for testing
       NODE_TLS_REJECT_UNAUTHORIZED: '0',
       NUXT_SESSION_PASSWORD: 'test-session-password-at-least-32-chars-long',
       NUXT_PUBLIC_CLIENT_ID: 'test',
