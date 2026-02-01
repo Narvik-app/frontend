@@ -21,6 +21,7 @@ logs
 # Local env files
 .env
 .env.*
+!.env.ci
 !.env.example
 
 localhost-key.pem
