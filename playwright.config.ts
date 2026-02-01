@@ -78,6 +78,8 @@ export default defineConfig({
     ignoreHTTPSErrors: true,
     env: {
       NUXT_PUBLIC_TURNSTILE_SITE_KEY: '1x00000000000000000000AA', // Dummy key for testing
+      NODE_TLS_REJECT_UNAUTHORIZED: '0',
+      ...(process.env.NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL ? { NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL: process.env.NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL } : {}),
     },
   },
 });

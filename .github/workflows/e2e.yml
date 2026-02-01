@@ -107,6 +107,7 @@ jobs:
         env:
           PLAYWRIGHT_BASE_URL: https://localhost:3000
           NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL: http://localhost:80
+          NODE_TLS_REJECT_UNAUTHORIZED: '0'
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v6
