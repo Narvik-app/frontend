@@ -16,17 +16,17 @@ setup.describe.configure({ mode: 'serial' });
 
 setup('authenticate as club admin', async ({ page }) => {
   await login(page, 'admin@club1.fr', 'admin123', authFileAdmin);
-  logout(page);
+  await logout(page);
 });
 
 setup('authenticate as super admin', async ({ page }) => {
   await login(page, 'admin@admin.com', 'admin123', authFileSuperAdmin);
-  logout(page);
+  await logout(page);
 });
 
 setup('authenticate as member', async ({ page }) => {
   await login(page, 'member@club1.fr', 'member123', authFileMember);
-  logout(page);
+  await logout(page);
 });
 
 setup('authenticate as badger', async ({ page }) => {
@@ -55,5 +55,5 @@ setup('authenticate as badger', async ({ page }) => {
   // Assuming successful load implies auth
   // We save this state as badger
   await page.context().storageState({ path: authFileBadger });
-  logout(page);
+  await logout(page);
 });

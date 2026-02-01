@@ -35,7 +35,7 @@ test.describe('Authentication', () => {
     
     // Should be on login page
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.getByRole('button', { name: 'Connexion' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Connexion', exact: true })).toBeVisible();
   });
 });
 
@@ -48,7 +48,7 @@ test.describe('Login page', () => {
 
     await expect(page.getByLabel('Email')).toBeVisible();
     await expect(page.getByLabel('Mot de passe')).toBeVisible();
-    await expect(page.getByRole('button', { name: /connexion/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Connexion', exact: true })).toBeVisible();
   });
 
   test('shows error on invalid credentials', async ({ page }) => {
@@ -56,9 +56,9 @@ test.describe('Login page', () => {
 
     await page.getByLabel('Email').fill('invalid@test.com');
     await page.getByLabel('Mot de passe').fill('wrongpassword');
-    await page.getByRole('button', { name: /connexion/i }).click();
+    await page.getByRole('button', { name: 'Connexion', exact: true }).click();
 
     // Should show an error message (adjust based on your error handling)
-    await expect(page.getByText(/erreur|invalide|incorrect/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/erreur|invalide|incorrect/i).first()).toBeVisible({ timeout: 10000 });
   });
 });
