@@ -34,13 +34,14 @@ jobs:
       - name: Build Backend (Cached)
         working-directory: backend
         run: |
-          docker buildx bake \
-            -f compose.yaml \
-            -f .github/compose.ci.yaml \
-            --set "*.cache-from=type=gha,scope=${{ github.ref }}" \
-            --set "*.cache-from=type=gha,scope=refs/heads/main" \
-            --set "*.cache-to=type=gha,scope=${{ github.ref }},mode=max" \
-            --load
+          docker buildx build \
+            --target frankenphp_dev \
+            --cache-from type=gha,scope=${{ github.ref }} \
+            --cache-from type=gha,scope=refs/heads/main \
+            --cache-to type=gha,scope=${{ github.ref }},mode=max \
+            --tag narvik-php:latest \
+            --load \
+            .
 
       - name: Generate JWT Keys
         working-directory: backend
