@@ -45,6 +45,13 @@ jobs:
             --set "*.cache-to=type=gha,scope=${{ github.ref }},mode=max" \
             --load
 
+      - name: Generate JWT Keys
+        working-directory: backend
+        run: |
+          mkdir -p config/jwt
+          openssl genrsa -passout pass:changeme -out config/jwt/private.pem -aes256 4096
+          openssl rsa -in config/jwt/private.pem -passin pass:changeme -pubout -out config/jwt/public.pem
+
       - name: Start Backend (Dev Mode)
         working-directory: backend
         run: |
