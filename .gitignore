@@ -21,7 +21,15 @@ logs
 # Local env files
 .env
 .env.*
+!.env.ci
 !.env.example
 
 localhost-key.pem
 localhost.pem
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+tests/e2e/.auth/
