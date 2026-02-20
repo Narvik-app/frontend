@@ -79,7 +79,7 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
       <div class="w-full mb-2"/>
 
       <UPopover v-model:open="popoverOpen">
-        <UButton icon="i-heroicons-calendar-days-20-solid" :label="selectedRange ? formatDateRangeReadable(selectedRange) || 'Choisir une plage' : 'Choisir une plage'" />
+        <UButton data-testid="date-range-picker-trigger" icon="i-heroicons-calendar-days-20-solid" :label="selectedRange ? formatDateRangeReadable(selectedRange) || 'Choisir une plage' : 'Choisir une plage'" />
 
         <template #content>
           <GenericDateRangePicker :date-range="selectedRange" @range-updated="(range) => { saleStore.setSelectedRange(range); popoverOpen = false; saleStore.getSales();}" />
