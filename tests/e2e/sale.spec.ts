@@ -1,4 +1,4 @@
-import {expect, test} from '@playwright/test';
+import {expect, test} from './fixtures';
 import {STORAGE_STATE} from './utils/auth';
 
 // Use admin authenticated state — regular users don't have sale access

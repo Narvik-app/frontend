@@ -1,5 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import pkg from './package.json'
+import istanbul from 'vite-plugin-istanbul'
 
 export default defineNuxtConfig({
   devServer: {
@@ -87,6 +88,12 @@ export default defineNuxtConfig({
   turnstile: {
     siteKey: '',
     addValidateEndpoint: false
+  },
+
+  vite: {
+    plugins: process.env.COVERAGE
+      ? [istanbul({ extension: ['.js', '.ts', '.vue'], requireEnv: false })]
+      : [],
   },
 
   // Require ssr, so we disable it

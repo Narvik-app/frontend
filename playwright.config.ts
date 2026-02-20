@@ -6,6 +6,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests/e2e',
+  globalTeardown: './tests/e2e/global-teardown.ts',
   
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -90,6 +91,7 @@ export default defineConfig({
       NUXT_PUBLIC_BADGER_CLIENT_ID: 'badger',
       NUXT_PUBLIC_BADGER_CLIENT_SECRET: 'secretTestOnly',
       NUXT_PUBLIC_CLIENT_TURNSTILE: 'false',
+      ...(process.env.COVERAGE ? { COVERAGE: 'true' } : {}),
       ...(process.env.NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL ? { NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL: process.env.NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL } : {}),
     },
   },

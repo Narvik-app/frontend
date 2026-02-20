@@ -33,3 +33,7 @@ localhost.pem
 /blob-report/
 /playwright/.cache/
 tests/e2e/.auth/
+
+# Coverage
+/.nyc_output/
+/coverage/
