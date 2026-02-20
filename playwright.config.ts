@@ -40,6 +40,10 @@ export default defineConfig({
 
     /* Ignore invalid SSL certificates for localhost */
     ignoreHTTPSErrors: true,
+
+    /* Generous timeouts for Nuxt dev server + API calls */
+    navigationTimeout: 30000,
+    actionTimeout: 15000,
   },
 
   /* Configure projects for major browsers */

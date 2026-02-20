@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test';
-import { STORAGE_STATE } from './utils/auth';
+import {expect, test} from '@playwright/test';
+import {STORAGE_STATE} from './utils/auth';
 
 // Use authenticated state from setup
 test.use({ storageState: STORAGE_STATE.ADMIN });
@@ -11,8 +11,8 @@ test.describe('Authentication', () => {
     // Should be on admin page, not redirected to login
     await expect(page).not.toHaveURL(/\/login/);
 
-    // Should see some admin content (adjust selector based on your UI)
-    await expect(page.locator('body')).toBeVisible();
+    // Should see some admin content
+    await expect(page.locator('body')).toBeVisible({ timeout: 15000 });
   });
 
   test('can navigate to member list', async ({ page }) => {
@@ -28,11 +28,11 @@ test.describe('Authentication', () => {
 
   test('can logout', async ({ page }) => {
     await page.goto('/');
-    
+
     // Use the helper
     const { logout } = await import('./utils/auth');
     await logout(page);
-    
+
     // Should be on login page
     await expect(page).toHaveURL(/\/login/);
     await expect(page.getByRole('button', { name: 'Connexion', exact: true })).toBeVisible();
@@ -46,9 +46,9 @@ test.describe('Login page', () => {
   test('shows login form', async ({ page }) => {
     await page.goto('/login');
 
-    await expect(page.getByLabel('Email')).toBeVisible();
-    await expect(page.getByLabel('Mot de passe')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Connexion', exact: true })).toBeVisible();
+    await expect(page.getByLabel('Email')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByLabel('Mot de passe')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('button', { name: 'Connexion', exact: true })).toBeVisible({ timeout: 15000 });
   });
 
   test('shows error on invalid credentials', async ({ page }) => {
