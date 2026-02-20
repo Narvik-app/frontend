@@ -24,7 +24,7 @@ export async function logout(page: Page) {
 
   if (!await logoutItem.isVisible()) {
     // Alternative: The user menu is typically the last item in the navbar actions.
-    const userMenuButton = page.locator('header nav button').last();
+    const userMenuButton = page.getByTestId('user-menu');
     await userMenuButton.click();
   }
 

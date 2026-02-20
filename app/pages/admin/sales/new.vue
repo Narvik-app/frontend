@@ -246,6 +246,7 @@ definePageMeta({
               v-for="item in items"
               :key="item.uuid"
               class="flex items-center gap-2 mb-1 hover:bg-neutral-100 dark:hover:bg-neutral-600/50 rounded-md"
+              data-testid="inventory-item-row"
             >
               <div class="flex-1 flex flex-col">
                 <div class="print:text-xs flex-1">{{ item.name }}</div>
@@ -257,8 +258,8 @@ definePageMeta({
                 class="print:hidden text-xs font-bold text-error-600">
                 Stock restant : {{ item.quantity }}
               </div>
-              <div class="text-xs bg-neutral-200 print:!bg-neutral-200 dark:bg-neutral-600 p-1 rounded-md">{{ formatMonetary(item.sellingPrice) }}</div>
-              <UButton class="print:hidden" icon="i-heroicons-shopping-cart" size="xs" @click="cartStore.addToCart(item)" />
+              <div data-testid="item-price" class="text-xs bg-neutral-200 print:!bg-neutral-200 dark:bg-neutral-600 p-1 rounded-md">{{ formatMonetary(item.sellingPrice) }}</div>
+              <UButton class="print:hidden" data-testid="add-to-cart" icon="i-heroicons-shopping-cart" size="xs" @click="cartStore.addToCart(item)" />
             </div>
           </div>
         </div>
@@ -310,14 +311,14 @@ definePageMeta({
     <template #side>
       <div class="flex flex-col gap-4">
         <UCard class="print:hidden">
-          <div class="text-4xl text-center">{{ formatMonetary(cartTotalPrice) }}</div>
+          <div data-testid="cart-total-price" class="text-4xl text-center">{{ formatMonetary(cartTotalPrice) }}</div>
           <div class="mt-4">
             <div class="flex text-xs align-center mt-1">
               <div class="flex-1"/>
               <UButton v-if="cart.length > 0" size="xs" @click="cartStore.emptyCart()">Vider le panier</UButton>
             </div>
             <div v-if="cart.length < 1" class="text-center">
-              <i>Aucun articles</i>
+              <i data-testid="cart-empty">Aucun articles</i>
             </div>
             <div class="overflow-y-auto max-h-[25vh] mt-2">
               <div v-for="cartItem in cart" :key="cartItem.item.uuid" class="flex items-center gap-2 mb-1">
@@ -326,7 +327,7 @@ definePageMeta({
                 <div class="text-xs bg-neutral-200 dark:bg-neutral-600 p-1 rounded-md">{{ cartItem.quantity }}</div>
                 <div class="text-sm flex-1 leading-tight">{{ cartItem.item.name }}</div>
                 <UTooltip :text="'Prix unitaire : ' + formatMonetary(cartItem.item.sellingPrice)" :delay-duration="0">
-                  <div class="text-xs bg-neutral-200 dark:bg-neutral-600 p-1 rounded-md">
+                  <div data-testid="cart-item-total-price" class="text-xs bg-neutral-200 dark:bg-neutral-600 p-1 rounded-md">
                     <template v-if="cartItem.item.sellingPrice">
                       {{ formatMonetary(Number(Number(cartItem.item.sellingPrice) * cartItem.quantity).toFixed(2)) }}
                     </template>
@@ -342,7 +343,15 @@ definePageMeta({
 
         <UCard class="print:hidden">
           <UFormField label="Vendeur" :error="!sellerSelected && 'Un vendeur doit être défini'">
-            <UInputMenu v-model="sellerSelected" class="w-full" :items="sellersSelect" :filter-fields="['item.lastname', 'item.firstname']" @change="sellerUpdated" />
+            <div data-testid="seller-input-wrapper" class="w-full">
+              <UInputMenu
+                v-model="sellerSelected"
+                class="w-full"
+                :items="sellersSelect"
+                :filter-fields="['item.lastname', 'item.firstname']"
+                @change="sellerUpdated"
+              />
+            </div>
           </UFormField>
 
           <UFormField class="my-2" label="Commentaire" :error="cartComment.length > 249 && 'Longueur maximum atteinte (250)'">
@@ -354,9 +363,11 @@ definePageMeta({
               <UButton
                 v-for="paymentMode in paymentModes"
                 :key="paymentMode.uuid"
+                :data-testid="'payment-mode-' + paymentMode.name.toLowerCase()"
                 :variant="selectedPaymentMode?.uuid == paymentMode.uuid ? 'solid' : 'soft'"
-                class="basis-[calc(50%-0.25rem)]">
-                <div class="flex items-center w-full" @click="selectedPaymentMode = selectedPaymentMode === paymentMode ? null : paymentMode">
+                class="basis-[calc(50%-0.25rem)]"
+                @click="selectedPaymentMode = selectedPaymentMode === paymentMode ? null : paymentMode">
+                <div class="flex items-center w-full">
                   <UIcon :name="'i-heroicons-' + paymentMode.icon" />
                   <div class="flex-1">
                     {{ paymentMode.name }}
@@ -366,7 +377,17 @@ definePageMeta({
             </div>
           </UFormField>
 
-          <UButton :loading="isCreatingSale" class="mt-4" block color="success" :disabled="cart.size < 1 || !selectedPaymentMode || !seller" @click="createSale()">Finaliser la vente</UButton>
+          <UButton
+            data-testid="finalize-sale"
+            :loading="isCreatingSale"
+            class="mt-4"
+            block
+            color="success"
+            :disabled="cart.length < 1 || !selectedPaymentMode || !sellerSelected"
+            @click="createSale()"
+          >
+            Finaliser la vente
+          </UButton>
         </UCard>
       </div>
     </template>

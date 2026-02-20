@@ -147,6 +147,7 @@ const overlay = useOverlay()
         </div>
         <UDropdownMenu :items="rightMenu">
           <UButton
+            data-testid="user-menu"
             variant="ghost"
             color="neutral"
             :label="(isDesktopDisplay || isTabletDisplay) ? (!isBadger ? (selectedProfile?.displayName ?? user?.fullName) : 'Pointeuse') : undefined">

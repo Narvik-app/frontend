@@ -91,11 +91,13 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
 
     <div class="sm:grid sm:grid-flow-row sm:gap-4 sm:grid-cols-2">
       <GenericStatCard
+        data-testid="stat-sale-count"
         title="Nombres de ventes"
         :value="sales.length"
         :loading="isLoading"/>
 
       <GenericStatCard
+        data-testid="stat-sale-total"
         title="Total"
         :value="formatMonetary(totalAmountSales.toFixed(2))"
         :loading="isLoading"/>
