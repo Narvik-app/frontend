@@ -1,0 +1,154 @@
+name: E2E Tests
+
+on:
+  push:
+    branches:
+      - main
+      - '[0-9]+.[0-9]+*'
+  pull_request: ~
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: Playwright E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Checkout Backend
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ vars.BACKEND_REPOSITORY || 'Narvik-app/backend' }}
+          path: backend
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend (Cached)
+        working-directory: backend
+        run: |
+          docker buildx build \
+            --target frankenphp_dev \
+            --cache-from type=gha,scope=${{ github.ref }} \
+            --cache-from type=gha,scope=refs/heads/main \
+            --cache-to type=gha,scope=${{ github.ref }},mode=max \
+            --tag narvik-php:latest \
+            --load \
+            .
+
+      - name: Generate JWT Keys
+        working-directory: backend
+        run: |
+          mkdir -p config/jwt
+          openssl genrsa -passout pass:changeme -out config/jwt/private.pem -aes256 4096
+          openssl rsa -in config/jwt/private.pem -passin pass:changeme -pubout -out config/jwt/public.pem
+
+      - name: Start Backend (Dev Mode)
+        working-directory: backend
+        run: |
+          # Create an override to map ports and set E2E secrets
+          cat > compose.e2e.override.yaml << 'EOF'
+          services:
+            php:
+              ports:
+                - "80:80"
+              environment:
+                APP_SECRET: ChangeMeTheSecretForE2E
+                # Ensure we use dev env
+                APP_ENV: dev
+                # Caddy config for HTTP
+                SERVER_NAME: :80
+                # CORS for frontend
+                CORS_ALLOW_ORIGIN: "^https?://localhost(:[0-9]+)?$"
+                TRUSTED_HOSTS: ^localhost|php$$
+                OAUTH_PASSPHRASE: changeme
+                MERCURE_JWT_SECRET: '!ChangeThisMercureHubJWTSecretKey!'
+                MERCURE_PUBLISHER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
+                MERCURE_SUBSCRIBER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
+          EOF
+
+          # Start using pre-built image from cache
+          # compose.yaml (base) + .github/compose.ci.yaml (dev build + mounts) + override (ports)
+          docker compose -f compose.yaml -f .github/compose.ci.yaml -f compose.e2e.override.yaml up -d --wait --no-build
+
+      - name: Setup database and fixtures
+        working-directory: backend
+        run: |
+          docker compose exec -T php composer reload-fixture
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Get Playwright Version
+        id: playwright-version
+        run: echo "VERSION=$(pnpm exec playwright --version | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright Browsers
+        uses: actions/cache@v5
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Generate SSL Certificates
+        run: |
+          openssl req -x509 -newkey rsa:4096 -keyout localhost-key.pem -out localhost.pem -days 365 -nodes -subj '/CN=localhost'
+
+      - name: Build Nuxt application
+        run: pnpm build
+
+      - name: Setup Environment
+        run: cp .env.ci .env
+
+      - name: Verify Backend Accessibility
+        run: |
+          # Wait up to 30s for the backend to respond with something (even if 4xx/5xx)
+          timeout 30s bash -c "until curl -s http://127.0.0.1:80 > /dev/null; do sleep 1; done" || (echo 'Backend unreachable at http://127.0.0.1:80'; exit 1)
+          # Check health endpoint if exists, or just root
+          curl -v http://127.0.0.1:80
+
+      - name: Run Playwright tests
+        run: pnpm test:e2e:ci --project=chromium
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v6
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v6
+        if: ${{ !cancelled() }}
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 7
+
+      - name: Stop services
+        if: always()
+        working-directory: backend
+        run: docker compose -f compose.yaml -f .github/compose.ci.yaml -f compose.e2e.override.yaml down -v

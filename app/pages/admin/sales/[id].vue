@@ -169,16 +169,19 @@ definePageMeta({
 
     <div class="sm:grid sm:grid-flow-row sm:gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <GenericStatCard
+        data-testid="detail-total"
         title="Total"
         :value="formatMonetary(sale?.price?.toString())"
         :loading="isLoading"/>
 
       <GenericStatCard
+        data-testid="detail-item-count"
         title="Articles achetés"
         :value="sale?.salePurchasedItems?.length"
         :loading="isLoading"/>
 
       <GenericStatCard
+        data-testid="detail-payment-mode"
         title="Moyen de paiement"
         :value="sale?.paymentMode?.name"
         :top-right="{
@@ -187,6 +190,7 @@ definePageMeta({
         :loading="isLoading"/>
 
       <GenericStatCard
+        data-testid="detail-seller"
         title="Vendeur"
         :value="sale?.seller?.fullName"
         :loading="isLoading"/>

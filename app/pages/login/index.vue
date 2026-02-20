@@ -76,11 +76,11 @@ function redirectSuccessLogin() {
     <UCard>
       <UForm :state="state" class="space-y-4" :validate="validate" @submit="onSubmit">
         <UFormField label="Email" name="email">
-          <UInput v-model="state.email" type="email" />
+          <UInput v-model="state.email" type="email" data-testid="login-email" />
         </UFormField>
 
         <UFormField label="Mot de passe" name="password">
-          <UInput v-model="state.password" type="password" />
+          <UInput v-model="state.password" type="password" data-testid="login-password" />
         </UFormField>
 
         <div class="flex justify-end !-mt-0 ">
@@ -90,7 +90,7 @@ function redirectSuccessLogin() {
         </div>
 
         <div class="flex flex-col justify-center gap-4">
-          <UButton block type="submit" :loading="isLoading">
+          <UButton block type="submit" :loading="isLoading" data-testid="login-submit">
             Connexion
           </UButton>
 
@@ -101,7 +101,7 @@ function redirectSuccessLogin() {
           </UButton>
 
           <div class="flex justify-end !-mt-0 ">
-            <UButton class="text-[.6rem]" variant="link" @click="navigateTo('login/badger-quick-login')">
+            <UButton class="text-[.6rem]" variant="link" data-testid="login-badger-quick" @click="navigateTo('login/badger-quick-login')">
               Connexion pointeuse
             </UButton>
           </div>

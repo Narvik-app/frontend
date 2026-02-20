@@ -132,9 +132,9 @@ const topRightIcon = computed( () => {
         </p>
       </slot>
 
-      <p :class="valueClass"><slot name="value">{{ props.value }}</slot></p>
+      <p :class="valueClass" data-testid="stat-value"><slot name="value">{{ props.value }}</slot></p>
       <UTooltip :delay-duration="0" :text="props.tooltip" class="w-full justify-center text-center">
-        <div><p class="text-lg text-center">{{ props.title }}</p></div>
+        <div><p class="text-lg text-center" data-testid="stat-title">{{ props.title }}</p></div>
       </UTooltip>
     </div>
 

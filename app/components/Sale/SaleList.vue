@@ -79,7 +79,7 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
       <div class="w-full mb-2"/>
 
       <UPopover v-model:open="popoverOpen">
-        <UButton icon="i-heroicons-calendar-days-20-solid" :label="selectedRange ? formatDateRangeReadable(selectedRange) || 'Choisir une plage' : 'Choisir une plage'" />
+        <UButton data-testid="date-range-picker-trigger" icon="i-heroicons-calendar-days-20-solid" :label="selectedRange ? formatDateRangeReadable(selectedRange) || 'Choisir une plage' : 'Choisir une plage'" />
 
         <template #content>
           <GenericDateRangePicker :date-range="selectedRange" @range-updated="(range) => { saleStore.setSelectedRange(range); popoverOpen = false; saleStore.getSales();}" />
@@ -91,11 +91,13 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
 
     <div class="sm:grid sm:grid-flow-row sm:gap-4 sm:grid-cols-2">
       <GenericStatCard
+        data-testid="stat-sale-count"
         title="Nombres de ventes"
         :value="sales.length"
         :loading="isLoading"/>
 
       <GenericStatCard
+        data-testid="stat-sale-total"
         title="Total"
         :value="formatMonetary(totalAmountSales.toFixed(2))"
         :loading="isLoading"/>
