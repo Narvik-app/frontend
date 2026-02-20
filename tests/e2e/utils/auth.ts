@@ -13,6 +13,7 @@ export const STORAGE_STATE = {
   SUPER_ADMIN: path.join(AUTH_DIR, 'superadmin.json'),
   MEMBER: path.join(AUTH_DIR, 'member.json'),
   BADGER: path.join(AUTH_DIR, 'badger.json'),
+  SUPERVISOR: path.join(AUTH_DIR, 'supervisor.json'),
 };
 
 /**

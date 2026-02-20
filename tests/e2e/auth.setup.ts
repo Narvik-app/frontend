@@ -10,6 +10,7 @@ const authFileAdmin = path.join(__dirname, '.auth/admin.json');
 const authFileSuperAdmin = path.join(__dirname, '.auth/superadmin.json');
 const authFileMember = path.join(__dirname, '.auth/member.json');
 const authFileBadger = path.join(__dirname, '.auth/badger.json');
+const authFileSupervisor = path.join(__dirname, '.auth/supervisor.json');
 
 // Run setup steps serially to avoid backend overload or race conditions
 setup.describe.configure({ mode: 'serial' });
@@ -26,6 +27,11 @@ setup('authenticate as super admin', async ({ page }) => {
 
 setup('authenticate as member', async ({ page }) => {
   await login(page, 'member@club1.fr', 'member123', authFileMember);
+  await logout(page);
+});
+
+setup('authenticate as supervisor', async ({ page }) => {
+  await login(page, 'supervisor@club1.fr', 'admin123', authFileSupervisor);
   await logout(page);
 });
 
