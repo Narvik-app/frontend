@@ -38,16 +38,16 @@ setup('authenticate as supervisor', async ({ page }) => {
 setup('authenticate as badger', async ({ page }) => {
   // First login as admin to get the link
   await page.goto('/login');
-  await page.getByLabel('Email').fill('admin@club1.fr');
-  await page.getByLabel('Mot de passe').fill('admin123');
-  await page.getByRole('button', { name: 'Connexion', exact: true }).click();
+  await page.getByTestId('login-email').fill('admin@club1.fr');
+  await page.getByTestId('login-password').fill('admin123');
+  await page.getByTestId('login-submit').click();
   await expect(page).not.toHaveURL(/\/login/);
 
   // Navigate to presence config
   await page.goto('/admin/config/presences');
 
   // Find the Badger login link
-  const link = page.getByRole('link', { name: 'Gestion de présence' });
+  const link = page.getByTestId('link-badger-quick-login');
   await expect(link).toBeVisible();
 
   const href = await link.getAttribute('href');

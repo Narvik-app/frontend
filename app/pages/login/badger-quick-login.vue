@@ -56,7 +56,7 @@ async function getBadgerLogin() {
 
         <NuxtTurnstile v-if="requireTurnstile" v-model="state.turnstileToken" />
 
-        <UButton type="submit" :loading="isLoading">
+        <UButton type="submit" :loading="isLoading" data-testid="login-badger-submit">
           Connexion
         </UButton>
       </UForm>

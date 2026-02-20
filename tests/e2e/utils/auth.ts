@@ -21,17 +21,20 @@ export const STORAGE_STATE = {
  */
 export async function logout(page: Page) {
   const logoutItem = page.getByRole('menuitem', { name: 'Déconnexion' });
+  const userMenuButton = page.getByTestId('user-menu');
+
+  // Wait for the user menu to be visible before interacting
+  await expect(userMenuButton).toBeVisible();
 
   if (!await logoutItem.isVisible()) {
-    // Alternative: The user menu is typically the last item in the navbar actions.
-    const userMenuButton = page.getByTestId('user-menu');
     await userMenuButton.click();
   }
 
   await logoutItem.click();
 
-  // Verify redirected to login
+  // Verify redirected to login and it has fully loaded
   await expect(page).toHaveURL(/\/login/);
+  await expect(page.getByTestId('login-submit')).toBeVisible();
 }
 
 /**
@@ -43,10 +46,13 @@ export async function logout(page: Page) {
  */
 export async function login(page: Page, email: string, pass: string, storagePath?: string) {
   await page.goto('/login');
-  await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Mot de passe').fill(pass);
-  await page.getByRole('button', { name: 'Connexion', exact: true }).click();
+  await page.getByTestId('login-email').fill(email);
+  await page.getByTestId('login-password').fill(pass);
+  await page.getByTestId('login-submit').click();
   await expect(page).not.toHaveURL(/\/login/);
+  
+  // Wait for the user menu to be visible to ensure auth state and dashboard have fully loaded
+  await expect(page.getByTestId('user-menu')).toBeVisible();
 
   if (storagePath) {
     await page.context().storageState({ path: storagePath });
