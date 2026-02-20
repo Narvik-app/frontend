@@ -4,9 +4,15 @@ import {STORAGE_STATE} from './utils/auth';
 // Use admin authenticated state — regular users don't have sale access
 test.use({ storageState: STORAGE_STATE.ADMIN });
 
-test.describe('Sale creation flow', () => {
+test.describe.serial('Sale creation flow', () => {
+  let initialSaleCount = 0;
 
   test('can create a sale with articles', async ({ page }) => {
+    // Record initial sale count for today before creating a new one
+    await page.goto('/admin/sales/history');
+    await page.waitForTimeout(3000);
+    initialSaleCount = await page.getByRole('link', { name: 'Voir le détail' }).count();
+
     // Navigate to the new sale page
     await page.goto('/admin/sales/new');
 
@@ -20,21 +26,18 @@ test.describe('Sale creation flow', () => {
     const itemsToAdd = Math.min(rowCount, 2);
 
     for (let i = 0; i < itemsToAdd; i++) {
-      // The cart button is the last button in each row
       const cartButton = itemRows.nth(i).locator('button').last();
       await cartButton.click();
     }
 
-    // Verify cart shows items (should show "Aucun articles" text removed)
+    // Verify cart shows items
     await expect(page.getByText('Aucun articles')).not.toBeVisible({ timeout: 5000 });
 
     // --- Select a seller ---
-    // Click the trailing icon (chevron) on the UInputMenu to open the dropdown
     const sellerTrailingIcon = page.locator('[data-slot="trailing"]').first();
     await expect(sellerTrailingIcon).toBeVisible({ timeout: 15000 });
     await sellerTrailingIcon.click();
 
-    // Wait for dropdown options and pick the first one
     const sellerOption = page.getByRole('option').first();
     await expect(sellerOption).toBeVisible({ timeout: 15000 });
     await sellerOption.click();
@@ -55,16 +58,11 @@ test.describe('Sale creation flow', () => {
     await expect(page.getByText('Articles achetés').first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('sale appears in history', async ({ page }) => {
-    // Navigate to history page
+  test('sale count increased by 1 in history', async ({ page }) => {
     await page.goto('/admin/sales/history');
 
-    // Wait for the sales table to load
-    const detailButton = page.getByRole('link', { name: 'Voir le détail' }).first();
-    await expect(detailButton).toBeVisible({ timeout: 30000 });
-
-    // The stat card "Nombres de ventes" should show at least 1
-    const salesCount = page.locator('text=Nombres de ventes').locator('..');
-    await expect(salesCount).toBeVisible();
+    // Wait for sales to load and verify count increased by exactly 1
+    const detailLinks = page.getByRole('link', { name: 'Voir le détail' });
+    await expect(detailLinks).toHaveCount(initialSaleCount + 1, { timeout: 30000 });
   });
 });
