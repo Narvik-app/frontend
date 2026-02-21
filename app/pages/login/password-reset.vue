@@ -6,6 +6,7 @@ import type {NuxtTurnstile} from "#components";
 
 const toast = useToast()
 const isLoading = ref(false)
+const showPassword = ref(false)
 const securityEmailSent = ref(false)
 
 const queryParams = useRoute().query
@@ -154,7 +155,21 @@ v-if="securityEmailSent"
             </UFormField>
 
             <UFormField label="Nouveau mot de passe" name="password">
-              <UInput v-model="state.password" type="password" />
+              <UInput
+                v-model="state.password"
+                :type="showPassword ? 'text' : 'password'"
+              >
+                <template #trailing>
+                  <UButton
+                    color="neutral"
+                    variant="link"
+                    :icon="showPassword ? 'i-heroicons-eye-slash' : 'i-heroicons-eye'"
+                    :padded="false"
+                    class="pointer-events-auto"
+                    @click="showPassword = !showPassword"
+                  />
+                </template>
+              </UInput>
             </UFormField>
 
             <div class="flex justify-between">

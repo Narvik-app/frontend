@@ -8,6 +8,7 @@ import {ClubActivity, getSelectMenuClubActivity} from "~/types/api/item/club";
 
 const toast = useToast()
 const isLoading = ref(false)
+const showPassword = ref(false)
 const securityEmailSent = ref(false)
 
 const queryParams = useRoute().query
@@ -244,7 +245,21 @@ onBeforeUnmount(() => {
             </UFormField>
 
             <UFormField v-if="accountType !== 'club' || !alreadyAnAccount" label="Mot de passe" name="password" required>
-              <UInput v-model="state.password" type="password" />
+              <UInput
+                v-model="state.password"
+                :type="showPassword ? 'text' : 'password'"
+              >
+                <template #trailing>
+                  <UButton
+                    color="neutral"
+                    variant="link"
+                    :icon="showPassword ? 'i-heroicons-eye-slash' : 'i-heroicons-eye'"
+                    :padded="false"
+                    class="pointer-events-auto"
+                    @click="showPassword = !showPassword"
+                  />
+                </template>
+              </UInput>
             </UFormField>
 
             <UFormField v-if="accountType !== 'club' || !alreadyAnAccount" label="Nom" name="lastname" required>
