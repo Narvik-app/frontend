@@ -136,7 +136,7 @@ v-else
               :loading="fileUploading"
               :disabled="fileUploading || !canEdit"
               type="file"
-              accept="text/csv"
+              accept=".csv, text/csv, application/vnd.ms-excel"
               icon="i-heroicons-document-text"
               @change="importFromItac"
             />
@@ -162,7 +162,7 @@ v-else
               :loading="fileUploading"
               :disabled="fileUploading || !canEdit"
               type="file"
-              accept="text/csv"
+              accept=".csv, text/csv, application/vnd.ms-excel"
               icon="i-heroicons-document-text"
               @change="importFromItacSecondary"
             />
@@ -186,7 +186,7 @@ v-else
           :loading="fileUploading"
           :disabled="fileUploading || !canEdit"
           type="file"
-          accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
           icon="i-heroicons-document-text"
           @change="importFromEden"
         />

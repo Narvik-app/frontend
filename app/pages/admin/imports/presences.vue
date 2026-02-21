@@ -91,7 +91,7 @@ async function importExternalPresences(event: any) {
             :disabled="fileUploading || !canEdit"
             class="my-4"
             type="file"
-            accept="text/csv"
+            accept=".csv, text/csv, application/vnd.ms-excel"
             icon="i-heroicons-document-text"
             @change="importMemberPresences"
           />
@@ -116,7 +116,7 @@ async function importExternalPresences(event: any) {
             :disabled="fileUploading || !canEdit"
             class="my-4"
             type="file"
-            accept="text/csv"
+            accept=".csv, text/csv, application/vnd.ms-excel"
             icon="i-heroicons-document-text"
             @change="importExternalPresences"
           />

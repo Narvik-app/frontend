@@ -71,7 +71,7 @@ definePageMeta({
           :disabled="fileUploading || !canEdit"
           class="my-4"
           type="file"
-          accept="application/vnd.ms-excel"
+          accept=".xls, application/vnd.ms-excel"
           icon="i-heroicons-document-text"
           @change="getFileObject"
       />
