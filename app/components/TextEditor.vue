@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import TextAlign from '@tiptap/extension-text-align'
 import {Color, TextStyle} from '@tiptap/extension-text-style'
-import type { Editor } from '@tiptap/vue-3'
+import type { Editor } from '@tiptap/core'
 
 const props = defineProps(
     {
