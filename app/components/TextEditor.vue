@@ -132,7 +132,7 @@ const props = defineProps(
     @update:model-value="emit('update:modelValue', $event)"
   >
     <template #default="{ editor: slotEditor }">
-      <div v-if="slotEditor" class="flex flex-wrap gap-2 mb-2">
+      <div v-if="slotEditor" class="flex flex-wrap items-center gap-2">
         <UButton icon="i-heroicons-arrow-uturn-left" size="sm" :disabled="props.disabled" @click="slotEditor.chain().focus().undo().run()" />
         <UButton icon="i-heroicons-arrow-uturn-right" size="sm" :disabled="props.disabled" @click="slotEditor.chain().focus().redo().run()" />
 
@@ -153,23 +153,29 @@ const props = defineProps(
           </UButton>
 
           <template #content>
-            <UTooltip
-              v-for="(c, index) in colors"
-              :key="index"
-              :text="c.name"
-            >
-              <UButton variant="ghost" @click="setTextColor(c.hex)">
-                <span :style="{ backgroundColor: c.hex }" class="size-3 rounded-full"/>
-              </UButton>
-            </UTooltip>
+            <div class="flex flex-wrap justify-center items-center ">
+              <UTooltip
+                v-for="(c, index) in colors"
+                :key="index"
+                :text="c.name"
+              >
+                <UButton variant="ghost" @click="setTextColor(c.hex)">
+                  <span :style="{ backgroundColor: c.hex }" class="size-3 rounded-full"/>
+                </UButton>
+              </UTooltip>
 
-            <UTooltip text="Autre couleur">
-              <input
-                type="color"
-                :value="slotEditor.getAttributes('textStyle').color"
-                class="w-4 h-4 rounded-full"
-                @input="setTextColor($event.target.value)" >
-            </UTooltip>
+              <USeparator orientation="vertical" color="primary" class="h-4 mx-1" />
+
+              <UTooltip text="Autre couleur">
+                <UButton variant="soft">
+                  <input
+                    type="color"
+                    :value="slotEditor.getAttributes('textStyle').color"
+                    class="size-3 rounded-full"
+                    @input="setTextColor($event.target.value)" >
+                </UButton>
+              </UTooltip>
+            </div>
           </template>
         </UPopover>
 
