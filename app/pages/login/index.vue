@@ -13,6 +13,7 @@ definePageMeta({
 const toast = useToast()
 const overlay = useOverlay()
 const isLoading = ref(false)
+const showPassword = ref(false)
 
 const state = reactive({
   email: undefined,
@@ -80,7 +81,22 @@ function redirectSuccessLogin() {
         </UFormField>
 
         <UFormField label="Mot de passe" name="password">
-          <UInput v-model="state.password" type="password" data-testid="login-password" />
+          <UInput
+            v-model="state.password"
+            :type="showPassword ? 'text' : 'password'"
+            data-testid="login-password"
+          >
+            <template #trailing>
+              <UButton
+                color="neutral"
+                variant="link"
+                :icon="showPassword ? 'i-heroicons-eye-slash' : 'i-heroicons-eye'"
+                :padded="false"
+                class="pointer-events-auto"
+                @click="showPassword = !showPassword"
+              />
+            </template>
+          </UInput>
         </UFormField>
 
         <div class="flex justify-end !-mt-0 ">
