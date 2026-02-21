@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import {Editor, EditorContent} from '@tiptap/vue-3'
-import StarterKit from '@tiptap/starter-kit'
 import TextAlign from '@tiptap/extension-text-align'
 import {Color, TextStyle} from '@tiptap/extension-text-style'
+import type { Editor } from '@tiptap/core'
 
 const props = defineProps(
     {
@@ -52,26 +51,10 @@ const props = defineProps(
     { 'name': 'Rose', hex: '#EC407A' }
   ]
 
-  const editor: Ref<Editor> = ref(
-    new Editor({
-      content: props.modelValue,
-      extensions: [StarterKit, TextStyle, Color, TextAlign.configure({ types: ['heading', 'paragraph'] })],
-      editable: !props.disabled,
-      editorProps: {
-        attributes: {
-          class: 'min-h-[200px]'
-        }
-      },
+  const editorRef = ref()
+  const editor = computed<Editor | undefined>(() => editorRef.value?.editor)
 
-      onCreate: ({editor}) => {
-        emit('update:editor', editor)
-      },
-      onUpdate: ({editor}) => {
-        emit('update:modelValue', editor.getHTML())
-        emit('update:editor', editor)
-      }
-    })
-  )
+  const extensions = [TextStyle, Color, TextAlign.configure({ types: ['heading', 'paragraph'] })]
 
   const currentTextType = computed(() => {
     if (!editor.value) return 'paragraph'
@@ -85,24 +68,32 @@ const props = defineProps(
   const color = ref('#000000')
   const chip = computed(() => ({ backgroundColor: color.value }))
 
-  onMounted(() => {
-    if (!editor.value) return
+  watch(editor, (ed) => {
+    if (ed) {
+      emit('update:editor', ed)
 
-    editor.value.on('selectionUpdate', () => {
-      const newType = currentTextType.value
-      if (newType !== selectedTextType.value) {
-        selectedTextType.value = newType
-      }
+      ed.on('selectionUpdate', () => {
+        const newType = currentTextType.value
+        if (newType !== selectedTextType.value) {
+          selectedTextType.value = newType
+        }
 
-      const newColor = editor.value.getAttributes('textStyle').color || "#000000"
-      if (newColor !== color.value) {
-        color.value = newColor
-      }
-    })
+        const newColor = ed.getAttributes('textStyle').color || "#000000"
+        if (newColor !== color.value) {
+          color.value = newColor
+        }
+      })
+
+      ed.on('update', () => {
+        emit('update:editor', ed)
+      })
+    }
   })
 
-  onUnmounted(() => {
-    editor.value.destroy()
+  watch(() => props.disabled, (editorDisabled) => {
+    if (editor.value) {
+      editor.value.setEditable(!editorDisabled)
+    }
   })
 
   function setTextType(newType: string) {
@@ -125,85 +116,89 @@ const props = defineProps(
     editor.value.chain().focus().setColor(hexColor).run()
     color.value = hexColor
   }
-
-  watch(() => props.modelValue, (newValue) => {
-    if (newValue !== editor.value.getHTML()) {
-      editor.value.commands.setContent(newValue)
-    }
-  })
-
-  watch(() => props.disabled, (editorDisabled) => {
-    editor.value.setEditable(!editorDisabled)
-  })
 </script>
 
 <template>
-  <div class="ring ring-inset ring-accented rounded-xl p-4 space-y-2">
-    <div class="flex flex-wrap gap-2 mb-2">
-      <UButton icon="i-heroicons-arrow-uturn-left" size="sm" :disabled="props.disabled" @click="editor.chain().focus().undo().run()" />
-      <UButton icon="i-heroicons-arrow-uturn-right" size="sm" :disabled="props.disabled" @click="editor.chain().focus().redo().run()" />
+  <UEditor
+    ref="editorRef"
+    :model-value="props.modelValue"
+    :editable="!props.disabled"
+    :extensions="extensions"
+    :ui="{
+      root: 'ring ring-inset ring-accented rounded-xl p-4 space-y-2',
+      content: 'prose dark:prose-invert focus:outline-none py-2 rounded-md border border-gray-300 bg-white dark:bg-gray-900 overflow-y-auto max-h-72',
+      base: 'min-h-[200px] p-0 focus:outline-none !px-3'
+    }"
+    @update:model-value="emit('update:modelValue', $event)"
+  >
+    <template #default="{ editor: slotEditor }">
+      <div v-if="slotEditor" class="flex flex-wrap items-center gap-2">
+        <UButton icon="i-heroicons-arrow-uturn-left" size="sm" :disabled="props.disabled" @click="slotEditor.chain().focus().undo().run()" />
+        <UButton icon="i-heroicons-arrow-uturn-right" size="sm" :disabled="props.disabled" @click="slotEditor.chain().focus().redo().run()" />
 
-      <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
+        <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
 
-      <USelect
-        v-model="selectedTextType"
-        :items="textTypes"
-        class="w-32"
-        variant="outline"
-        :disabled="props.disabled"
-        @update:model-value="setTextType"
-      />
+        <USelect
+          v-model="selectedTextType"
+          :items="textTypes"
+          class="w-32"
+          variant="outline"
+          :disabled="props.disabled"
+          @update:model-value="setTextType"
+        />
 
-      <UPopover>
-        <UButton variant="ghost" size="sm" :disabled="props.disabled">
-          <span :style="chip" class="size-3 rounded-full" />
-        </UButton>
+        <UPopover>
+          <UButton variant="ghost" size="sm" :disabled="props.disabled">
+            <span :style="chip" class="size-3 rounded-full" />
+          </UButton>
 
-        <template #content>
-          <UTooltip
-            v-for="(color, index) in colors"
-            :key="index"
-            :text="color.name"
-          >
-            <UButton variant="ghost" @click="setTextColor(color.hex)">
-              <span :style="{ backgroundColor: color.hex }" class="size-3 rounded-full"/>
-            </UButton>
-          </UTooltip>
+          <template #content>
+            <div class="flex flex-wrap justify-center items-center ">
+              <UTooltip
+                v-for="(c, index) in colors"
+                :key="index"
+                :text="c.name"
+              >
+                <UButton variant="ghost" @click="setTextColor(c.hex)">
+                  <span :style="{ backgroundColor: c.hex }" class="size-3 rounded-full"/>
+                </UButton>
+              </UTooltip>
 
-          <UTooltip text="Autre couleur">
-            <input
-              type="color"
-              :value="editor.getAttributes('textStyle').color"
-              class="w-4 h-4 rouded-full"
-              @input="setTextColor($event.target.value)" >
-          </UTooltip>
-        </template>
-      </UPopover>
+              <USeparator orientation="vertical" color="primary" class="h-4 mx-1" />
 
-      <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
+              <UTooltip text="Autre couleur">
+                <UButton variant="soft">
+                  <input
+                    type="color"
+                    :value="slotEditor.getAttributes('textStyle').color"
+                    class="size-3 rounded-full"
+                    @input="setTextColor($event.target.value)" >
+                </UButton>
+              </UTooltip>
+            </div>
+          </template>
+        </UPopover>
 
-      <UButton icon="i-heroicons-bold" size="sm" :disabled="props.disabled" @click="editor.chain().focus().toggleBold().run()" />
-      <UButton icon="i-heroicons-italic" size="sm" :disabled="props.disabled" @click="editor.chain().focus().toggleItalic().run()" />
-      <UButton icon="i-heroicons-underline" size="sm" :disabled="props.disabled" @click="editor.chain().focus().toggleUnderline().run()" />
-      <UButton icon="i-heroicons-strikethrough" size="sm" :disabled="props.disabled" @click="editor.chain().focus().toggleStrike().run()" />
+        <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
 
-      <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
+        <UButton icon="i-heroicons-bold" size="sm" :disabled="props.disabled" @click="slotEditor.chain().focus().toggleBold().run()" />
+        <UButton icon="i-heroicons-italic" size="sm" :disabled="props.disabled" @click="slotEditor.chain().focus().toggleItalic().run()" />
+        <UButton icon="i-heroicons-underline" size="sm" :disabled="props.disabled" @click="slotEditor.chain().focus().toggleUnderline().run()" />
+        <UButton icon="i-heroicons-strikethrough" size="sm" :disabled="props.disabled" @click="slotEditor.chain().focus().toggleStrike().run()" />
 
-      <UButton icon="i-heroicons-list-bullet" size="sm" :disabled="props.disabled" @click="editor.chain().focus().toggleBulletList().run()" />
-      <UButton icon="i-heroicons-numbered-list" size="sm" :disabled="props.disabled" @click="editor.chain().focus().toggleOrderedList().run()" />
+        <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
 
-      <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
+        <UButton icon="i-heroicons-list-bullet" size="sm" :disabled="props.disabled" @click="slotEditor.chain().focus().toggleBulletList().run()" />
+        <UButton icon="i-heroicons-numbered-list" size="sm" :disabled="props.disabled" @click="slotEditor.chain().focus().toggleOrderedList().run()" />
 
-      <UButton icon="i-heroicons-bars-3-bottom-left" color="primary" size="sm" :disabled="props.disabled" @click="editor.chain().focus().setTextAlign('left').run()" />
-      <UButton icon="i-heroicons-bars-3" color="primary" size="sm" :disabled="props.disabled" @click="editor.chain().focus().setTextAlign('center').run()" />
-      <UButton icon="i-heroicons-bars-3-bottom-right" color="primary" size="sm" :disabled="props.disabled" @click="editor.chain().focus().setTextAlign('right').run()" />
-    </div>
+        <USeparator orientation="vertical" color="primary" class="h-6 mx-1" />
 
-    <EditorContent
-      :editor="editor"
-      class="prose dark:prose-invert focus:outline-none px-3 py-2 rounded-md border border-gray-300 bg-white dark:bg-gray-900 overflow-y-auto max-h-72"
-    />
-  </div>
+        <UButton icon="i-heroicons-bars-3-bottom-left" color="primary" size="sm" :disabled="props.disabled" @click="slotEditor.chain().focus().setTextAlign('left').run()" />
+        <UButton icon="i-heroicons-bars-3" color="primary" size="sm" :disabled="props.disabled" @click="slotEditor.chain().focus().setTextAlign('center').run()" />
+        <UButton icon="i-heroicons-bars-3-bottom-right" color="primary" size="sm" :disabled="props.disabled" @click="slotEditor.chain().focus().setTextAlign('right').run()" />
+      </div>
+    </template>
+  </UEditor>
 </template>
 
 <style scoped>
@@ -252,5 +247,10 @@ const props = defineProps(
 	font-size: 1.2rem;
 	font-weight: bold;
 	margin-bottom: 0.3rem;
+}
+
+:deep(.ProseMirror p) {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 </style>
