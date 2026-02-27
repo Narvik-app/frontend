@@ -13,8 +13,8 @@ test.describe.serial('Sale flow', () => {
     
     // Wait for stat card to load and capture initial count
     const saleCountStat = page.getByTestId('stat-sale-count').getByTestId('stat-value');
-    await expect(saleCountStat).toBeVisible({ timeout: 15000 });
-    await expect(saleCountStat).not.toHaveText('', { timeout: 15000 });
+    await expect(saleCountStat).toBeVisible();
+    await expect(saleCountStat).not.toHaveText('');
     initialSaleCount = parseInt(await saleCountStat.innerText());
 
     // Navigate to the new sale page
@@ -22,7 +22,7 @@ test.describe.serial('Sale flow', () => {
 
     // Wait for inventory items to load
     const itemRow = page.getByTestId('inventory-item-row').first();
-    await expect(itemRow).toBeVisible({ timeout: 30000 });
+    await expect(itemRow).toBeVisible();
 
     // Verify item prices are visible
     await expect(page.getByTestId('item-price').first()).toBeVisible();
@@ -49,7 +49,7 @@ test.describe.serial('Sale flow', () => {
     await sellerWrapper.locator('[data-slot="trailing"]').first().click();
     
     const sellerOption = page.getByRole('option').first();
-    await expect(sellerOption).toBeVisible({ timeout: 15000 });
+    await expect(sellerOption).toBeVisible();
     await sellerOption.click();
 
     // --- Select a payment mode ---
@@ -63,7 +63,7 @@ test.describe.serial('Sale flow', () => {
     await finalizeButton.click();
 
     // Assert we are redirected to the sale detail page (only happens on success)
-    await expect(page).toHaveURL(/\/admin\/sales\//, { timeout: 15000 });
+    await expect(page).toHaveURL(/\/admin\/sales\//);
     await expect(page).not.toHaveURL(/\/new/);
 
     // Assert the detail page shows the correct data using stable IDs
@@ -76,7 +76,7 @@ test.describe.serial('Sale flow', () => {
 
     // Wait for sales to load and verify count increased by exactly 1
     const saleCountStat = page.getByTestId('stat-sale-count').getByTestId('stat-value');
-    await expect(saleCountStat).toHaveText((initialSaleCount + 1).toString(), { timeout: 30000 });
+    await expect(saleCountStat).toHaveText((initialSaleCount + 1).toString());
   });
 
   test('6 derniers mois shows more or equal results', async ({ page }) => {
@@ -84,8 +84,8 @@ test.describe.serial('Sale flow', () => {
 
     // Wait for today's sales to load
     const saleCountStat = page.getByTestId('stat-sale-count').getByTestId('stat-value');
-    await expect(saleCountStat).toBeVisible({ timeout: 15000 });
-    await expect(saleCountStat).not.toHaveText('', { timeout: 15000 });
+    await expect(saleCountStat).toBeVisible();
+    await expect(saleCountStat).not.toHaveText('');
     const todayCount = parseInt(await saleCountStat.innerText());
 
     // Open the date range popover (button shows current date like "20 février 2026")
@@ -105,8 +105,8 @@ test.describe.serial('Sale flow', () => {
     
     // Wait for stat card to load
     const saleCountStat = page.getByTestId('stat-sale-count').getByTestId('stat-value');
-    await expect(saleCountStat).toBeVisible({ timeout: 15000 });
-    await expect(saleCountStat).not.toHaveText('', { timeout: 15000 });
+    await expect(saleCountStat).toBeVisible();
+    await expect(saleCountStat).not.toHaveText('');
 
     // Open the date range popover
     const datePickerButton = page.getByTestId('date-range-picker-trigger');
@@ -119,20 +119,20 @@ test.describe.serial('Sale flow', () => {
 
     // v-calendar renders day cells as buttons with aria-label containing the full date
     // Click the current day button twice (start + end of range)
-    const todayButton = page.locator('.vc-day-content').getByText(todayDay, { exact: true }).first();
+    const todayButton = page.locator('.vc-day:not(.is-not-in-month) .vc-day-content').getByText(todayDay, { exact: true }).first();
     await todayButton.click();
     await todayButton.click();
 
     // Should show the same count as initial + 1 (today's sales only)
-    await expect(saleCountStat).toHaveText((initialSaleCount + 1).toString(), { timeout: 15000 });
+    await expect(saleCountStat).toHaveText((initialSaleCount + 1).toString());
   });
 
   test('selecting today to a month ago shows more results', async ({ page }) => {
     await page.goto('/admin/sales/history');
 
     const saleCountStat = page.getByTestId('stat-sale-count').getByTestId('stat-value');
-    await expect(saleCountStat).toBeVisible({ timeout: 15000 });
-    await expect(saleCountStat).not.toHaveText('', { timeout: 15000 });
+    await expect(saleCountStat).toBeVisible();
+    await expect(saleCountStat).not.toHaveText('');
     const todayCount = parseInt(await saleCountStat.innerText());
 
     // Open the date range popover
@@ -146,7 +146,7 @@ test.describe.serial('Sale flow', () => {
     await page.waitForTimeout(500);
 
     // Click the 1st of the previous month as range start
-    const firstDayPrevMonth = page.locator('.vc-day-content').getByText('1', { exact: true }).first();
+    const firstDayPrevMonth = page.locator('.vc-day:not(.is-not-in-month) .vc-day-content').getByText('1', { exact: true }).first();
     await firstDayPrevMonth.click();
 
     // Navigate back to current month
@@ -157,7 +157,7 @@ test.describe.serial('Sale flow', () => {
     // Click today as range end
     const today = new Date();
     const todayDay = today.getDate().toString();
-    const todayButton = page.locator('.vc-day-content').getByText(todayDay, { exact: true }).first();
+    const todayButton = page.locator('.vc-day:not(.is-not-in-month) .vc-day-content').getByText(todayDay, { exact: true }).first();
     await todayButton.click();
 
     // A month range should show at least as many sales as today
