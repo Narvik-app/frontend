@@ -49,8 +49,7 @@ export async function login(page: Page, email: string, pass: string, storagePath
   await page.getByTestId('login-email').fill(email);
   await page.getByTestId('login-password').fill(pass);
   await page.getByTestId('login-submit').click();
-  await expect(page).not.toHaveURL(/\/login/);
-  
+
   // Wait for the user menu to be visible to ensure auth state and dashboard have fully loaded
   await expect(page.getByTestId('user-menu')).toBeVisible();
 
