@@ -7,19 +7,37 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
+ * Detects the available container runtime (podman or docker).
+ * Supports override via CONTAINER_RUNTIME environment variable.
+ */
+const getContainerCompose = (): string => {
+  if (process.env.CONTAINER_RUNTIME) {
+    return `${process.env.CONTAINER_RUNTIME} compose`;
+  }
+  try {
+    execSync('podman --version', { stdio: 'ignore' });
+    return 'podman compose';
+  } catch {
+    return 'docker compose';
+  }
+};
+
+/**
  * Resets the database fixtures to the initial state.
  * Uses the backend's 'make reload-fixture' command.
  * 
  * Assumes the backend repo is located at '../narvik-back' relative to this project root.
  */
 export const resetFixtures = () => {
+  const compose = getContainerCompose();
+
   // Check if running in CI
   if (process.env.CI) {
     try {
       console.log('Resetting fixtures in CI environment...');
       // In CI, we use the specific e2e compose file and 'backend' service
       // We use -T because there is no TTY in CI
-      execSync('docker compose -f docker-compose.e2e.yml exec -T backend composer reload-fixture', {
+      execSync(`${compose} -f docker-compose.e2e.yml exec -T backend composer reload-fixture`, {
         stdio: 'inherit',
         timeout: 60000
       });
@@ -46,10 +64,10 @@ export const resetFixtures = () => {
   }
 
   try {
-    console.log(`Resetting fixtures via backend docker compose (path: ${backendPath})...`);
-    // Use docker compose directly for consistency, pointing to local backend setup
+    console.log(`Resetting fixtures via ${compose} (path: ${backendPath})...`);
+    // Use container compose directly for consistency, pointing to local backend setup
     // Assuming standard 'php' service name in local dev
-    execSync('docker compose exec -T php composer reload-fixture', { 
+    execSync(`${compose} exec -T php composer reload-fixture`, { 
       cwd: backendPath, 
       stdio: 'inherit',
       timeout: 60000 

@@ -85,8 +85,8 @@ To ensure tests run in a clean state, use the `resetFixtures()` utility.
 
 - **What it does**: Reloads the database fixtures to their initial state.
 - **How it works**:
-    - **Locally**: Runs `docker compose exec php composer reload-fixture` in the sibling `../narvik-back` directory.
-    - **CI**: Runs the command inside the CI's docker environment.
+    - **Locally**: Runs `docker compose exec php composer reload-fixture` (or `podman compose` equivalent) in the sibling `../narvik-back` directory.
+    - **CI**: Runs the command inside the CI's container environment.
 
 **Configuration**:
 If your backend repository is not located at `../narvik-back`, set the `BACKEND_PATH` environment variable:
