@@ -30,15 +30,15 @@ jobs:
         with:
           github-token: ${{ secrets.GH_PAT || github.token }}
           script: |
-            const targetBranch = context.eventName === 'pull_request' 
-              ? context.payload.pull_request.base.ref 
+            const targetBranch = context.eventName === 'pull_request'
+              ? context.payload.pull_request.base.ref
               : context.ref.replace('refs/heads/', '');
-            
+
             let backendRef = 'main';
             let reason = 'Not a version branch, using default (main).';
             const backendRepoStr = process.env.BACKEND_REPOSITORY;
             const [owner, repo] = backendRepoStr.split('/');
-            
+
             if (/^[0-9]+\.[0-9]+/.test(targetBranch)) {
               try {
                 await github.rest.repos.getBranch({
@@ -62,18 +62,20 @@ jobs:
               backendRef = 'main';
               reason = 'Target branch is main, checking out main on backend.';
             }
-            
+
+            const summaryTable = `
+              | Property | Value |
+              | --- | --- |
+              | Frontend Target Branch | \`${targetBranch}\` |
+              | Backend Checkout Ref | \`${backendRef}\` |
+              | Event | \`${context.eventName}\` |
+              | Reason | ${reason} |
+            `;
             await core.summary
               .addHeading('🔗 Backend Repository Details', 3)
-              .addTable([
-                [{data: 'Property', header: true}, {data: 'Value', header: true}],
-                ['Frontend Target Branch', `\`${targetBranch}\``],
-                ['Backend Checkout Ref', `\`${backendRef}\``],
-                ['Event', `\`${context.eventName}\``],
-                ['Reason', reason]
-              ])
+              .addRaw(summaryTable)
               .write();
-              
+
             core.setOutput('backend_ref', backendRef);
 
       - name: Checkout Backend
