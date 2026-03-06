@@ -11,6 +11,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
+env:
+  BACKEND_REPOSITORY: ${{ vars.BACKEND_REPOSITORY || 'Narvik-app/backend' }}
+
 jobs:
   e2e:
     name: Playwright E2E Tests
@@ -21,10 +24,63 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Determine Backend Branch
+        id: determine-backend
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GH_PAT || github.token }}
+          script: |
+            const targetBranch = context.eventName === 'pull_request' 
+              ? context.payload.pull_request.base.ref 
+              : context.ref.replace('refs/heads/', '');
+            
+            let backendRef = 'main';
+            let reason = 'Not a version branch, using default (main).';
+            const backendRepoStr = process.env.BACKEND_REPOSITORY;
+            const [owner, repo] = backendRepoStr.split('/');
+            
+            if (/^[0-9]+\.[0-9]+/.test(targetBranch)) {
+              try {
+                await github.rest.repos.getBranch({
+                  owner,
+                  repo,
+                  branch: targetBranch
+                });
+                backendRef = targetBranch;
+                reason = `PR/Push is targeting a version branch (${targetBranch}), checking out the same branch on backend.`;
+              } catch (error) {
+                if (error.status === 404) {
+                  reason = `⚠️ Version branch (${targetBranch}) DOES NOT exist on backend (${owner}/${repo}). Falling back to main.`;
+                  core.warning(reason);
+                } else {
+                  reason = `⚠️ Error checking backend branch on ${owner}/${repo} (${error.message}). Falling back to main.`;
+                  core.warning(reason);
+                }
+                backendRef = 'main';
+              }
+            } else if (targetBranch === 'main') {
+              backendRef = 'main';
+              reason = 'Target branch is main, checking out main on backend.';
+            }
+            
+            await core.summary
+              .addHeading('🔗 Backend Repository Details', 3)
+              .addTable([
+                [{data: 'Property', header: true}, {data: 'Value', header: true}],
+                ['Frontend Target Branch', `\`${targetBranch}\``],
+                ['Backend Checkout Ref', `\`${backendRef}\``],
+                ['Event', `\`${context.eventName}\``],
+                ['Reason', reason]
+              ])
+              .write();
+              
+            core.setOutput('backend_ref', backendRef);
+
       - name: Checkout Backend
         uses: actions/checkout@v6
         with:
-          repository: ${{ vars.BACKEND_REPOSITORY || 'Narvik-app/backend' }}
+          repository: ${{ env.BACKEND_REPOSITORY }}
+          ref: ${{ steps.determine-backend.outputs.backend_ref }}
           path: backend
           token: ${{ secrets.GH_PAT }}
 
@@ -139,6 +195,7 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+          if-no-files-found: ignore
 
       - name: Upload test results
         uses: actions/upload-artifact@v7
@@ -147,6 +204,7 @@ jobs:
           name: test-results
           path: test-results/
           retention-days: 7
+          if-no-files-found: ignore
 
       - name: Stop services
         if: always()
