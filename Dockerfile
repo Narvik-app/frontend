@@ -1,8 +1,6 @@
 # syntax = docker/dockerfile:1
 
-ARG NODE_VERSION=24
-
-FROM node:${NODE_VERSION}-slim AS base
+FROM node:24-slim AS base
 
 ARG PORT=3000
 ENV NODE_ENV=production
