@@ -30,6 +30,25 @@ export default defineNuxtConfig({
     '@nuxtjs/seo',
   ],
 
+  vite: {
+    optimizeDeps: {
+      include: [
+        '@vue/devtools-core',
+        '@vue/devtools-kit',
+        'uuid-encoder',
+        'dayjs',
+        'mergician',
+        'clipboardy',
+        'vue-qrcode-reader',
+        'v-calendar',
+        'chart.js',
+        'vue-chartjs',
+        '@tiptap/extension-text-align',
+        '@tiptap/extension-text-style',
+      ]
+    }
+  },
+
   css: ['~/assets/css/main.css'],
 
   piniaPluginPersistedstate: {
