@@ -102,7 +102,6 @@ const columns = [{
 }]
 
 function rowClicked(row: Member) {
-  console.log(row)
   memberSelected.value = row
   emit('selected-member', row)
 }
