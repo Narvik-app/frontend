@@ -96,9 +96,6 @@ const columns = [
 ]
 
 function rowClicked(row: TableRow<ExternalPresence|MemberPresence>) {
-  if (!props.isExternalPresences && !row.original.member) {
-    return;
-  }
   emit('rowClicked', row)
 }
 

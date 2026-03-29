@@ -45,6 +45,7 @@ const member: Ref<Member | undefined> = ref(undefined)
 
 const memberProfileImage: Ref<ExposedFile|undefined> = ref(undefined)
 
+const isLoading = ref(false)
 const isLoadingPresences = ref(false)
 const memberPresences: Ref<MemberPresence[]> = ref([])
 const totalMemberPresences = computed(() => memberPresences.value.length)
@@ -53,9 +54,12 @@ const chartData: Ref<ChartDoughnutData|undefined> = ref(undefined)
 
 const updateMemberPresenceModalOpen = ref(false);
 
+// Load the member presence datas
 if (memberPresence.value && memberPresence.value.member?.uuid) {
+  isLoading.value = true
   // We request the real member datas
   memberQuery.get(memberPresence.value.member.uuid).then(memberResponse => {
+    isLoading.value = false
     if (memberResponse.retrieved) {
       member.value = memberResponse.retrieved
 
@@ -125,7 +129,10 @@ function presenceUpdated(newMemberPresence: MemberPresence) {
 
 async function deletePresence() {
   if (isSupervisor || isBadger) {
-    await memberPresenceQuery.delete(memberPresence.value)
+    const { error } = await memberPresenceQuery.delete(memberPresence.value)
+    if (error) {
+      displayApiError(error)
+    }
     popoverOpen.value = false
     emit('updated', null)
   }
@@ -144,7 +151,7 @@ async function copyLicence() {
 
 <template>
   <div>
-    <template v-if="member">
+    <template v-if="!isLoading">
       <UCard class="bg-(--ui-bg)">
         <div class="flex gap-2 mb-2">
           <UButton
@@ -158,14 +165,14 @@ async function copyLicence() {
           <div class="flex-1"/>
 
           <template v-if="!viewOnly && (isSupervisor || isBadger)">
-            <UButton
+            <UButton v-if="member"
               icon="i-heroicons-pencil-square"
               size="xs"
               variant="soft"
               label="Éditer la présence"
               @click="updateMemberPresenceModalOpen = true"
             />
-            <UTooltip v-if="!member.blacklisted || (isSupervisor)" text="Supprimer la présence">
+            <UTooltip v-if="isSupervisor" text="Supprimer la présence">
               <UPopover v-model:open="popoverOpen">
                 <UButton
                   icon="i-heroicons-trash"
@@ -192,89 +199,97 @@ async function copyLicence() {
           </template>
         </div>
 
-        <div class="mx-auto my-0 h-24 w-24 aspect-square">
-          <UAvatar
-            class="w-full h-full"
-            size="3xl"
-            :src="memberProfileImage?.base64"
-            :alt="member.fullName"
-            :ui="{
+        <template v-if="member">
+          <div class="mx-auto my-0 h-24 w-24 aspect-square">
+            <UAvatar
+              class="w-full h-full"
+              size="3xl"
+              :src="memberProfileImage?.base64"
+              :alt="member.fullName"
+              :ui="{
               rounded: 'object-contain bg-gray-100 dark:bg-gray-800'
             }"
-          />
-        </div>
-
-        <div class="space-y-4 w-full my-4">
-          <div class="text-center text-2xl font-bold">
-            <ContentLink v-if="isSupervisor" class="!text-(--ui-text)" :to="`/admin/members/${convertUuidToUrlUuid(member.uuid)}`">
-              {{ member.fullName }}
-            </ContentLink>
-
-            <template v-else>
-              {{ member.fullName }}
-            </template>
+            />
           </div>
-          <div class="flex justify-center flex-wrap gap-2">
-            <UBadge
+
+          <div class="space-y-4 w-full my-4">
+            <div class="text-center text-2xl font-bold">
+              <ContentLink v-if="isSupervisor" class="!text-(--ui-text)" :to="`/admin/members/${convertUuidToUrlUuid(member.uuid)}`">
+                {{ member.fullName }}
+              </ContentLink>
+
+              <template v-else>
+                {{ member.fullName }}
+              </template>
+            </div>
+            <div class="flex justify-center flex-wrap gap-2">
+              <UBadge
                 v-if="member.currentSeason && member.currentSeason.ageCategory"
                 variant="subtle"
                 color="warning">
-              {{ member.currentSeason.ageCategory.name }}
-            </UBadge>
+                {{ member.currentSeason.ageCategory.name }}
+              </UBadge>
 
-            <div v-if="member.blacklisted" class="basis-full text-center">
+              <div v-if="member.blacklisted" class="basis-full text-center">
+                <UButton
+                  color="neutral">
+                  Blacklisté
+                </UButton>
+              </div>
+
+              <div v-if="member.medicalCertificateExpiration && member.medicalCertificateStatus !== 'valid'" class="basis-full text-center">
+                <UButton
+                  :color="member.medicalCertificateStatus === 'expired' ? 'error' : 'warning'">
+                  Certificat médical : {{ formatDateReadable(member.medicalCertificateExpiration.toString()) }}
+                </UButton>
+              </div>
+
               <UButton
-                color="neutral">
-                Blacklisté
+                v-if="!member.currentSeason"
+                color="error">
+                Saison non renouvelée
               </UButton>
-            </div>
 
-            <div v-if="member.medicalCertificateExpiration && member.medicalCertificateStatus !== 'valid'" class="basis-full text-center">
-              <UButton
-                :color="member.medicalCertificateStatus === 'expired' ? 'error' : 'warning'">
-                Certificat médical : {{ formatDateReadable(member.medicalCertificateExpiration.toString()) }}
-              </UButton>
-            </div>
-
-            <UButton
-              v-if="!member.currentSeason"
-              color="error">
-              Saison non renouvelée
-            </UButton>
-
-            <UBadge
+              <UBadge
                 v-if="member.currentSeason && member.currentSeason.isSecondaryClub"
                 variant="subtle"
                 color="success">
-              Club secondaire
-            </UBadge>
-          </div>
-          <div class="flex items-center justify-center text-xl cursor-pointer" @click="copyLicence">
-            <UIcon class="mr-2" name="i-heroicons-identification" />
-            {{ member.licence }}
-          </div>
-          <div v-if="member.lastControlShooting" class="text-center text-xl">
-            Dernier contrôle : {{ formatDateReadable(member.lastControlShooting.toString()) }}
-          </div>
-          <div class="flex gap-4 justify-center flex-wrap">
-            <UButton
+                Club secondaire
+              </UBadge>
+            </div>
+            <div class="flex items-center justify-center text-xl cursor-pointer" @click="copyLicence">
+              <UIcon class="mr-2" name="i-heroicons-identification" />
+              {{ member.licence }}
+            </div>
+            <div v-if="member.lastControlShooting" class="text-center text-xl">
+              Dernier contrôle : {{ formatDateReadable(member.lastControlShooting.toString()) }}
+            </div>
+            <div class="flex gap-4 justify-center flex-wrap">
+              <UButton
                 v-for="activity in memberPresence?.activities?.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))"
                 :key="activity.uuid"
                 variant="soft">
-              {{ activity.name }}
-            </UButton>
+                {{ activity.name }}
+              </UButton>
+            </div>
+
           </div>
 
-        </div>
+          <div class="flex justify-center">
+            <UButton
+              :loading="isLoadingPresences"
+              @click="loadPresenceHistory()"
+            >
+              Afficher l'historique de présence
+            </UButton>
+          </div>
+        </template>
+        <template v-else>
+          <div class="text-center text-2xl font-bold">
+            <i>Membre supprimé</i>
+          </div>
+        </template>
 
-        <div class="flex justify-center">
-          <UButton
-            :loading="isLoadingPresences"
-            @click="loadPresenceHistory()"
-          >
-            Afficher l'historique de présence
-          </UButton>
-        </div>
       </UCard>
 
       <UCard

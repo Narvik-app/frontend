@@ -100,7 +100,7 @@ watch(searchMemberModalOpen, (value, _oldValue) => {
 function memberSelectedFromSearch(member: Member) {
 
   // We check the member is not already present, in that case we open up the presence card
-  const foundMember = presenceList.value.presentMembers.find( (pm) => pm.member.licence === member.licence);
+  const foundMember = presenceList.value.presentMembers.find( (pm) => pm.member?.licence === member.licence);
   if (foundMember) {
     searchMemberModalOpen.value = false;
 
