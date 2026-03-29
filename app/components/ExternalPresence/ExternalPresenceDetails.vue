@@ -72,7 +72,7 @@ async function deletePresence() {
           @click="updateExternalPresenceModalOpen = true"
       />
 
-      <UTooltip v-if="isSupervisor || isBadger" text="Supprimer">
+      <UTooltip v-if="isSupervisor" text="Supprimer">
         <UPopover v-model:open="popoverOpen">
           <UButton
               icon="i-heroicons-trash"
