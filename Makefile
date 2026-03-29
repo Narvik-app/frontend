@@ -25,6 +25,9 @@ generate-local-ssl: ## Generate local SSL certificates using mkcert
 	@chmod +x localhost.pem localhost-key.pem
 	@echo "\033[32mCertificates generated and permissions set.\033[0m"
 
+updgrade-nuxt: ## Command to run when upgrading nuxt
+	npx nuxt upgrade --dedupe
+
 ## —— Docker 🐳 ————————————————————————————————————————————————————————————————
 
 build-cloud-latest-only: ## Build using cloud and push it under latest tag (use for preprod testing)
