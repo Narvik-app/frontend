@@ -129,7 +129,10 @@ function presenceUpdated(newMemberPresence: MemberPresence) {
 
 async function deletePresence() {
   if (isSupervisor || isBadger) {
-    await memberPresenceQuery.delete(memberPresence.value)
+    const { error } = await memberPresenceQuery.delete(memberPresence.value)
+    if (error) {
+      displayApiError(error)
+    }
     popoverOpen.value = false
     emit('updated', null)
   }
