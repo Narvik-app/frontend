@@ -21,9 +21,16 @@ export function convertUuidToUrlUuid(uuid?: string): string {
   return encoder.encode(uuid)
 }
 
+export function isRawUuid(uuid: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uuid)
+}
+
 export function decodeUrlUuid(uuid?: string): string {
   if (!uuid) {
     return ''
+  }
+  if (isRawUuid(uuid)) {
+    return uuid
   }
   const encoder = new UuidEncoder('base62')
   return encoder.decode(uuid)
