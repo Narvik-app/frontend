@@ -216,23 +216,17 @@ const MAX_ATTACHMENT_SIZE_MB = 15
       let firstErrorMessage = ''
 
       for (const encodedUuid of uuidList) {
-        try {
-          const { retrieved, error } = await memberQuery.get(decodeUrlUuid(encodedUuid.trim()))
+        const { retrieved, error } = await memberQuery.get(decodeUrlUuid(encodedUuid.trim()))
 
-          if (error) {
-            if (!firstErrorMessage) {
-              firstErrorMessage = error.message || 'Erreur de chargement'
-            }
-            continue
-          }
-
-          if (retrieved) {
-            loadedMembers.push(retrieved)
-          }
-        } catch (e) {
+        if (error) {
           if (!firstErrorMessage) {
-            firstErrorMessage = e instanceof Error ? e.message : String(e)
+            firstErrorMessage = error.message || 'Erreur de chargement'
           }
+          continue
+        }
+
+        if (retrieved) {
+          loadedMembers.push(retrieved)
         }
       }
 
