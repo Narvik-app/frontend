@@ -10,7 +10,6 @@ definePageMeta({
   })
 
   const route = useRoute()
-
   const memberId = decodeUrlUuid(route.params.id.toString());
 </script>
 
