@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type {PropType} from "vue";
 import type {Member} from "~/types/api/item/clubDependent/member";
+import clipboard from "clipboardy";
 
 const props = defineProps({
   member: {
@@ -44,11 +45,7 @@ async function copyToClipboard(event?: Event) {
   event?.preventDefault()
   event?.stopPropagation()
 
-  if (!import.meta.client || !navigator.clipboard) {
-    return
-  }
-
-  await navigator.clipboard.writeText(licenceValue.value)
+  await clipboard.write(licenceValue.value)
   toast.add({
     title: 'Licence copiée'
   })
