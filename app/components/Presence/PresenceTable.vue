@@ -169,7 +169,6 @@ function getPresenceMember(item: ExternalPresence|MemberPresence) {
       </template>
       <template v-else>
         <MemberLicence v-if="getPresenceMember(row.original)" :member="getPresenceMember(row.original)" />
-        <UBadge v-else color="neutral" variant="soft">-</UBadge>
       </template>
     </template>
 
