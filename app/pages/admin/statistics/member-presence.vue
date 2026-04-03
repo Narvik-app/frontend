@@ -8,6 +8,8 @@ import type {TablePaginateInterface} from "~/types/table";
 import dayjs from "dayjs";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import type {ColumnDef} from '@tanstack/vue-table'
+import type {ColumnSort} from "@tanstack/table-core";
+import {getTableSortVal} from "~/utils/table";
 import {UCheckbox} from '#components';
 
 definePageMeta({
@@ -27,6 +29,8 @@ interface MemberPresenceStat {
   firstname: string;
   lastname: string;
   licence: string;
+  medicalCertificateExpiration?: string | null;
+  lastControlShooting?: string | null;
 }
 
 // Stores
@@ -48,69 +52,86 @@ const items = ref<MemberPresenceStat[]>([]);
 const totalItems = ref(0);
 const page = ref(1);
 const itemsPerPage = ref(10);
-const order = ref('ASC');
+const sort = ref([{ id: 'presenceCount', desc: true }] as ColumnSort[]);
 const popoverOpen = ref(false);
 const selectedMembers = ref<MemberPresenceStat[]>([]);
 
-const columns: ColumnDef<MemberPresenceStat>[] = [
-  {
-    accessorKey: 'select',
-    header: () => h(UCheckbox, {
-      modelValue: someMembersSelectedInPage()
-        ? 'indeterminate'
-        : allMembersSelectedInPage(),
-      'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
-        if (value) {
-          // Select all members in current page
-          const uuidsAlreadySelected = selectedMembers.value.map(member => member.memberUuid)
-          const newMembers = items.value.filter(member => !uuidsAlreadySelected.includes(member.memberUuid))
-          selectedMembers.value = [...selectedMembers.value, ...newMembers]
-        } else {
-          // Only remove members in the current page
-          const uuidsToRemove = items.value.map(member => member.memberUuid)
-          selectedMembers.value = selectedMembers.value.filter(member => !uuidsToRemove.includes(member.memberUuid))
+// Check if control shooting activity is configured for this club
+const hasControlShootingActivity = computed(() => {
+  return !!selfStore.selectedProfile?.club?.settings?.controlShootingActivity
+})
+
+const columns = computed<ColumnDef<MemberPresenceStat>[]>(() => {
+  const cols: ColumnDef<MemberPresenceStat>[] = [
+    {
+      accessorKey: 'select',
+      header: () => h(UCheckbox, {
+        modelValue: someMembersSelectedInPage()
+          ? 'indeterminate'
+          : allMembersSelectedInPage(),
+        'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
+          if (value) {
+            const uuidsAlreadySelected = selectedMembers.value.map(member => member.memberUuid)
+            const newMembers = items.value.filter(member => !uuidsAlreadySelected.includes(member.memberUuid))
+            selectedMembers.value = [...selectedMembers.value, ...newMembers]
+          } else {
+            const uuidsToRemove = items.value.map(member => member.memberUuid)
+            selectedMembers.value = selectedMembers.value.filter(member => !uuidsToRemove.includes(member.memberUuid))
+          }
+        },
+        disabled: items.value.length === 0
+      }),
+      cell: ({row}) => h(UCheckbox, {
+        modelValue: selectedMembers.value.some(member => member.memberUuid === row.original.memberUuid),
+        'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
+          if (value) {
+            selectedMembers.value = [...selectedMembers.value, row.original]
+          } else {
+            selectedMembers.value = selectedMembers.value.filter(member => member.memberUuid !== row.original.memberUuid)
+          }
+        },
+        key: row.original.memberUuid
+      }),
+      meta: {
+        class: {
+          th: 'print:hidden',
         }
-      },
-      disabled: items.value.length === 0
-    }),
-    cell: ({row}) => h(UCheckbox, {
-      modelValue: selectedMembers.value.some(member => member.memberUuid === row.original.memberUuid),
-      'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
-        if (value) {
-          selectedMembers.value = [...selectedMembers.value, row.original]
-        } else {
-          selectedMembers.value = selectedMembers.value.filter(member => member.memberUuid !== row.original.memberUuid)
-        }
-      },
-      key: row.original.memberUuid
-    }),
-    meta: {
-      class: {
-        th: 'print:hidden',
       }
-    }
-  },
-  {
-    accessorKey: 'licence',
-    header: 'Licence',
-  },
-  {
-    accessorKey: 'lastname',
-    header: 'Nom',
-  },
-  {
-    accessorKey: 'firstname',
-    header: 'Prénom',
-  },
-  {
-    accessorKey: 'presenceCount',
-    header: 'Présences',
-  },
-  {
-    accessorKey: 'lastPresenceDate',
-    header: 'Dernière présence',
-  },
-  {
+    },
+    {
+      accessorKey: 'licence',
+      header: 'Licence',
+    },
+    {
+      accessorKey: 'lastname',
+      header: 'Nom',
+    },
+    {
+      accessorKey: 'firstname',
+      header: 'Prénom',
+    },
+    {
+      accessorKey: 'presenceCount',
+      header: 'Présences',
+    },
+    {
+      accessorKey: 'lastPresenceDate',
+      header: 'Dernière présence',
+    },
+    {
+      accessorKey: 'medicalCertificateExpiration',
+      header: 'Certificat médical',
+    },
+  ];
+
+  if (hasControlShootingActivity.value) {
+    cols.push({
+      accessorKey: 'lastControlShooting',
+      header: 'Dernier contrôle',
+    });
+  }
+
+  cols.push({
     accessorKey: 'actions',
     header: 'Actions',
     meta: {
@@ -118,8 +139,34 @@ const columns: ColumnDef<MemberPresenceStat>[] = [
         th: 'print:hidden text-right',
       }
     }
-  }
-];
+  });
+
+  return cols;
+});
+
+// Helpers for cell coloring
+function getMedicalCertificateColor(expiration: string | null | undefined): 'error' | 'warning' | 'neutral' {
+  if (!expiration) return 'neutral';
+  const exp = new Date(expiration);
+  const now = new Date();
+  if (exp <= now) return 'error';
+  const twoMonthsFromNow = new Date();
+  twoMonthsFromNow.setMonth(twoMonthsFromNow.getMonth() + 2);
+  if (exp <= twoMonthsFromNow) return 'warning';
+  return 'neutral';
+}
+
+function getControlShootingColor(date: string | null | undefined): 'error' | 'warning' | 'neutral' {
+  if (!date) return 'neutral';
+  const d = new Date(date);
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  const nineMonthsAgo = new Date();
+  nineMonthsAgo.setMonth(nineMonthsAgo.getMonth() - 9);
+  if (d <= oneYearAgo) return 'error';
+  if (d <= nineMonthsAgo) return 'warning';
+  return 'neutral';
+}
 
 // Methods
 async function fetchMetrics() {
@@ -128,13 +175,16 @@ async function fetchMetrics() {
     const urlParams = new URLSearchParams();
     urlParams.append('page', page.value.toString());
     urlParams.append('itemsPerPage', itemsPerPage.value.toString());
-    urlParams.append('order', order.value);
+
+    // API Platform-style sorting: order[field]=direction
+    sort.value.forEach((value) => {
+      urlParams.append(`order[${value.id}]`, getTableSortVal(value))
+    })
 
     // Date filters from store
     if (dateRange.value) {
-       // We emulate the metricStore logic for consistency
        if ('value' in dateRange.value) {
-          // If custom filters provided (e.g. Current Season handled by backend)
+          // Current Season handled by backend
        } else {
          const range = dateRange.value as DateRange;
          urlParams.append('start', dayjs(range.start).format('YYYY-MM-DD'));
@@ -152,12 +202,9 @@ async function fetchMetrics() {
 
     if (retrieved) {
       items.value = (retrieved.values as MemberPresenceStat[]) || [];
-      // Pagination data from API
       if (retrieved.pagination) {
         totalItems.value = retrieved.pagination.totalItems;
       }
-
-      // Update last refresh date in store manually since we bypass the store action
       lastRefreshDate.value = new Date();
     }
   } catch (e) {
@@ -169,7 +216,7 @@ async function fetchMetrics() {
 
 function handleDateRangeUpdate(range: DateRange | DateRangeFilter | undefined) {
   metricStore.setDateRange(range);
-  page.value = 1; // Reset to first page
+  page.value = 1;
   fetchMetrics();
   popoverOpen.value = false;
 }
@@ -177,6 +224,11 @@ function handleDateRangeUpdate(range: DateRange | DateRangeFilter | undefined) {
 function onPaginate(pagination: TablePaginateInterface) {
   page.value = pagination.page;
   itemsPerPage.value = pagination.itemsPerPage;
+  fetchMetrics();
+}
+
+function onSortChanged() {
+  page.value = 1;
   fetchMetrics();
 }
 
@@ -275,19 +327,6 @@ onMounted(() => {
       />
 
       <GenericCardWithActions :title="`Membres (${totalItems})`">
-        <template #actions>
-          <div class="flex items-center gap-2">
-            <USelect
-              v-model="order"
-              :items="[
-                { label: 'Moins présents', value: 'ASC' },
-                { label: 'Plus présents', value: 'DESC' }
-              ]"
-              @change="() => { page = 1; fetchMetrics() }"
-            />
-          </div>
-        </template>
-
         <div
           v-if="selectedMembers.length > 0"
           class="mb-4 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg flex items-center justify-between print:hidden">
@@ -314,10 +353,28 @@ onMounted(() => {
         </div>
 
         <UTable
+          v-model:sorting="sort"
           :loading="isLoading"
+          :sorting-options="{
+            manualSorting: true,
+            enableMultiSort: false,
+          }"
           :columns="columns"
           :data="items"
+          @update:sorting="onSortChanged()"
         >
+           <template #presenceCount-header="{ column }">
+             <GenericTableSortButton :column="column" :can-be-unsorted="true" />
+           </template>
+
+           <template #medicalCertificateExpiration-header="{ column }">
+             <GenericTableSortButton :column="column" :can-be-unsorted="true" />
+           </template>
+
+           <template v-if="hasControlShootingActivity" #lastControlShooting-header="{ column }">
+             <GenericTableSortButton :column="column" :can-be-unsorted="true" />
+           </template>
+
            <template #lastPresenceDate-cell="{ row }">
              <p v-if="row.original.lastPresenceDate">
                {{ formatDateReadable(row.original.lastPresenceDate) }}
@@ -325,6 +382,28 @@ onMounted(() => {
              <i v-else>
                Aucune présences pour cette période
              </i>
+           </template>
+
+           <template #medicalCertificateExpiration-cell="{ row }">
+             <UBadge
+               v-if="row.original.medicalCertificateExpiration"
+               :color="getMedicalCertificateColor(row.original.medicalCertificateExpiration)"
+               variant="soft"
+             >
+               {{ formatDateReadable(row.original.medicalCertificateExpiration) }}
+             </UBadge>
+             <i v-else>Non défini</i>
+           </template>
+
+           <template v-if="hasControlShootingActivity" #lastControlShooting-cell="{ row }">
+             <UBadge
+               v-if="row.original.lastControlShooting"
+               :color="getControlShootingColor(row.original.lastControlShooting)"
+               variant="soft"
+             >
+               {{ formatDateReadable(row.original.lastControlShooting) }}
+             </UBadge>
+             <i v-else>Aucun enregistrement</i>
            </template>
 
            <template #actions-cell="{ row }">
