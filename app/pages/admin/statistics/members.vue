@@ -1,10 +1,13 @@
 <script lang="ts" setup>
 import {useMetricStore} from "~/stores/useMetricStore";
 import MetricQuery from "~/composables/api/query/MetricQuery";
+import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
 import {formatDateRangeReadable, formatDateReadable, formatDateTimeReadable} from "~/utils/date";
 import {print} from "~/utils/browser";
 import type {DateRange, DateRangeFilter} from "~/types/date";
 import type {TablePaginateInterface} from "~/types/table";
+import type {Member} from "~/types/api/item/clubDependent/member";
+import {convertUuidToUrlUuid} from "~/utils/resource";
 import dayjs from "dayjs";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import type {ColumnDef} from '@tanstack/vue-table'
@@ -29,6 +32,7 @@ interface MemberPresenceStat {
   firstname: string;
   lastname: string;
   licence: string;
+  member?: Member;
   medicalCertificateExpiration?: string | null;
   lastControlShooting?: string | null;
 }
@@ -44,6 +48,7 @@ const {
 
 // Query
 const metricQuery = new MetricQuery();
+const memberQuery = new MemberQuery();
 
 // State
 const isAdmin = selfStore.isAdmin();
@@ -202,6 +207,22 @@ async function fetchMetrics() {
 
     if (retrieved) {
       items.value = (retrieved.values as MemberPresenceStat[]) || [];
+
+      if (items.value.length > 0) {
+        const hydratedItems = await Promise.all(
+          items.value.map(async (item) => {
+            const { retrieved: member } = await memberQuery.get(item.memberUuid);
+
+            return {
+              ...item,
+              member: member ?? undefined,
+            };
+          })
+        );
+
+        items.value = hydratedItems;
+      }
+
       if (retrieved.pagination) {
         totalItems.value = retrieved.pagination.totalItems;
       }
@@ -372,7 +393,7 @@ onMounted(() => {
            </template>
 
            <template #licence-cell="{ row }">
-             <MemberLicence :licence="row.original.licence"  />
+             <MemberLicence :member="row.original.member" />
            </template>
 
            <template v-if="hasControlShootingActivity" #lastControlShooting-header="{ column }">
