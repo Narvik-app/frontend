@@ -18,7 +18,7 @@ const links = [
     title: 'Membres',
     description: 'Récapitulatif par membres pour la saison actuelle.',
     icon: 'i-heroicons-user-group',
-    to: '/admin/statistics/member-presence'
+    to: '/admin/statistics/members'
   }
 ]
 </script>
