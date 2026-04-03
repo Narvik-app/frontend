@@ -56,8 +56,32 @@ async function copyToClipboard(event?: Event) {
 </script>
 
 <template>
+  <UTooltip v-if="isSecondaryClubMember" :delay-duration="0" text="Club secondaire">
+    <UButton
+      v-if="props.copyable && hasLicence"
+      :size="props.size"
+      :color="badgeColor"
+      :variant="badgeVariant"
+      :icon="badgeIcon"
+      class="cursor-copy"
+      @click="copyToClipboard"
+    >
+      {{ licenceValue }}
+    </UButton>
+
+    <UBadge
+      v-else
+      :size="props.size"
+      :color="badgeColor"
+      :variant="badgeVariant"
+      :icon="badgeIcon"
+    >
+      {{ licenceValue || '-' }}
+    </UBadge>
+  </UTooltip>
+
   <UButton
-    v-if="props.copyable && hasLicence"
+    v-else-if="props.copyable && hasLicence"
     :size="props.size"
     :color="badgeColor"
     :variant="badgeVariant"
@@ -74,7 +98,6 @@ async function copyToClipboard(event?: Event) {
     :color="badgeColor"
     :variant="badgeVariant"
     :icon="badgeIcon"
-
   >
     {{ licenceValue || '-' }}
   </UBadge>
