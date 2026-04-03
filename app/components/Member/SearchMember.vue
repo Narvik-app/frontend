@@ -174,6 +174,10 @@ function onSelect(event: Event) {
           <span class="italic text-sm">Aucune résultat trouvé</span>
         </div>
       </template>
+
+      <template #licence-cell="{ row }">
+        <MemberLicence :member="row.original"  />
+      </template>
     </UTable>
 
   </div>

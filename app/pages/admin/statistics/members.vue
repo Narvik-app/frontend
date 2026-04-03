@@ -371,6 +371,10 @@ onMounted(() => {
              <GenericTableSortButton :column="column" :can-be-unsorted="true" />
            </template>
 
+           <template #licence-cell="{ row }">
+             <MemberLicence :licence="row.original.licence"  />
+           </template>
+
            <template v-if="hasControlShootingActivity" #lastControlShooting-header="{ column }">
              <GenericTableSortButton :column="column" :can-be-unsorted="true" />
            </template>
