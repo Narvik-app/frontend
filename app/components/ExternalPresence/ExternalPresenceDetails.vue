@@ -103,8 +103,7 @@ async function deletePresence() {
         {{ externalPresence.fullName }}
       </div>
       <div class="flex items-center justify-center text-xl">
-        <UIcon class="mr-2" name="i-heroicons-identification" />
-        {{ externalPresence.licence }}
+        <MemberLicence :licence="externalPresence.licence" :copyable="selfStore.hasSupervisorRole()" :icon="true" />
       </div>
       <div class="flex gap-4 justify-center flex-wrap">
         <UButton

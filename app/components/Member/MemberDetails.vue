@@ -17,7 +17,6 @@ import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.
 import MemberSeasonQuery from "~/composables/api/query/clubDependent/MemberSeasonQuery";
 import MemberSeasonSelectModal from "~/components/MemberSeason/MemberSeasonSelectModal.vue";
 import MemberEditLinkedEmailModal from "~/components/Member/MemberEditLinkedEmailModal.vue";
-import clipboard from "clipboardy";
 import type {TablePaginateInterface} from "~/types/table";
 import type {SelectApiItem} from "~/types/select";
 import {createBrowserCsvDownload} from "~/utils/browser";
@@ -582,6 +581,10 @@ async function deleteMember() {
               {{ memberRef.fullName }}
             </div>
 
+            <div class="text-center">
+              <MemberLicence :member="memberRef" :copyable="true" :icon="true" />
+            </div>
+
             <div class="flex flex-col items-center justify-center flex-wrap gap-1">
               <div v-if="memberRef.blacklisted">
                 <UButton
@@ -610,7 +613,6 @@ async function deleteMember() {
                 Dernier contrôle : {{ formatDateReadable(memberRef.lastControlShooting.toString()) }}
               </div>
 
-              <MemberDetailsPersonnalInfo icon="i-heroicons-identification" :label="memberRef.licence" to="#" @click.prevent="clipboard.write(memberRef.licence ?? '');toast.add({title: 'Licence copiée'});" />
               <MemberDetailsPersonnalInfo icon="i-heroicons-at-symbol" :label="memberRef.email" :to="'mailto:' + memberRef.email" />
               <MemberDetailsPersonnalInfo icon="i-heroicons-phone" :label="memberRef.phone?.match(/.{1,2}/g)?.join(' ')" :to="memberRef.phone ? 'tel:' + memberRef.phone : undefined" />
               <MemberDetailsPersonnalInfo icon="i-heroicons-phone" :label="memberRef.mobilePhone?.match(/.{1,2}/g)?.join(' ')" :to="memberRef.mobilePhone ? 'tel:' + memberRef.mobilePhone : undefined" />

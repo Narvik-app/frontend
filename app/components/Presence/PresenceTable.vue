@@ -105,6 +105,26 @@ function sortClicked() {
   }
 }
 
+function isMemberPresenceRow(item: ExternalPresence|MemberPresence): item is MemberPresence {
+  return 'member' in item
+}
+
+function getPresenceLicence(item: ExternalPresence|MemberPresence): string|undefined {
+  if (isMemberPresenceRow(item)) {
+    return item.member?.licence
+  }
+
+  return item.licence
+}
+
+function getPresenceMember(item: ExternalPresence|MemberPresence) {
+  if (isMemberPresenceRow(item)) {
+    return item.member
+  }
+
+  return undefined
+}
+
 </script>
 
 <template>
@@ -145,10 +165,10 @@ function sortClicked() {
 
     <template #licence-cell="{ row }">
       <template v-if="props.isExternalPresences">
-        {{ row.original.licence }}
+        <MemberLicence :licence="getPresenceLicence(row.original)" />
       </template>
       <template v-else>
-        {{ row.original.member?.licence }}
+        <MemberLicence v-if="getPresenceMember(row.original)" :member="getPresenceMember(row.original)" />
       </template>
     </template>
 
@@ -158,13 +178,6 @@ function sortClicked() {
       </template>
       <template v-else>
         <div v-if="row.original.member" class="flex flex-wrap gap-2">
-          <UBadge
-              v-if="row.original.member.currentSeason && row.original.member.currentSeason.isSecondaryClub"
-              variant="subtle"
-              color="success">
-            Club secondaire
-          </UBadge>
-
           <p class="inline-flex items-center w-full">{{ row.original.member.fullName }}</p>
         </div>
         <p v-else class="italic">Membre supprimé</p>

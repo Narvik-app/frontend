@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type {PropType} from "vue";
 import type {MemberPresence} from "~/types/api/item/clubDependent/plugin/presence/memberPresence";
-import clipboard from "clipboardy";
 import RegisterMemberPresence from "~/components/PresentMember/RegisterMemberPresence.vue";
 import type {ExposedFile} from "~/types/api/item/exposedFile";
 import FileQuery from "~/composables/api/query/FileQuery";
@@ -12,7 +11,6 @@ import {useSelfUserStore} from "~/stores/useSelfUser";
 import MemberPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/MemberPresenceQuery";
 import {convertUuidToUrlUuid} from "~/utils/resource";
 
-const toast = useToast()
 const selfStore = useSelfUserStore()
 const isSupervisor = selfStore.hasSupervisorRole()
 const isBadger = selfStore.isBadger()
@@ -138,15 +136,6 @@ async function deletePresence() {
   }
 }
 
-async function copyLicence() {
-  if (selfStore.hasSupervisorRole() && props.item.member?.licence) {
-    clipboard.write(props.item.member.licence)
-    toast.add({
-      title: 'Licence copiée'
-    })
-  }
-}
-
 </script>
 
 <template>
@@ -249,17 +238,9 @@ async function copyLicence() {
                 color="error">
                 Saison non renouvelée
               </UButton>
-
-              <UBadge
-                v-if="member.currentSeason && member.currentSeason.isSecondaryClub"
-                variant="subtle"
-                color="success">
-                Club secondaire
-              </UBadge>
             </div>
-            <div class="flex items-center justify-center text-xl cursor-pointer" @click="copyLicence">
-              <UIcon class="mr-2" name="i-heroicons-identification" />
-              {{ member.licence }}
+            <div class="flex items-center justify-center text-xl">
+              <MemberLicence :member="member" size="lg" :copyable="selfStore.hasSupervisorRole()" :icon="true" />
             </div>
             <div v-if="member.lastControlShooting" class="text-center text-xl">
               Dernier contrôle : {{ formatDateReadable(member.lastControlShooting.toString()) }}

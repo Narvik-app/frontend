@@ -290,6 +290,10 @@ const props = defineProps({
           </div>
         </template>
 
+        <template #licence-cell="{ row }">
+          <MemberLicence :member="row.original"  />
+        </template>
+
         <template #status-cell="{ row }">
           <i v-if="!row.original.currentSeason">Saison non renouvelée</i>
           <p v-if="row.original.role && row.original.role !== ClubRole.Member">{{ getAvailableClubRoles().find((role) => role.value === row.original.role)?.text }}</p>
