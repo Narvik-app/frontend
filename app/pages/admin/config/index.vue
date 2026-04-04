@@ -344,8 +344,11 @@ async function emailReplyToUpdated() {
     </GenericCard>
 
     <div v-if="selectedProfile?.club.presencesEnabled" class="flex flex-col gap-4">
-      <GenericCard title="Activités exclus du décompte des jours ouverts">
-        <div>
+      <GenericCard title="Activités exclues des statistiques">
+        <div class="flex flex-col gap-2">
+          <p class="text-xs">
+            Les activités sélectionnées ne seront pas comptabilisées dans les jours ouverts, ni dans les statistiques de présences des membres.
+          </p>
           <USelectMenu
             v-model="configState.excludedActivitiesFromOpeningDays"
             :items="activitiesSelect"
@@ -357,7 +360,7 @@ async function emailReplyToUpdated() {
             <span v-if="configState.excludedActivitiesFromOpeningDays && activities && configState.excludedActivitiesFromOpeningDays.length" class="truncate">
               {{ activities.filter(a => (a.uuid && configState.excludedActivitiesFromOpeningDays?.includes(a.uuid)) ).map(a => a.name).join(', ') }}
             </span>
-              <span v-else>Aucune activités exclus</span>
+              <span v-else>Aucune activité exclue</span>
             </template>
           </USelectMenu>
         </div>
