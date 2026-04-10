@@ -23,10 +23,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update package.json
-        run: |
-          VERSION=${{ github.ref_name }}
-          VERSION_NUMBER=${VERSION#v}
-          jq --indent 2 --arg ver "$VERSION_NUMBER" '.version = $ver' package.json > package.json.tmp && mv package.json.tmp package.json
+        uses: froozeify/gh-version-updater@v1
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v7
