@@ -26,7 +26,7 @@ jobs:
 
       - name: Determine Backend Branch
         id: determine-backend
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.GH_PAT || github.token }}
           script: |
