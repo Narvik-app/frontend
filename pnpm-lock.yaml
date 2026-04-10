@@ -39,11 +39,11 @@ importers:
         specifier: ^2.11.8
         version: 2.11.8
       '@tiptap/extension-text-align':
-        specifier: ^3.22.1
-        version: 3.22.1(@tiptap/core@3.20.5(@tiptap/pm@3.20.5))
+        specifier: ^3.22.3
+        version: 3.22.3(@tiptap/core@3.20.5(@tiptap/pm@3.20.5))
       '@tiptap/extension-text-style':
-        specifier: ^3.22.1
-        version: 3.22.1(@tiptap/core@3.20.5(@tiptap/pm@3.20.5))
+        specifier: ^3.22.3
+        version: 3.22.3(@tiptap/core@3.20.5(@tiptap/pm@3.20.5))
       '@types/qs':
         specifier: ^6.15.0
         version: 6.15.0
@@ -2298,15 +2298,15 @@ packages:
     peerDependencies:
       '@tiptap/core': ^3.20.5
 
-  '@tiptap/extension-text-align@3.22.1':
-    resolution: {integrity: sha512-llkKgYX2sdwnjQFG0LMjZEdWDCFA5zJgJmrVqkx8zuMukNZbuD6rjszmG90uvhOsnvacwHmD0RMpLpHOfqHX8Q==}
+  '@tiptap/extension-text-align@3.22.3':
+    resolution: {integrity: sha512-dG1NHE0yGf7fYiOdabCJuecI2IJ1uogyY/QvZqvPNaxRjZDoXYuGlMtz9jEDiIdQSaPED2MSsS7KkuNFQIEMGg==}
     peerDependencies:
-      '@tiptap/core': ^3.22.1
+      '@tiptap/core': ^3.22.3
 
-  '@tiptap/extension-text-style@3.22.1':
-    resolution: {integrity: sha512-xtUuqXFRQxJ2C0OIp4MpD+reHrULkZSec+YXbFt4SHHHluK1lquibYbZknbmd9jsagPUcv0hc7zmdkxdz83lfA==}
+  '@tiptap/extension-text-style@3.22.3':
+    resolution: {integrity: sha512-JKmWAogM/LX9ZJmXJQalpcR77wWVtVXdRFgvHGsFomW9WFhZqcnIEDWR2sbpZHWtu8dml6eBQGhdLppJmxeFfA==}
     peerDependencies:
-      '@tiptap/core': ^3.22.1
+      '@tiptap/core': ^3.22.3
 
   '@tiptap/extension-text@3.20.5':
     resolution: {integrity: sha512-DMa9g5cH2d/Gx1KXtV7txTxaa6FBqgG8glmfug+N93VMb8sEZR1Yu1az++yAep4SGGq9GWIGZCUS3H6W66et6Q==}
@@ -8538,11 +8538,11 @@ snapshots:
     dependencies:
       '@tiptap/core': 3.20.5(@tiptap/pm@3.20.5)
 
-  '@tiptap/extension-text-align@3.22.1(@tiptap/core@3.20.5(@tiptap/pm@3.20.5))':
+  '@tiptap/extension-text-align@3.22.3(@tiptap/core@3.20.5(@tiptap/pm@3.20.5))':
     dependencies:
       '@tiptap/core': 3.20.5(@tiptap/pm@3.20.5)
 
-  '@tiptap/extension-text-style@3.22.1(@tiptap/core@3.20.5(@tiptap/pm@3.20.5))':
+  '@tiptap/extension-text-style@3.22.3(@tiptap/core@3.20.5(@tiptap/pm@3.20.5))':
     dependencies:
       '@tiptap/core': 3.20.5(@tiptap/pm@3.20.5)
 
