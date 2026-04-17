@@ -44,6 +44,11 @@ export default class MemberQuery extends AbstractClubDependentQuery<Member, Memb
     return useUploadFile(this.getRootUrl() + "/-/photos-from-itac", formData)
   }
 
+  async updateProfileImage(member: Member, formData: FormData | null) {
+    const fd = formData ?? new FormData()
+    return useUploadFile(`${member["@id"]}/profile-image`, fd)
+  }
+
   async seasons(id: string, urlParams?: URLSearchParams) {
     let url = `${this.getRootUrl()}/${id}/seasons`;
 

@@ -178,7 +178,7 @@ async function deleteUser() {
       </UButton>
     </div>
 
-    <MemberDetails v-if="member" :member="member" />
+    <MemberDetails v-if="member" :member="member" :self="true" />
     <GenericCard v-else class="text-center" title="Compte liée à aucun club">
       <p>Veuillez vous assurer que l'adresse mail du compte correspond à celle enregistré auprès de votre club.</p>
       <p>Si ce n'est pas le cas, veuillez le signaler à votre club pour que celui-ci modifie le compte lié.</p>

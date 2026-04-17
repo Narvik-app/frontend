@@ -17,6 +17,7 @@ import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.
 import MemberSeasonQuery from "~/composables/api/query/clubDependent/MemberSeasonQuery";
 import MemberSeasonSelectModal from "~/components/MemberSeason/MemberSeasonSelectModal.vue";
 import MemberEditLinkedEmailModal from "~/components/Member/MemberEditLinkedEmailModal.vue";
+import MemberProfileImageModal from "~/components/Member/MemberProfileImageModal.vue";
 import type {TablePaginateInterface} from "~/types/table";
 import type {SelectApiItem} from "~/types/select";
 import {createBrowserCsvDownload} from "~/utils/browser";
@@ -54,6 +55,18 @@ const isSuperAdmin = selfStore.isSuperAdmin();
 const isAdmin = selfStore.isAdmin();
 const isSupervisor = selfStore.hasSupervisorRole();
 const canSendEmail = selfStore.can(Permission.EmailEdit)
+
+const canEditPicture = computed(() => isSuperAdmin || isAdmin || memberRef.value?.email === loggedUsername || props.self)
+
+function openProfileImageModal() {
+  if (!memberRef.value) return
+  overlay.create(MemberProfileImageModal).open({
+    member: memberRef.value,
+    onUpdated() {
+      loadItem()
+    }
+  })
+}
 
 const addMemberPresenceModal = ref(false)
 const selectedPresence: Ref<MemberPresence | undefined> = ref(undefined)
@@ -568,13 +581,20 @@ async function deleteMember() {
               />
             </div>
 
-            <div class="h-24 w-24 aspect-square self-center">
+            <div class="relative h-24 w-24 aspect-square self-center group">
               <UAvatar
                 class="w-full h-full"
                 size="3xl"
                 :src="memberProfileImage?.base64"
                 :alt="memberRef.fullName"
               />
+              <button
+                v-if="canEditPicture"
+                class="absolute inset-0 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition cursor-pointer flex items-center justify-center text-xs text-center px-2"
+                @click="openProfileImageModal"
+              >
+                Changer la photo
+              </button>
             </div>
 
             <div class="text-center text-2xl font-bold">
