@@ -18,6 +18,7 @@ const emit = defineEmits(['updated', 'close'])
 const isLoading = ref(false)
 const currentImage: Ref<ExposedFile | undefined> = ref(undefined)
 const selectedFormData: Ref<FormData | null> = ref(null)
+const previewUrl: Ref<string | undefined> = ref(undefined)
 
 const memberQuery = new MemberQuery()
 const fileQuery = new FileQuery()
@@ -30,7 +31,23 @@ if (props.member.profileImage?.privateUrl) {
 
 function onFileChange(event: Event) {
   selectedFormData.value = getFileFormDataFromUInputChangeEvent(event)
+
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+    previewUrl.value = undefined
+  }
+
+  const file = selectedFormData.value?.get('file')
+  if (file instanceof File) {
+    previewUrl.value = URL.createObjectURL(file)
+  }
 }
+
+onBeforeUnmount(() => {
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+  }
+})
 
 async function uploadPhoto() {
   if (!selectedFormData.value) return
@@ -73,7 +90,7 @@ async function removePhoto() {
         <UAvatar
           class="w-full h-full"
           size="3xl"
-          :src="currentImage?.base64"
+          :src="previewUrl ?? currentImage?.base64"
           :alt="props.member.fullName"
         />
       </div>

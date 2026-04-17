@@ -158,6 +158,8 @@ watch(memberRef, (newValue, _oldValue) => {
         fileQuery.getFromUrl(memberRef.value.profileImage.privateUrl).then(imageResponse => {
           memberProfileImage.value = imageResponse.retrieved
         })
+      } else {
+        memberProfileImage.value = undefined
       }
 
       selectedNewRole.value = memberRef.value.role
