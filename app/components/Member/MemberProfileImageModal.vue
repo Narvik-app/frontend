@@ -66,7 +66,7 @@ async function removePhoto() {
 </script>
 
 <template>
-  <ModalWithActions title="Photo de profil" @close="(state: boolean) => emit('close', state)">
+  <ModalWithActions title="Photo de profil" @close="(state: boolean) => emit('close', state)" :display-cancel-button="false">
 
     <div class="flex flex-col gap-4 items-center">
       <div class="h-24 w-24 aspect-square">
