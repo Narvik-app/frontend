@@ -242,8 +242,8 @@ async function deletePresence() {
             <div class="flex items-center justify-center text-xl">
               <MemberLicence :member="member" size="lg" :copyable="selfStore.hasSupervisorRole()" :icon="true" />
             </div>
-            <div v-if="member.lastControlShooting" class="text-center text-xl">
-              Dernier contrôle : {{ formatDateReadable(member.lastControlShooting.toString()) }}
+            <div v-if="member.lastControlActivity" class="text-center text-xl">
+              Dernier contrôle : {{ formatDateReadable(member.lastControlActivity.toString()) }}
             </div>
             <div class="flex gap-4 justify-center flex-wrap">
               <UButton

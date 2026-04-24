@@ -211,12 +211,14 @@ function getPresenceMember(item: ExternalPresence|MemberPresence) {
           </div>
 
           <div
-              v-if="new Date((new Date()).setFullYear((new Date().getFullYear() - 1))) > new Date(row.original.member.lastControlShooting)"
+              v-if="!row.original.member.controlActivityAlertDisabled
+                    && row.original.member.lastControlActivity
+                    && new Date((new Date()).setFullYear((new Date().getFullYear() - 1))) > new Date(row.original.member.lastControlActivity)"
               class="basis-full">
             <UButton
                 color="error"
             >
-              Dernier contrôle : {{ formatDateReadable(row.original.member.lastControlShooting) }}
+              Dernier contrôle : {{ formatDateReadable(row.original.member.lastControlActivity) }}
             </UButton>
           </div>
         </template>

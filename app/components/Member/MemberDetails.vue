@@ -347,6 +347,20 @@ function presenceUpdated(_presence?: MemberPresence) {
   getMemberPresences()
 }
 
+const hasControlActivity = computed(() => !!selfStore.selectedProfile?.club?.settings?.controlActivity)
+
+async function toggleControlActivityAlert() {
+  if (!memberRef.value || !isSupervisor) return;
+  const newValue = !memberRef.value.controlActivityAlertDisabled;
+  const { updated, error } = await memberQuery.patch(memberRef.value, { controlActivityAlertDisabled: newValue });
+  if (error) {
+    toast.add({ color: 'error', title: 'Une erreur est survenue', description: error.message });
+    return;
+  }
+  if (updated) memberRef.value = updated;
+  toast.add({ color: 'success', title: newValue ? 'Alerte contrôle désactivée' : 'Alerte contrôle activée' });
+}
+
 async function downloadCsv() {
   if (!memberRef.value || !memberRef.value.uuid) return;
   isDownloadingCsv.value = true
@@ -622,19 +636,9 @@ async function deleteMember() {
                 </UButton>
               </div>
 
-              <div v-if="memberRef.medicalCertificateExpiration && memberRef.medicalCertificateStatus !== 'valid'">
-                <UButton
-                  :color="memberRef.medicalCertificateStatus === 'expired' ? 'error' : 'warning'">
-                  Certificat médical : {{ formatDateReadable(memberRef.medicalCertificateExpiration.toString()) }}
-                </UButton>
-              </div>
             </div>
 
             <div class="grid grid-cols-1 xl:grid-cols-2 text-sm gap-2">
-              <div v-if="memberRef.lastControlShooting" class="xl:col-span-2 flex items-center">
-                Dernier contrôle : {{ formatDateReadable(memberRef.lastControlShooting.toString()) }}
-              </div>
-
               <MemberDetailsPersonnalInfo icon="i-heroicons-at-symbol" :label="memberRef.email" :to="'mailto:' + memberRef.email" />
               <MemberDetailsPersonnalInfo icon="i-heroicons-phone" :label="memberRef.phone?.match(/.{1,2}/g)?.join(' ')" :to="memberRef.phone ? 'tel:' + memberRef.phone : undefined" />
               <MemberDetailsPersonnalInfo icon="i-heroicons-phone" :label="memberRef.mobilePhone?.match(/.{1,2}/g)?.join(' ')" :to="memberRef.mobilePhone ? 'tel:' + memberRef.mobilePhone : undefined" />
@@ -654,6 +658,44 @@ async function deleteMember() {
                 <p>{{ memberRef.zipCode }} {{ memberRef.city }}</p>
                 <p>{{ memberRef.country }}</p>
               </div>
+
+              <template v-if="hasControlActivity || memberRef.medicalCertificateExpiration">
+                <USeparator label="Autre" class="xl:col-span-2" />
+
+                <div v-if="hasControlActivity" class="flex items-center gap-4">
+                  <div class="flex flex-col gap-1">
+                    <div>
+                      Dernier contrôle :
+                      <span v-if="memberRef.lastControlActivity">{{ formatDateReadable(memberRef.lastControlActivity.toString()) }}</span>
+                      <i v-else class="text-muted">Aucun enregistrement</i>
+                    </div>
+                      <USwitch
+                        checked-icon="i-heroicons-bell"
+                        :description="memberRef.controlActivityAlertDisabled ? 'Alerte désactivée' : 'Alerte active'"
+                        :model-value="!memberRef.controlActivityAlertDisabled"
+                        :disabled="!isSupervisor"
+                        @update:model-value="toggleControlActivityAlert"
+                      />
+                  </div>
+
+                </div>
+
+                <div v-if="memberRef.medicalCertificateExpiration" class="flex items-center justify-between">
+                  <span>Certificat médical :
+                    <UBadge v-if="memberRef.medicalCertificateStatus !== 'valid'"
+                      :color="memberRef.medicalCertificateStatus === 'expired' ? 'error' : 'warning'">
+                      {{ formatDateReadable(memberRef.medicalCertificateExpiration.toString()) }}
+                    </UBadge>
+                    <UBadge v-else
+                      variant="soft"
+                      color="neutral"
+                    >
+                      {{ formatDateReadable(memberRef.medicalCertificateExpiration.toString()) }}
+                    </UBadge>
+                  </span>
+                </div>
+
+              </template>
 
             </div>
 

@@ -8,7 +8,8 @@ import type {PermissionTemplate} from "~/types/api/item/clubDependent/permission
 export interface Member extends UuidItem, ClubLinkedItem {
   profileImage?: File;
   profileImageBase64?: string;
-  lastControlShooting?: Date;
+  lastControlActivity?: Date;
+  controlActivityAlertDisabled?: boolean;
   currentSeason?: MemberSeason;
   plainPassword?: string;
 

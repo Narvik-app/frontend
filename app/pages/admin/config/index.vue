@@ -27,14 +27,14 @@ const clubSettingQuery = new ClubSettingQuery();
 const activityQuery = new ActivityQuery();
 
 const configState = reactive({
-  selectedControlShootingActivity: selectedProfile.value?.club.settings.controlShootingActivity?.uuid,
+  selectedControlActivity: selectedProfile.value?.club.settings.controlActivity?.uuid,
   excludedActivitiesFromOpeningDays: selectedProfile.value?.club.settings.excludedActivitiesFromOpeningDays?.map((a: Activity) => a.uuid),
   selectedMonth: selectedProfile.value?.club.settings.seasonEnd.split('-')[0].toString(),
   selectedDay: selectedProfile.value?.club.settings.seasonEnd.split('-')[1].toString(),
   activity: getSelectMenuClubActivity().find((item) => item.value === selectedProfile.value?.club.settings.activity),
   emailReplyTo: selectedProfile.value?.club.settings.emailReplyTo
 })
-const selectedControlShootingActivity: Ref<Activity | undefined> = ref(undefined);
+const selectedControlActivity: Ref<Activity | undefined> = ref(undefined);
 
 const activities: Ref<Activity[] | undefined> = ref(undefined);
 activityQuery.getAll().then(value => {
@@ -129,17 +129,17 @@ const daysSelect = computed( () => {
   return items;
 })
 
-async function controlShootingUpdated() {
+async function controlActivityUpdated() {
   if (!selectedProfile.value?.club.settings) return;
 
-  if (configState.selectedControlShootingActivity) {
-    selectedControlShootingActivity.value = await getActivity(configState.selectedControlShootingActivity)
+  if (configState.selectedControlActivity) {
+    selectedControlActivity.value = await getActivity(configState.selectedControlActivity)
   } else {
-    selectedControlShootingActivity.value = undefined
+    selectedControlActivity.value = undefined
   }
 
   const payload: WriteClubSetting = {
-    controlShootingActivity: selectedControlShootingActivity.value? selectedControlShootingActivity.value["@id"] : null
+    controlActivity: selectedControlActivity.value? selectedControlActivity.value["@id"] : null
   }
 
   const { error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
@@ -374,17 +374,17 @@ async function emailReplyToUpdated() {
           </div>
 
           <USelect
-            v-model="configState.selectedControlShootingActivity"
+            v-model="configState.selectedControlActivity"
             :items="activitiesSelect"
             placeholder="Aucun contrôle défini"
-            @change="controlShootingUpdated" />
+            @change="controlActivityUpdated" />
 
           <UButton
-v-if="configState.selectedControlShootingActivity"
+v-if="configState.selectedControlActivity"
                    class="w-fit"
                    @click="
-                  configState.selectedControlShootingActivity = undefined;
-                  controlShootingUpdated()
+                  configState.selectedControlActivity = undefined;
+                  controlActivityUpdated()
                  "
           >
             Désactiver l'activité de contrôle
