@@ -34,7 +34,7 @@ interface MemberPresenceStat {
   licence: string;
   member?: Member;
   medicalCertificateExpiration?: string | null;
-  lastControlShooting?: string | null;
+  lastControlActivity?: string | null;
 }
 
 // Stores
@@ -61,9 +61,8 @@ const sort = ref([{ id: 'presenceCount', desc: true }] as ColumnSort[]);
 const popoverOpen = ref(false);
 const selectedMembers = ref<MemberPresenceStat[]>([]);
 
-// Check if control shooting activity is configured for this club
-const hasControlShootingActivity = computed(() => {
-  return !!selfStore.selectedProfile?.club?.settings?.controlShootingActivity
+const hasControlActivity = computed(() => {
+  return !!selfStore.selectedProfile?.club?.settings?.controlActivity
 })
 
 const columns = computed<ColumnDef<MemberPresenceStat>[]>(() => {
@@ -129,9 +128,9 @@ const columns = computed<ColumnDef<MemberPresenceStat>[]>(() => {
     },
   ];
 
-  if (hasControlShootingActivity.value) {
+  if (hasControlActivity.value) {
     cols.push({
-      accessorKey: 'lastControlShooting',
+      accessorKey: 'lastControlActivity',
       header: 'Dernier contrôle',
     });
   }
@@ -161,7 +160,7 @@ function getMedicalCertificateColor(expiration: string | null | undefined): 'err
   return 'neutral';
 }
 
-function getControlShootingColor(date: string | null | undefined): 'error' | 'warning' | 'neutral' {
+function getControlActivityColor(date: string | null | undefined): 'error' | 'warning' | 'neutral' {
   if (!date) return 'neutral';
   const d = new Date(date);
   const oneYearAgo = new Date();
@@ -396,7 +395,7 @@ onMounted(() => {
              <MemberLicence :member="row.original.member" />
            </template>
 
-           <template v-if="hasControlShootingActivity" #lastControlShooting-header="{ column }">
+           <template v-if="hasControlActivity" #lastControlActivity-header="{ column }">
              <GenericTableSortButton :column="column" :can-be-unsorted="true" />
            </template>
 
@@ -420,15 +419,20 @@ onMounted(() => {
              <i v-else>Non défini</i>
            </template>
 
-           <template v-if="hasControlShootingActivity" #lastControlShooting-cell="{ row }">
-             <UBadge
-               v-if="row.original.lastControlShooting"
-               :color="getControlShootingColor(row.original.lastControlShooting)"
-               variant="soft"
-             >
-               {{ formatDateReadable(row.original.lastControlShooting) }}
-             </UBadge>
-             <i v-else>Aucun enregistrement</i>
+           <template v-if="hasControlActivity" #lastControlActivity-cell="{ row }">
+             <template v-if="!row.original.member?.controlActivityAlertDisabled">
+               <UBadge
+                 v-if="row.original.lastControlActivity"
+                 :color="getControlActivityColor(row.original.lastControlActivity)"
+                 variant="soft"
+               >
+                 {{ formatDateReadable(row.original.lastControlActivity) }}
+               </UBadge>
+               <i v-else>Aucun enregistrement</i>
+             </template>
+             <span v-else class="text-sm text-muted">
+               {{ row.original.lastControlActivity ? formatDateReadable(row.original.lastControlActivity) : '—' }}
+             </span>
            </template>
 
            <template #actions-cell="{ row }">
