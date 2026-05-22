@@ -11,7 +11,7 @@ updates:
       day: "friday"
       time: "03:00"
     cooldown:
-      minimum-age: "1 day"
+      default-days: 1
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
