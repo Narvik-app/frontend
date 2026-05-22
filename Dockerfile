@@ -8,7 +8,7 @@ ENV NODE_ENV=production
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 ENV CI=true
-RUN corepack enable
+RUN npm install -g corepack && corepack enable
 
 WORKDIR /app
 
