@@ -1,5 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import pkg from './package.json'
+import { defineLink } from '@unhead/vue'
 
 export default defineNuxtConfig({
   devServer: {
@@ -62,11 +63,11 @@ export default defineNuxtConfig({
     head: {
       titleTemplate: 'Narvik',
       link: [
-        { rel: 'shortcut icon', type: 'image/x-icon', href: '/favicon.ico' },
-        { rel: 'icon', type: 'image/png', href: '/favicon-96x96.png', sizes: '96x96' },
-        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
-        { rel: 'apple-touch-icon', type: 'image/svg+xml', href: '/apple-touch-icon.png', sizes: '180x180' },
-        { rel: 'manifest', href: '/manifest.json' },
+        defineLink({ rel: 'shortcut icon', type: 'image/x-icon', href: '/favicon.ico' }),
+        defineLink({ rel: 'icon', type: 'image/png', href: '/favicon-96x96.png', sizes: '96x96' }),
+        defineLink({ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }),
+        defineLink({ rel: 'apple-touch-icon', type: 'image/svg+xml', href: '/apple-touch-icon.png', sizes: '180x180' }),
+        defineLink({ rel: 'manifest', href: '/manifest.json' }),
       ]
     }
   },
