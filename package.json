@@ -39,6 +39,7 @@
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
     "qs": "^6.15.2",
+    "tailwindcss": "^4.3.0",
     "uuid-encoder": "^1.2.0",
     "v-calendar": "^3.1.2",
     "vue-chartjs": "^5.3.3",
