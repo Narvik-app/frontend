@@ -182,6 +182,8 @@ definePageMeta({
   saleStore.getPaymentModes()
   saleStore.getSellers()
 
+  const isStockRemovalMode = computed(() => selectedPaymentMode.value?.kind === 'stock_removal')
+
   const mobileSideTitle: Ref<string|undefined> = ref(undefined)
   watchEffect(() => {
     mobileSideTitle.value = `Panier (${cartStore.cartTotalItems} `
@@ -254,9 +256,9 @@ definePageMeta({
                 <div v-if="item.description" class="text-xs print:hidden">{{ item.description }}</div>
               </div>
               <div
-                v-if="item.quantityAlert && (item.quantity || item.quantity === 0) && item.quantity <= item.quantityAlert"
-                class="print:hidden text-xs font-bold text-error-600">
-                Stock restant : {{ item.quantity }}
+                v-if="(item.quantity || item.quantity === 0)"
+                :class="item.quantityAlert && item.quantity <= item.quantityAlert ? 'print:hidden text-xs font-bold text-error-600' : 'print:hidden text-xs opacity-50 hover:opacity-100'">
+                Stock : {{ item.quantity }}
               </div>
               <div data-testid="item-price" class="text-xs bg-neutral-200 print:!bg-neutral-200 dark:bg-neutral-600 p-1 rounded-md">{{ formatMonetary(item.sellingPrice) }}</div>
               <UButton class="print:hidden" data-testid="add-to-cart" icon="i-heroicons-shopping-cart" size="xs" @click="cartStore.addToCart(item)" />
@@ -311,7 +313,7 @@ definePageMeta({
     <template #side>
       <div class="flex flex-col gap-4">
         <UCard class="print:hidden">
-          <div data-testid="cart-total-price" class="text-4xl text-center">{{ formatMonetary(cartTotalPrice) }}</div>
+          <div data-testid="cart-total-price" class="text-4xl text-center">{{ formatMonetary(isStockRemovalMode ? '0' : cartTotalPrice) }}</div>
           <div class="mt-4">
             <div class="flex text-xs align-center mt-1">
               <div class="flex-1"/>
@@ -382,11 +384,11 @@ definePageMeta({
             :loading="isCreatingSale"
             class="mt-4"
             block
-            color="success"
+            :color="isStockRemovalMode ? 'warning' : 'success'"
             :disabled="cart.length < 1 || !selectedPaymentMode || !sellerSelected"
             @click="createSale()"
           >
-            Finaliser la vente
+            {{ isStockRemovalMode ? 'Enregistrer la sortie de stock' : 'Finaliser la vente' }}
           </UButton>
         </UCard>
       </div>

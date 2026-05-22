@@ -22,10 +22,13 @@ const isAdmin = selfStore.isAdmin()
 
 const popoverOpen = ref(false)
 
+const isStockRemoval = (sale: { paymentMode?: SalePaymentMode | string | null }) =>
+  typeof sale.paymentMode === 'object' && sale.paymentMode?.kind === 'stock_removal'
+
 const totalAmountSales = computed(() => {
   let amount = 0
   sales.value.forEach(sale => {
-    amount += Number(sale.price)
+    if (!isStockRemoval(sale)) amount += Number(sale.price)
   })
   return amount
 })
@@ -33,7 +36,7 @@ const totalAmountSales = computed(() => {
 const totalPerPaymentMode = computed(() => {
   const amountPerPayment: Map<string, {count: number, amount: number, icon: string}> = new Map()
   paymentModes.value.forEach(paymentMode => {
-    if (!paymentMode.name) return
+    if (!paymentMode.name || paymentMode.kind === 'stock_removal') return
     amountPerPayment.set(paymentMode.name, {
       count: 0,
       amount: 0,
@@ -43,7 +46,7 @@ const totalPerPaymentMode = computed(() => {
 
   sales.value.forEach(sale => {
     const paymentModeObject: SalePaymentMode = sale.paymentMode as SalePaymentMode
-    if (!sale.paymentMode || !paymentModeObject.name) { return }
+    if (!sale.paymentMode || !paymentModeObject.name || isStockRemoval(sale)) { return }
 
     const paymentMode = amountPerPayment.get(paymentModeObject.name)
     if (!paymentMode) {
@@ -194,7 +197,17 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
 <!--            <GenericTableSortButton :column="column" />-->
 <!--          </template>-->
           <template #paymentMode-cell="{ row }">
-            {{ row.original.paymentMode.name }}
+            <div class="flex items-center gap-1">
+              {{ row.original.paymentMode.name }}
+              <UBadge
+                v-if="isStockRemoval(row.original)"
+                color="warning"
+                size="sm"
+              >
+                <UIcon name="i-heroicons-archive-box-arrow-down" />
+                Sortie de stock
+              </UBadge>
+            </div>
           </template>
 
           <template #price-cell="{ row }">
