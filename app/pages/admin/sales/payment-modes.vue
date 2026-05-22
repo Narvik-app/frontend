@@ -221,7 +221,7 @@ definePageMeta({
             :sort="sort"
             :columns="columns"
             :data="paymentModes"
-            @select="rowClicked">
+            @select="(evt, row) => rowClicked(row)">
             <template #empty>
               <div class="flex flex-col items-center justify-center py-6 gap-3">
                 <span class="italic text-sm">Aucun moyen de paiement.</span>
