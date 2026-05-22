@@ -45,10 +45,19 @@ definePageMeta({
     column: 'weight',
     direction: 'asc'
   });
+  const kindOptions = [
+    { label: 'Paiement', value: 'payment' },
+    { label: 'Sortie de stock', value: 'stock_removal' }
+  ]
+
   const columns = [
     {
       accessorKey: 'name',
       header: 'Nom'
+    },
+    {
+      accessorKey: 'kind',
+      header: 'Type'
     },
     {
       accessorKey: 'icon',
@@ -116,6 +125,7 @@ definePageMeta({
       available: true,
       name: '',
       icon: '',
+      kind: 'payment',
     }
   }
 
@@ -124,7 +134,8 @@ definePageMeta({
     const payload: SalePaymentMode = {
       available: paymentMode.available,
       name: paymentMode.name,
-      icon: paymentMode.icon
+      icon: paymentMode.icon,
+      kind: paymentMode.kind
     }
 
     if (paymentMode.weight) {
@@ -221,6 +232,17 @@ definePageMeta({
               {{ row.original.name }}
             </template>
 
+            <template #kind-cell="{ row }">
+              <UBadge
+                v-if="row.original.kind === 'stock_removal'"
+                color="warning"
+                variant="subtle"
+              >
+                <UIcon name="i-heroicons-archive-box-arrow-down" class="mr-1" />
+                Sortie de stock
+              </UBadge>
+              <span v-else class="text-sm text-gray-500">Paiement</span>
+            </template>
 
             <template #icon-cell="{ row }">
               <UIcon :name="'i-heroicons-' + row.original.icon" />
@@ -252,6 +274,20 @@ definePageMeta({
             <div class="flex gap-2 flex-col">
               <UFormField label="Disponible" name="available">
                 <USwitch v-model="selectedPaymentMode.available" />
+              </UFormField>
+
+              <UFormField
+                label="Type"
+                name="kind"
+                :description="selectedPaymentMode.uuid ? 'Le type ne peut pas être modifié après création.' : undefined"
+              >
+                <USelect
+                  v-model="selectedPaymentMode.kind"
+                  :items="kindOptions"
+                  value-key="value"
+                  label-key="label"
+                  :disabled="!!selectedPaymentMode.uuid"
+                />
               </UFormField>
 
               <UFormField label="Nom" name="name">

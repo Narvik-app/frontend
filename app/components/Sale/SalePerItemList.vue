@@ -94,7 +94,9 @@ function generateList() {
       if (!mappedPaymentMode) return
 
       mappedPaymentMode.count += salePurchasedItem.quantity ?? 0
-      mappedPaymentMode.amount += Number(salePurchasedItem.itemPrice) * Number(salePurchasedItem.quantity ?? 0)
+      if (typeof sale.paymentMode !== 'string' && sale.paymentMode?.kind !== 'stock_removal') {
+        mappedPaymentMode.amount += Number(salePurchasedItem.itemPrice) * Number(salePurchasedItem.quantity ?? 0)
+      }
       salePurchasedItemMap.counts.set(salePaymentMode, mappedPaymentMode)
 
       categoryMapping.items.set(salePurchasedItem.itemName, salePurchasedItemMap)

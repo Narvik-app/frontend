@@ -6,4 +6,5 @@ export interface SalePaymentMode extends UuidItem, ClubLinkedItem {
   icon?: string;
   available?: boolean;
   weight?: number;
+  kind?: 'payment' | 'stock_removal';
 }
