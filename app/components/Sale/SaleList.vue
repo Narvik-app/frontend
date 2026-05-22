@@ -202,7 +202,6 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
               <UBadge
                 v-if="isStockRemoval(row.original)"
                 color="warning"
-                variant="subtle"
                 size="sm"
               >
                 <UIcon name="i-heroicons-archive-box-arrow-down" />

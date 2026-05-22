@@ -236,7 +236,6 @@ definePageMeta({
               <UBadge
                 v-if="row.original.kind === 'stock_removal'"
                 color="warning"
-                variant="subtle"
               >
                 <UIcon name="i-heroicons-archive-box-arrow-down" class="mr-1" />
                 Sortie de stock
