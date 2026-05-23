@@ -98,9 +98,10 @@ async function reactivate(item: InventoryItem) {
 
         <!-- Stock controls + action buttons -->
         <div class="flex items-center gap-2">
-          <template v-if="showStockControl && canEdit">
+          <template v-if="showStockControl">
             <InventoryStockControl
               :item="item"
+              :readonly="!canEdit"
               @updated="emit('itemUpdated', $event)"
             />
             <span
@@ -112,18 +113,8 @@ async function reactivate(item: InventoryItem) {
             </span>
           </template>
 
-          <template v-else>
-            <span
-              class="text-sm"
-              :class="item.quantity != null && item.quantityAlert != null && item.quantity <= item.quantityAlert ? 'font-bold text-error-600' : ''"
-            >
-              {{ item.quantity }}
-            </span>
-          </template>
-
           <div class="flex-1" />
 
-          <!-- Reactivate shortcut (Désactivés tab) -->
           <UButton
             v-if="showReactivate && canEdit"
             size="xs"
@@ -134,7 +125,6 @@ async function reactivate(item: InventoryItem) {
             Réactiver
           </UButton>
 
-          <!-- Détails button -->
           <UButton
             size="xs"
             variant="soft"
