@@ -1,351 +1,349 @@
 <script setup lang="ts">
-import InventoryItemQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryItemQuery";
-import type {InventoryItem} from "~/types/api/item/clubDependent/plugin/sale/inventoryItem";
-import InventoryCategoryQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryCategoryQuery";
-import type {InventoryCategory} from "~/types/api/item/clubDependent/plugin/sale/inventoryCategory";
-import {createBrowserCsvDownload, verifyCameraIsPresent} from "~/utils/browser";
-import {convertUuidToUrlUuid, decodeUrlUuid} from "~/utils/resource";
-import type {ColumnSort} from "@tanstack/table-core";
-import {getTableSortVal} from "~/utils/table";
-import type {TablePaginateInterface} from "~/types/table";
-import type {SelectApiItem} from "~/types/select";
-import {useSelfUserStore} from "~/stores/useSelfUser";
-import {Permission} from "~/types/api/permissions";
+import InventoryItemQuery from '~/composables/api/query/clubDependent/plugin/sale/InventoryItemQuery'
+import type { InventoryItem } from '~/types/api/item/clubDependent/plugin/sale/inventoryItem'
+import InventoryCategoryQuery from '~/composables/api/query/clubDependent/plugin/sale/InventoryCategoryQuery'
+import type { InventoryCategory } from '~/types/api/item/clubDependent/plugin/sale/inventoryCategory'
+import { createBrowserCsvDownload, verifyCameraIsPresent } from '~/utils/browser'
+import { convertUuidToUrlUuid, decodeUrlUuid } from '~/utils/resource'
+import { useSelfUserStore } from '~/stores/useSelfUser'
+import { Permission } from '~/types/api/permissions'
 
-definePageMeta({
-    layout: "pos"
-  });
+definePageMeta({ layout: 'pos' })
+useHead({ title: 'Inventaire' })
 
-  useHead({
-    title: 'Inventaire'
-  })
+const queryParams = useRoute().query
+const selfStore = useSelfUserStore()
+const canEdit = computed(() => selfStore.can(Permission.SaleInventoryEdit))
 
-  const queryParams = useRoute().query
-  const selfStore = useSelfUserStore();
-  const canEdit = computed(() => selfStore.can(Permission.SaleInventoryEdit));
+// Queries
+const apiQuery = new InventoryItemQuery()
+const itemCategoryQuery = new InventoryCategoryQuery()
 
-  const isSideVisible = ref(false)
+// All items loaded in memory (full paginated load like /sales/new)
+const allItems = ref<InventoryItem[]>([])
+const categories = ref<InventoryCategory[]>([])
+const isLoading = ref(true)
+const isDownloadingCsv = ref(false)
 
-  const apiQuery = new InventoryItemQuery()
-  const itemCategoryQuery = new InventoryCategoryQuery()
+// Search
+const searchQuery = ref('')
+const cameraPreview = ref(false)
+const cameraIsPresent = verifyCameraIsPresent()
 
-  const searchQuery: Ref<string> = ref('')
-  const categories: Ref<InventoryCategory[]> = ref([])
-  const categoriesSelect = computed( () => {
-    const items: SelectApiItem<InventoryCategory>[] = []
-    categories.value.forEach(value => {
-      items.push({
-        label: value.name,
-        value: value.uuid,
-        item: value
-      })
+// Slideover / modal state
+const isSideVisible = ref(false)
+const selectedItem = ref<InventoryItem | undefined>(undefined)
+const inventoryItemModalOpen = ref(false)
+
+// Category highlight from URL param (?category=<urlUuid>)
+const highlightedCategoryName = ref<string | null>(null)
+
+// Tab
+const activeTab = ref('stock')
+const tabs = computed(() => [
+  { label: `Stock géré (${stockManagedItems.value.length})`, value: 'stock' },
+  { label: `Sans stock géré (${unmanagedItems.value.length})`, value: 'unmanaged' },
+  { label: `Désactivés (${disabledItems.value.length})`, value: 'disabled' },
+])
+
+// Fetch all pages
+async function loadAllItems() {
+  isLoading.value = true
+  const loaded: InventoryItem[] = []
+
+  const urlParams = new URLSearchParams({ itemsPerPage: '100' })
+  let page = 1
+
+  while (true) {
+    urlParams.set('page', page.toString())
+    const { items, view } = await apiQuery.getAll(urlParams)
+    loaded.push(...items)
+    if (!view?.['next']) break
+    page++
+  }
+
+  allItems.value = loaded
+  isLoading.value = false
+
+  // Auto-open if exactly one result after a search
+  if (loaded.length === 1) {
+    rowClicked(loaded[0])
+  }
+}
+
+// Categories
+itemCategoryQuery.getAll().then((value) => {
+  categories.value = value.items
+
+  if (queryParams.category !== undefined) {
+    const matched = value.items.find(
+      (c) => c.uuid === decodeUrlUuid(queryParams.category?.toString())
+    )
+    if (matched) {
+      highlightedCategoryName.value = matched.name ?? null
+      useRouter().replace(useRouter().currentRoute.value.path)
+    }
+  }
+})
+
+loadAllItems().then(() => {
+  // After items are loaded, switch to the tab that contains the highlighted category
+  if (highlightedCategoryName.value) {
+    if (stockGroups.value.has(highlightedCategoryName.value)) activeTab.value = 'stock'
+    else if (unmanagedGroups.value.has(highlightedCategoryName.value)) activeTab.value = 'unmanaged'
+    else if (disabledGroups.value.has(highlightedCategoryName.value)) activeTab.value = 'disabled'
+  }
+})
+
+// Filtering
+const searchLower = computed(() => searchQuery.value.toLowerCase().trim())
+
+function matchesSearch(item: InventoryItem): boolean {
+  if (!searchLower.value) return true
+  return (
+    item.name?.toLowerCase().includes(searchLower.value) ||
+    item.barcode?.toLowerCase().includes(searchLower.value) ||
+    item.description?.toLowerCase().includes(searchLower.value) ||
+    false
+  )
+}
+
+const stockManagedItems = computed(() =>
+  allItems.value.filter((i) => i.quantity != null && i.canBeSold !== false && matchesSearch(i))
+)
+const unmanagedItems = computed(() =>
+  allItems.value.filter((i) => i.quantity == null && i.canBeSold !== false && matchesSearch(i))
+)
+const disabledItems = computed(() =>
+  allItems.value.filter((i) => i.canBeSold === false && matchesSearch(i))
+)
+
+// Group items by category into a sorted Map
+function groupByCategory(items: InventoryItem[]): Map<string, InventoryItem[]> {
+  const map = new Map<string, InventoryItem[]>()
+  for (const item of items) {
+    const key = item.category?.name ?? 'Sans catégorie'
+    if (!map.has(key)) map.set(key, [])
+    map.get(key)!.push(item)
+  }
+  // Sort items within each section: low stock first, then by quantity asc
+  for (const [, group] of map) {
+    group.sort((a, b) => {
+      const aAlert = a.quantity != null && a.quantityAlert != null && a.quantity <= a.quantityAlert
+      const bAlert = b.quantity != null && b.quantityAlert != null && b.quantity <= b.quantityAlert
+      if (aAlert && !bAlert) return -1
+      if (!aAlert && bAlert) return 1
+      return (a.quantity ?? Infinity) - (b.quantity ?? Infinity)
     })
-    return items;
-  })
-  const filteredCategories: Ref<SelectApiItem<InventoryCategory>[]> = ref([])
-  itemCategoryQuery.getAll().then(value => {
-    categories.value = value.items
-
-    // Filter is apply on a category
-    if (queryParams.category !== undefined) {
-      const matchedCategory = value.items.find( (category) => category.uuid == decodeUrlUuid(queryParams.category?.toString()))
-      if (matchedCategory) {
-        filteredCategories.value.push({
-          label: matchedCategory.name,
-          value: matchedCategory.uuid,
-          item: matchedCategory
-        } as SelectApiItem<InventoryCategory>)
-        useRouter().replace(useRouter().currentRoute.value.path) // We remove the param from the url
-        getItemsPaginated()
-      }
-    }
-  });
-
-  const apiItems: Ref<InventoryItem[]> = ref([])
-  const isLoading = ref(true);
-  const isDownloadingCsv = ref(false)
-  const totalApiItems = ref(0)
-  const selectedItem: Ref<InventoryItem | undefined> = ref(undefined)
-
-  watch(filteredCategories, () => {
-    getItemsPaginated()
-  })
-
-  let inputTimer: NodeJS.Timeout;
-  async function searchQueryUpdated() {
-    clearTimeout(inputTimer);
-    inputTimer = setTimeout(async () => {
-      page.value = 1;
-      await getItemsPaginated()
-    }, 500);
   }
+  return map
+}
 
-  // Table settings
-  const page = ref(1);
-  const itemsPerPage = ref(30);
-  const sort = ref([{
-    id: 'quantity',
-    desc: false,
+const stockGroups = computed(() => groupByCategory(stockManagedItems.value))
+const unmanagedGroups = computed(() => groupByCategory(unmanagedItems.value))
+const disabledGroups = computed(() => groupByCategory(disabledItems.value))
 
-  }] as ColumnSort[]);
-  const columns = [
-    {
-      accessorKey: 'quantity',
-      header: 'Quantité en stock',
-    },
-    {
-      accessorKey: 'name',
-      header: 'Nom',
-    },
-    {
-      accessorKey: 'description',
-      header: 'Description',
-      meta: {
-        class: {
-          th: 'w-full',
-        }
-      }
-    },
-    {
-      accessorKey: 'category',
-      header: 'Catégorie'
-    },
-    {
-      accessorKey: 'actions',
-      header: ''
-    }
-  ]
+function hasLowStock(items: InventoryItem[]): boolean {
+  return items.some(
+    (i) => i.quantity != null && i.quantityAlert != null && i.quantity <= i.quantityAlert
+  )
+}
 
-  function rowClicked(item: InventoryItem) {
-    selectedItem.value = {...item} // We make a shallow clone
-    isSideVisible.value = true
+// Search debounce
+let inputTimer: ReturnType<typeof setTimeout>
+function searchQueryUpdated() {
+  clearTimeout(inputTimer)
+  inputTimer = setTimeout(() => {}, 0) // just triggers computed reactivity — already reactive
+}
+
+// Slideover
+function rowClicked(item: InventoryItem) {
+  selectedItem.value = { ...item }
+  isSideVisible.value = true
+}
+
+function onItemUpdated(updated: InventoryItem) {
+  mergeItem(updated)
+  inventoryItemModalOpen.value = false
+  isSideVisible.value = false
+}
+
+function onStockUpdated(updated: InventoryItem) {
+  mergeItem(updated)
+}
+
+function mergeItem(updated: InventoryItem) {
+  const idx = allItems.value.findIndex((i) => i.uuid === updated.uuid)
+  if (idx !== -1) {
+    allItems.value.splice(idx, 1, updated)
+  } else {
+    allItems.value.push(updated)
   }
-
-  // We get the data from the api on first page load
-  getItemsPaginated()
-  async function getItemsPaginated() {
-    isLoading.value = true
-
-    const urlParams = new URLSearchParams({
-      page: page.value.toString(),
-      itemsPerPage: itemsPerPage.value.toString(),
-    });
-
-    if (filteredCategories.value.length > 0) {
-      filteredCategories.value.forEach(filteredCategory => {
-        if (!filteredCategory.item.uuid) return;
-        urlParams.append('category.uuid[]', filteredCategory.item.uuid)
-      })
-    }
-
-    // When filter by name the category is applied before
-    if (sort.value.length > 0) {
-      sort.value.forEach((value) => {
-        if (value.id === 'name') {
-          urlParams.append(`order[category.weight]`, 'asc')
-        }
-
-        urlParams.append(`order[${value.id}]`, getTableSortVal(value))
-
-        // For remaining items we sort first by this then by category
-        if (value.id === 'quantity') {
-          urlParams.append(`order[category.weight]`, 'asc')
-        }
-      })
-    }
-
-
-    if (searchQuery.value.trim().length > 0) {
-      urlParams.append('multiple[name, barcode]', searchQuery.value.trim())
-    }
-
-    const { totalItems, items } = await apiQuery.getAll(urlParams)
-    apiItems.value = items
-    if (totalItems) {
-      totalApiItems.value = totalItems
-    }
-
-    isLoading.value = false
-
-    if (totalApiItems.value === 1) {
-      rowClicked(items.at(0) as InventoryItem)
-    }
-
+  // Keep slideover in sync if it's showing this item
+  if (selectedItem.value?.uuid === updated.uuid) {
+    selectedItem.value = { ...updated }
   }
+}
 
-  // InventoryItemModal
-  const inventoryItemModalOpen = ref(false)
+// Barcode scan
+function onDecoded(value: string) {
+  searchQuery.value = value
+}
 
-  function onItemUpdated(value: InventoryItem) {
-    selectedItem.value = value
-    inventoryItemModalOpen.value = false
-    isSideVisible.value = false
-    getItemsPaginated()
+// CSV export
+async function downloadCsv() {
+  isDownloadingCsv.value = true
+  const urlParams = new URLSearchParams({ pagination: 'false' })
+  if (searchQuery.value) {
+    urlParams.append('multiple[name, barcode]', searchQuery.value)
   }
-
-  // Camera detection setup
-
-  const cameraPreview = ref(false)
-  const cameraIsPresent = verifyCameraIsPresent()
-
-  function onDecoded(value: string) {
-    searchQuery.value = value
-    page.value = 1
-    getItemsPaginated()
-  }
-
-  async function downloadCsv() {
-    isDownloadingCsv.value = true
-
-    const urlParams = new URLSearchParams({
-      pagination: 'false',
-    });
-
-    if (searchQuery.value) {
-      urlParams.append(`multiple[name, barcode]`, searchQuery.value);
-    }
-
-    // We make the search
-    const { data } = await apiQuery.getAllCsv(urlParams)
-    isDownloadingCsv.value = false
-    createBrowserCsvDownload('inventory-items.csv', data)
-  }
+  const { data } = await apiQuery.getAllCsv(urlParams)
+  isDownloadingCsv.value = false
+  createBrowserCsvDownload('inventory-items.csv', data)
+}
 </script>
 
 <template>
   <GenericLayoutContentWithSlideover v-model="isSideVisible" tabindex="-1">
     <template #main>
       <UCard>
-        <div class="flex mb-2">
-          <div class="flex-1"/>
-          <UButton icon="i-heroicons-arrow-down-tray" color="success" :loading="isDownloadingCsv" @click="downloadCsv()">
+        <!-- Top bar -->
+        <div class="flex items-center gap-2 mb-4 flex-wrap">
+          <GenericBarcodeReader v-model="cameraPreview" @decoded="onDecoded" />
+
+          <UInput
+            v-model="searchQuery"
+            placeholder="Rechercher…"
+            class="w-64"
+            @update:model-value="searchQueryUpdated()"
+          >
+            <template v-if="cameraIsPresent || searchQuery" #trailing>
+              <UIcon
+                v-if="cameraIsPresent"
+                class="cursor-pointer"
+                name="i-heroicons-qr-code"
+                @click="cameraPreview = true"
+              />
+              <UIcon
+                v-if="searchQuery"
+                class="cursor-pointer"
+                name="i-heroicons-x-mark"
+                @click="searchQuery = ''"
+              />
+            </template>
+          </UInput>
+
+          <div class="flex-1" />
+
+          <UButton
+            icon="i-heroicons-arrow-down-tray"
+            color="success"
+            :loading="isDownloadingCsv"
+            @click="downloadCsv()"
+          >
             CSV
           </UButton>
-        </div>
-        <div class="flex gap-2 flex-col flex-wrap sm:flex-row">
-          <GenericBarcodeReader
-            v-model="cameraPreview"
-            @decoded="onDecoded"
+
+          <UButton
+            v-if="canEdit"
+            icon="i-heroicons-plus"
+            @click="selectedItem = undefined; inventoryItemModalOpen = true"
           />
-
-          <div>
-            <UInput
-              v-model="searchQuery"
-              placeholder="Rechercher..."
-              @update:model-value="searchQueryUpdated()"
-            >
-              <template v-if="cameraIsPresent || searchQuery" #trailing>
-                <UIcon
-                  v-if="cameraIsPresent"
-                  class="cursor-pointer"
-                  name="i-heroicons-qr-code"
-                  @click="cameraPreview = true"
-                />
-
-                <UIcon
-                  v-if="searchQuery"
-                  class="cursor-pointer"
-                  name="i-heroicons-x-mark"
-                  @click="searchQuery = ''; getItemsPaginated()"
-                />
-              </template>
-            </UInput>
-          </div>
-
-
-          <div class="flex-1"/>
-
-          <div class="flex gap-4 justify-between">
-            <USelectMenu
-              v-model="filteredCategories"
-              class="w-44"
-              :items="categoriesSelect"
-              multiple
-            >
-              <template #default>
-              <span v-if="filteredCategories.length" class="truncate">
-                {{ filteredCategories.map(fa => fa.label).join(', ') }}
-              </span>
-                <span v-else>Catégories</span>
-              </template>
-            </USelectMenu>
-
-            <UButton v-if="canEdit" icon="i-heroicons-plus" @click="selectedItem = undefined; inventoryItemModalOpen = true" />
-          </div>
-
-
         </div>
 
-        <UTable
-          v-model:sorting="sort"
-          class="w-full"
-          :loading="isLoading"
-          :sorting-options="{
-            manualSorting: true,
-            enableMultiSort: false,
-          }"
-          :columns="columns"
-          :data="apiItems"
-          @update:sorting="getItemsPaginated()"
-          @select="(evt, row) => rowClicked(row.original)">
-          <template #empty>
-            <div class="flex flex-col items-center justify-center py-6 gap-3">
-              <span class="italic text-sm">Aucun articles.</span>
-            </div>
-          </template>
+        <!-- Loading -->
+        <div v-if="isLoading" class="flex justify-center py-12">
+          <UIcon name="i-heroicons-arrow-path" class="animate-spin text-2xl text-muted" />
+        </div>
 
-          <template #name-header="{ column }">
-            <GenericTableSortButton :column="column" :can-be-unsorted="true" />
-          </template>
-          <template #name-cell="{ row }">
-            <UBadge v-if="!row.original.canBeSold" color="error" class="mr-2">Désactivé</UBadge>
-            {{ row.original.name }}
-          </template>
-
-          <template #quantity-header="{ column }">
-            <GenericTableSortButton :column="column" :can-be-unsorted="true" />
-          </template>
-          <template #quantity-cell="{ row }">
-            <p v-if="row.original.quantity || row.original.quantity === 0" :class="row.original.quantityAlert && row.original.quantity <= row.original.quantityAlert ? 'font-bold text-error-600' : ''">
-              {{ row.original.quantity }}
-            </p>
-            <i v-else>Non définie</i>
-          </template>
-
-          <template #category-cell="{ row }">
-            <UButton
-                v-if="row.original.category"
-                variant="soft"
+        <template v-else>
+          <!-- Tabs -->
+          <div class="flex gap-1 mb-4 border-b border-(--ui-border)">
+            <button
+              v-for="tab in tabs"
+              :key="tab.value"
+              class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px"
+              :class="
+                activeTab === tab.value
+                  ? 'border-(--ui-primary) text-(--ui-primary)'
+                  : 'border-transparent text-muted hover:text-default'
+              "
+              @click="activeTab = tab.value"
             >
-              {{ row.original.category.name }}
-            </UButton>
+              {{ tab.label }}
+            </button>
+          </div>
 
-            <i v-else>
-              Pas de catégorie.
-            </i>
-          </template>
-
-          <template #actions-cell="{ row }">
-            <div class="text-right">
-              <UButton @click="rowClicked(row.original)">Détails</UButton>
+          <!-- Stock géré tab -->
+          <div v-if="activeTab === 'stock'" class="flex flex-col gap-2">
+            <div v-if="stockGroups.size === 0" class="text-center py-8 text-muted italic text-sm">
+              Aucun article avec stock géré.
             </div>
-          </template>
+            <InventoryCategorySection
+              v-for="[catName, items] in stockGroups"
+              :key="catName"
+              :title="catName"
+              :items="items"
+              :show-stock-control="true"
+              :show-reactivate="false"
+              :can-edit="canEdit"
+              :default-expanded="hasLowStock(items) || catName === highlightedCategoryName"
+              @item-updated="onStockUpdated"
+              @item-clicked="rowClicked"
+            />
+          </div>
 
-        </UTable>
+          <!-- Sans stock géré tab -->
+          <div v-else-if="activeTab === 'unmanaged'" class="flex flex-col gap-2">
+            <div v-if="unmanagedGroups.size === 0" class="text-center py-8 text-muted italic text-sm">
+              Aucun article sans stock géré.
+            </div>
+            <InventoryCategorySection
+              v-for="[catName, items] in unmanagedGroups"
+              :key="catName"
+              :title="catName"
+              :items="items"
+              :show-stock-control="false"
+              :show-reactivate="false"
+              :can-edit="canEdit"
+              :default-expanded="catName === highlightedCategoryName"
+              @item-updated="onStockUpdated"
+              @item-clicked="rowClicked"
+            />
+          </div>
 
-        <GenericTablePagination
-          v-model:page="page"
-          v-model:items-per-page="itemsPerPage"
-          :total-items="totalApiItems"
-          @paginate="(object: TablePaginateInterface) => { getItemsPaginated() }"
-        />
-
+          <!-- Désactivés tab -->
+          <div v-else-if="activeTab === 'disabled'" class="flex flex-col gap-2">
+            <div v-if="disabledGroups.size === 0" class="text-center py-8 text-muted italic text-sm">
+              Aucun article désactivé.
+            </div>
+            <InventoryCategorySection
+              v-for="[catName, items] in disabledGroups"
+              :key="catName"
+              :title="catName"
+              :items="items"
+              :show-stock-control="false"
+              :show-reactivate="true"
+              :can-edit="canEdit"
+              :default-expanded="catName === highlightedCategoryName"
+              @item-updated="mergeItem"
+              @item-clicked="rowClicked"
+            />
+          </div>
+        </template>
       </UCard>
     </template>
 
+    <!-- Slideover -->
     <template #side>
       <template v-if="selectedItem">
-        <UButton block class="mb-4" :to="'/admin/inventories/items/' + convertUuidToUrlUuid(selectedItem.uuid)">Voir en détail</UButton>
+        <UButton
+          block
+          class="mb-4"
+          :to="'/admin/inventories/items/' + convertUuidToUrlUuid(selectedItem.uuid)"
+        >
+          Voir en détail
+        </UButton>
 
         <UCard class="overflow-y-auto">
           <InventoryItemForm
@@ -355,29 +353,20 @@ definePageMeta({
             @updated="onItemUpdated"
           />
         </UCard>
-
       </template>
     </template>
-
   </GenericLayoutContentWithSlideover>
 
-  <UModal
-    v-model:open="inventoryItemModalOpen">
+  <!-- Create modal -->
+  <UModal v-model:open="inventoryItemModalOpen">
     <template #content>
-      <div>
-        <UCard>
-          <InventoryItemForm
-            :item="selectedItem ? {...selectedItem} : undefined"
-            :categories="categories"
-            @updated="onItemUpdated"
-          />
-        </UCard>
-      </div>
+      <UCard>
+        <InventoryItemForm
+          :item="selectedItem ? { ...selectedItem } : undefined"
+          :categories="categories"
+          @updated="onItemUpdated"
+        />
+      </UCard>
     </template>
   </UModal>
-
 </template>
-
-<style scoped lang="css">
-
-</style>
