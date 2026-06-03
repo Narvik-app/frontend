@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type {InventoryCategory} from "~/types/api/item/clubDependent/plugin/sale/inventoryCategory";
 import SalePaymentModeQuery from "~/composables/api/query/clubDependent/plugin/sale/SalePaymentModeQuery";
+import SalePaymentTerminalQuery from "~/composables/api/query/clubDependent/plugin/sale/SalePaymentTerminalQuery";
 import type {SalePaymentMode} from "~/types/api/item/clubDependent/plugin/sale/salePaymentMode";
+import type {SalePaymentTerminal} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminal";
 import type {FormError, TableRow} from "#ui/types";
 import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
 import type {NuxtError} from "#app";
@@ -25,8 +27,17 @@ definePageMeta({
   const canEdit = computed(() => selfStore.can(Permission.SalePaymentModesEdit));
 
   const apiQuery = new SalePaymentModeQuery()
+  const terminalQuery = new SalePaymentTerminalQuery()
 
   const paymentModes: Ref<SalePaymentMode[]> = ref([])
+  const availableTerminals: Ref<SalePaymentTerminal[]> = ref([])
+
+  // Load available terminals for the selector
+  async function loadTerminals() {
+    const {items} = await terminalQuery.getAll()
+    availableTerminals.value = items.filter(t => t.available)
+  }
+  loadTerminals()
   const isLoading = ref(true);
   const totalPaymentModes = ref(0)
   const selectedPaymentMode: Ref<SalePaymentMode | undefined> = ref(undefined)
@@ -135,11 +146,22 @@ definePageMeta({
       available: paymentMode.available,
       name: paymentMode.name,
       icon: paymentMode.icon,
-      kind: paymentMode.kind
+      kind: paymentMode.kind,
     }
 
     if (paymentMode.weight) {
       payload.weight = paymentMode.weight
+    }
+
+    // Terminal link: send IRI if set, null to unlink
+    if (paymentMode.paymentTerminal !== undefined) {
+      if (paymentMode.paymentTerminal === null) {
+        payload.paymentTerminal = null
+      } else if (typeof paymentMode.paymentTerminal === 'string') {
+        payload.paymentTerminal = paymentMode.paymentTerminal
+      } else {
+        payload.paymentTerminal = paymentMode.paymentTerminal['@id'] ?? null
+      }
     }
 
     // We verify if it's a creation or an update
@@ -314,6 +336,21 @@ definePageMeta({
 
               <UFormField label="Poids dans la liste" name="weight">
                 <UInput v-model="selectedPaymentMode.weight" type="number" />
+              </UFormField>
+
+              <UFormField
+                label="Terminal de paiement (TPE)"
+                name="paymentTerminal"
+                description="Lier un terminal pour déclencher un paiement automatique à la caisse."
+              >
+                <USelectMenu
+                  v-model="selectedPaymentMode.paymentTerminal"
+                  :items="[{ label: 'Aucun (paiement manuel)', value: null }, ...availableTerminals.map(t => ({ label: t.name + (t.configured ? '' : ' ⚠ non configuré'), value: t }))]"
+                  value-key="value"
+                  label-key="label"
+                  placeholder="Aucun terminal"
+                  :disabled="selectedPaymentMode.kind === 'stock_removal'"
+                />
               </UFormField>
             </div>
 

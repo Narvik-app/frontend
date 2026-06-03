@@ -17,6 +17,7 @@ useHead({
   const canAccessInventory = selfStore.can(Permission.SaleInventoryAccess)
   const canAccessCategories = selfStore.can(Permission.SaleCategoriesAccess)
   const canAccessPaymentModes = selfStore.can(Permission.SalePaymentModesAccess)
+  const canAccessPaymentTerminals = selfStore.can(Permission.SalePaymentTerminalsAccess)
   const canAccessImport = selfStore.can(Permission.SaleImportAccess)
 
   const salesSection: { label: string; icon: string; to: string }[] = []
@@ -66,6 +67,14 @@ useHead({
       label: 'Moyen de paiements',
       icon: 'i-heroicons-credit-card',
       to: '/admin/sales/payment-modes'
+    })
+  }
+
+  if (canAccessPaymentTerminals) {
+    managementSection.push({
+      label: 'Terminaux de paiement',
+      icon: 'i-heroicons-device-phone-mobile',
+      to: '/admin/sales/payment-terminals'
     })
   }
 
