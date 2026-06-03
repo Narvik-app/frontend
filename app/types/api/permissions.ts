@@ -29,6 +29,8 @@ export enum Permission {
   SaleCategoriesEdit = 'SALE_CATEGORIES_EDIT',
   SalePaymentModesAccess = 'SALE_PAYMENT_MODES_ACCESS',
   SalePaymentModesEdit = 'SALE_PAYMENT_MODES_EDIT',
+  SalePaymentTerminalsAccess = 'SALE_PAYMENT_TERMINALS_ACCESS',
+  SalePaymentTerminalsEdit = 'SALE_PAYMENT_TERMINALS_EDIT',
   SaleImportAccess = 'SALE_IMPORT_ACCESS',
   SaleImportEdit = 'SALE_IMPORT_EDIT',
 }
@@ -119,6 +121,11 @@ export const permissionSections: PermissionSection[] = [
         name: 'Moyens de paiement',
         accessPermission: Permission.SalePaymentModesAccess,
         editPermission: Permission.SalePaymentModesEdit,
+      },
+      {
+        name: 'Terminaux de paiement',
+        accessPermission: Permission.SalePaymentTerminalsAccess,
+        editPermission: Permission.SalePaymentTerminalsEdit,
       },
       {
         name: 'Import',

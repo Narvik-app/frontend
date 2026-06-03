@@ -129,7 +129,7 @@ async function reactivate(item: InventoryItem) {
             size="xs"
             variant="soft"
             @click.stop="emit('itemClicked', item)"
-          >
+          >Lier un terminal pour déclencher un paiement automatique à la caisse.
             Détails
           </UButton>
         </div>

@@ -3,8 +3,11 @@ import InventoryItemQuery from "~/composables/api/query/clubDependent/plugin/sal
 import type {InventoryItem} from "~/types/api/item/clubDependent/plugin/sale/inventoryItem";
 import {formatMonetary} from "~/utils/string";
 import SaleQuery from "~/composables/api/query/clubDependent/plugin/sale/SaleQuery";
+import SalePaymentTerminalQuery from "~/composables/api/query/clubDependent/plugin/sale/SalePaymentTerminalQuery";
 import type {Sale} from "~/types/api/item/clubDependent/plugin/sale/sale";
 import type {SalePurchasedItem} from "~/types/api/item/clubDependent/plugin/sale/salePurchasedItem";
+import type {SalePaymentTerminal} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminal";
+import {SalePaymentTerminalCheckoutStatus} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminal";
 import {useSaleStore} from "~/stores/useSaleStore";
 import {useCartStore} from "~/stores/useCartStore";
 import {formatDate} from "~/utils/date";
@@ -13,6 +16,7 @@ import {convertUuidToUrlUuid} from "~/utils/resource";
 import {print} from "~/utils/browser";
 import type {SelectApiItem} from "~/types/select";
 import type {Member} from "~/types/api/item/clubDependent/member";
+import ModalTerminalPayment from "~/components/Sale/ModalTerminalPayment.vue";
 
 definePageMeta({
     layout: "pos"
@@ -47,6 +51,27 @@ definePageMeta({
 
   const inventoryItemQuery = new InventoryItemQuery()
   const saleQuery = new SaleQuery()
+  const terminalQuery = new SalePaymentTerminalQuery()
+
+  // Terminal payment modal state (driven by the polling loop below)
+  const showTpeModal = ref(false)
+  const tpePhase = ref<'waiting' | 'success' | 'failed' | 'cancelled' | 'error'>('waiting')
+  const tpeError = ref<string | undefined>(undefined)
+  const tpeAmount = ref('')
+  const tpeTerminalName = ref<string | undefined>(undefined)
+
+  // Promise resolver used to bridge modal button clicks into the async polling loop
+  let resolveTerminalAction: ((v: { type: 'success'; transactionId: string } | { type: 'manual' } | { type: 'cancel' }) => void) | null = null
+
+  function onTerminalManual() {
+    showTpeModal.value = false
+    resolveTerminalAction?.({type: 'manual'})
+  }
+
+  function onTerminalCancel() {
+    showTpeModal.value = false
+    resolveTerminalAction?.({type: 'cancel'})
+  }
 
   const searchQueryInput: Ref<string> = ref(searchQuery.value)
   watch(searchQuery, () => {
@@ -127,54 +152,147 @@ definePageMeta({
     }
   }
 
-  async function createSale() {
-    isCreatingSale.value = true
-
-    const salePurchasedItems: SalePurchasedItem[] = []
-    cart.value.forEach((item, _key) => {
-      const payload: SalePurchasedItem = {
-        quantity: item.quantity
-      }
-
+  /** Build the list of purchased items from the cart */
+  function buildPurchasedItems(): SalePurchasedItem[] {
+    return cart.value.map(item => {
+      const payload: SalePurchasedItem = {quantity: item.quantity}
       if (item.item['@id']) {
         payload.item = item.item['@id']
       } else {
         payload.itemName = item.item.name
         payload.itemPrice = item.item.sellingPrice
       }
-
-      salePurchasedItems.push(payload)
+      return payload
     })
+  }
 
+  /** Post the sale to the API and navigate on success */
+  async function submitSale(extraComment?: string) {
+    const comment = [cartComment.value, extraComment].filter(Boolean).join(' ').trim()
     const payload: Sale = {
       seller: seller.value?.["@id"],
-      comment: cartComment.value.length ? cartComment.value : undefined,
-      salePurchasedItems: salePurchasedItems,
-      paymentMode: selectedPaymentMode.value?.["@id"]
+      comment: comment.length ? comment : undefined,
+      salePurchasedItems: buildPurchasedItems(),
+      paymentMode: selectedPaymentMode.value?.["@id"],
     }
 
-    const { created, error } = await saleQuery.post(payload)
-
-    isCreatingSale.value = false
+    const {created, error} = await saleQuery.post(payload)
 
     if (!created || error) {
       toast.add({
         color: "error",
-        title: "La vente à échoué",
-        description: error?.message
-      });
-      return;
+        title: "La vente a échoué",
+        description: error?.message,
+      })
+      return
     }
 
-    toast.add({
-      color: "success",
-      title: "Vente enregistrée",
-    });
-
+    toast.add({color: "success", title: "Vente enregistrée"})
     cartStore.emptyCart()
     saleStore.shouldRefreshSales = true
-
     navigateTo('/admin/sales/' + convertUuidToUrlUuid(created.uuid))
+  }
+
+  /**
+   * Run the terminal payment flow: open the modal, then start polling.
+   * Resolves when the terminal confirms, or when the user clicks manual/cancel.
+   * The modal (ModalTerminalPayment) is driven by reactive refs.
+   */
+  function runTerminalPayment(terminal: SalePaymentTerminal): Promise<{ type: 'success'; transactionId: string } | { type: 'manual' } | { type: 'cancel' }> {
+    tpePhase.value = 'waiting'
+    tpeError.value = undefined
+    tpeAmount.value = String(cartTotalPrice.value)
+    tpeTerminalName.value = terminal.name
+    showTpeModal.value = true
+
+    const result = new Promise<{ type: 'success'; transactionId: string } | { type: 'manual' } | { type: 'cancel' }>((resolve) => {
+      resolveTerminalAction = resolve
+    })
+
+    // Drive the checkout + polling asynchronously; it resolves via resolveTerminalAction
+    void pollTerminalPayment(terminal)
+
+    return result
+  }
+
+  async function pollTerminalPayment(terminal: SalePaymentTerminal) {
+    // Initiate checkout on the terminal
+    const {item: checkoutResult, error: checkoutError} = await terminalQuery.checkout(terminal, tpeAmount.value)
+
+    // Guard: user may have already cancelled while the checkout was in-flight
+    if (!showTpeModal.value) return
+
+    if (checkoutError || !checkoutResult?.clientTransactionId) {
+      // Terminal unreachable / offline — keep modal open with manual + cancel buttons
+      tpePhase.value = 'error'
+      tpeError.value = checkoutError?.message ?? 'Impossible de contacter le terminal.'
+      return
+    }
+
+    // Poll until success / failure / cancellation / timeout
+    const clientTransactionId = checkoutResult.clientTransactionId
+    const deadline = Date.now() + 120_000
+
+    while (showTpeModal.value && Date.now() < deadline) {
+      await new Promise(r => setTimeout(r, 2000))
+
+      if (!showTpeModal.value) return // User clicked cancel/manual during the wait
+
+      const {retrieved} = await terminalQuery.checkoutStatus(terminal, clientTransactionId)
+
+      if (!retrieved || !showTpeModal.value) continue
+
+      if (retrieved.status === SalePaymentTerminalCheckoutStatus.Successful) {
+        tpePhase.value = 'success'
+        await new Promise(r => setTimeout(r, 900)) // brief success animation
+        showTpeModal.value = false
+        resolveTerminalAction?.({type: 'success', transactionId: retrieved.transactionId ?? clientTransactionId})
+        return
+      } else if (retrieved.status === SalePaymentTerminalCheckoutStatus.Failed) {
+        tpePhase.value = 'failed'
+        return // Wait for manual/cancel
+      } else if (retrieved.status === SalePaymentTerminalCheckoutStatus.Cancelled) {
+        tpePhase.value = 'cancelled'
+        return // Wait for manual/cancel
+      }
+      // Pending → loop
+    }
+
+    if (showTpeModal.value) {
+      // Reached deadline without result
+      tpePhase.value = 'error'
+      tpeError.value = "Délai d'attente dépassé. Le terminal n'a pas confirmé le paiement."
+      // Wait for manual/cancel
+    }
+  }
+
+  async function createSale() {
+    isCreatingSale.value = true
+
+    const terminal = selectedPaymentMode.value?.paymentTerminal
+    const isTerminalLinked = terminal !== null && terminal !== undefined && typeof terminal === 'object'
+
+    if (!isTerminalLinked) {
+      // Standard flow: no terminal linked
+      await submitSale()
+      isCreatingSale.value = false
+      return
+    }
+
+    // Terminal payment flow
+    const result = await runTerminalPayment(terminal as SalePaymentTerminal)
+
+    if (result.type === 'cancel') {
+      isCreatingSale.value = false
+      return
+    }
+
+    const extraComment = result.type === 'success'
+      ? `sumup: ${result.transactionId}`
+      : '(paiement manuel)'
+
+    await submitSale(extraComment)
+    isCreatingSale.value = false
   }
 
   // We load the page content
@@ -394,6 +512,17 @@ definePageMeta({
       </div>
     </template>
   </GenericLayoutContentWithStickySide>
+
+  <!-- Terminal payment waiting modal — driven by the polling loop in createSale() -->
+  <ModalTerminalPayment
+    :open="showTpeModal"
+    :amount-display="tpeAmount + ' €'"
+    :terminal-name="tpeTerminalName"
+    :phase="tpePhase"
+    :error-message="tpeError"
+    @manual="onTerminalManual"
+    @cancel="onTerminalCancel"
+  />
 </template>
 
 <style scoped lang="css">
