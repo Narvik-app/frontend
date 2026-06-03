@@ -28,7 +28,7 @@ export interface TerminalCheckoutStatusResult {
   transactionId?: string | null;
 }
 
-/** A device discovered from a provider during setup. */
+/** A device discovered from a provider during setup, with optional live diagnostics. */
 export interface TerminalDevice {
   id: string;
   name: string;
@@ -36,6 +36,11 @@ export interface TerminalDevice {
   online: boolean;
   paired: boolean;
   available: boolean;
+  /** Live diagnostics (when a status check is available) */
+  state?: string | null;
+  lastActivity?: string | null;
+  batteryLevel?: number | null;
+  connectionType?: string | null;
 }
 
 export interface ListDevicesResult {

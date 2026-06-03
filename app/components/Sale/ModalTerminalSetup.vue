@@ -2,26 +2,37 @@
 /**
  * Provider-agnostic, multi-step terminal setup modal.
  *
- * Step 1: collect the provider credentials (from TerminalProviderDefinition.credentialFields)
- *         and validate them. For providers that list devices, validation = listing devices.
- * Step 2: pick the device (with live online/offline status). Skipped for providers that
- *         can't list devices (the device id field, if any, is collected in step 1 instead).
+ * CREATE mode (no `terminal` prop):
+ *   Step 1: collect provider credentials and validate them (= list devices).
+ *   Step 2: pick the device (with live online/offline status).
  *
- * Emits `submit` with the full terminal payload { name, provider, credentials }.
+ * RECONFIGURE mode (`terminal` prop set):
+ *   Credentials are already stored (write-only, never returned), so their fields are
+ *   locked. "Vérifier et continuer" lists devices using the stored credentials
+ *   server-side, then the device can be re-selected.
+ *
+ * Emits `submit` with a discriminated result the parent persists.
  */
 import ModalWithActions from "~/components/Modal/ModalWithActions.vue";
 import SalePaymentTerminalQuery from "~/composables/api/query/clubDependent/plugin/sale/SalePaymentTerminalQuery";
 import {getTerminalProvider} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminal";
-import type {SalePaymentTerminal, TerminalDevice} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminal";
+import type {SalePaymentTerminal, TerminalDevice, ListDevicesResult} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminal";
+import type {NuxtError} from "#app";
+
+type SetupResult =
+  | { mode: 'create'; name: string; provider: string; credentials: Record<string, string> }
+  | { mode: 'reconfigure'; name: string; deviceId: string }
 
 const props = defineProps<{
   provider: string;
-  /** Pre-fill the terminal name (e.g. when reconfiguring) */
+  /** When set, the modal runs in reconfigure mode for this existing terminal */
+  terminal?: SalePaymentTerminal;
+  /** Pre-fill the terminal name (create mode) */
   initialName?: string;
 }>()
 
 const emit = defineEmits<{
-  submit: [payload: SalePaymentTerminal]
+  submit: [result: SetupResult]
   close: [boolean]
 }>()
 
@@ -29,13 +40,14 @@ const toast = useToast()
 const query = new SalePaymentTerminalQuery()
 
 const definition = computed(() => getTerminalProvider(props.provider))
+const isReconfigure = computed(() => !!props.terminal)
 
 const step = ref<1 | 2>(1)
 const isLoading = ref(false)
 
 // Step 1 — credentials
 const credentials = ref<Record<string, string>>({})
-const name = ref(props.initialName ?? '')
+const name = ref(props.terminal?.name ?? props.initialName ?? '')
 
 // Step 2 — devices
 const devices = ref<TerminalDevice[]>([])
@@ -45,6 +57,8 @@ const step1Valid = computed(() => {
   const def = definition.value
   if (!def) return false
   if (!name.value?.trim()) return false
+  // In reconfigure mode credentials are stored — only the name is editable
+  if (isReconfigure.value) return true
   return def.credentialFields.every(f => !f.required || !!credentials.value[f.key]?.trim())
 })
 
@@ -52,28 +66,39 @@ async function validateAndNext() {
   const def = definition.value
   if (!def) return
 
-  // Provider can't list devices → submit directly with step-1 credentials
+  // Provider can't list devices → submit directly with step-1 credentials (create only)
   if (!def.supportsDeviceListing) {
     submit()
     return
   }
 
   isLoading.value = true
-  const {item, error} = await query.listDevices(props.provider, cleanedCredentials())
+  // Reconfigure: list using the terminal's stored credentials; Create: use entered credentials
+  let result: ListDevicesResult | undefined
+  let error: NuxtError | undefined
+  if (isReconfigure.value && props.terminal) {
+    const res = await query.terminalDevices(props.terminal)
+    result = res.retrieved
+    error = res.error
+  } else {
+    const res = await query.listDevices(props.provider, cleanedCredentials())
+    result = res.item
+    error = res.error
+  }
   isLoading.value = false
 
-  if (error || !item) {
+  if (error || !result) {
     toast.add({
       color: "error",
-      title: "Identifiants invalides",
+      title: isReconfigure.value ? "Connexion impossible" : "Identifiants invalides",
       description: error?.message ?? "Impossible de récupérer les terminaux.",
     })
     return
   }
 
-  devices.value = item.devices
+  devices.value = result.devices
   // Pre-select the first available (online) device, else the first one
-  selectedDeviceId.value = (item.devices.find(d => d.available) ?? item.devices[0])?.id
+  selectedDeviceId.value = (result.devices.find(d => d.available) ?? result.devices[0])?.id
   step.value = 2
 }
 
@@ -81,15 +106,21 @@ function submit() {
   const def = definition.value
   if (!def) return
 
+  if (isReconfigure.value) {
+    if (!selectedDeviceId.value) return
+    emit('submit', {mode: 'reconfigure', name: name.value.trim(), deviceId: selectedDeviceId.value})
+    return
+  }
+
   const finalCredentials = cleanedCredentials()
   if (def.supportsDeviceListing && def.deviceCredentialKey && selectedDeviceId.value) {
     finalCredentials[def.deviceCredentialKey] = selectedDeviceId.value
   }
 
   emit('submit', {
+    mode: 'create',
     name: name.value.trim(),
-    provider: props.provider as SalePaymentTerminal['provider'],
-    available: true,
+    provider: props.provider,
     credentials: finalCredentials,
   })
 }
@@ -107,7 +138,7 @@ const canSubmitStep2 = computed(() => !!selectedDeviceId.value)
 
 <template>
   <ModalWithActions
-    :title="`Configurer ${definition?.label ?? 'le terminal'}`"
+    :title="`${isReconfigure ? 'Reconfigurer' : 'Configurer'} ${definition?.label ?? 'le terminal'}`"
     :dismissible="false"
     :display-cancel-button="false"
   >
@@ -124,18 +155,27 @@ const canSubmitStep2 = computed(() => !!selectedDeviceId.value)
         <UInput v-model="name" placeholder="Ex: Terminal caisse 1" />
       </UFormField>
 
+      <UAlert
+        v-if="isReconfigure"
+        color="neutral"
+        variant="subtle"
+        icon="i-heroicons-lock-closed"
+        description="Les identifiants enregistrés ne sont pas modifiables ici. Vérifiez la connexion pour sélectionner un terminal. Pour changer les identifiants, supprimez et recréez le terminal."
+      />
+
       <UFormField
         v-for="field in definition?.credentialFields ?? []"
         :key="field.key"
         :label="field.label"
         :name="field.key"
-        :required="field.required"
+        :required="!isReconfigure && field.required"
         :help="field.help"
       >
         <UInput
           v-model="credentials[field.key]"
           :type="field.secret ? 'password' : 'text'"
-          :placeholder="field.required ? 'Requis' : 'Optionnel'"
+          :disabled="isReconfigure"
+          :placeholder="isReconfigure ? '•••••••• (enregistré)' : (field.required ? 'Requis' : 'Optionnel')"
         />
       </UFormField>
     </div>
