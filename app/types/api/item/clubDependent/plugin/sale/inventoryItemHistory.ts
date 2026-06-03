@@ -7,4 +7,5 @@ export interface InventoryItemHistory extends UuidItem, TimestampItem {
 
   purchasePrice?: string;
   sellingPrice?: string;
+  quantity?: number | null;
 }

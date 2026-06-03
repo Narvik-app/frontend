@@ -128,7 +128,8 @@ async function reactivate(item: InventoryItem) {
           <UButton
             size="xs"
             variant="soft"
-            @click.stop="emit('itemClicked', item)"
+            :to="'/admin/inventories/items/' + convertUuidToUrlUuid(item.uuid)"
+            @click.stop=""
           >
             Détails
           </UButton>

@@ -18,6 +18,13 @@ export default class InventoryItemQuery extends AbstractClubDependentQuery<Inven
     return useFetchList<InventoryItemHistory>(url)
   }
 
+  async dailyHistories(id: string, urlParams?: URLSearchParams) {
+    let url = `${this.getRootUrl()}/${id}/histories-per-day`;
+    if (!urlParams) urlParams = new URLSearchParams();
+    url += '?' + urlParams.toString();
+    return useFetchList<InventoryItemHistory>(url);
+  }
+
   async importFromCsv(formData: FormData) {
     return useUploadFile(this.getRootUrl() + "/-/from-csv", formData)
   }
