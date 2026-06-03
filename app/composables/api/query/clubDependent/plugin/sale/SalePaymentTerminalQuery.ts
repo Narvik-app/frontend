@@ -26,6 +26,25 @@ export default class SalePaymentTerminalQuery extends AbstractClubDependentQuery
   }
 
   /**
+   * List devices for an existing terminal using its stored credentials (reconfiguration).
+   */
+  async terminalDevices(terminal: SalePaymentTerminal) {
+    return useFetchItem<ListDevicesResult>(
+      (terminal['@id'] ?? '') + '/devices',
+    )
+  }
+
+  /**
+   * Re-select the active device for an existing terminal (preserves stored credentials).
+   */
+  async setDevice(terminal: SalePaymentTerminal, deviceId: string) {
+    return usePost<{ configured: boolean }>(
+      (terminal['@id'] ?? '') + '/device',
+      {deviceId},
+    )
+  }
+
+  /**
    * Initiate a payment on the terminal for the given amount (decimal string, e.g. "15.00").
    * Returns a clientTransactionId to be used with checkoutStatus().
    */
