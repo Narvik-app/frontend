@@ -8,6 +8,7 @@ import ModalTerminalSetup from "~/components/Sale/ModalTerminalSetup.vue";
 import type {TablePaginateInterface} from "~/types/table";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {Permission} from "~/types/api/permissions";
+import {formatDate} from "~/utils/date";
 
 definePageMeta({
   layout: "pos"
@@ -98,30 +99,62 @@ function providerLabel(value?: string): string {
   return getTerminalProvider(value)?.label ?? value ?? ''
 }
 
+type SetupResult =
+  | { mode: 'create'; name: string; provider: string; credentials: Record<string, string> }
+  | { mode: 'reconfigure'; name: string; deviceId: string }
+
 /** Open the multi-step setup modal to create a terminal (provider chosen first) */
 function createTerminal(provider: string) {
   overlaySetup.open({
     provider,
-    async onSubmit(payload: SalePaymentTerminal) {
-      await saveNewTerminal(payload)
+    async onSubmit(result: SetupResult) {
+      if (result.mode !== 'create') return
+      await saveNewTerminal({
+        name: result.name,
+        provider: result.provider as SalePaymentTerminal['provider'],
+        available: true,
+        credentials: result.credentials,
+      })
       overlaySetup.close(true)
     },
   })
 }
 
-/** Reconfigure an existing terminal's credentials/device via the setup modal */
+/** Reconfigure an existing terminal: re-pick the device (credentials stay stored) */
 function reconfigureTerminal(terminal: SalePaymentTerminal) {
   overlaySetup.open({
     provider: terminal.provider ?? 'sumup',
-    initialName: terminal.name,
-    async onSubmit(payload: SalePaymentTerminal) {
-      await patchTerminal(terminal, {
-        name: payload.name,
-        credentials: payload.credentials,
-      })
+    terminal,
+    async onSubmit(result: SetupResult) {
+      if (result.mode !== 'reconfigure') return
+      await applyReconfigure(terminal, result.name, result.deviceId)
       overlaySetup.close(true)
     },
   })
+}
+
+async function applyReconfigure(terminal: SalePaymentTerminal, newName: string, deviceId: string) {
+  isLoading.value = true
+
+  // Update the device first (preserves stored secret credentials)
+  const {error: deviceError} = await apiQuery.setDevice(terminal, deviceId)
+  // Update the name if it changed
+  let nameError = undefined
+  if (!deviceError && newName && newName !== terminal.name) {
+    const {error} = await apiQuery.patch(terminal, {name: newName} as SalePaymentTerminal)
+    nameError = error
+  }
+
+  isLoading.value = false
+
+  const error = deviceError ?? nameError
+  if (error) {
+    toast.add({color: "error", title: "La modification a échouée", description: error.message})
+    return
+  }
+  toast.add({color: "success", title: "Terminal modifié"})
+  selectedTerminal.value = undefined
+  await getTerminalsPaginated()
 }
 
 async function saveNewTerminal(payload: SalePaymentTerminal) {
@@ -274,14 +307,34 @@ async function deleteTerminal() {
 
               <div
                 v-if="deviceStatus"
-                class="flex items-center gap-2 p-2 rounded-lg border"
+                class="flex flex-col gap-2 p-3 rounded-lg border"
                 :class="deviceStatus.online ? 'border-success/40' : 'border-warning/40'"
               >
-                <UBadge :color="deviceStatus.online ? 'success' : 'warning'" variant="subtle">
-                  <UIcon :name="deviceStatus.online ? 'i-heroicons-signal' : 'i-heroicons-signal-slash'" class="mr-1" />
-                  {{ deviceStatus.online ? 'En ligne' : 'Hors ligne' }}
-                </UBadge>
-                <span class="text-sm">{{ deviceStatus.name }}</span>
+                <div class="flex items-center gap-2">
+                  <UBadge :color="deviceStatus.online ? 'success' : 'warning'" variant="subtle">
+                    <UIcon :name="deviceStatus.online ? 'i-heroicons-signal' : 'i-heroicons-signal-slash'" class="mr-1" />
+                    {{ deviceStatus.online ? 'En ligne' : 'Hors ligne' }}
+                  </UBadge>
+                  <span class="text-sm font-medium">{{ deviceStatus.name }}</span>
+                </div>
+
+                <!-- Diagnostics -->
+                <dl class="text-xs text-gray-500 grid grid-cols-2 gap-x-2 gap-y-0.5">
+                  <template v-if="deviceStatus.state">
+                    <!-- When offline, `state` is the last persisted state (stale), not live readiness -->
+                    <dt>{{ deviceStatus.online ? 'État' : 'Dernier état connu' }}</dt>
+                    <dd class="text-right">{{ deviceStatus.state }}</dd>
+                  </template>
+                  <template v-if="deviceStatus.connectionType">
+                    <dt>Connexion</dt><dd class="text-right">{{ deviceStatus.connectionType }}</dd>
+                  </template>
+                  <template v-if="deviceStatus.batteryLevel != null">
+                    <dt>Batterie</dt><dd class="text-right">{{ Math.round(deviceStatus.batteryLevel) }}%</dd>
+                  </template>
+                  <template v-if="deviceStatus.lastActivity">
+                    <dt>Dernière activité</dt><dd class="text-right">{{ formatDate(deviceStatus.lastActivity) }}</dd>
+                  </template>
+                </dl>
               </div>
 
               <UAlert
