@@ -66,10 +66,23 @@ const page = ref(1);
 const itemsPerPage = ref(30);
 
 const columns = [
-  {accessorKey: 'name', header: 'Nom'},
-  {accessorKey: 'provider', header: 'Fournisseur'},
-  {accessorKey: 'configured', header: 'Config.'},
-  {accessorKey: 'available', header: 'Disponible'},
+  {
+    accessorKey: 'available',
+    header: 'Disponible'
+  },
+  {
+    accessorKey: 'name',
+    header: 'Nom',
+    meta: {
+      class: {
+        th: 'w-full',
+      }
+    }
+  },
+  {
+    accessorKey: 'provider',
+    header: 'Fournisseur'
+  },
 ]
 
 getTerminalsPaginated()
@@ -238,25 +251,16 @@ async function deleteTerminal() {
               </div>
             </template>
 
+            <template #available-cell="{ row }">
+              <USwitch class="pointer-events-none" :model-value="row.original.available" />
+            </template>
+
             <template #name-cell="{ row }">
               {{ row.original.name }}
             </template>
 
             <template #provider-cell="{ row }">
               {{ providerLabel(row.original.provider) }}
-            </template>
-
-            <template #configured-cell="{ row }">
-              <UBadge :color="row.original.configured ? 'success' : 'neutral'" variant="subtle">
-                {{ row.original.configured ? 'Configuré' : 'Non configuré' }}
-              </UBadge>
-            </template>
-
-            <template #available-cell="{ row }">
-              <UIcon
-                :name="row.original.available ? 'i-heroicons-check-circle' : 'i-heroicons-x-circle'"
-                :class="row.original.available ? 'text-success' : 'text-neutral'"
-              />
             </template>
           </UTable>
 
@@ -283,15 +287,14 @@ async function deleteTerminal() {
               <USwitch v-model="selectedTerminal.available" @update:model-value="toggleAvailable(selectedTerminal)" />
             </UFormField>
 
-            <div class="flex items-center gap-2">
-              <UIcon
-                :name="selectedTerminal.configured ? 'i-heroicons-check-circle' : 'i-heroicons-x-circle'"
-                :class="selectedTerminal.configured ? 'text-success' : 'text-neutral'"
-              />
-              <span class="text-sm">
-                {{ selectedTerminal.configured ? 'Identifiants enregistrés' : 'Aucun identifiant' }}
-              </span>
-            </div>
+            <UButton
+              block
+              variant="soft"
+              icon="i-heroicons-wrench-screwdriver"
+              @click="reconfigureTerminal(selectedTerminal)"
+            >
+              Reconfigurer
+            </UButton>
 
             <!-- Test connection -->
             <template v-if="selectedTerminal.configured">
@@ -345,15 +348,6 @@ async function deleteTerminal() {
                 :description="deviceStatusError"
               />
             </template>
-
-            <UButton
-              block
-              variant="soft"
-              icon="i-heroicons-wrench-screwdriver"
-              @click="reconfigureTerminal(selectedTerminal)"
-            >
-              Reconfigurer
-            </UButton>
           </div>
         </UCard>
 
