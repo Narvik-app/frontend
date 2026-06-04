@@ -48,11 +48,19 @@ export interface ListDevicesResult {
   devices: TerminalDevice[];
 }
 
+/** A single step inside a provider's setup flow. */
+export interface TerminalStep {
+  id: string;    // unique step value, e.g. 'credentials', 'device'
+  title: string; // label shown in the stepper
+  icon: string;  // heroicon name
+}
+
 /**
  * Provider-agnostic definition (the front-end "interface" for a terminal provider).
  *
- * To support a new provider, add an entry here describing its setup credential fields
- * and capabilities — the setup modal renders itself from this, no per-provider UI code.
+ * To support a new provider, add an entry here describing its credential fields,
+ * setup steps, and capabilities — the setup modal renders itself from this config,
+ * no per-provider UI code needed.
  */
 export interface TerminalProviderDefinition {
   value: string;
@@ -60,8 +68,13 @@ export interface TerminalProviderDefinition {
   /** Whether the provider can enumerate physical devices (drives the device-selection step) */
   supportsDeviceListing: boolean;
   /**
-   * Credentials collected in step 1 (everything except the device).
-   * For providers that list devices, the chosen device id is stored under `deviceCredentialKey`.
+   * Ordered list of provider-specific setup steps (shown after the "Provider" step).
+   * Each step's `id` maps to a block of form content in ModalTerminalSetup.
+   */
+  steps: TerminalStep[];
+  /**
+   * Credentials collected during the 'credentials' step (everything except the device).
+   * For providers that list devices, the chosen device id is merged in under `deviceCredentialKey`.
    */
   credentialFields: TerminalCredentialField[];
   /** Credential key that receives the selected device id (e.g. 'readerId' for SumUp) */
@@ -82,10 +95,14 @@ export const TERMINAL_PROVIDERS: Record<string, TerminalProviderDefinition> = {
     label: 'SumUp',
     supportsDeviceListing: true,
     deviceCredentialKey: 'readerId',
+    steps: [
+      {id: 'credentials', title: 'Identifiants', icon: 'i-heroicons-key'},
+      {id: 'device',      title: 'Terminal',     icon: 'i-heroicons-device-phone-mobile'},
+    ],
     credentialFields: [
-      {key: 'apiKey', label: 'Clé API', required: true, secret: true, help: 'Clé API SumUp (Bearer token)'},
+      {key: 'apiKey',       label: 'Clé API',       required: true,  secret: true, help: 'Clé API SumUp (Bearer token)'},
       {key: 'merchantCode', label: 'Code marchand', required: true},
-      {key: 'affiliateKey', label: 'Clé affilié', required: false, secret: true},
+      {key: 'affiliateKey', label: 'Clé affilié',   required: false, secret: true},
     ],
   },
 }

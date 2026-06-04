@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import SalePaymentTerminalQuery from "~/composables/api/query/clubDependent/plugin/sale/SalePaymentTerminalQuery";
 import type {SalePaymentTerminal, TerminalDevice} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminal";
-import {TERMINAL_PROVIDER_OPTIONS, getTerminalProvider} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminal";
+import {getTerminalProvider} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminal";
 import type {TableRow} from "#ui/types";
 import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
 import ModalTerminalSetup from "~/components/Sale/ModalTerminalSetup.vue";
@@ -116,10 +116,9 @@ type SetupResult =
   | { mode: 'create'; name: string; provider: string; credentials: Record<string, string> }
   | { mode: 'reconfigure'; name: string; deviceId: string }
 
-/** Open the multi-step setup modal to create a terminal (provider chosen first) */
-function createTerminal(provider: string) {
+/** Open the multi-step setup modal to create a terminal (provider picked inside) */
+function createTerminal() {
   overlaySetup.open({
-    provider,
     async onSubmit(result: SetupResult) {
       if (result.mode !== 'create') return
       await saveNewTerminal({
@@ -228,14 +227,9 @@ async function deleteTerminal() {
         <div>
           <div class="flex gap-4 mb-4 items-center">
             <div class="flex-1" />
-            <UDropdownMenu
-              v-if="canEdit"
-              :items="TERMINAL_PROVIDER_OPTIONS.map(p => ({ label: p.label, onSelect: () => createTerminal(p.value) }))"
-            >
-              <UButton icon="i-heroicons-plus" trailing-icon="i-heroicons-chevron-down">
-                Ajouter un terminal
-              </UButton>
-            </UDropdownMenu>
+            <UButton v-if="canEdit" icon="i-heroicons-plus" @click="createTerminal()">
+              Ajouter un terminal
+            </UButton>
           </div>
 
           <UTable
