@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Determine Backend Branch
         id: determine-backend
@@ -79,7 +79,7 @@ jobs:
             core.setOutput('backend_ref', backendRef);
 
       - name: Checkout Backend
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ${{ env.BACKEND_REPOSITORY }}
           ref: ${{ steps.determine-backend.outputs.backend_ref }}
