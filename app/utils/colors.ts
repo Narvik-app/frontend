@@ -36,8 +36,9 @@ export function getColor(name: ColorName): Color {
 }
 
 export function getColorByIndex(index?: number): Color {
+  let color: Color | undefined
+
   const colors = getColors()
-  let color = undefined
 
   if (index === undefined) {
     color = colors[Math.floor(Math.random() * colors.length)]
