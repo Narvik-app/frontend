@@ -5,9 +5,11 @@ import {generateBadgerLoginPath} from "~/utils/resource";
 const props = defineProps({
   badgerToken: {
     type: String,
+    default: undefined,
   },
   clubUuid: {
     type: String,
+    default: undefined,
   }
 });
 

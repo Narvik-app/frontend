@@ -11,10 +11,12 @@ const props = defineProps({
   item: {
     type: Object as PropType<InventoryItem>,
     required: false,
+    default: undefined,
   },
   categories: {
     type: Object as PropType<InventoryCategory[]>,
     required: false,
+    default: undefined,
   },
   viewOnly: {
     type: Boolean,

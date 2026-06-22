@@ -5,7 +5,8 @@ import type {EmailTemplate} from '~/types/api/item/clubDependent/plugin/emailing
 const props = defineProps({
     templateId: {
       type: String,
-      required: false
+      required: false,
+      default: undefined
     }
   })
 

@@ -3,7 +3,8 @@
 const props = defineProps({
   label: {
     type: String,
-    required: false
+    required: false,
+    default: undefined
   },
   icon: {
     type: String,

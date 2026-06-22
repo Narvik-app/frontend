@@ -46,12 +46,12 @@ export const useCartStore = defineStore('cart', () => {
 
     const itemIndex = cart.value.findIndex((cartItem) => cartItem.item.uuid === item.uuid)
 
-    let cartItem: CartItem | undefined = undefined
+    let cartItem: CartItem | undefined
 
     if (itemIndex < 0) {
       cartItem = { quantity: modifier, item: item }
     } else {
-      cartItem = cart.value[itemIndex]
+      cartItem = cart.value[itemIndex] ?? { quantity: modifier - 1, item: item }
       cartItem.quantity += modifier
     }
 

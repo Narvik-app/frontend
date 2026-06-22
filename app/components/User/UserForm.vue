@@ -9,6 +9,7 @@ const props = defineProps({
   item: {
     type: Object as PropType<User>,
     required: false,
+    default: undefined,
   },
   isList: {
     type: Boolean,

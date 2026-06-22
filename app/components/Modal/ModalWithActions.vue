@@ -33,7 +33,7 @@ const props = defineProps(
             <slot/>
 
             <div class="flex gap-2 justify-between sm:justify-end flex-wrap">
-              <slot name="cancel" v-if="props.displayCancelButton">
+              <slot v-if="props.displayCancelButton" name="cancel">
                 <UButton color="neutral" variant="ghost" @click="emit('close', false)">
                   {{ props.cancelText }}
                 </UButton>

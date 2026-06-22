@@ -11,13 +11,16 @@ const props = defineProps({
     required: true
   },
   value: {
-    type: [String, Number]
+    type: [String, Number],
+    default: undefined
   },
   valueClass: {
-    type: String
+    type: String,
+    default: undefined
   },
   tooltip: {
-    type: String
+    type: String,
+    default: undefined
   },
 
   isIncreasing: {

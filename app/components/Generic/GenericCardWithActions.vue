@@ -3,7 +3,8 @@
 const props = defineProps({
   title: {
     type: String,
-    required: false
+    required: false,
+    default: undefined
   },
   spaced: {
     type: Boolean,

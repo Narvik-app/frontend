@@ -10,10 +10,12 @@ const props = defineProps({
   item: {
     type: Object as PropType<Member>,
     required: false,
+    default: undefined,
   },
   seasons: {
     type: Object as PropType<Season[]>,
     required: false,
+    default: undefined,
   },
   viewOnly: {
     type: Boolean,

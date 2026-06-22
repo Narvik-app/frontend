@@ -7,6 +7,7 @@ export default withNuxt(
     rules: {
       // Vue 3 supports multiple template roots (fragments)
       'vue/no-multiple-template-root': 'off',
+      'vue/first-attribute-linebreak': 'off'
     }
   }
 )
