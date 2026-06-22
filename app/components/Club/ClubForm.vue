@@ -10,6 +10,7 @@ const props = defineProps({
   item: {
     type: Object as PropType<WriteClub>,
     required: false,
+    default: undefined,
   },
   isList: {
     type: Boolean,

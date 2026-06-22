@@ -18,7 +18,8 @@ import {ClubRole} from "~/types/api/item/club";
 const props = defineProps({
   externalPresence: {
     type: Object as PropType<ExternalPresence>,
-    required: false
+    required: false,
+    default: undefined
   },
 });
 

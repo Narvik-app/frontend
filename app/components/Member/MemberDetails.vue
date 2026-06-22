@@ -29,11 +29,13 @@ import {Permission} from "~/types/api/permissions";
 const props = defineProps({
   member: {
     type: Object as PropType<Member>,
-    required: false
+    required: false,
+    default: undefined
   },
   memberId: {
     type: String,
-    required: false
+    required: false,
+    default: undefined
   },
   self: {
     type: Boolean,

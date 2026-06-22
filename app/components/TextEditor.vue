@@ -6,7 +6,8 @@ import type { Editor } from '@tiptap/core'
 const props = defineProps(
     {
       modelValue: {
-        type: String
+        type: String,
+        default: undefined
       },
       disabled: {
         type: Boolean

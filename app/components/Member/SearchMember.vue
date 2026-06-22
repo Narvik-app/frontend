@@ -6,7 +6,8 @@ import type {TableRow} from "#ui/types";
 const props = defineProps({
   query: {
     type: [String],
-    required: false
+    required: false,
+    default: undefined
   }
 });
 

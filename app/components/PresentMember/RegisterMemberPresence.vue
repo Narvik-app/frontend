@@ -12,11 +12,13 @@ import {ClubRole, getAvailableClubRole, hasClubSupervisorRole, isClubAdmin} from
 const props = defineProps({
   member: {
     type: Object as PropType<Member>,
-    required: false
+    required: false,
+    default: undefined
   },
   memberPresence: {
     type: Object as PropType<MemberPresence>,
-    required: false
+    required: false,
+    default: undefined
   },
   dateEditable: {
     type: Boolean,

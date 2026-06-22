@@ -7,6 +7,7 @@ const props = defineProps(
   {
     items: {
       type: Array as PropType<GroupedNavigationLinks[]>,
+      default: undefined
     }
   }
 )
