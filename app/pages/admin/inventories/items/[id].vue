@@ -286,6 +286,7 @@ definePageMeta({
         <UButton
           v-for="p in periods"
           :key="p.value"
+          :data-testid="'period-' + p.value"
           :label="p.label"
           size="sm"
           :variant="selectedPeriod === p.value ? 'soft' : 'ghost'"
@@ -307,6 +308,7 @@ definePageMeta({
     <UCard>
       <div class="text-xl font-bold mb-4">Détail par jour</div>
       <UTable
+        data-testid="daily-history-table"
         :loading="isLoadingTable"
         :columns="stockColumns"
         :data="dailyHistories"
