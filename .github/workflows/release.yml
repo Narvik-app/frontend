@@ -18,7 +18,7 @@ jobs:
     if: github.event_name == 'release'
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -47,7 +47,7 @@ jobs:
     # On a release, this job waits for update-version to succeed.
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Download package.json
         if: github.event_name == 'release'
