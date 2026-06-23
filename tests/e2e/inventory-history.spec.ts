@@ -1,6 +1,5 @@
 import {expect, test} from '@playwright/test';
 import {STORAGE_STATE} from './utils/auth';
-import {waitForApiResponse, getProxyRequestPath} from './utils/api';
 
 // Admin role required — inventory management is admin-only
 test.use({ storageState: STORAGE_STATE.ADMIN });
