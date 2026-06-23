@@ -40,15 +40,16 @@ async function useApi<T>(path: string, options: UseApiDataOptions<T> = {}, requi
     const selfStore = useSelfUserStore()
     const jwtToken = await selfStore.enhanceJwtTokenDefined()
     
-    // enhanceJwtTokenDefined handles token refresh, expiry checks, and logout on failure
-    // If we don't have a valid token at this point, the user is being redirected to login
-    if (!jwtToken.value?.access?.token) {
+    // enhanceJwtTokenDefined handles token refresh, expiry checks, and logout on fatal failure.
+    // On a transient refresh failure the token ref is returned but the access token is stale
+    const token = jwtToken.value
+    if (!token?.access?.token || !selfStore.isAccessTokenValid(token)) {
       return undefined
     }
     
     overloadedOptions = mergician({
       headers: {
-        Authorization: `Bearer ${jwtToken.value.access.token}`
+        Authorization: `Bearer ${token.access!.token}`
       }
     }, options)
 
@@ -86,7 +87,7 @@ export async function useLoginUser(email: string, password: string) {
 
   if (data) {
     const selfStore = useSelfUserStore()
-    selfStore.setJwtSelfJwtTokenFromApiResponse(data)
+    selfStore.setJwtSelfJwtTokenFromApiResponse(data as { access_token: string; refresh_token: string; expires_in?: number })
 
     await selfStore.refresh()
   }
@@ -101,7 +102,7 @@ export async function useLoginBadger(clubId: string, loginToken: string) {
   }, true);
 
   const selfStore = useSelfUserStore()
-  selfStore.setJwtSelfJwtTokenFromApiResponse(data, true)
+  selfStore.setJwtSelfJwtTokenFromApiResponse(data as { access_token: string; refresh_token: string; expires_in?: number }, true)
 
   await selfStore.refresh()
 
