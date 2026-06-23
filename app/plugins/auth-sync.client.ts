@@ -14,6 +14,8 @@
  * to use the same refresh token simultaneously. This plugin handles the follow-up:
  * a tab that lost the race re-hydrates the winner's rotated token from storage.
  */
+import type {RawJwtToken} from "~/types/jwtTokens";
+
 export default defineNuxtPlugin(() => {
   // Must match the pinia-plugin-persistedstate key for the selfUser store.
   // Config: nuxt.config.ts → piniaPluginPersistedstate.key = 'narvik_%id', store id = 'selfUser'
@@ -31,7 +33,7 @@ export default defineNuxtPlugin(() => {
     }
 
     try {
-      const parsed = JSON.parse(event.newValue)
+      const parsed = JSON.parse(event.newValue) as { selfJwtToken?: RawJwtToken }
       if (parsed?.selfJwtToken) {
         selfStore.hydrateJwtFromStorage(parsed.selfJwtToken)
       }

@@ -2,7 +2,7 @@ import type {Member} from "~/types/api/item/clubDependent/member";
 import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
 import {usePostRawJson} from "~/composables/api/api";
 import type {NuxtError} from "#app";
-import {JwtToken} from "~/types/jwtTokens";
+import {JwtToken, type RawJwtToken} from "~/types/jwtTokens";
 import type {Ref} from "vue";
 import FileQuery from "~/composables/api/query/FileQuery";
 import {defineStore} from "pinia";
@@ -183,24 +183,24 @@ export const useSelfUserStore = defineStore('selfUser', () => {
    * Adopt a token that was persisted by another tab.
    * Never regresses: ignores incoming token if our in-memory access token is already newer.
    */
-  function hydrateJwtFromStorage(raw: Record<string, any>): void {
-    if (!raw?.access?.token && !raw?.refresh?.token) return
+  function hydrateJwtFromStorage(raw: RawJwtToken): void {
+    if (!raw.access?.token && !raw.refresh?.token) return
 
     // Never overwrite a newer in-memory token with an older persisted one
-    if (selfJwtToken.value?.access?.date && raw?.access?.date) {
+    if (selfJwtToken.value?.access?.date && raw.access?.date) {
       const inMemory = dayjs(selfJwtToken.value.access.date)
       const incoming = dayjs(raw.access.date)
       if (incoming.isValid() && inMemory.isValid() && incoming.isBefore(inMemory)) return
     }
 
     const t = new JwtToken(!!raw.isBadger)
-    if (raw.access) {
+    if (raw.access?.token) {
       t.access = {
         token: raw.access.token,
         date: raw.access.date ? new Date(raw.access.date) : null
       }
     }
-    if (raw.refresh) {
+    if (raw.refresh?.token) {
       t.refresh = {
         token: raw.refresh.token,
         date: raw.refresh.date ? new Date(raw.refresh.date) : null
