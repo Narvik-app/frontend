@@ -1,6 +1,7 @@
 import type {Member} from "~/types/api/item/clubDependent/member";
 import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
 import {usePostRawJson} from "~/composables/api/api";
+import type {NuxtError} from "#app";
 import {JwtToken} from "~/types/jwtTokens";
 import type {Ref} from "vue";
 import FileQuery from "~/composables/api/query/FileQuery";
@@ -88,6 +89,24 @@ export const useSelfUserStore = defineStore('selfUser', () => {
   }
 
 
+  // Discriminated outcome for token refresh — fatal means log out, transient means keep session and retry later
+  type RefreshOutcome =
+    | { status: 'ok'; token: JwtToken }
+    | { status: 'fatal' }
+    | { status: 'transient' }
+
+  /**
+   * Classify a /token error as fatal (invalid_grant → log out) or transient (network/5xx → keep session).
+   * Classifies on statusCode / data.error, never on message text.
+   */
+  function isFatalRefreshError(error: NuxtError | undefined): boolean {
+    if (!error) return false
+    const status = error.statusCode
+    const oauthError = (error.data as Record<string, unknown>)?.error
+    if (oauthError === 'invalid_grant' || oauthError === 'invalid_request') return true
+    return status === 400 || status === 401
+  }
+
   /**
    * Handle token errors - logs, shows toast if needed, and triggers logout.
    * Returns ref(null) to allow chaining in async functions.
@@ -110,12 +129,13 @@ export const useSelfUserStore = defineStore('selfUser', () => {
 
   /**
    * Performs the actual token refresh API call.
-   * Returns the new JwtToken on success, null on failure.
+   * Returns a discriminated RefreshOutcome: ok (new token), fatal (invalid_grant → log out),
+   * or transient (network/5xx → keep session and retry on the next poll tick).
    */
-  async function performTokenRefresh(): Promise<JwtToken | null> {
+  async function performTokenRefresh(): Promise<RefreshOutcome> {
     const token = selfJwtToken.value
     if (!token?.refresh?.token) {
-      return null
+      return { status: 'fatal' }
     }
 
     const { data, error } = await usePostRawJson("token", {
@@ -124,11 +144,92 @@ export const useSelfUserStore = defineStore('selfUser', () => {
     }, token.isBadger)
 
     if (error) {
-      console.error('Token refresh failed:', error.message)
-      return null
+      if (isFatalRefreshError(error)) {
+        console.error('Token refresh rejected (invalid_grant), logging out:', error.message)
+        return { status: 'fatal' }
+      }
+      console.warn('Token refresh transient failure, keeping session:', error.message)
+      return { status: 'transient' }
     }
 
-    return setJwtSelfJwtTokenFromApiResponse(data, token.isBadger)
+    const apiData = data as { access_token?: string; refresh_token?: string; expires_in?: number }
+    if (!apiData?.access_token || !apiData?.refresh_token) {
+      // Unexpected response shape — treat as transient, not a reason to log out
+      console.warn('Token refresh returned unexpected response, keeping session')
+      return { status: 'transient' }
+    }
+
+    return { status: 'ok', token: setJwtSelfJwtTokenFromApiResponse(apiData as { access_token: string; refresh_token: string; expires_in?: number }, token.isBadger) }
+  }
+
+  /**
+   * Re-read the stored token from localStorage and adopt it if it is newer than what is in memory.
+   * Runs synchronously inside the Web Lock so another tab's just-written token is visible
+   * before we decide whether to call /token again.
+   */
+  function rehydrateFromLocalStorageIfNewer(): void {
+    if (typeof localStorage === 'undefined') return
+    try {
+      const raw = localStorage.getItem('narvik_selfUser')
+      if (!raw) return
+      const parsed = JSON.parse(raw)
+      if (parsed?.selfJwtToken) hydrateJwtFromStorage(parsed.selfJwtToken)
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
+  /**
+   * Adopt a token that was persisted by another tab.
+   * Never regresses: ignores incoming token if our in-memory access token is already newer.
+   */
+  function hydrateJwtFromStorage(raw: Record<string, any>): void {
+    if (!raw?.access?.token && !raw?.refresh?.token) return
+
+    // Never overwrite a newer in-memory token with an older persisted one
+    if (selfJwtToken.value?.access?.date && raw?.access?.date) {
+      const inMemory = dayjs(selfJwtToken.value.access.date)
+      const incoming = dayjs(raw.access.date)
+      if (incoming.isValid() && inMemory.isValid() && incoming.isBefore(inMemory)) return
+    }
+
+    const t = new JwtToken(!!raw.isBadger)
+    if (raw.access) {
+      t.access = {
+        token: raw.access.token,
+        date: raw.access.date ? new Date(raw.access.date) : null
+      }
+    }
+    if (raw.refresh) {
+      t.refresh = {
+        token: raw.refresh.token,
+        date: raw.refresh.date ? new Date(raw.refresh.date) : null
+      }
+    }
+    selfJwtToken.value = t
+  }
+
+  /**
+   * Run the token refresh in a cross-tab serialized manner using the Web Locks API.
+   * Inside the lock we re-read localStorage — if another tab already refreshed,
+   * we adopt its token and skip the network call (prevents double-spending rotated tokens).
+   * Falls back to a plain async call when Web Locks are unavailable.
+   */
+  async function coordinatedRefresh(): Promise<RefreshOutcome> {
+    const run = async (): Promise<RefreshOutcome> => {
+      rehydrateFromLocalStorageIfNewer()
+      // If re-hydration gave us a fresh access token, skip the network call
+      const current = selfJwtToken.value
+      if (current && isAccessTokenValid(current)) {
+        return { status: 'ok', token: current }
+      }
+      return performTokenRefresh()
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.locks?.request) {
+      return navigator.locks.request('narvik-token-refresh', run)
+    }
+    return run()
   }
 
   /**
@@ -158,19 +259,23 @@ export const useSelfUserStore = defineStore('selfUser', () => {
       return handleTokenError("Session expirée.")
     }
 
-    // If already refreshing, wait for that operation to complete
+    // If already refreshing in this tab, wait for that operation to complete
     if (refreshTokenPromise) {
       return refreshTokenPromise
     }
 
-    // Start the refresh operation wrapped in our singleton promise
+    // Start the refresh operation wrapped in our singleton promise (per-tab inner guard)
+    // coordinatedRefresh adds the cross-tab Web Lock as the outer guard
     refreshTokenPromise = (async (): Promise<Ref<JwtToken | null>> => {
-      const newToken = await performTokenRefresh()
+      const outcome = await coordinatedRefresh()
 
-      if (!newToken) {
+      if (outcome.status === 'fatal') {
         return handleTokenError("Impossible de rafraîchir la session.")
       }
 
+      // 'ok' or 'transient': keep the session.
+      // On 'transient', the access token is stale — useApi will detect this and return
+      // undefined for this call, keeping last displayed data until the next poll tick retries.
       return jwtToken
     })()
 
@@ -181,16 +286,43 @@ export const useSelfUserStore = defineStore('selfUser', () => {
     }
   }
 
-  function setJwtSelfJwtTokenFromApiResponse(data: { access_token: string; refresh_token: string; refresh_token_expiration: number }, isBadger: boolean = false): JwtToken {
+  /**
+   * Derive the access token expiry from the JWT payload `exp` claim when available.
+   * Falls back to `expires_in` from the response, then to the historical 58-minute constant.
+   * A 2-minute buffer ensures we refresh before the server actually rejects the token.
+   */
+  function deriveAccessExpiry(accessToken: string, expiresIn?: number): Date {
+    try {
+      const parts = accessToken.split('.')
+      const payloadPart = parts[1]
+      if (parts.length === 3 && payloadPart) {
+        const payload = JSON.parse(atob(payloadPart.replace(/-/g, '+').replace(/_/g, '/')))
+        if (payload?.exp && typeof payload.exp === 'number') {
+          return new Date((payload.exp - 120) * 1000)
+        }
+      }
+    } catch {
+      // Opaque token or malformed JWT — fall through to next strategy
+    }
+    if (typeof expiresIn === 'number' && expiresIn > 0) {
+      return new Date(Date.now() + (expiresIn - 120) * 1000)
+    }
+    return new Date(Date.now() + 3480 * 1000) // historical fallback (58 min)
+  }
+
+  function setJwtSelfJwtTokenFromApiResponse(data: { access_token: string; refresh_token: string; expires_in?: number }, isBadger: boolean = false): JwtToken {
     const jwtToken = new JwtToken(isBadger);
 
     jwtToken.access = {
-      date: new Date(Date.now() + (3480 * 1000)), // Expires in 1h - 2mn (to get some room on the token expiration),
+      date: deriveAccessExpiry(data.access_token, data.expires_in),
       token: data.access_token
     }
 
+    // The backend does not return refresh_token_expiration — we let the server be the
+    // source of truth (invalid_grant on an expired/revoked token). Store null cleanly;
+    // shouldAttemptRefresh treats null as "try anyway".
     jwtToken.refresh = {
-      date: new Date((data.refresh_token_expiration - 120) * 1000),
+      date: null,
       token: data.refresh_token
     }
 
@@ -500,7 +632,9 @@ export const useSelfUserStore = defineStore('selfUser', () => {
 
     // Session management
     selfJwtToken,
+    isAccessTokenValid,
     setJwtSelfJwtTokenFromApiResponse,
+    hydrateJwtFromStorage,
     enhanceJwtTokenDefined,
   }
 }, {

@@ -10,7 +10,7 @@ export class JwtToken {
 
 interface _Token {
   token: string,
-  date: Date
+  date: Date | null
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
