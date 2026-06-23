@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type {FormError, SelectItem, SelectMenuItem, TabsItem} from '#ui/types'
 import UserQuery from "~/composables/api/query/UserQuery";
-import {isMobile, watchBreakpoint} from "~/utils/browser";
+import {isMobile} from "~/utils/browser";
 import type {NuxtTurnstile} from "#components";
 import {useLoginUser} from "~/composables/api/api";
 import {ClubActivity, getSelectMenuClubActivity} from "~/types/api/item/club";
@@ -180,14 +180,6 @@ async function initiateRegister() {
   securityEmailSent.value = true
 }
 
-onMounted(() => {
-  watchBreakpoint()
-  window.addEventListener('resize', watchBreakpoint)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', watchBreakpoint)
-})
 </script>
 
 <template>

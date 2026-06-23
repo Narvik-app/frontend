@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type {FormError, TabsItem} from '#ui/types'
 import UserQuery from "~/composables/api/query/UserQuery";
-import {isMobile, watchBreakpoint} from "~/utils/browser";
+import {isMobile} from "~/utils/browser";
 import type {NuxtTurnstile} from "#components";
 
 const toast = useToast()
@@ -107,14 +107,6 @@ async function initiatePasswordReset() {
   securityEmailSent.value = true
 }
 
-onMounted(() => {
-  watchBreakpoint()
-  window.addEventListener('resize', watchBreakpoint)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', watchBreakpoint)
-})
 </script>
 
 <template>

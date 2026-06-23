@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {useAppConfigStore} from "~/stores/useAppConfig";
-import {isDesktop, isTablet, watchBreakpoint} from "~/utils/browser";
+import {isDesktop, isTablet} from "~/utils/browser";
 import ModalSelectProfile from "~/components/Modal/ModalSelectProfile.vue";
 import type {DropdownMenuItem} from "#ui/components/DropdownMenu";
 import {Permission} from "~/types/api/permissions";
@@ -97,14 +97,6 @@ const overlay = useOverlay()
     ]);
   }
 
-  onMounted(() => {
-    watchBreakpoint()
-    window.addEventListener('resize', watchBreakpoint)
-  })
-
-  onBeforeUnmount(() => {
-    window.removeEventListener('resize', watchBreakpoint)
-  })
 </script>
 
 <template>

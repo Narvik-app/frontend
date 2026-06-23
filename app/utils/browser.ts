@@ -60,15 +60,15 @@ export function isTouchDevice() {
 
 export const activeBreakpoint: Ref<string|undefined> = ref(undefined)
 export function watchBreakpoint() {
-  if (window.screen.width >= 1536) {
+  if (window.innerWidth >= 1536) {
     activeBreakpoint.value = '2xl'
-  } else if (window.screen.width >= 1280) {
+  } else if (window.innerWidth >= 1280) {
     activeBreakpoint.value = 'xl'
-  } else if (window.screen.width >= 1024) {
+  } else if (window.innerWidth >= 1024) {
     activeBreakpoint.value = 'lg'
-  } else if (window.screen.width >= 768) {
+  } else if (window.innerWidth >= 768) {
     activeBreakpoint.value = 'md'
-  } else if (window.screen.width >= 640) {
+  } else if (window.innerWidth >= 640) {
     activeBreakpoint.value = 'sm'
   } else {
     activeBreakpoint.value = 'xs'
