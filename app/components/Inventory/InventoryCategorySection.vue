@@ -69,6 +69,7 @@ async function reactivate(item: InventoryItem) {
   <div class="border border-(--ui-border) rounded-lg overflow-hidden">
     <!-- Section header -->
     <button
+      data-testid="inventory-category-header"
       class="w-full flex items-center gap-2 px-4 py-2 bg-(--ui-bg-muted) hover:bg-(--ui-bg-elevated) transition-colors text-left"
       @click="isExpanded = !isExpanded"
     >
@@ -126,9 +127,11 @@ async function reactivate(item: InventoryItem) {
           </UButton>
 
           <UButton
+            data-testid="inventory-item-detail-link"
             size="xs"
             variant="soft"
-            @click.stop="emit('itemClicked', item)"
+            :to="'/admin/inventories/items/' + convertUuidToUrlUuid(item.uuid)"
+            @click.stop=""
           >
             Détails
           </UButton>

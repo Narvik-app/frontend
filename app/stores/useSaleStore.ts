@@ -49,9 +49,9 @@ export const useSaleStore = defineStore('sale', () => {
           urlParams.append(`createdAt[after]`, formattedStartDate);
 
           if (formattedEndDate) {
-            urlParams.append(`createdAt[before]`, formattedEndDate);
+            urlParams.append(`createdAt[strictly_before]`, formattedEndDate);
           } else {
-            urlParams.append(`createdAt[before]`, formattedStartDate);
+            urlParams.append(`createdAt[strictly_before]`, formattedStartDate);
           }
         }
       }
@@ -96,9 +96,9 @@ export const useSaleStore = defineStore('sale', () => {
           urlParams.append(`createdAt[after]`, formattedStartDate);
 
           if (formattedEndDate) {
-            urlParams.append(`createdAt[before]`, formattedEndDate);
+            urlParams.append(`createdAt[strictly_before]`, formattedEndDate);
           } else {
-            urlParams.append(`createdAt[before]`, formattedStartDate);
+            urlParams.append(`createdAt[strictly_before]`, formattedStartDate);
           }
         }
       }

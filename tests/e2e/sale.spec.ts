@@ -1,5 +1,6 @@
 import {expect, test} from '@playwright/test';
 import {STORAGE_STATE} from './utils/auth';
+import {waitForApiResponse, getProxyRequestPath} from './utils/api';
 
 // Use admin authenticated state — regular users don't have sale access
 test.use({ storageState: STORAGE_STATE.ADMIN });
@@ -125,6 +126,52 @@ test.describe.serial('Sale flow', () => {
 
     // Should show the same count as initial + 1 (today's sales only)
     await expect(saleCountStat).toHaveText((initialSaleCount + 1).toString());
+  });
+
+  test('selecting yesterday excludes today\'s midnight sales', async ({ page }) => {
+    await page.goto('/admin/sales/history');
+
+    const saleCountStat = page.getByTestId('stat-sale-count').getByTestId('stat-value');
+    await expect(saleCountStat).toBeVisible();
+    await expect(saleCountStat).not.toHaveText('');
+
+    // Open date range picker
+    await page.getByTestId('date-range-picker-trigger').click();
+
+    // Compute yesterday's day number; handle month boundary
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    if (today.getDate() === 1) {
+      // Yesterday is in the previous month — navigate back
+      await page.locator('.vc-arrow.vc-prev').first().click();
+      await page.waitForTimeout(300);
+    }
+
+    const yesterdayCell = page
+      .locator('.vc-day:not(.is-not-in-month) .vc-day-content')
+      .getByText(String(yesterday.getDate()), { exact: true })
+      .first();
+
+    await yesterdayCell.click(); // first click: set range start
+    const [response] = await Promise.all([
+      waitForApiResponse(page, path => path.includes('/sales') && path.includes('createdAt')),
+      yesterdayCell.click(), // second click: set range end → triggers getSales()
+    ]);
+
+    const requestPath = getProxyRequestPath(response);
+    expect(requestPath).toContain('createdAt[strictly_before]');
+    expect(requestPath).not.toMatch(/createdAt\[before\]=/); // no bare before= param
+
+    // No response member should be dated today
+    const todayPrefix = today.toISOString().slice(0, 10);
+    const yesterdayPrefix = yesterday.toISOString().slice(0, 10);
+    const responseBody = await response.json();
+    for (const sale of responseBody.member ?? []) {
+      expect(sale.createdAt).toContain(yesterdayPrefix);
+      expect(sale.createdAt).not.toContain(todayPrefix);
+    }
   });
 
   test('selecting today to a month ago shows more results', async ({ page }) => {

@@ -7,6 +7,9 @@ import {convertUuidToUrlUuid, decodeUrlUuid} from "~/utils/resource";
 import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {Permission} from "~/types/api/permissions";
+import {formatDate} from "~/utils/date";
+import type {ChartDataField} from "~/utils/chart";
+import dayjs from "dayjs";
 
 definePageMeta({
     layout: "pos"
@@ -22,18 +25,48 @@ definePageMeta({
   const route = useRoute()
   const itemId = decodeUrlUuid(route.params.id.toString());
 
-
   const overlayDeleteConfirmation = overlay.create(ModalDeleteConfirmation)
   const inventoryItemModalOpen = ref(false)
 
   const inventoryItem: Ref<InventoryItem | undefined> = ref(undefined)
-  const inventoryItemHistories: Ref<InventoryItemHistory[]> = ref([])
 
   const chartData: Ref<ChartLineData|undefined> = ref(undefined)
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        type: 'linear',
+        position: 'left',
+        title: { display: true, text: 'Prix (€)' },
+      },
+      y1: {
+        type: 'linear',
+        position: 'right',
+        title: { display: true, text: 'Stock' },
+        grid: { drawOnChartArea: false },
+      },
+    },
+  }
+
+  type Period = '6m' | '1y' | '2y' | 'all'
+  const periods: { label: string; value: Period }[] = [
+    { label: '6 mois', value: '6m' },
+    { label: '1 an',   value: '1y' },
+    { label: '2 ans',  value: '2y' },
+    { label: 'Tout',   value: 'all' },
+  ]
+  const selectedPeriod = ref<Period>('1y')
+
+  const dailyHistories = ref<InventoryItemHistory[]>([])
+  const totalDailyHistories = ref(0)
+  const page = ref(1)
+  const itemsPerPage = ref(30)
+  const isLoadingChart = ref(false)
+  const isLoadingTable = ref(false)
 
   const itemQuery = new InventoryItemQuery()
 
-  // We load the item
   loadItem().then(value => {
     if (!value) {
       toast.add({
@@ -56,52 +89,90 @@ definePageMeta({
 
     inventoryItem.value = retrieved
 
-    // We update the page title
     useHead({
       title: retrieved.name
     })
 
-    loadHistories(itemId.toString())
+    loadChart()
+    loadTable()
 
     return true
   }
 
-  async function loadHistories(itemId: string) {
-    // We load the history
-    const { items, error } = await itemQuery.histories(itemId)
+  function buildParams(includePagination: boolean): URLSearchParams {
+    const params = new URLSearchParams()
+    if (selectedPeriod.value !== 'all') {
+      const periodMap: Record<string, [number, dayjs.ManipulateType]> = {
+        '6m': [6, 'month'],
+        '1y': [1, 'year'],
+        '2y': [2, 'year'],
+      }
+      const [amount, unit] = periodMap[selectedPeriod.value]!
+      params.append('start', dayjs().subtract(amount, unit).format('YYYY-MM-DD'))
+      params.append('end', dayjs().format('YYYY-MM-DD'))
+    }
+    if (includePagination) {
+      params.append('page', page.value.toString())
+      params.append('itemsPerPage', itemsPerPage.value.toString())
+    } else {
+      params.append('pagination', 'false')
+    }
+    return params
+  }
 
-    if (error) {
-      inventoryItemHistories.value = []
-      return;
+  function selectPeriod(p: Period) {
+    selectedPeriod.value = p
+    page.value = 1
+    loadChart()
+    loadTable()
+  }
+
+  async function loadChart() {
+    isLoadingChart.value = true
+    const { items, error } = await itemQuery.dailyHistories(itemId.toString(), buildParams(false))
+    isLoadingChart.value = false
+
+    if (error || !items.length) {
+      chartData.value = undefined
+      return
     }
 
-    inventoryItemHistories.value = items
-
-
-
-    const labels: string[] = [];
-    const dataPurchasePrice: string[] = [];
-    const dataSellingPrice: string[] = [];
-
-    items.reverse().forEach(value => {
-      labels.push(formatDate(value.createdAt) ?? '')
-      dataPurchasePrice.push(value.purchasePrice ?? '')
-      dataSellingPrice.push(value.sellingPrice ?? '')
-    })
+    const reversed = [...items].reverse()
+    const dataPurchasePrice: ChartDataField[] = reversed.map(r => ({
+      x: formatDate(r.createdAt) ?? '',
+      y: r.purchasePrice ?? undefined,
+    }))
+    const dataSellingPrice: ChartDataField[] = reversed.map(r => ({
+      x: formatDate(r.createdAt) ?? '',
+      y: r.sellingPrice ?? undefined,
+    }))
+    const dataQuantity: ChartDataField[] = reversed.map(r => ({
+      x: formatDate(r.createdAt) ?? '',
+      y: r.quantity ?? undefined,
+    }))
 
     chartData.value = {
-      labels: labels,
       datasets: [
-        {
-          label: 'Prix d\'achat',
-          data: dataPurchasePrice
-        },
-        {
-          label: 'Prix de vente',
-          data: dataSellingPrice
-        }
+        { label: "Prix d'achat",  data: dataPurchasePrice, yAxisID: 'y' },
+        { label: 'Prix de vente', data: dataSellingPrice,  yAxisID: 'y' },
+        { label: 'Stock',         data: dataQuantity,      yAxisID: 'y1' },
       ]
     }
+  }
+
+  async function loadTable() {
+    isLoadingTable.value = true
+    const { items, totalItems, error } = await itemQuery.dailyHistories(itemId.toString(), buildParams(true))
+    isLoadingTable.value = false
+
+    if (error) {
+      dailyHistories.value = []
+      totalDailyHistories.value = 0
+      return
+    }
+
+    dailyHistories.value = items
+    totalDailyHistories.value = totalItems ?? 0
   }
 
   async function deleteItem() {
@@ -125,6 +196,13 @@ definePageMeta({
     })
     navigateTo('/admin/inventories')
   }
+
+  const stockColumns = [
+    { accessorKey: 'createdAt',     header: 'Date' },
+    { accessorKey: 'quantity',      header: 'Stock fin de journée' },
+    { accessorKey: 'purchasePrice', header: "Prix d'achat" },
+    { accessorKey: 'sellingPrice',  header: 'Prix de vente' },
+  ]
 </script>
 
 <template>
@@ -203,11 +281,53 @@ definePageMeta({
       </GenericStatCard>
     </div>
 
-    <GenericCard v-if="chartData" title="Historique des prix de ventes/achats">
-      <div class="h-[55vh] sm:h-[65vh]">
-        <ChartLine :data="chartData" />
+    <GenericCard title="Historique des prix et du stock">
+      <div class="flex justify-end gap-1 mb-4">
+        <UButton
+          v-for="p in periods"
+          :key="p.value"
+          :data-testid="'period-' + p.value"
+          :label="p.label"
+          size="sm"
+          :variant="selectedPeriod === p.value ? 'soft' : 'ghost'"
+          :color="selectedPeriod === p.value ? 'primary' : 'neutral'"
+          @click="selectPeriod(p.value)"
+        />
+      </div>
+      <div v-if="isLoadingChart" class="h-[55vh] sm:h-[65vh] flex items-center justify-center">
+        <UIcon name="i-heroicons-arrow-path" class="animate-spin text-2xl" />
+      </div>
+      <div v-else-if="chartData" class="h-[55vh] sm:h-[65vh]">
+        <ChartLine :data="chartData" :options="chartOptions" />
+      </div>
+      <div v-else class="h-[20vh] flex items-center justify-center italic text-sm">
+        Aucun historique sur la période sélectionnée.
       </div>
     </GenericCard>
+
+    <UCard>
+      <div class="text-xl font-bold mb-4">Détail par jour</div>
+      <UTable
+        data-testid="daily-history-table"
+        :loading="isLoadingTable"
+        :columns="stockColumns"
+        :data="dailyHistories"
+      >
+        <template #createdAt-cell="{ row }">{{ formatDate(row.original.createdAt) }}</template>
+        <template #quantity-cell="{ row }">{{ row.original.quantity ?? '—' }}</template>
+        <template #purchasePrice-cell="{ row }">{{ formatMonetary(row.original.purchasePrice) }}</template>
+        <template #sellingPrice-cell="{ row }">{{ formatMonetary(row.original.sellingPrice) }}</template>
+        <template #empty>
+          <div class="italic text-sm py-6 text-center">Aucun mouvement sur la période.</div>
+        </template>
+      </UTable>
+      <GenericTablePagination
+        v-model:page="page"
+        v-model:items-per-page="itemsPerPage"
+        :total-items="totalDailyHistories"
+        @paginate="loadTable()"
+      />
+    </UCard>
   </div>
 
   <UModal

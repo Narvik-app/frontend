@@ -274,7 +274,6 @@ async function downloadCsv() {
             </button>
           </div>
 
-          <!-- Stock géré tab -->
           <div v-if="activeTab === 'stock'" class="flex flex-col gap-2">
             <div v-if="stockGroups.size === 0" class="text-center py-8 text-muted italic text-sm">
               Aucun article avec stock géré.
@@ -293,7 +292,6 @@ async function downloadCsv() {
             />
           </div>
 
-          <!-- Sans stock géré tab -->
           <div v-else-if="activeTab === 'unmanaged'" class="flex flex-col gap-2">
             <div v-if="unmanagedGroups.size === 0" class="text-center py-8 text-muted italic text-sm">
               Aucun article sans stock géré.
@@ -312,7 +310,6 @@ async function downloadCsv() {
             />
           </div>
 
-          <!-- Désactivés tab -->
           <div v-else-if="activeTab === 'disabled'" class="flex flex-col gap-2">
             <div v-if="disabledGroups.size === 0" class="text-center py-8 text-muted italic text-sm">
               Aucun article désactivé.

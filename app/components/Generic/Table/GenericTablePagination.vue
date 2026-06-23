@@ -25,8 +25,8 @@ function emitPaginate(pagination: TablePaginateInterface) {
 
 <template>
 
-  <div class="flex flex-wrap justify-end gap-4 px-3 py-3.5 pr-0 border-t border-neutral-200 dark:border-neutral-700">
-    <USelect v-model="itemsPerPage" class="w-fit" :items="usePaginationValues" @update:model-value="(payload) => emitPaginate({ page: page, itemsPerPage: payload })" />
+  <div data-testid="table-pagination" class="flex flex-wrap justify-end gap-4 px-3 py-3.5 pr-0 border-t border-neutral-200 dark:border-neutral-700">
+    <USelect v-model="itemsPerPage" data-testid="table-items-per-page" class="w-fit" :items="usePaginationValues" @update:model-value="(payload) => emitPaginate({ page: page, itemsPerPage: payload })" />
     <UPagination
       v-model:page="page"
       :items-per-page="parseInt(itemsPerPage.toString())"
