@@ -67,6 +67,12 @@ export function formatErrorFromApiResponse(response: any): object {
       return response
     }
 
+    // API Platform 3 validation errors: extract clean messages from violations array
+    if ('violations' in response.data && Array.isArray(response.data.violations) && response.data.violations.length > 0) {
+      response.message = response.data.violations.map((v: {message: string}) => v.message).join(', ')
+      return response
+    }
+
     if ('detail' in response.data) {
       response.message = response.data.detail
       return response

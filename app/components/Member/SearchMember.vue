@@ -8,6 +8,11 @@ const props = defineProps({
     type: [String],
     required: false,
     default: undefined
+  },
+  compact: {
+    type: Boolean,
+    required: false,
+    default: false
   }
 });
 
@@ -86,7 +91,7 @@ async function search(query: string | undefined | null, replayCount: number = 0)
     const members: Ref<Member[]> = ref([])
     members.value = searchResult.item
 
-    foundMembers.value = members.value;
+    foundMembers.value = props.compact ? members.value.slice(0, 3) : members.value;
     if (members.value.length === 1) {
       rowClicked(members.value.at(0) as Member)
     }
@@ -105,6 +110,10 @@ const columns = [{
 function rowClicked(row: Member) {
   memberSelected.value = row
   emit('selected-member', row)
+  if (props.compact) {
+    searchQuery.value = ''
+    foundMembers.value = []
+  }
 }
 
 function onSelect(event: Event) {
@@ -125,7 +134,10 @@ function onSelect(event: Event) {
 </script>
 
 <template>
-  <div class="flex flex-col justify-start px-4 py-4 rounded-lg divide-y divide-gray-200 dark:divide-gray-800 ring-1 ring-gray-200 dark:ring-gray-800 shadow bg-white dark:bg-gray-900 min-h-96">
+  <div
+    class="flex flex-col justify-start px-4 py-4 rounded-lg divide-y divide-gray-200 dark:divide-gray-800 ring-1 ring-gray-200 dark:ring-gray-800 shadow bg-white dark:bg-gray-900"
+    :class="compact ? '' : 'min-h-96'"
+  >
 
     <UFormField label="Nom / Licence">
       <GenericBarcodeReader
@@ -161,6 +173,7 @@ function onSelect(event: Event) {
     </UFormField>
 
     <UTable
+        v-if="!compact || searchQuery"
         :loading="searching"
         class="w-full"
         :columns="columns"

@@ -82,7 +82,7 @@ export function hasClubSupervisorRole(role: ClubRole|undefined): boolean {
 }
 
 // Club plugin types that can be enabled/disabled per club
-export type ClubPlugin = 'presencesEnabled' | 'salesEnabled';
+export type ClubPlugin = 'presencesEnabled' | 'salesEnabled' | 'loansEnabled';
 
 // Plugin metadata for UI display
 export interface ClubPluginInfo {
@@ -94,6 +94,7 @@ export interface ClubPluginInfo {
 export const clubPlugins: ClubPluginInfo[] = [
   { key: 'presencesEnabled', label: 'Présences', description: 'Enregistrement des présences' },
   { key: 'salesEnabled', label: 'Ventes', description: 'Ventes et gestion des stocks' },
+  { key: 'loansEnabled', label: 'Prêts', description: 'Prêt de matériel aux membres' },
 ];
 
 interface _Club extends UuidItem, TimestampItem {
@@ -101,6 +102,7 @@ interface _Club extends UuidItem, TimestampItem {
   isActivated?: boolean
   presencesEnabled?: boolean
   salesEnabled?: boolean
+  loansEnabled?: boolean
   badgerToken?: string
   comment?: string
   settings?: ClubSetting
@@ -124,6 +126,7 @@ export interface Club extends _Club {
   isActivated: boolean
   presencesEnabled: boolean
   salesEnabled: boolean
+  loansEnabled: boolean
 
   settings: ClubSetting
 }
@@ -133,6 +136,7 @@ export interface WriteClub extends _Club {
   isActivated: boolean
   presencesEnabled: boolean
   salesEnabled: boolean
+  loansEnabled: boolean
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type

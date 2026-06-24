@@ -13,6 +13,9 @@ import {convertUuidToUrlUuid} from "~/utils/resource";
 import {print} from "~/utils/browser";
 import type {SelectApiItem} from "~/types/select";
 import type {Member} from "~/types/api/item/clubDependent/member";
+import LoanItemQuery from "~/composables/api/query/clubDependent/plugin/loan/LoanItemQuery";
+import type {LoanItem} from "~/types/api/item/clubDependent/plugin/loan/loanItem";
+import {useSelfUserStore} from "~/stores/useSelfUser";
 
 definePageMeta({
     layout: "pos"
@@ -47,6 +50,15 @@ definePageMeta({
 
   const inventoryItemQuery = new InventoryItemQuery()
   const saleQuery = new SaleQuery()
+  const loanItemQuery = new LoanItemQuery()
+
+  // Loan items visible on sale page
+  const selfStore = useSelfUserStore()
+  const loanItems = ref<LoanItem[]>([])
+  if (selfStore.selectedProfile?.club.loansEnabled) {
+    const p = new URLSearchParams({visibleOnSalePage: '1', pagination: 'false'})
+    loanItemQuery.getAll(p).then(r => { loanItems.value = r.items })
+  }
 
   const searchQueryInput: Ref<string> = ref(searchQuery.value)
   watch(searchQuery, () => {
@@ -273,6 +285,40 @@ definePageMeta({
           <div v-for="j in (Math.floor(Math.random()*6) + 2)" :key="j">
             <USkeleton class="h-4 w-32" />
             <USkeleton class="h-4 w-full my-4" />
+          </div>
+        </div>
+      </UCard>
+
+      <!-- Loan items section (redirect-only) -->
+      <UCard v-if="selfStore.selectedProfile?.club.loansEnabled && loanItems.length > 0" class="mt-4 print:hidden">
+        <div class="font-bold text-lg mb-3 flex items-center gap-2">
+          <UIcon name="i-heroicons-archive-box" />
+          Matériel en prêt
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div
+            v-for="item in loanItems"
+            :key="item.uuid"
+            class="flex items-center gap-2 border rounded-lg p-2"
+          >
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium truncate">{{ item.name }}</p>
+              <p v-if="item.loanPrice" class="text-xs text-muted">{{ item.loanPrice }} €/prêt</p>
+            </div>
+            <UBadge
+              :color="item.isCurrentlyLoaned ? 'primary' : 'success'"
+              variant="soft"
+              size="xs"
+            >
+              {{ item.isCurrentlyLoaned ? 'Prêté' : 'Disponible' }}
+            </UBadge>
+            <UButton
+              size="xs"
+              icon="i-heroicons-arrow-top-right-on-square"
+              :to="'/admin/loans/items/' + convertUuidToUrlUuid(item.uuid)"
+            >
+              Gérer le prêt
+            </UButton>
           </div>
         </div>
       </UCard>
