@@ -31,6 +31,16 @@ export enum Permission {
   SalePaymentModesEdit = 'SALE_PAYMENT_MODES_EDIT',
   SaleImportAccess = 'SALE_IMPORT_ACCESS',
   SaleImportEdit = 'SALE_IMPORT_EDIT',
+
+  // Loan permissions
+  LoanAccess = 'LOAN_ACCESS',
+  LoanEdit = 'LOAN_EDIT',
+  LoanItemsAccess = 'LOAN_ITEMS_ACCESS',
+  LoanItemsEdit = 'LOAN_ITEMS_EDIT',
+  LoanCategoriesAccess = 'LOAN_CATEGORIES_ACCESS',
+  LoanCategoriesEdit = 'LOAN_CATEGORIES_EDIT',
+  LoanRecordingsAccess = 'LOAN_RECORDINGS_ACCESS',
+  LoanRecordingsEdit = 'LOAN_RECORDINGS_EDIT',
 }
 
 // Feature definition with Access and Edit permissions
@@ -124,6 +134,32 @@ export const permissionSections: PermissionSection[] = [
         name: 'Import',
         accessPermission: Permission.SaleImportAccess,
         editPermission: Permission.SaleImportEdit,
+      },
+    ],
+  },
+  {
+    label: 'Prêts',
+    plugin: 'loansEnabled',
+    features: [
+      {
+        name: 'Prêts',
+        accessPermission: Permission.LoanAccess,
+        editPermission: Permission.LoanEdit,
+      },
+      {
+        name: 'Articles',
+        accessPermission: Permission.LoanItemsAccess,
+        editPermission: Permission.LoanItemsEdit,
+      },
+      {
+        name: 'Catégories',
+        accessPermission: Permission.LoanCategoriesAccess,
+        editPermission: Permission.LoanCategoriesEdit,
+      },
+      {
+        name: 'Enregistrements',
+        accessPermission: Permission.LoanRecordingsAccess,
+        editPermission: Permission.LoanRecordingsEdit,
       },
     ],
   },

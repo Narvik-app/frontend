@@ -7,6 +7,12 @@ export function formatDate(date?: string): string | null {
   return dayjs(date).format("DD/MM/YYYY");
 }
 
+export function formatDateTime(date?: string): string | null {
+  if (!date) return null;
+
+  return dayjs(date).format("DD/MM/YYYY HH:mm");
+}
+
 export function formatDateTimeReadable(date?: string): string | null {
   if (!date) return null;
 
