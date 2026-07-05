@@ -139,21 +139,6 @@ function effectiveStatus(item: LoanItem): string {
   return item.status ?? 'available'
 }
 
-const statusColors: Record<string, string> = {
-  available: 'success',
-  loaned: 'primary',
-  maintenance: 'warning',
-  sold: 'neutral',
-  retired: 'error',
-}
-
-const statusLabels: Record<string, string> = {
-  available: 'Disponible',
-  loaned: 'Prêté',
-  maintenance: 'Maintenance',
-  sold: 'Vendu',
-  retired: 'Retiré',
-}
 </script>
 
 <template>
@@ -215,7 +200,7 @@ const statusLabels: Record<string, string> = {
                 v-if="item.uuid && imageCache[item.uuid]"
                 :src="imageCache[item.uuid]"
                 :alt="item.name"
-                class="w-full h-44 object-cover rounded-md"
+                class="w-full h-44 object-contain rounded-md"
               >
 
               <!-- Name / description / price -->
@@ -253,10 +238,10 @@ const statusLabels: Record<string, string> = {
                 <div v-else />
 
                 <UBadge
-                  :color="(statusColors[effectiveStatus(item)] as 'success'|'primary'|'warning'|'neutral'|'error')"
+                  v-if="effectiveStatus(item) === 'loaned'"
                   variant="soft"
                 >
-                  {{ statusLabels[effectiveStatus(item)] }}
+                  Prêté
                 </UBadge>
               </div>
             </UCard>
