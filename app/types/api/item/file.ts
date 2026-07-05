@@ -5,4 +5,7 @@ export interface File extends UuidItem, TimestampItem {
   publicUrl?: string
   publicInlineUrl?: string
   privateUrl?: string
+  publicThumbnailUrl?: string
+  publicInlineThumbnailUrl?: string
+  privateThumbnailUrl?: string
 }
