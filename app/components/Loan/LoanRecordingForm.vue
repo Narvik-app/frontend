@@ -2,12 +2,9 @@
 import type {PropType} from 'vue'
 import type {LoanItem} from '~/types/api/item/clubDependent/plugin/loan/loanItem'
 import type {LoanRecordingType} from '~/types/api/item/clubDependent/plugin/loan/loanRecordingType'
-import type {Member} from '~/types/api/item/clubDependent/member'
 import LoanRecordingQuery from '~/composables/api/query/clubDependent/plugin/loan/LoanRecordingQuery'
 import LoanRecordingTypeQuery from '~/composables/api/query/clubDependent/plugin/loan/LoanRecordingTypeQuery'
-import MemberQuery from '~/composables/api/query/clubDependent/MemberQuery'
-import {useSelfUserStore} from '~/stores/useSelfUser'
-import {ClubRole} from '~/types/api/item/club'
+import {useSellerSelect} from '~/composables/useSellerSelect'
 import type {SelectApiItem} from '~/types/select'
 
 const props = defineProps({
@@ -22,8 +19,6 @@ const emit = defineEmits(['updated', 'close'])
 const toast = useToast()
 const recordingQuery = new LoanRecordingQuery()
 const recordingTypeQuery = new LoanRecordingTypeQuery()
-const memberQuery = new MemberQuery()
-const selfStore = useSelfUserStore()
 
 const isLoading = ref(false)
 const description = ref('')
@@ -39,55 +34,24 @@ const typeItems = computed(() => {
   return items
 })
 
-// Author (admin+supervisor)
-const sellers = ref<Member[]>([])
-const sellerSelected = ref<SelectApiItem<Member> | undefined>()
-const sellersSelect = computed(() => {
-  const items: SelectApiItem<Member>[] = []
-  sellers.value.forEach(m => {
-    items.push({label: m.fullName, value: m.uuid, item: m})
-  })
-  return items
-})
-
-async function loadSellers(page: number = 1, acc: Member[] = []): Promise<Member[]> {
-  const urlParams = new URLSearchParams({'order[lastname]': 'ASC', 'order[firstname]': 'ASC', 'exists[licence]': 'true'})
-  urlParams.append('userMember.role[]', ClubRole.Admin)
-  urlParams.append('userMember.role[]', ClubRole.Supervisor)
-  const {items, view} = await memberQuery.getAll(urlParams)
-  acc.push(...items)
-  if (view?.['next']) return loadSellers(page + 1, acc)
-  return acc
-}
+// Author (admin+supervisor) — shared with the sale flow
+const {sellerSelected, sellersSelect, ensureLoaded} = useSellerSelect()
 
 onMounted(async () => {
-  const [types, sellerList] = await Promise.all([
+  const [types] = await Promise.all([
     recordingTypeQuery.getAll().then(r => r.items),
-    loadSellers(),
+    ensureLoaded(),
   ])
   recordingTypes.value = types
-  sellers.value = sellerList
-  // Default author to current user
-  const currentMember = selfStore.member
-  if (currentMember) {
-    const match = sellerList.find(m => m.uuid === currentMember.uuid)
-    if (match) {
-      sellerSelected.value = {label: match.fullName, value: match.uuid, item: match}
-    }
-  }
 })
 
 async function submit() {
-  if (!description.value.trim()) {
-    toast.add({color: 'error', title: 'La description est requise'})
-    return
-  }
   isLoading.value = true
   const {created, error} = await recordingQuery.post({
     loanItem: props.loanItem['@id'],
     recordingType: selectedType.value?.item?.['@id'] ?? null,
     author: sellerSelected.value?.item?.['@id'] ?? null,
-    description: description.value.trim(),
+    description: description.value.trim() || null,
     date: new Date().toISOString(),
   })
   isLoading.value = false
@@ -142,7 +106,7 @@ async function submit() {
       </UFormField>
 
       <!-- Description -->
-      <UFormField label="Description" required>
+      <UFormField label="Description (optionnel)">
         <UTextarea v-model="description" :rows="3" placeholder="Décrivez l'intervention…" />
       </UFormField>
     </div>

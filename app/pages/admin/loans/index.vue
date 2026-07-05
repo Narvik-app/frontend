@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import LoanItemQuery from '~/composables/api/query/clubDependent/plugin/loan/LoanItemQuery'
 import LoanCategoryQuery from '~/composables/api/query/clubDependent/plugin/loan/LoanCategoryQuery'
+import LoanQuery from '~/composables/api/query/clubDependent/plugin/loan/LoanQuery'
 import FileQuery from '~/composables/api/query/FileQuery'
 import type {LoanItem, LoanItemStatus} from '~/types/api/item/clubDependent/plugin/loan/loanItem'
 import type {LoanCategory} from '~/types/api/item/clubDependent/plugin/loan/loanCategory'
@@ -9,16 +10,22 @@ import {useSelfUserStore} from '~/stores/useSelfUser'
 import {Permission} from '~/types/api/permissions'
 import {print} from '~/utils/browser'
 import {formatDate} from '~/utils/date'
+import LoanModalRecord from '~/components/Loan/LoanModalRecord.vue'
 
 definePageMeta({layout: 'loan'})
 useHead({title: 'Prêts'})
 
+const toast = useToast()
+const overlay = useOverlay()
 const selfStore = useSelfUserStore()
 const canEdit = computed(() => selfStore.can(Permission.LoanItemsEdit))
+const canLoan = computed(() => selfStore.can(Permission.LoanEdit))
 
 const itemQuery = new LoanItemQuery()
 const categoryQuery = new LoanCategoryQuery()
+const loanQuery = new LoanQuery()
 const fileQuery = new FileQuery()
+const returningItemUuid = ref<string | undefined>()
 
 const allItems = ref<LoanItem[]>([])
 const categories = ref<LoanCategory[]>([])
@@ -64,6 +71,39 @@ async function loadImages(items: LoanItem[]) {
       }
     }
   }
+}
+
+async function openLoanModal(item: LoanItem) {
+  if (item.isCurrentlyLoaned) {
+    toast.add({color: 'warning', title: 'Article déjà en prêt', description: 'Enregistrez le retour avant de créer un nouveau prêt.'})
+    return
+  }
+  const instance = overlay.create(LoanModalRecord).open({loanItem: item})
+  if (await instance.result) {
+    const {retrieved} = await itemQuery.get(item.uuid!)
+    if (retrieved) onItemUpdated(retrieved)
+  }
+}
+
+async function returnItemLoan(item: LoanItem) {
+  if (!item.uuid) return
+  returningItemUuid.value = item.uuid
+  const p = new URLSearchParams({'loanItem.uuid': item.uuid, 'exists[endDate]': 'false'})
+  const {items: openLoans, error: fetchError} = await loanQuery.getAll(p)
+  if (fetchError || !openLoans[0]) {
+    toast.add({color: 'error', title: 'Impossible de trouver le prêt en cours', description: fetchError?.message})
+    returningItemUuid.value = undefined
+    return
+  }
+  const {error} = await loanQuery.patch(openLoans[0], {endDate: new Date().toISOString()})
+  returningItemUuid.value = undefined
+  if (error) {
+    toast.add({color: 'error', title: 'Erreur lors du retour', description: error.message})
+    return
+  }
+  toast.add({color: 'success', title: 'Retour enregistré'})
+  const {retrieved} = await itemQuery.get(item.uuid)
+  if (retrieved) onItemUpdated(retrieved)
 }
 
 function onItemUpdated(item: LoanItem) {
@@ -179,56 +219,70 @@ const statusLabels: Record<string, string> = {
         </h2>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 print:grid-cols-2 print:gap-1">
-          <div
+          <NuxtLink
             v-for="item in items"
             :key="item.uuid"
-            class="border rounded-lg p-3 flex items-start gap-2 print:border-black print:rounded-none print:p-1 print:break-inside-avoid"
+            :to="selfStore.can(Permission.LoanItemsAccess) ? '/admin/loans/items/' + convertUuidToUrlUuid(item.uuid) : undefined"
+            class="block"
           >
-            <!-- Thumbnail -->
-            <div class="w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-muted flex items-center justify-center print:hidden">
+            <UCard
+              class="print:border print:border-black print:rounded-none print:break-inside-avoid hover:bg-muted/50 transition-colors"
+              :ui="{body: 'flex flex-col gap-2'}"
+            >
+              <!-- Image — full width, capped height -->
               <img
                 v-if="item.uuid && imageCache[item.uuid]"
                 :src="imageCache[item.uuid]"
                 :alt="item.name"
-                class="w-full h-full object-cover"
+                class="w-full h-44 object-cover rounded-md print:hidden"
               />
-              <UIcon v-else name="i-heroicons-photo" class="text-lg text-muted" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="font-medium text-sm truncate print:text-black">{{ item.name }}</p>
-              <p v-if="item.description" class="text-xs text-muted truncate print:text-black print:text-xs">
-                {{ item.description }}
-              </p>
-              <p v-if="item.loanPrice" class="text-xs text-muted print:text-black">
-                {{ item.loanPrice }} €/prêt
-              </p>
-            </div>
 
-            <!-- Status badge — simplifies to text on print -->
-            <div class="flex-shrink-0 flex flex-col items-end gap-1">
-              <UBadge
-                :color="(statusColors[effectiveStatus(item)] as 'success'|'primary'|'warning'|'neutral'|'error')"
-                variant="soft"
-                class="print:hidden"
-              >
-                {{ statusLabels[effectiveStatus(item)] }}
-              </UBadge>
+              <!-- Name / description / price -->
+              <div>
+                <p class="font-medium text-sm truncate print:text-black">{{ item.name }}</p>
+                <p v-if="item.description" class="text-xs text-muted truncate print:text-black print:text-xs">
+                  {{ item.description }}
+                </p>
+                <p v-if="item.loanPrice" class="text-xs text-muted print:text-black">
+                  {{ item.loanPrice }} €/prêt
+                </p>
+              </div>
+
+              <!-- Loan/return action (left) + status (right) -->
+              <div class="flex items-center justify-between gap-2 print:hidden">
+                <UButton
+                  v-if="canLoan && !item.isCurrentlyLoaned"
+                  size="xs"
+                  variant="soft"
+                  color="primary"
+                  icon="i-heroicons-archive-box-arrow-down"
+                  label="Prêter"
+                  @click.prevent.stop="openLoanModal(item)"
+                />
+                <UButton
+                  v-else-if="canLoan"
+                  size="xs"
+                  variant="soft"
+                  color="success"
+                  icon="i-heroicons-arrow-uturn-left"
+                  label="Retourner"
+                  :loading="returningItemUuid === item.uuid"
+                  @click.prevent.stop="returnItemLoan(item)"
+                />
+                <div v-else />
+
+                <UBadge
+                  :color="(statusColors[effectiveStatus(item)] as 'success'|'primary'|'warning'|'neutral'|'error')"
+                  variant="soft"
+                >
+                  {{ statusLabels[effectiveStatus(item)] }}
+                </UBadge>
+              </div>
               <span class="hidden print:inline text-xs font-medium print:text-black">
                 {{ statusLabels[effectiveStatus(item)] }}
               </span>
-
-              <!-- Link to item detail — hidden on print -->
-              <UButton
-                v-if="selfStore.can(Permission.LoanItemsAccess)"
-                size="xs"
-                variant="ghost"
-                color="neutral"
-                icon="i-heroicons-arrow-top-right-on-square"
-                class="print:hidden"
-                :to="'/admin/loans/items/' + convertUuidToUrlUuid(item.uuid)"
-              />
-            </div>
-          </div>
+            </UCard>
+          </NuxtLink>
         </div>
       </div>
     </template>

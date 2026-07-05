@@ -8,6 +8,8 @@ export interface Loan extends UuidItem, ClubLinkedItem, TimestampItem {
   loanItem?: LoanItem | string | null
   /** The member who borrows the item */
   member?: Member | string | null
+  /** Free-text borrower name, used when the borrower is not a club member */
+  borrowerName?: string | null
   /** The supervisor/admin who lent the item */
   author?: Member | string | null
   startDate?: string

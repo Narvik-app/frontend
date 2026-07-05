@@ -224,6 +224,12 @@ function getMemberName(m: unknown): string {
   return '-'
 }
 
+function getBorrowerName(loan: Loan): string {
+  if (loan.member) return getMemberName(loan.member)
+  if (loan.borrowerName) return loan.borrowerName
+  return '-'
+}
+
 const activeLoan = computed(() => loans.value.find(l => !l.endDate))
 
 async function openLoanModal() {
@@ -287,7 +293,7 @@ async function openRecordingModal() {
       <div class="flex flex-col sm:flex-row sm:items-center gap-3">
         <UIcon name="i-heroicons-archive-box-arrow-down" class="text-2xl text-primary shrink-0" />
         <div class="flex-1 flex flex-col gap-0.5">
-          <div class="font-semibold">Prêté à {{ getMemberName(activeLoan.member) }}</div>
+          <div class="font-semibold">Prêté à {{ getBorrowerName(activeLoan) }}</div>
           <div class="text-sm text-muted">
             Depuis le {{ formatDateTime(activeLoan.startDate) }}
             <template v-if="activeLoan.author"> · par {{ getMemberName(activeLoan.author) }}</template>
@@ -351,7 +357,7 @@ async function openRecordingModal() {
           <UBadge v-else color="primary" variant="soft">En cours</UBadge>
         </template>
         <template #member-cell="{ row }">
-          {{ getMemberName(row.original.member) }}
+          {{ getBorrowerName(row.original) }}
         </template>
         <template #author-cell="{ row }">
           {{ getMemberName(row.original.author) }}
@@ -397,7 +403,7 @@ async function openRecordingModal() {
         </template>
         <template #author-cell="{ row }">{{ getMemberName(row.original.author) }}</template>
         <template #description-cell="{ row }">
-          <span class="text-xs">{{ row.original.description }}</span>
+          <span class="text-xs">{{ row.original.description ?? '-' }}</span>
         </template>
       </UTable>
     </GenericCard>

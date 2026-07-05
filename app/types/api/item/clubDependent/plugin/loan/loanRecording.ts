@@ -7,7 +7,7 @@ import type {TimestampItem} from '~/types/api/timestampItem'
 
 export interface LoanRecording extends UuidItem, ClubLinkedItem, TimestampItem {
   loanItem?: LoanItem | string | null
-  description?: string
+  description?: string | null
   recordingType?: LoanRecordingType | string | null
   /** The supervisor/admin who performed the action */
   author?: Member | string | null

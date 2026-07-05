@@ -3,11 +3,8 @@ import type {PropType} from 'vue'
 import type {LoanItem} from '~/types/api/item/clubDependent/plugin/loan/loanItem'
 import type {Member} from '~/types/api/item/clubDependent/member'
 import LoanQuery from '~/composables/api/query/clubDependent/plugin/loan/LoanQuery'
-import MemberQuery from '~/composables/api/query/clubDependent/MemberQuery'
 import SearchMember from '~/components/Member/SearchMember.vue'
-import {useSelfUserStore} from '~/stores/useSelfUser'
-import {ClubRole} from '~/types/api/item/club'
-import type {SelectApiItem} from '~/types/select'
+import {useSellerSelect} from '~/composables/useSellerSelect'
 
 const props = defineProps({
   loanItem: {
@@ -20,51 +17,28 @@ const emit = defineEmits(['updated', 'close'])
 
 const toast = useToast()
 const loanQuery = new LoanQuery()
-const memberQuery = new MemberQuery()
-const selfStore = useSelfUserStore()
 
 const isLoading = ref(false)
+const borrowerType = ref<'member' | 'external'>('member')
 const borrower = ref<Member | undefined>()
+const borrowerName = ref<string>('')
 const comment = ref<string>('')
 
-// Lender/author (admin+supervisor)
-const sellers = ref<Member[]>([])
-const sellerSelected = ref<SelectApiItem<Member> | undefined>()
-const sellersSelect = computed(() => {
-  const items: SelectApiItem<Member>[] = []
-  sellers.value.forEach(m => {
-    items.push({label: m.fullName, value: m.uuid, item: m})
-  })
-  return items
+watch(borrowerType, () => {
+  borrower.value = undefined
+  borrowerName.value = ''
 })
 
-async function loadSellers(page: number = 1, acc: Member[] = []): Promise<Member[]> {
-  const urlParams = new URLSearchParams({'order[lastname]': 'ASC', 'order[firstname]': 'ASC', 'exists[licence]': 'true'})
-  urlParams.append('userMember.role[]', ClubRole.Admin)
-  urlParams.append('userMember.role[]', ClubRole.Supervisor)
-  const {items, view} = await memberQuery.getAll(urlParams)
-  acc.push(...items)
-  if (view?.['next']) return loadSellers(page + 1, acc)
-  return acc
-}
-
-onMounted(async () => {
-  sellers.value = await loadSellers()
-  // Default lender to current user if they're in the sellers list
-  const currentMember = selfStore.member
-  if (currentMember) {
-    const match = sellers.value.find(m => m.uuid === currentMember.uuid)
-    if (match) {
-      sellerSelected.value = {label: match.fullName, value: match.uuid, item: match}
-    }
-  }
-})
+// Lender/author (admin+supervisor) — shared with the sale flow
+const {sellerSelected, sellersSelect, ensureLoaded} = useSellerSelect()
+onMounted(ensureLoaded)
 
 async function submit() {
   isLoading.value = true
   const {created, error} = await loanQuery.post({
     loanItem: props.loanItem['@id'],
-    member: borrower.value?.['@id'] ?? null,
+    member: borrowerType.value === 'member' ? (borrower.value?.['@id'] ?? null) : null,
+    borrowerName: borrowerType.value === 'external' ? (borrowerName.value.trim() || null) : null,
     author: sellerSelected.value?.item?.['@id'] ?? null,
     comment: comment.value.trim() || null,
   })
@@ -82,9 +56,28 @@ async function submit() {
 <template>
   <ModalWithActions title="Enregistrer un prêt" @close="emit('close', false)">
     <div class="flex flex-col gap-4">
-      <!-- Borrower search -->
+      <!-- Borrower -->
       <UFormField label="Emprunteur (optionnel)">
-        <div class="border rounded-lg p-3">
+        <div class="flex gap-1 mb-3">
+          <UButton
+            label="Membre du club"
+            icon="i-heroicons-user"
+            size="sm"
+            :variant="borrowerType === 'member' ? 'soft' : 'ghost'"
+            :color="borrowerType === 'member' ? 'primary' : 'neutral'"
+            @click="borrowerType = 'member'"
+          />
+          <UButton
+            label="Personne extérieure"
+            icon="i-heroicons-user-plus"
+            size="sm"
+            :variant="borrowerType === 'external' ? 'soft' : 'ghost'"
+            :color="borrowerType === 'external' ? 'primary' : 'neutral'"
+            @click="borrowerType = 'external'"
+          />
+        </div>
+
+        <div v-if="borrowerType === 'member'" class="border rounded-lg p-3">
           <SearchMember compact @selected-member="(m: Member) => borrower = m" />
           <div v-if="borrower" class="mt-2 text-sm font-medium text-primary flex items-center gap-1">
             <UIcon name="i-heroicons-check-circle" />
@@ -92,6 +85,12 @@ async function submit() {
             <UIcon name="i-heroicons-x-mark" class="cursor-pointer ml-1" @click="borrower = undefined" />
           </div>
         </div>
+
+        <UInput
+          v-else
+          v-model="borrowerName"
+          placeholder="Nom de l'emprunteur"
+        />
       </UFormField>
 
       <!-- Lender (author) -->
