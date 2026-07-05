@@ -5,7 +5,7 @@ import LoanRecordingQuery from '~/composables/api/query/clubDependent/plugin/loa
 import type {LoanItem} from '~/types/api/item/clubDependent/plugin/loan/loanItem'
 import type {Loan} from '~/types/api/item/clubDependent/plugin/loan/loan'
 import type {LoanRecording} from '~/types/api/item/clubDependent/plugin/loan/loanRecording'
-import {decodeUrlUuid, convertUuidToUrlUuid} from '~/utils/resource'
+import {decodeUrlUuid} from '~/utils/resource'
 import {formatMonetary} from '~/utils/string'
 import {useSelfUserStore} from '~/stores/useSelfUser'
 import {Permission} from '~/types/api/permissions'
@@ -234,6 +234,10 @@ const activeLoan = computed(() => loans.value.find(l => !l.endDate))
 
 async function openLoanModal() {
   if (!loanItem.value) return
+  if (loanItem.value.status !== 'available') {
+    toast.add({color: 'warning', title: 'Article non disponible', description: "Cet article n'est pas disponible pour le prêt."})
+    return
+  }
   if (loanItem.value.isCurrentlyLoaned) {
     toast.add({color: 'warning', title: 'Article déjà en prêt', description: 'Enregistrez le retour avant de créer un nouveau prêt.'})
     return
@@ -269,8 +273,16 @@ async function openRecordingModal() {
         </UBadge>
       </div>
 
-      <UTooltip v-if="canLoan" :text="loanItem?.isCurrentlyLoaned ? 'Article déjà en prêt' : 'Enregistrer un prêt'">
-        <UButton icon="i-heroicons-archive-box-arrow-down" color="primary" :disabled="loanItem?.isCurrentlyLoaned" @click="openLoanModal()" />
+      <UTooltip
+        v-if="canLoan"
+        :text="loanItem?.status !== 'available' ? 'Article non disponible' : loanItem?.isCurrentlyLoaned ? 'Article déjà en prêt' : 'Enregistrer un prêt'"
+      >
+        <UButton
+          icon="i-heroicons-archive-box-arrow-down"
+          color="primary"
+          :disabled="loanItem?.status !== 'available' || loanItem?.isCurrentlyLoaned"
+          @click="openLoanModal()"
+        />
       </UTooltip>
 
       <UTooltip v-if="canEdit" text="Modifier">

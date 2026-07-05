@@ -1,15 +1,12 @@
 <script setup lang="ts">
 import LoanItemQuery from '~/composables/api/query/clubDependent/plugin/loan/LoanItemQuery'
-import LoanCategoryQuery from '~/composables/api/query/clubDependent/plugin/loan/LoanCategoryQuery'
 import LoanQuery from '~/composables/api/query/clubDependent/plugin/loan/LoanQuery'
 import FileQuery from '~/composables/api/query/FileQuery'
-import type {LoanItem, LoanItemStatus} from '~/types/api/item/clubDependent/plugin/loan/loanItem'
-import type {LoanCategory} from '~/types/api/item/clubDependent/plugin/loan/loanCategory'
+import type {LoanItem} from '~/types/api/item/clubDependent/plugin/loan/loanItem'
 import {convertUuidToUrlUuid} from '~/utils/resource'
 import {useSelfUserStore} from '~/stores/useSelfUser'
 import {Permission} from '~/types/api/permissions'
 import {print} from '~/utils/browser'
-import {formatDate} from '~/utils/date'
 import LoanModalRecord from '~/components/Loan/LoanModalRecord.vue'
 
 definePageMeta({layout: 'loan'})
@@ -18,22 +15,17 @@ useHead({title: 'Prêts'})
 const toast = useToast()
 const overlay = useOverlay()
 const selfStore = useSelfUserStore()
-const canEdit = computed(() => selfStore.can(Permission.LoanItemsEdit))
 const canLoan = computed(() => selfStore.can(Permission.LoanEdit))
 
 const itemQuery = new LoanItemQuery()
-const categoryQuery = new LoanCategoryQuery()
 const loanQuery = new LoanQuery()
 const fileQuery = new FileQuery()
 const returningItemUuid = ref<string | undefined>()
 
 const allItems = ref<LoanItem[]>([])
-const categories = ref<LoanCategory[]>([])
 const isLoading = ref(true)
 const searchQuery = ref('')
 
-const itemModalOpen = ref(false)
-const selectedItem = ref<LoanItem | undefined>()
 // Image cache: uuid -> base64
 const imageCache = ref<Record<string, string>>({})
 
@@ -41,13 +33,9 @@ const today = new Date().toLocaleDateString('fr-FR', {day: '2-digit', month: '2-
 
 async function loadAll() {
   isLoading.value = true
-  const [catResult] = await Promise.all([
-    categoryQuery.getAll(),
-  ])
-  categories.value = catResult.items
 
   const loaded: LoanItem[] = []
-  const urlParams = new URLSearchParams({itemsPerPage: '100'})
+  const urlParams = new URLSearchParams({itemsPerPage: '100', status: 'available'})
   let page = 1
   while (true) {
     urlParams.set('page', page.toString())
@@ -107,7 +95,6 @@ async function returnItemLoan(item: LoanItem) {
 }
 
 function onItemUpdated(item: LoanItem) {
-  itemModalOpen.value = false
   const idx = allItems.value.findIndex(i => i.uuid === item.uuid)
   if (idx !== -1) allItems.value.splice(idx, 1, item)
   else allItems.value.push(item)
@@ -188,18 +175,12 @@ const statusLabels: Record<string, string> = {
       <UButton icon="i-heroicons-printer" variant="ghost" color="neutral" @click="print()">
         Imprimer
       </UButton>
-
-      <UButton
-        v-if="canEdit"
-        icon="i-heroicons-plus"
-        @click="selectedItem = undefined; itemModalOpen = true"
-      />
     </div>
 
     <!-- Print-only date header -->
     <div class="hidden print:block mb-4">
-      <h1 class="text-xl font-bold print:text-black">Liste des articles en prêt</h1>
-      <p class="text-sm print:text-black">Imprimé le {{ today }}</p>
+      <h1 class="text-xl font-bold print:text-black">Articles en prêt</h1>
+      <p class="text-xs print:text-black">Imprimé le {{ today }}</p>
     </div>
 
     <!-- Loading -->
@@ -223,23 +204,23 @@ const statusLabels: Record<string, string> = {
             v-for="item in items"
             :key="item.uuid"
             :to="selfStore.can(Permission.LoanItemsAccess) ? '/admin/loans/items/' + convertUuidToUrlUuid(item.uuid) : undefined"
-            class="block"
+            class="block h-full"
           >
             <UCard
-              class="print:border print:border-black print:rounded-none print:break-inside-avoid hover:bg-muted/50 transition-colors"
-              :ui="{body: 'flex flex-col gap-2'}"
+              class="h-full flex flex-col print:border print:border-black print:rounded-none print:break-inside-avoid hover:bg-muted/50 transition-colors"
+              :ui="{body: 'flex flex-col gap-2 flex-1'}"
             >
               <!-- Image — full width, capped height -->
               <img
                 v-if="item.uuid && imageCache[item.uuid]"
                 :src="imageCache[item.uuid]"
                 :alt="item.name"
-                class="w-full h-44 object-cover rounded-md print:hidden"
-              />
+                class="w-full h-44 object-cover rounded-md"
+              >
 
               <!-- Name / description / price -->
-              <div>
-                <p class="font-medium text-sm truncate print:text-black">{{ item.name }}</p>
+              <div class="flex-1">
+                <p class="font-medium truncate print:text-black">{{ item.name }}</p>
                 <p v-if="item.description" class="text-xs text-muted truncate print:text-black print:text-xs">
                   {{ item.description }}
                 </p>
@@ -278,26 +259,10 @@ const statusLabels: Record<string, string> = {
                   {{ statusLabels[effectiveStatus(item)] }}
                 </UBadge>
               </div>
-              <span class="hidden print:inline text-xs font-medium print:text-black">
-                {{ statusLabels[effectiveStatus(item)] }}
-              </span>
             </UCard>
           </NuxtLink>
         </div>
       </div>
     </template>
   </div>
-
-  <!-- Create/edit item modal -->
-  <UModal v-model:open="itemModalOpen">
-    <template #content>
-      <UCard>
-        <LoanItemForm
-          :item="selectedItem ? {...selectedItem} : undefined"
-          :categories="categories"
-          @updated="onItemUpdated"
-        />
-      </UCard>
-    </template>
-  </UModal>
 </template>

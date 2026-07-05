@@ -14,14 +14,13 @@ const selfStore = useSelfUserStore()
 const canAccessLoans = selfStore.can(Permission.LoanAccess)
 const canAccessItems = selfStore.can(Permission.LoanItemsAccess)
 const canAccessCategories = selfStore.can(Permission.LoanCategoriesAccess)
-const canAccessRecordings = selfStore.can(Permission.LoanRecordingsAccess)
 const canEditRecordingTypes = selfStore.can(Permission.LoanRecordingsEdit)
 
 const loansSection: { label: string; icon: string; to: string }[] = []
 
 if (canAccessLoans) {
   loansSection.push({
-    label: 'Prêts en cours',
+    label: 'Prêts',
     icon: 'i-heroicons-archive-box-arrow-down',
     to: '/admin/loans'
   })
@@ -42,14 +41,6 @@ if (canAccessCategories) {
     label: 'Catégories',
     icon: 'i-heroicons-tag',
     to: '/admin/loans/categories'
-  })
-}
-
-if (canAccessRecordings) {
-  itemsSection.push({
-    label: 'Enregistrements',
-    icon: 'i-heroicons-clipboard-document-list',
-    to: '/admin/loans/recordings'
   })
 }
 

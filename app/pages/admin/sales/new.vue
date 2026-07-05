@@ -14,8 +14,11 @@ import {print} from "~/utils/browser";
 import type {SelectApiItem} from "~/types/select";
 import type {Member} from "~/types/api/item/clubDependent/member";
 import LoanItemQuery from "~/composables/api/query/clubDependent/plugin/loan/LoanItemQuery";
+import LoanQuery from "~/composables/api/query/clubDependent/plugin/loan/LoanQuery";
 import type {LoanItem} from "~/types/api/item/clubDependent/plugin/loan/loanItem";
 import {useSelfUserStore} from "~/stores/useSelfUser";
+import {Permission} from "~/types/api/permissions";
+import LoanModalRecord from "~/components/Loan/LoanModalRecord.vue";
 
 definePageMeta({
     layout: "pos"
@@ -51,13 +54,55 @@ definePageMeta({
   const inventoryItemQuery = new InventoryItemQuery()
   const saleQuery = new SaleQuery()
   const loanItemQuery = new LoanItemQuery()
+  const loanQuery = new LoanQuery()
+  const overlay = useOverlay()
 
   // Loan items visible on sale page
   const selfStore = useSelfUserStore()
+  const canLoan = computed(() => selfStore.can(Permission.LoanEdit))
   const loanItems = ref<LoanItem[]>([])
+  const returningLoanItemUuid = ref<string | undefined>()
   if (selfStore.selectedProfile?.club.loansEnabled) {
-    const p = new URLSearchParams({visibleOnSalePage: '1', pagination: 'false'})
+    const p = new URLSearchParams({visibleOnSalePage: '1', status: 'available', pagination: 'false'})
     loanItemQuery.getAll(p).then(r => { loanItems.value = r.items })
+  }
+
+  function onLoanItemUpdated(item: LoanItem) {
+    const idx = loanItems.value.findIndex(i => i.uuid === item.uuid)
+    if (idx !== -1) loanItems.value.splice(idx, 1, item)
+  }
+
+  async function openLoanItemModal(item: LoanItem) {
+    if (item.isCurrentlyLoaned) {
+      toast.add({color: 'warning', title: 'Article déjà en prêt', description: 'Enregistrez le retour avant de créer un nouveau prêt.'})
+      return
+    }
+    const instance = overlay.create(LoanModalRecord).open({loanItem: item})
+    if (await instance.result) {
+      const {retrieved} = await loanItemQuery.get(item.uuid!)
+      if (retrieved) onLoanItemUpdated(retrieved)
+    }
+  }
+
+  async function returnLoanItem(item: LoanItem) {
+    if (!item.uuid) return
+    returningLoanItemUuid.value = item.uuid
+    const p = new URLSearchParams({'loanItem.uuid': item.uuid, 'exists[endDate]': 'false'})
+    const {items: openLoans, error: fetchError} = await loanQuery.getAll(p)
+    if (fetchError || !openLoans[0]) {
+      toast.add({color: 'error', title: 'Impossible de trouver le prêt en cours', description: fetchError?.message})
+      returningLoanItemUuid.value = undefined
+      return
+    }
+    const {error} = await loanQuery.patch(openLoans[0], {endDate: new Date().toISOString()})
+    returningLoanItemUuid.value = undefined
+    if (error) {
+      toast.add({color: 'error', title: 'Erreur lors du retour', description: error.message})
+      return
+    }
+    toast.add({color: 'success', title: 'Retour enregistré'})
+    const {retrieved} = await loanItemQuery.get(item.uuid)
+    if (retrieved) onLoanItemUpdated(retrieved)
   }
 
   const searchQueryInput: Ref<string> = ref(searchQuery.value)
@@ -289,7 +334,7 @@ definePageMeta({
         </div>
       </UCard>
 
-      <!-- Loan items section (redirect-only) -->
+      <!-- Loan items section — quick lend/return -->
       <UCard v-if="selfStore.selectedProfile?.club.loansEnabled && loanItems.length > 0" class="mt-4 print:hidden">
         <div class="font-bold text-lg mb-3 flex items-center gap-2">
           <UIcon name="i-heroicons-archive-box" />
@@ -312,12 +357,25 @@ definePageMeta({
             >
               {{ item.isCurrentlyLoaned ? 'Prêté' : 'Disponible' }}
             </UBadge>
+
             <UButton
+              v-if="canLoan && !item.isCurrentlyLoaned"
               size="xs"
-              icon="i-heroicons-arrow-top-right-on-square"
-              :to="'/admin/loans/items/' + convertUuidToUrlUuid(item.uuid)"
+              color="primary"
+              icon="i-heroicons-archive-box-arrow-down"
+              @click="openLoanItemModal(item)"
             >
-              Gérer le prêt
+              Prêter
+            </UButton>
+            <UButton
+              v-else-if="canLoan"
+              size="xs"
+              color="success"
+              icon="i-heroicons-arrow-uturn-left"
+              :loading="returningLoanItemUuid === item.uuid"
+              @click="returnLoanItem(item)"
+            >
+              Retourner
             </UButton>
           </div>
         </div>
