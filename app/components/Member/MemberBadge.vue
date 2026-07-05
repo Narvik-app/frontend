@@ -33,8 +33,9 @@ const props = defineProps({
     if (props.member) {
       memberRef.value = props.member
 
-      if (memberRef.value.profileImage?.privateUrl) {
-        fileQuery.getFromUrl(memberRef.value.profileImage.privateUrl).then(imageResponse => {
+      const imageUrl = memberRef.value.profileImage?.privateThumbnailUrl ?? memberRef.value.profileImage?.privateUrl
+      if (imageUrl) {
+        fileQuery.getFromUrl(imageUrl).then(imageResponse => {
           memberProfileImage.value = imageResponse.retrieved
         })
       }

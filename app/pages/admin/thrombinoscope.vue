@@ -70,9 +70,10 @@ definePageMeta({
   }
 
   async function loadMemberProfileImage(member: Member) {
-    if (!member.profileImage?.privateUrl) return null;
+    const imageUrl = member.profileImage?.privateThumbnailUrl ?? member.profileImage?.privateUrl;
+    if (!imageUrl) return null;
 
-    const { retrieved } = await fileQuery.getFromUrl(member.profileImage.privateUrl);
+    const { retrieved } = await fileQuery.getFromUrl(imageUrl);
     if (!retrieved || !retrieved.base64) return null
 
     return retrieved.base64
