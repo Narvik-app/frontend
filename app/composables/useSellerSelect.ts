@@ -33,9 +33,16 @@ export function useSellerSelect() {
     if (sellers.value.length === 0) {
       await saleStore.getSellers()
     }
+
+    // A previously persisted selection may reference a member that no longer exists
+    if (sellerSelected.value && !sellers.value.some(m => m.uuid === sellerSelected.value?.value)) {
+      sellerSelected.value = undefined
+      seller.value = undefined
+    }
+
     if (sellerSelected.value) return
 
-    if (seller.value) {
+    if (seller.value && sellers.value.some(m => m.uuid === seller.value?.uuid)) {
       sellerSelected.value = toSelectItem(seller.value)
       return
     }
