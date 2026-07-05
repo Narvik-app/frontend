@@ -2,6 +2,7 @@
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {useMetricStore} from "~/stores/useMetricStore";
 import MetricQuery from "~/composables/api/query/MetricQuery";
+import LoanItemQuery from "~/composables/api/query/clubDependent/plugin/loan/LoanItemQuery";
 import type {Metric} from "~/types/api/item/metric";
 import {Permission} from "~/types/api/permissions";
 import type {ChartBarData, ChartDataField} from "~/utils/chart";
@@ -36,32 +37,49 @@ const {
   previousPeriodInfo,
 } = storeToRefs(metricStore)
 
+const AGGREGATE_KEYS = ['open-now', 'distinct-items', 'distinct-borrowers', 'avg-duration-days']
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric child type properly
-function findItemMetric(metric: any, itemUuid: string) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric child type properly
-  return metric?.childMetrics?.find((m: any) => m.name === itemUuid)
+function findChild(metric: any, name: string) {
+  return metric?.childMetrics?.find((m: {name: string}) => m.name === name)
+}
+
+function childValue(metric: unknown, name: string): number {
+  return findChild(metric, name)?.value ?? 0
+}
+
+// Metric only carries numbers/ids — item display names are resolved separately from LoanItem.
+const loanItemQuery = new LoanItemQuery()
+const itemNames = ref<Record<string, string>>({})
+async function loadItemNames() {
+  const {items} = await loanItemQuery.getAll(new URLSearchParams({pagination: 'false'}))
+  const names: Record<string, string> = {}
+  items.forEach(item => { if (item.uuid) names[item.uuid] = item.name ?? item.uuid })
+  itemNames.value = names
 }
 
 const modeItems = computed(() => {
   const items = [{label: 'Global (tous les articles)', value: '__global__'}]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric child type properly
   const children = (loanMetrics.value?.childMetrics ?? []) as any[]
-  children.forEach(cm => {
-    items.push({label: cm.values?.itemName ?? cm.name, value: cm.name})
-  })
+  children
+    .filter(cm => !AGGREGATE_KEYS.includes(cm.name))
+    .forEach(cm => {
+      items.push({label: itemNames.value[cm.name] ?? cm.name, value: cm.name})
+    })
   return items
 })
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric type properly
 const currentNode = computed<any>(() => {
   if (selectedMode.value === '__global__') return loanMetrics.value
-  return findItemMetric(loanMetrics.value, selectedMode.value)
+  return findChild(loanMetrics.value, selectedMode.value)
 })
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric type properly
 const previousNode = computed<any>(() => {
   if (selectedMode.value === '__global__') return loanMetricsPreviousSeason.value
-  return findItemMetric(loanMetricsPreviousSeason.value, selectedMode.value)
+  return findChild(loanMetricsPreviousSeason.value, selectedMode.value)
 })
 
 const isGlobalMode = computed(() => selectedMode.value === '__global__')
@@ -84,10 +102,10 @@ const loanStats = computed(() => {
     total: current,
     previousTotal: previous,
     isIncreasing: current >= previous,
-    // Global mode exposes "openNow" (live count); per-item mode exposes "openCount" (0 or 1 for that item)
-    openNow: currentNode.value?.values?.openNow ?? currentNode.value?.values?.openCount ?? 0,
-    distinctItems: currentNode.value?.values?.distinctItems ?? 0,
-    distinctBorrowers: currentNode.value?.values?.distinctBorrowers ?? 0,
+    // Global mode exposes "open-now" (live count); per-item mode exposes "open-count" (0 or 1 for that item)
+    openNow: isGlobalMode.value ? childValue(currentNode.value, 'open-now') : childValue(currentNode.value, 'open-count'),
+    distinctItems: childValue(currentNode.value, 'distinct-items'),
+    distinctBorrowers: childValue(currentNode.value, 'distinct-borrowers'),
     dailyAverage: current / daysInPeriod.value,
   }
 })
@@ -130,7 +148,7 @@ async function loadFixedWindowMetrics() {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric type properly
 function nodeFor(metric: any, mode: string) {
   if (!metric) return undefined
-  return mode === '__global__' ? metric : findItemMetric(metric, mode)
+  return mode === '__global__' ? metric : findChild(metric, mode)
 }
 
 const fixedWindowStats = computed(() => {
@@ -181,12 +199,12 @@ function toMonthlyOffsetSeries(
 const chartData = computed(() => {
   const response: ChartBarData = {datasets: []}
 
-  const previousSeries = toMonthlyOffsetSeries(previousNode.value?.values?.dailyCounts, previousPeriodInfo.value?.dates?.start, currentPeriodStart.value)
+  const previousSeries = toMonthlyOffsetSeries(previousNode.value?.values, previousPeriodInfo.value?.dates?.start, currentPeriodStart.value)
   if (previousSeries.length > 0) {
     response.datasets.push({label: 'Période précédente', data: previousSeries})
   }
 
-  const currentSeries = toMonthlyOffsetSeries(currentNode.value?.values?.dailyCounts, currentPeriodStart.value, currentPeriodStart.value)
+  const currentSeries = toMonthlyOffsetSeries(currentNode.value?.values, currentPeriodStart.value, currentPeriodStart.value)
   if (currentSeries.length > 0) {
     response.datasets.push({label: 'Période courante', data: currentSeries})
   }
@@ -200,20 +218,22 @@ const itemsBreakdown = computed(() => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric child type properly
   const previousItems = (loanMetricsPreviousSeason.value?.childMetrics ?? []) as any[]
 
-  return currentItems.map(cm => {
-    const previous = previousItems.find(pm => pm.name === cm.name)
-    const currentValue = cm.value ?? 0
-    const previousValue = previous?.value ?? 0
-    return {
-      uuid: cm.name,
-      name: cm.values?.itemName ?? cm.name,
-      count: currentValue,
-      openCount: cm.values?.openCount ?? 0,
-      dailyAverage: currentValue / daysInPeriod.value,
-      previousValue,
-      isIncreasing: currentValue >= previousValue,
-    }
-  })
+  return currentItems
+    .filter(cm => !AGGREGATE_KEYS.includes(cm.name))
+    .map(cm => {
+      const previous = previousItems.find(pm => pm.name === cm.name)
+      const currentValue = cm.value ?? 0
+      const previousValue = previous?.value ?? 0
+      return {
+        uuid: cm.name,
+        name: itemNames.value[cm.name] ?? cm.name,
+        count: currentValue,
+        openCount: childValue(cm, 'open-count'),
+        dailyAverage: currentValue / daysInPeriod.value,
+        previousValue,
+        isIncreasing: currentValue >= previousValue,
+      }
+    })
 })
 
 const topLoanedItems = computed(() =>
@@ -248,6 +268,7 @@ onMounted(() => {
     metricStore.getMetrics()
   }
   loadFixedWindowMetrics()
+  loadItemNames()
 })
 
 watch(dateRange, () => {
