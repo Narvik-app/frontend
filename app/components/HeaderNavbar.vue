@@ -134,7 +134,7 @@ const overlay = useOverlay()
         <div v-if="isSupervisor && loansButtonUrl">
           <UButton :to="loansButtonUrl" icon="i-heroicons-archive-box" variant="ghost" color="neutral">
             <template v-if="isDesktopDisplay || isTabletDisplay">
-              Prêts
+              Prêt
             </template>
           </UButton>
         </div>

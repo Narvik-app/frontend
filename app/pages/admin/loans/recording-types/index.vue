@@ -127,9 +127,6 @@ const validate = (state: any): FormError[] => {
               {{ row.original.color }}
             </span>
           </template>
-          <template #actions-cell="{ row }">
-            <UButton v-if="canEdit" size="xs" variant="ghost" icon="i-heroicons-pencil-square" @click="selected = {...row.original}" />
-          </template>
         </UTable>
 
         <GenericTablePagination

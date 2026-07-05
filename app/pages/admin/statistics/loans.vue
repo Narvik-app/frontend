@@ -148,32 +148,45 @@ const currentPeriodStart = computed<Date | undefined>(() => {
   return undefined
 })
 
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
 // Loans are infrequent (often just 1-2 per day), so a daily breakdown is mostly empty bars —
 // group into months instead. Daily counts also land on different calendar dates for the current
-// vs. previous period (shifted by a year), so we realign both series on "months since period
-// start" rather than absolute calendar month, letting them overlay meaningfully.
-function toMonthlyOffsetSeries(dailyCounts: {day: string, count: number}[] | undefined, periodStart: Date | undefined): ChartDataField[] {
-  if (!dailyCounts || !periodStart) return []
-  const start = dayjs(periodStart)
+// vs. previous period (shifted by a year), so each series is bucketed against its OWN start
+// (bucketAnchor) but labeled using the current period's months (labelAnchor) — same relative
+// position, real month names, letting the two series overlay meaningfully.
+function toMonthlyOffsetSeries(
+  dailyCounts: {day: string, count: number}[] | undefined,
+  bucketAnchor: Date | undefined,
+  labelAnchor: Date | undefined,
+): ChartDataField[] {
+  if (!dailyCounts || !bucketAnchor || !labelAnchor) return []
+  const bucketStart = dayjs(bucketAnchor)
+  const labelStart = dayjs(labelAnchor)
   const buckets = new Map<number, number>()
   dailyCounts.forEach(d => {
-    const offset = dayjs(d.day).diff(start, 'month')
+    const offset = dayjs(d.day).diff(bucketStart, 'month')
     buckets.set(offset, (buckets.get(offset) ?? 0) + d.count)
   })
   return Array.from(buckets.entries())
     .sort((a, b) => a[0] - b[0])
-    .map(([offset, count]) => ({x: `Mois ${offset + 1}`, y: count}))
+    .map(([offset, count]) => ({
+      x: capitalize(labelStart.add(offset, 'month').toDate().toLocaleDateString('fr-FR', {month: 'long', year: 'numeric'})),
+      y: count,
+    }))
 }
 
 const chartData = computed(() => {
   const response: ChartBarData = {datasets: []}
 
-  const previousSeries = toMonthlyOffsetSeries(previousNode.value?.values?.dailyCounts, previousPeriodInfo.value?.dates?.start)
+  const previousSeries = toMonthlyOffsetSeries(previousNode.value?.values?.dailyCounts, previousPeriodInfo.value?.dates?.start, currentPeriodStart.value)
   if (previousSeries.length > 0) {
     response.datasets.push({label: 'Période précédente', data: previousSeries})
   }
 
-  const currentSeries = toMonthlyOffsetSeries(currentNode.value?.values?.dailyCounts, currentPeriodStart.value)
+  const currentSeries = toMonthlyOffsetSeries(currentNode.value?.values?.dailyCounts, currentPeriodStart.value, currentPeriodStart.value)
   if (currentSeries.length > 0) {
     response.datasets.push({label: 'Période courante', data: currentSeries})
   }

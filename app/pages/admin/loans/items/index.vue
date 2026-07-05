@@ -146,11 +146,10 @@ function getCategoryName(item: LoanItem): string {
           <template #category-cell="{ row }">{{ getCategoryName(row.original) }}</template>
           <template #actions-cell="{ row }">
             <UButton
-              size="xs"
-              variant="ghost"
-              icon="i-heroicons-arrow-top-right-on-square"
               :to="'/admin/loans/items/' + convertUuidToUrlUuid(row.original.uuid)"
-            />
+            >
+              Détail
+            </UButton>
           </template>
         </UTable>
 
