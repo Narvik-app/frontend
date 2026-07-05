@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {useSelfUserStore} from "~/stores/useSelfUser";
-import {useMetricStore} from "~/stores/useMetricStore";
+import {useMetricStore, type LoanMetricDailyCount} from "~/stores/useMetricStore";
 import MetricQuery from "~/composables/api/query/MetricQuery";
 import LoanItemQuery from "~/composables/api/query/clubDependent/plugin/loan/LoanItemQuery";
 import type {Metric} from "~/types/api/item/metric";
@@ -39,12 +39,11 @@ const {
 
 const AGGREGATE_KEYS = ['open-now', 'distinct-items', 'distinct-borrowers', 'avg-duration-days']
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric child type properly
-function findChild(metric: any, name: string) {
-  return metric?.childMetrics?.find((m: {name: string}) => m.name === name)
+function findChild<T>(metric: Metric<T> | undefined, name: string): Metric<T> | undefined {
+  return metric?.childMetrics?.find(m => m.name === name)
 }
 
-function childValue(metric: unknown, name: string): number {
+function childValue<T>(metric: Metric<T> | undefined, name: string): number {
   return findChild(metric, name)?.value ?? 0
 }
 
@@ -60,8 +59,7 @@ async function loadItemNames() {
 
 const modeItems = computed(() => {
   const items = [{label: 'Global (tous les articles)', value: '__global__'}]
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric child type properly
-  const children = (loanMetrics.value?.childMetrics ?? []) as any[]
+  const children = loanMetrics.value?.childMetrics ?? []
   children
     .filter(cm => !AGGREGATE_KEYS.includes(cm.name))
     .forEach(cm => {
@@ -70,14 +68,12 @@ const modeItems = computed(() => {
   return items
 })
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric type properly
-const currentNode = computed<any>(() => {
+const currentNode = computed<Metric<LoanMetricDailyCount[]> | undefined>(() => {
   if (selectedMode.value === '__global__') return loanMetrics.value
   return findChild(loanMetrics.value, selectedMode.value)
 })
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric type properly
-const previousNode = computed<any>(() => {
+const previousNode = computed<Metric<LoanMetricDailyCount[]> | undefined>(() => {
   if (selectedMode.value === '__global__') return loanMetricsPreviousSeason.value
   return findChild(loanMetricsPreviousSeason.value, selectedMode.value)
 })
@@ -117,10 +113,10 @@ function formatRate(value: number): string {
 // Real (non-estimated) monthly/yearly totals — fetched as their own fixed rolling windows,
 // independent of the main date-range picker, each compared to the equivalent prior window.
 const metricsQuery = new MetricQuery()
-const monthlyMetric = ref<Metric | undefined>()
-const monthlyMetricPrevious = ref<Metric | undefined>()
-const yearlyMetric = ref<Metric | undefined>()
-const yearlyMetricPrevious = ref<Metric | undefined>()
+const monthlyMetric = ref<Metric<LoanMetricDailyCount[]> | undefined>()
+const monthlyMetricPrevious = ref<Metric<LoanMetricDailyCount[]> | undefined>()
+const yearlyMetric = ref<Metric<LoanMetricDailyCount[]> | undefined>()
+const yearlyMetricPrevious = ref<Metric<LoanMetricDailyCount[]> | undefined>()
 
 function buildFixedWindowQuery(windowDays: number, offsetDays: number): string {
   const end = dayjs().subtract(offsetDays, 'day')
@@ -139,14 +135,13 @@ async function loadFixedWindowMetrics() {
     metricsQuery.get(buildFixedWindowQuery(365, 0)),
     metricsQuery.get(buildFixedWindowQuery(365, 365)),
   ])
-  monthlyMetric.value = monthly.retrieved
-  monthlyMetricPrevious.value = monthlyPrevious.retrieved
-  yearlyMetric.value = yearly.retrieved
-  yearlyMetricPrevious.value = yearlyPrevious.retrieved
+  monthlyMetric.value = monthly.retrieved as unknown as Metric<LoanMetricDailyCount[]> | undefined
+  monthlyMetricPrevious.value = monthlyPrevious.retrieved as unknown as Metric<LoanMetricDailyCount[]> | undefined
+  yearlyMetric.value = yearly.retrieved as unknown as Metric<LoanMetricDailyCount[]> | undefined
+  yearlyMetricPrevious.value = yearlyPrevious.retrieved as unknown as Metric<LoanMetricDailyCount[]> | undefined
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric type properly
-function nodeFor(metric: any, mode: string) {
+function nodeFor(metric: Metric<LoanMetricDailyCount[]> | undefined, mode: string): Metric<LoanMetricDailyCount[]> | undefined {
   if (!metric) return undefined
   return mode === '__global__' ? metric : findChild(metric, mode)
 }
@@ -213,10 +208,8 @@ const chartData = computed(() => {
 })
 
 const itemsBreakdown = computed(() => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric child type properly
-  const currentItems = (loanMetrics.value?.childMetrics ?? []) as any[]
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Define Metric child type properly
-  const previousItems = (loanMetricsPreviousSeason.value?.childMetrics ?? []) as any[]
+  const currentItems = loanMetrics.value?.childMetrics ?? []
+  const previousItems = loanMetricsPreviousSeason.value?.childMetrics ?? []
 
   return currentItems
     .filter(cm => !AGGREGATE_KEYS.includes(cm.name))
