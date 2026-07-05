@@ -177,7 +177,6 @@ export const useSaleStore = defineStore('sale', () => {
   }
 }, {
   persist: {
-    // The seller/loaner survives a page refresh — same person usually operates several pages in a row
     pick: ['seller'],
   },
 })
