@@ -52,8 +52,9 @@ async function loadAll() {
 
 async function loadImages(items: LoanItem[]) {
   for (const item of items) {
-    if (item.uuid && item.image?.privateUrl && !imageCache.value[item.uuid]) {
-      const {retrieved} = await fileQuery.getFromUrl(item.image.privateUrl)
+    const imageUrl = item.image?.privateThumbnailUrl ?? item.image?.privateUrl
+    if (item.uuid && imageUrl && !imageCache.value[item.uuid]) {
+      const {retrieved} = await fileQuery.getFromUrl(imageUrl)
       if (retrieved?.base64) {
         imageCache.value[item.uuid] = retrieved.base64
       }
@@ -98,8 +99,9 @@ function onItemUpdated(item: LoanItem) {
   const idx = allItems.value.findIndex(i => i.uuid === item.uuid)
   if (idx !== -1) allItems.value.splice(idx, 1, item)
   else allItems.value.push(item)
-  if (item.uuid && item.image?.privateUrl) {
-    fileQuery.getFromUrl(item.image.privateUrl).then(({retrieved}) => {
+  const imageUrl = item.image?.privateThumbnailUrl ?? item.image?.privateUrl
+  if (item.uuid && imageUrl) {
+    fileQuery.getFromUrl(imageUrl).then(({retrieved}) => {
       if (retrieved?.base64 && item.uuid) imageCache.value[item.uuid] = retrieved.base64
     })
   }

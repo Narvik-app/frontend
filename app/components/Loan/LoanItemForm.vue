@@ -174,8 +174,9 @@ async function fetchCategories() {
 
 // Load existing image on mount if editing
 onMounted(async () => {
-  if (props.item?.image?.privateUrl) {
-    const {retrieved} = await fileQuery.getFromUrl(props.item.image.privateUrl)
+  const imageUrl = props.item?.image?.privateThumbnailUrl ?? props.item?.image?.privateUrl
+  if (imageUrl) {
+    const {retrieved} = await fileQuery.getFromUrl(imageUrl)
     currentImageBase64.value = retrieved?.base64
   }
 })

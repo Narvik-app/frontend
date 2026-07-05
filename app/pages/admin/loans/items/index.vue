@@ -73,8 +73,9 @@ async function loadItems() {
 
 async function loadImages(list: LoanItem[]) {
   for (const item of list) {
-    if (item.uuid && item.image?.privateUrl && !imageCache.value[item.uuid]) {
-      const {retrieved} = await fileQuery.getFromUrl(item.image.privateUrl)
+    const imageUrl = item.image?.privateThumbnailUrl ?? item.image?.privateUrl
+    if (item.uuid && imageUrl && !imageCache.value[item.uuid]) {
+      const {retrieved} = await fileQuery.getFromUrl(imageUrl)
       if (retrieved?.base64) imageCache.value[item.uuid] = retrieved.base64
     }
   }
