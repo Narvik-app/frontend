@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type {PropType} from 'vue'
 import type {LoanItem} from '~/types/api/item/clubDependent/plugin/loan/loanItem'
+import type {LoanRecording} from '~/types/api/item/clubDependent/plugin/loan/loanRecording'
 import type {LoanRecordingType} from '~/types/api/item/clubDependent/plugin/loan/loanRecordingType'
 import LoanRecordingQuery from '~/composables/api/query/clubDependent/plugin/loan/LoanRecordingQuery'
 import LoanRecordingTypeQuery from '~/composables/api/query/clubDependent/plugin/loan/LoanRecordingTypeQuery'
@@ -12,6 +13,10 @@ const props = defineProps({
     type: Object as PropType<LoanItem>,
     required: true,
   },
+  recording: {
+    type: Object as PropType<LoanRecording>,
+    default: undefined,
+  },
 })
 
 const emit = defineEmits(['updated', 'close'])
@@ -20,8 +25,10 @@ const toast = useToast()
 const recordingQuery = new LoanRecordingQuery()
 const recordingTypeQuery = new LoanRecordingTypeQuery()
 
+const isEditing = computed(() => !!props.recording)
+
 const isLoading = ref(false)
-const description = ref('')
+const description = ref(props.recording?.description ?? '')
 
 // Recording type
 const recordingTypes = ref<LoanRecordingType[]>([])
@@ -43,30 +50,42 @@ onMounted(async () => {
     ensureLoaded(),
   ])
   recordingTypes.value = types
+
+  if (props.recording?.recordingType && typeof props.recording.recordingType === 'object') {
+    const type = props.recording.recordingType
+    selectedType.value = {label: type.name, value: type.uuid, item: type}
+  }
+  if (props.recording?.author && typeof props.recording.author === 'object') {
+    const author = props.recording.author
+    sellerSelected.value = {label: author.fullName ?? `${author.firstname ?? ''} ${author.lastname ?? ''}`.trim(), value: author.uuid, item: author}
+  }
 })
 
 async function submit() {
   isLoading.value = true
-  const {created, error} = await recordingQuery.post({
+  const payload = {
     loanItem: props.loanItem['@id'],
     recordingType: selectedType.value?.item?.['@id'] ?? null,
     author: sellerSelected.value?.item?.['@id'] ?? null,
     description: description.value.trim() || null,
-    date: new Date().toISOString(),
-  })
+    date: props.recording?.date ?? new Date().toISOString(),
+  }
+  const {created, updated, error} = isEditing.value
+    ? await recordingQuery.patch(props.recording!, payload)
+    : await recordingQuery.post(payload)
   isLoading.value = false
-  if (error || !created) {
+  if (error || (!created && !updated)) {
     toast.add({color: 'error', title: "Erreur lors de l'enregistrement", description: error?.message})
     return
   }
-  toast.add({color: 'success', title: 'Enregistrement ajouté'})
+  toast.add({color: 'success', title: isEditing.value ? 'Enregistrement modifié' : 'Enregistrement ajouté'})
   emit('updated')
   emit('close', true)
 }
 </script>
 
 <template>
-  <ModalWithActions title="Ajouter un enregistrement" @close="emit('close', false)">
+  <ModalWithActions :title="isEditing ? `Modifier l'enregistrement` : 'Ajouter un enregistrement'" @close="emit('close', false)">
     <div class="flex flex-col gap-4">
       <!-- Recording type -->
       <UFormField label="Type d'enregistrement">
@@ -112,7 +131,7 @@ async function submit() {
     </div>
 
     <template #actions>
-      <UButton :loading="isLoading" @click="submit">Ajouter</UButton>
+      <UButton :loading="isLoading" @click="submit">{{ isEditing ? 'Enregistrer les modifications' : 'Ajouter' }}</UButton>
     </template>
   </ModalWithActions>
 </template>

@@ -189,6 +189,54 @@ async function returnLoan(loan: Loan) {
   await loadItem()
 }
 
+function isToday(date?: string | null): boolean {
+  return !!date && dayjs(date).isSame(dayjs(), 'day')
+}
+
+async function openEditLoanModal(loan: Loan) {
+  if (!loanItem.value) return
+  const instance = overlay.create(LoanModalRecord).open({loanItem: loanItem.value, loan})
+  if (await instance.result) await loadLoans()
+}
+
+async function deleteLoan(loan: Loan) {
+  overlayDeleteConfirmation.open({
+    async onDelete() {
+      const {error} = await loanQuery.delete(loan)
+      if (error) {
+        toast.add({color: 'error', title: 'La suppression a échoué', description: error.message})
+        overlayDeleteConfirmation.close(false)
+        return
+      }
+      toast.add({color: 'success', title: 'Prêt supprimé'})
+      overlayDeleteConfirmation.close(true)
+      await loadLoans()
+    },
+  })
+}
+
+async function openEditRecordingModal(recording: LoanRecording) {
+  if (!loanItem.value) return
+  const instance = overlay.create(LoanRecordingForm).open({loanItem: loanItem.value, recording})
+  if (await instance.result) await loadRecordings()
+}
+
+async function deleteRecording(recording: LoanRecording) {
+  overlayDeleteConfirmation.open({
+    async onDelete() {
+      const {error} = await recordingQuery.delete(recording)
+      if (error) {
+        toast.add({color: 'error', title: 'La suppression a échoué', description: error.message})
+        overlayDeleteConfirmation.close(false)
+        return
+      }
+      toast.add({color: 'success', title: 'Enregistrement supprimé'})
+      overlayDeleteConfirmation.close(true)
+      await loadRecordings()
+    },
+  })
+}
+
 async function deleteItem() {
   if (!loanItem.value) return
   const {error} = await itemQuery.delete(loanItem.value)
@@ -213,6 +261,7 @@ const recordingColumns = [
   {accessorKey: 'recordingType', header: 'Type'},
   {accessorKey: 'author', header: 'Auteur'},
   {accessorKey: 'description', header: 'Description'},
+  {accessorKey: 'actions', header: ''},
 ]
 
 function getMemberName(m: unknown): string {
@@ -377,14 +426,24 @@ async function openRecordingModal() {
           <span class="text-xs text-muted">{{ row.original.comment ?? '-' }}</span>
         </template>
         <template #actions-cell="{ row }">
-          <UButton
-            v-if="canLoan && !row.original.endDate"
-            size="xs"
-            color="success"
-            @click="returnLoan(row.original)"
-          >
-            Retourner
-          </UButton>
+          <div class="flex items-center gap-1 justify-end">
+            <UButton
+              v-if="canLoan && !row.original.endDate"
+              size="xs"
+              color="success"
+              @click="returnLoan(row.original)"
+            >
+              Retourner
+            </UButton>
+            <template v-if="canLoan && isToday(row.original.startDate)">
+              <UTooltip text="Modifier">
+                <UButton icon="i-heroicons-pencil-square" size="xs" color="warning" variant="ghost" @click="openEditLoanModal(row.original)" />
+              </UTooltip>
+              <UTooltip text="Supprimer">
+                <UButton icon="i-heroicons-trash" size="xs" color="error" variant="ghost" @click="deleteLoan(row.original)" />
+              </UTooltip>
+            </template>
+          </div>
         </template>
       </UTable>
     </GenericCard>
@@ -415,6 +474,16 @@ async function openRecordingModal() {
         <template #author-cell="{ row }">{{ getMemberName(row.original.author) }}</template>
         <template #description-cell="{ row }">
           <span class="text-xs">{{ row.original.description ?? '-' }}</span>
+        </template>
+        <template #actions-cell="{ row }">
+          <div v-if="canEdit && isToday(row.original.date)" class="flex items-center gap-1 justify-end">
+            <UTooltip text="Modifier">
+              <UButton icon="i-heroicons-pencil-square" size="xs" color="warning" variant="ghost" @click="openEditRecordingModal(row.original)" />
+            </UTooltip>
+            <UTooltip text="Supprimer">
+              <UButton icon="i-heroicons-trash" size="xs" color="error" variant="ghost" @click="deleteRecording(row.original)" />
+            </UTooltip>
+          </div>
         </template>
       </UTable>
     </GenericCard>
