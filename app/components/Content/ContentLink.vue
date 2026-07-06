@@ -19,7 +19,7 @@ const border = computed(() => {
 
 <template>
   <ULink
-    :class="'transition text-primary-900 dark:text-primary-400 border-b-2 hover:text-primary-900 dark:hover:text-primary-400 hover:border-primary-800 dark:hover:border-primary-300 ' + border">
+    :class="'rounded-none transition text-primary-900 dark:text-primary-400 border-b-2 hover:text-primary-900 dark:hover:text-primary-400 hover:border-primary-800 dark:hover:border-primary-300 ' + border">
     <slot />
   </ULink>
 </template>
