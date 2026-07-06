@@ -19,6 +19,12 @@ const links = [
     description: 'Récapitulatif par membres pour la saison actuelle.',
     icon: 'i-heroicons-user-group',
     to: '/admin/statistics/members'
+  },
+  {
+    title: 'Prêts',
+    description: 'Statistiques du matériel en prêt.',
+    icon: 'i-heroicons-archive-box-arrow-down',
+    to: '/admin/statistics/loans'
   }
 ]
 </script>

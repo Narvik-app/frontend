@@ -7,6 +7,11 @@ import type {Metric} from "~/types/api/item/metric";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {formatDateInput, formatDateReadable} from "~/utils/date";
 
+export interface LoanMetricDailyCount {
+  day: string
+  count: number
+}
+
 export const useMetricStore = defineStore('metric', () => {
   // Filter settings
   const previousSeason: Ref<boolean> = ref(false)
@@ -15,6 +20,7 @@ export const useMetricStore = defineStore('metric', () => {
   const isLoading: Ref<boolean> = ref(false)
   const lastRefreshDate: Ref<Date> = ref(new Date())
   const metricsQuery = new MetricQuery()
+  const loanMetricsQuery = new MetricQuery<LoanMetricDailyCount[]>()
 
   // Metric data
   const openDaysMetrics: Ref<Metric | undefined> = ref(undefined);
@@ -24,6 +30,8 @@ export const useMetricStore = defineStore('metric', () => {
   const presenceMetricsPreviousSeason: Ref<Metric | undefined> = ref(undefined);
   const externalPresenceMetrics: Ref<Metric | undefined> = ref(undefined);
   const externalPresenceMetricsPreviousSeason: Ref<Metric | undefined> = ref(undefined);
+  const loanMetrics: Ref<Metric<LoanMetricDailyCount[]> | undefined> = ref(undefined);
+  const loanMetricsPreviousSeason: Ref<Metric<LoanMetricDailyCount[]> | undefined> = ref(undefined);
 
 const selfStore = useSelfUserStore();
   const { selectedProfile } = storeToRefs(selfStore)
@@ -101,8 +109,10 @@ const selfStore = useSelfUserStore();
       memberMetrics.value
     );
 
+    let loaded = basicMetricsLoaded;
+
     if (selectedProfile.value?.club.presencesEnabled) {
-      return basicMetricsLoaded && !!(
+      loaded = loaded && !!(
         presenceMetrics.value &&
         presenceMetricsPreviousSeason.value &&
         externalPresenceMetrics.value &&
@@ -110,7 +120,14 @@ const selfStore = useSelfUserStore();
       );
     }
 
-    return basicMetricsLoaded;
+    if (selectedProfile.value?.club.loansEnabled) {
+      loaded = loaded && !!(
+        loanMetrics.value &&
+        loanMetricsPreviousSeason.value
+      );
+    }
+
+    return loaded;
   }
 
   // Clear all metrics data
@@ -122,6 +139,8 @@ const selfStore = useSelfUserStore();
     presenceMetricsPreviousSeason.value = undefined;
     externalPresenceMetrics.value = undefined;
     externalPresenceMetricsPreviousSeason.value = undefined;
+    loanMetrics.value = undefined;
+    loanMetricsPreviousSeason.value = undefined;
   }
 
   // Load metrics for super admin
@@ -201,6 +220,18 @@ const selfStore = useSelfUserStore();
       );
     }
 
+    // We get loan stats
+    if (selectedProfile.value?.club.loansEnabled) {
+      promises.push(
+        loanMetricsQuery.get(buildQueryParams("loans", false, false)).then(value => {
+          loanMetrics.value = value.retrieved
+        }),
+        loanMetricsQuery.get(buildQueryParams("loans", false, true)).then(value => {
+          loanMetricsPreviousSeason.value = value.retrieved
+        })
+      );
+    }
+
     await Promise.all(promises)
     lastRefreshDate.value = new Date()
     isLoading.value = false
@@ -263,6 +294,8 @@ const selfStore = useSelfUserStore();
     presenceMetricsPreviousSeason,
     externalPresenceMetrics,
     externalPresenceMetricsPreviousSeason,
+    loanMetrics,
+    loanMetricsPreviousSeason,
 
     // Computed
     previousPeriodInfo,

@@ -175,4 +175,8 @@ export const useSaleStore = defineStore('sale', () => {
     getPaymentModes,
     setSelectedRange,
   }
+}, {
+  persist: {
+    pick: ['seller'],
+  },
 })

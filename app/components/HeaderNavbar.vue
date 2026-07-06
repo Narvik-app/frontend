@@ -46,6 +46,19 @@ const overlay = useOverlay()
     return null
   })
 
+  // Smart loans button: determine target URL and visibility
+  const loansButtonUrl = computed<string | null>(() => {
+    if (!selfStore.selectedProfile?.club.loansEnabled) return null
+
+    if (selfStore.isAdmin()) return '/admin/loans'
+
+    if (selfStore.can(Permission.LoanAccess)) return '/admin/loans'
+    if (selfStore.can(Permission.LoanItemsAccess)) return '/admin/loans/items'
+    if (selfStore.can(Permission.LoanCategoriesAccess)) return '/admin/loans/categories'
+
+    return null
+  })
+
   const isDesktopDisplay = isDesktop()
   const isTabletDisplay = isTablet()
 
@@ -115,6 +128,13 @@ const overlay = useOverlay()
           <UButton :to="salesButtonUrl" icon="i-heroicons-shopping-cart" variant="ghost" color="neutral">
             <template v-if="isDesktopDisplay || isTabletDisplay">
               Vente
+            </template>
+          </UButton>
+        </div>
+        <div v-if="isSupervisor && loansButtonUrl">
+          <UButton :to="loansButtonUrl" icon="i-heroicons-archive-box" variant="ghost" color="neutral">
+            <template v-if="isDesktopDisplay || isTabletDisplay">
+              Prêt
             </template>
           </UButton>
         </div>

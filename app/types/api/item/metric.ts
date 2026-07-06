@@ -1,10 +1,10 @@
 import type {Item} from "../item";
 
-export interface Metric extends Item {
+export interface Metric<TValues = unknown> extends Item {
   name: string;
   value?: number;
-  values?: object;
-  childMetrics: Metric[]
+  values?: TValues;
+  childMetrics: Metric<TValues>[]
   pagination?: {
     currentPage: number,
     itemsPerPage: number,

@@ -1,3 +1,10 @@
+export async function loadImageBase64(fileQuery: {getFromUrl: (url: string) => Promise<{retrieved?: {base64?: string}}>}, image?: {privateThumbnailUrl?: string; privateUrl?: string} | null): Promise<string | undefined> {
+  const imageUrl = image?.privateThumbnailUrl ?? image?.privateUrl
+  if (!imageUrl) return undefined
+  const {retrieved} = await fileQuery.getFromUrl(imageUrl)
+  return retrieved?.base64
+}
+
 export function getFileFormDataFromUInputChangeEvent(event: Event | FileList): FormData | null {
   const file = getFileFromUInputChangeEvent(event)
   if (!file) return null;
