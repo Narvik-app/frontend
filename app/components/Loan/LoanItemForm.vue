@@ -189,7 +189,7 @@ onMounted(async () => {
             :src="imagePreviewUrl ?? currentImageBase64"
             alt="Image de l'article"
             class="w-full h-full object-cover"
-          />
+          >
           <UIcon v-else name="i-heroicons-photo" class="text-2xl text-muted" />
         </div>
         <div v-if="!props.viewOnly" class="flex flex-col gap-1">

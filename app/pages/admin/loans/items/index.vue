@@ -68,7 +68,7 @@ async function loadImages(list: LoanItem[]) {
   }
 }
 
-function onItemUpdated(item: LoanItem) {
+function onItemUpdated() {
   itemModalOpen.value = false
   selectedItem.value = undefined
   loadItems()
@@ -120,7 +120,7 @@ function getCategoryName(item: LoanItem): string {
                   :src="imageCache[row.original.uuid]"
                   :alt="row.original.name"
                   class="w-full h-full object-cover"
-                />
+                >
                 <UIcon v-else name="i-heroicons-photo" class="text-sm text-muted" />
               </div>
               {{ row.original.name }}
@@ -166,7 +166,7 @@ function getCategoryName(item: LoanItem): string {
               :src="imageCache[selectedItem.uuid]"
               :alt="selectedItem.name"
               class="w-full h-32 object-contain rounded"
-            />
+            >
           </div>
           <div class="flex flex-col gap-2 text-sm">
             <div><span class="font-medium">Nom : </span>{{ selectedItem.name }}</div>

@@ -6,7 +6,7 @@ import type {LoanItem} from '~/types/api/item/clubDependent/plugin/loan/loanItem
 import type {Loan} from '~/types/api/item/clubDependent/plugin/loan/loan'
 import type {LoanRecording} from '~/types/api/item/clubDependent/plugin/loan/loanRecording'
 import {decodeUrlUuid} from '~/utils/resource'
-import {formatMonetary} from '~/utils/string'
+import {formatMonetary,getMemberDisplayName} from '~/utils/string'
 import {useSelfUserStore} from '~/stores/useSelfUser'
 import {Permission} from '~/types/api/permissions'
 import ModalDeleteConfirmation from '~/components/Modal/ModalDeleteConfirmation.vue'
@@ -16,7 +16,6 @@ import type {ChartDataField, ChartLineData} from '~/utils/chart'
 import dayjs from 'dayjs'
 import {formatDate, formatDateTime} from '~/utils/date'
 import {effectiveLoanItemStatus, LOAN_ITEM_STATUS_COLORS, LOAN_ITEM_STATUS_LABELS} from '~/utils/loan'
-import {getMemberDisplayName} from '~/utils/string'
 
 definePageMeta({layout: 'loan'})
 

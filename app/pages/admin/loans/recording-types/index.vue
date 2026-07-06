@@ -153,7 +153,7 @@ const validate = (state: any): FormError[] => {
                     v-model="selected.color"
                     type="color"
                     class="w-8 h-8 rounded cursor-pointer border-0 p-0 bg-transparent"
-                  />
+                  >
                 </div>
               </UFormField>
             </div>
