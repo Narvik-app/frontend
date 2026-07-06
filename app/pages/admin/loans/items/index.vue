@@ -9,6 +9,8 @@ import {useSelfUserStore} from '~/stores/useSelfUser'
 import {Permission} from '~/types/api/permissions'
 import type {TableRow} from '#ui/types'
 import type {TablePaginateInterface} from '~/types/table'
+import {loadImageBase64} from '~/utils/file'
+import {LOAN_ITEM_STATUS_COLORS, LOAN_ITEM_STATUS_LABELS} from '~/utils/loan'
 
 definePageMeta({layout: 'loan'})
 useHead({title: 'Articles de prêt'})
@@ -41,19 +43,6 @@ const columns = [
   {accessorKey: 'actions', header: ''},
 ]
 
-const statusLabels: Record<string, string> = {
-  available: 'Disponible',
-  maintenance: 'Maintenance',
-  sold: 'Vendu',
-  retired: 'Retiré',
-}
-const statusColors: Record<string, 'success' | 'warning' | 'neutral' | 'error' | 'primary'> = {
-  available: 'success',
-  maintenance: 'warning',
-  sold: 'neutral',
-  retired: 'error',
-}
-
 categoryQuery.getAll().then(r => { categories.value = r.items })
 loadItems()
 
@@ -73,11 +62,9 @@ async function loadItems() {
 
 async function loadImages(list: LoanItem[]) {
   for (const item of list) {
-    const imageUrl = item.image?.privateThumbnailUrl ?? item.image?.privateUrl
-    if (item.uuid && imageUrl && !imageCache.value[item.uuid]) {
-      const {retrieved} = await fileQuery.getFromUrl(imageUrl)
-      if (retrieved?.base64) imageCache.value[item.uuid] = retrieved.base64
-    }
+    if (!item.uuid || imageCache.value[item.uuid]) continue
+    const base64 = await loadImageBase64(fileQuery, item.image)
+    if (base64) imageCache.value[item.uuid] = base64
   }
 }
 
@@ -140,8 +127,8 @@ function getCategoryName(item: LoanItem): string {
             </div>
           </template>
           <template #status-cell="{ row }">
-            <UBadge :color="statusColors[row.original.status ?? 'available'] ?? 'neutral'" variant="soft" size="xs">
-              {{ statusLabels[row.original.status ?? 'available'] ?? row.original.status }}
+            <UBadge :color="LOAN_ITEM_STATUS_COLORS[row.original.status ?? 'available'] ?? 'neutral'" variant="soft" size="xs">
+              {{ LOAN_ITEM_STATUS_LABELS[row.original.status ?? 'available'] ?? row.original.status }}
             </UBadge>
           </template>
           <template #category-cell="{ row }">{{ getCategoryName(row.original) }}</template>

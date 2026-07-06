@@ -19,6 +19,7 @@ import type {LoanItem} from "~/types/api/item/clubDependent/plugin/loan/loanItem
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {Permission} from "~/types/api/permissions";
 import LoanModalRecord from "~/components/Loan/LoanModalRecord.vue";
+import {groupLoanItemsByCategory} from "~/utils/loan";
 
 definePageMeta({
     layout: "pos"
@@ -72,28 +73,7 @@ definePageMeta({
     if (idx !== -1) loanItems.value.splice(idx, 1, item)
   }
 
-  const orderedLoanItems = computed(() => {
-    const categories = new Map<string, LoanItem[]>()
-    loanItems.value.forEach(item => {
-      const categoryName = typeof item.category === 'object' ? item.category?.name : undefined
-      if (categoryName) {
-        if (!categories.has(categoryName)) {
-          categories.set(categoryName, [])
-        }
-
-        // @ts-expect-error - categories.get is guaranteed to exist after the if check
-        categories.get(categoryName).push(item)
-      } else {
-        if (!categories.has('Non définie')) {
-          categories.set('Non définie', [])
-        }
-
-        // @ts-expect-error - categories.get is guaranteed to exist after the if check
-        categories.get('Non définie').push(item)
-      }
-    })
-    return categories
-  })
+  const orderedLoanItems = computed(() => groupLoanItemsByCategory(loanItems.value, 'Non définie'))
 
   async function openLoanItemModal(item: LoanItem) {
     if (item.isCurrentlyLoaned) {

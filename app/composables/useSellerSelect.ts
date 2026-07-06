@@ -3,6 +3,7 @@ import {useSaleStore} from '~/stores/useSaleStore'
 import {useSelfUserStore} from '~/stores/useSelfUser'
 import type {Member} from '~/types/api/item/clubDependent/member'
 import type {SelectApiItem} from '~/types/select'
+import {getMemberDisplayName} from '~/utils/string'
 
 /**
  * Shared "seller/loaner" selection (the admin or supervisor currently operating the counter).
@@ -15,7 +16,7 @@ export function useSellerSelect() {
 
   function toSelectItem(member: Member): SelectApiItem<Member> {
     return {
-      label: member.fullName ?? `${member.firstname ?? ''} ${member.lastname ?? ''}`.trim(),
+      label: getMemberDisplayName(member),
       value: member.uuid,
       item: member,
     }

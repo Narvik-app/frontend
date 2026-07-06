@@ -7,6 +7,7 @@ import LoanRecordingQuery from '~/composables/api/query/clubDependent/plugin/loa
 import LoanRecordingTypeQuery from '~/composables/api/query/clubDependent/plugin/loan/LoanRecordingTypeQuery'
 import {useSellerSelect} from '~/composables/useSellerSelect'
 import type {SelectApiItem} from '~/types/select'
+import {getMemberDisplayName} from '~/utils/string'
 
 const props = defineProps({
   loanItem: {
@@ -57,7 +58,7 @@ onMounted(async () => {
   }
   if (props.recording?.author && typeof props.recording.author === 'object') {
     const author = props.recording.author
-    sellerSelected.value = {label: author.fullName ?? `${author.firstname ?? ''} ${author.lastname ?? ''}`.trim(), value: author.uuid, item: author}
+    sellerSelected.value = {label: getMemberDisplayName(author), value: author.uuid, item: author}
   }
 })
 

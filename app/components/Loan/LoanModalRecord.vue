@@ -6,6 +6,7 @@ import type {Member} from '~/types/api/item/clubDependent/member'
 import LoanQuery from '~/composables/api/query/clubDependent/plugin/loan/LoanQuery'
 import SearchMember from '~/components/Member/SearchMember.vue'
 import {useSellerSelect} from '~/composables/useSellerSelect'
+import {getMemberDisplayName} from '~/utils/string'
 
 const props = defineProps({
   loanItem: {
@@ -97,7 +98,7 @@ async function submit() {
           <SearchMember compact @selected-member="(m: Member) => borrower = m" />
           <div v-if="borrower" class="mt-2 text-sm font-medium text-primary flex items-center gap-1">
             <UIcon name="i-heroicons-check-circle" />
-            {{ borrower.fullName ?? `${borrower.firstname ?? ''} ${borrower.lastname ?? ''}`.trim() }}
+            {{ getMemberDisplayName(borrower) }}
             <UIcon name="i-heroicons-x-mark" class="cursor-pointer ml-1" @click="borrower = undefined" />
           </div>
         </div>

@@ -7,7 +7,7 @@ import LoanCategoryQuery from '~/composables/api/query/clubDependent/plugin/loan
 import FileQuery from '~/composables/api/query/FileQuery'
 import type {FormError, FormErrorEvent} from '#ui/types'
 import type {SelectApiItem} from '~/types/select'
-import {getFileFormDataFromUInputChangeEvent, displayFileErrorToast} from '~/utils/file'
+import {getFileFormDataFromUInputChangeEvent, displayFileErrorToast, loadImageBase64} from '~/utils/file'
 
 const props = defineProps({
   item: {
@@ -45,11 +45,12 @@ const imagePreviewUrl = ref<string | undefined>()
 const isRemovingImage = ref(false)
 
 // Category select
-const selectedCategory = ref<SelectApiItem<LoanCategory> | undefined>(
-  props.item?.category && typeof props.item.category === 'object'
-    ? {label: props.item.category.name, value: props.item.category.uuid, item: props.item.category}
+function categoryToSelectItem(category: LoanItem['category']): SelectApiItem<LoanCategory> | undefined {
+  return category && typeof category === 'object'
+    ? {label: category.name, value: category.uuid, item: category}
     : undefined
-)
+}
+const selectedCategory = ref<SelectApiItem<LoanCategory> | undefined>(categoryToSelectItem(props.item?.category))
 const categoryItems = computed(() => {
   const result: SelectApiItem<LoanCategory>[] = []
   categories.value?.forEach(cat => {
@@ -58,6 +59,10 @@ const categoryItems = computed(() => {
   return result
 })
 
+const viewOnlyAttrs = computed(() => props.viewOnly
+  ? {class: 'pointer-events-none', tabindex: '-1'}
+  : {class: '', tabindex: '0'})
+
 const statusOptions = [
   {label: 'Disponible', value: 'available'},
   {label: 'Maintenance', value: 'maintenance'},
@@ -65,23 +70,16 @@ const statusOptions = [
   {label: 'Retiré', value: 'retired'},
 ]
 
-watch(props, async () => {
+watch(() => props.item, async () => {
   item.value = props.item ? {...props.item} : getDefaultLoanItem()
-  selectedCategory.value = props.item?.category && typeof props.item.category === 'object'
-    ? {label: props.item.category.name, value: props.item.category.uuid, item: props.item.category}
-    : undefined
+  selectedCategory.value = categoryToSelectItem(props.item?.category)
   pendingFormData.value = null
   imagePreviewUrl.value = undefined
   isRemovingImage.value = false
   if (!props.categories) {
     await fetchCategories()
   }
-  if (props.item?.image?.privateUrl) {
-    const {retrieved} = await fileQuery.getFromUrl(props.item.image.privateUrl)
-    currentImageBase64.value = retrieved?.base64
-  } else {
-    currentImageBase64.value = undefined
-  }
+  currentImageBase64.value = await loadImageBase64(fileQuery, props.item?.image)
 })
 
 function getDefaultLoanItem(): LoanItem {
@@ -134,8 +132,10 @@ async function updateItem() {
     }
   }
 
-  // Re-fetch the complete item — POST-create plain-JSON lacks @id; this also pulls the image relation
-  if (savedItem?.uuid) {
+  // Re-fetch the complete item — POST-create plain-JSON lacks @id, and an image change needs
+  // to pull in the relation that was just updated via the separate image endpoint above.
+  const imageChanged = pendingFormData.value !== null || isRemovingImage.value
+  if (savedItem?.uuid && (isCreate || imageChanged)) {
     const {retrieved} = await loanItemQuery.get(savedItem.uuid)
     if (retrieved) savedItem = retrieved as LoanItem
   }
@@ -174,11 +174,7 @@ async function fetchCategories() {
 
 // Load existing image on mount if editing
 onMounted(async () => {
-  const imageUrl = props.item?.image?.privateThumbnailUrl ?? props.item?.image?.privateUrl
-  if (imageUrl) {
-    const {retrieved} = await fileQuery.getFromUrl(imageUrl)
-    currentImageBase64.value = retrieved?.base64
-  }
+  currentImageBase64.value = await loadImageBase64(fileQuery, props.item?.image)
 })
 </script>
 
@@ -217,8 +213,7 @@ onMounted(async () => {
       <USelectMenu
         v-model="selectedCategory"
         :items="categoryItems"
-        :class="props.viewOnly ? 'pointer-events-none' : ''"
-        :tabindex="props.viewOnly ? '-1' : '0'"
+        v-bind="viewOnlyAttrs"
       >
         <template #default>
           <span v-if="selectedCategory">{{ selectedCategory.label }}</span>
@@ -232,12 +227,12 @@ onMounted(async () => {
 
     <!-- Name -->
     <UFormField label="Nom" name="name" required>
-      <UInput v-model="item.name" :class="props.viewOnly ? 'pointer-events-none' : ''" :tabindex="props.viewOnly ? '-1' : '0'" />
+      <UInput v-model="item.name" v-bind="viewOnlyAttrs" />
     </UFormField>
 
     <!-- Description -->
     <UFormField label="Description">
-      <UInput v-model="item.description" :class="props.viewOnly ? 'pointer-events-none' : ''" :tabindex="props.viewOnly ? '-1' : '0'" />
+      <UInput v-model="item.description" v-bind="viewOnlyAttrs" />
     </UFormField>
 
     <!-- Status -->
@@ -253,7 +248,7 @@ onMounted(async () => {
 
     <!-- Loan price -->
     <UFormField label="Prix de prêt">
-      <UInput v-model="item.loanPrice" :class="props.viewOnly ? 'pointer-events-none' : ''" :tabindex="props.viewOnly ? '-1' : '0'">
+      <UInput v-model="item.loanPrice" v-bind="viewOnlyAttrs">
         <template #trailing>
           <span class="text-gray-500 dark:text-gray-400 text-xs">EUR</span>
         </template>
@@ -262,7 +257,7 @@ onMounted(async () => {
 
     <!-- Purchase price -->
     <UFormField label="Prix d'achat">
-      <UInput v-model="item.purchasePrice" :class="props.viewOnly ? 'pointer-events-none' : ''" :tabindex="props.viewOnly ? '-1' : '0'">
+      <UInput v-model="item.purchasePrice" v-bind="viewOnlyAttrs">
         <template #trailing>
           <span class="text-gray-500 dark:text-gray-400 text-xs">EUR</span>
         </template>
@@ -271,7 +266,7 @@ onMounted(async () => {
 
     <!-- Sold price -->
     <UFormField label="Prix de vente">
-      <UInput v-model="item.soldPrice" :class="props.viewOnly ? 'pointer-events-none' : ''" :tabindex="props.viewOnly ? '-1' : '0'">
+      <UInput v-model="item.soldPrice" v-bind="viewOnlyAttrs">
         <template #trailing>
           <span class="text-gray-500 dark:text-gray-400 text-xs">EUR</span>
         </template>

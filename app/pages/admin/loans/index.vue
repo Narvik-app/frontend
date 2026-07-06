@@ -8,6 +8,8 @@ import {useSelfUserStore} from '~/stores/useSelfUser'
 import {Permission} from '~/types/api/permissions'
 import {print} from '~/utils/browser'
 import LoanModalRecord from '~/components/Loan/LoanModalRecord.vue'
+import {loadImageBase64} from '~/utils/file'
+import {effectiveLoanItemStatus, groupLoanItemsByCategory} from '~/utils/loan'
 
 definePageMeta({layout: 'loan'})
 useHead({title: 'Prêts'})
@@ -33,32 +35,18 @@ const today = new Date().toLocaleDateString('fr-FR', {day: '2-digit', month: '2-
 
 async function loadAll() {
   isLoading.value = true
-
-  const loaded: LoanItem[] = []
-  const urlParams = new URLSearchParams({itemsPerPage: '100', status: 'available'})
-  let page = 1
-  while (true) {
-    urlParams.set('page', page.toString())
-    const {items, view} = await itemQuery.getAll(urlParams)
-    loaded.push(...items)
-    if (!view?.['next']) break
-    page++
-  }
-  allItems.value = loaded
+  const urlParams = new URLSearchParams({status: 'available'})
+  allItems.value = await itemQuery.getAllWithoutPagination(urlParams) ?? []
   isLoading.value = false
   // Pre-load images
-  loadImages(loaded)
+  loadImages(allItems.value)
 }
 
 async function loadImages(items: LoanItem[]) {
   for (const item of items) {
-    const imageUrl = item.image?.privateThumbnailUrl ?? item.image?.privateUrl
-    if (item.uuid && imageUrl && !imageCache.value[item.uuid]) {
-      const {retrieved} = await fileQuery.getFromUrl(imageUrl)
-      if (retrieved?.base64) {
-        imageCache.value[item.uuid] = retrieved.base64
-      }
-    }
+    if (!item.uuid || imageCache.value[item.uuid]) continue
+    const base64 = await loadImageBase64(fileQuery, item.image)
+    if (base64) imageCache.value[item.uuid] = base64
   }
 }
 
@@ -99,10 +87,9 @@ function onItemUpdated(item: LoanItem) {
   const idx = allItems.value.findIndex(i => i.uuid === item.uuid)
   if (idx !== -1) allItems.value.splice(idx, 1, item)
   else allItems.value.push(item)
-  const imageUrl = item.image?.privateThumbnailUrl ?? item.image?.privateUrl
-  if (item.uuid && imageUrl) {
-    fileQuery.getFromUrl(imageUrl).then(({retrieved}) => {
-      if (retrieved?.base64 && item.uuid) imageCache.value[item.uuid] = retrieved.base64
+  if (item.uuid) {
+    loadImageBase64(fileQuery, item.image).then(base64 => {
+      if (base64 && item.uuid) imageCache.value[item.uuid] = base64
     })
   }
 }
@@ -124,22 +111,7 @@ const filteredItems = computed(() =>
   allItems.value.filter(matchesSearch)
 )
 
-function groupByCategory(items: LoanItem[]): Map<string, LoanItem[]> {
-  const map = new Map<string, LoanItem[]>()
-  for (const item of items) {
-    const key = item.category ? (typeof item.category === 'string' ? item.category : item.category.name ?? 'Sans catégorie') : 'Sans catégorie'
-    if (!map.has(key)) map.set(key, [])
-    map.get(key)!.push(item)
-  }
-  return map
-}
-
-const grouped = computed(() => groupByCategory(filteredItems.value))
-
-function effectiveStatus(item: LoanItem): string {
-  if (item.isCurrentlyLoaned) return 'loaned'
-  return item.status ?? 'available'
-}
+const grouped = computed(() => groupLoanItemsByCategory(filteredItems.value))
 
 </script>
 
@@ -240,7 +212,7 @@ function effectiveStatus(item: LoanItem): string {
                 <div v-else />
 
                 <UBadge
-                  v-if="effectiveStatus(item) === 'loaned'"
+                  v-if="effectiveLoanItemStatus(item) === 'loaned'"
                   variant="soft"
                 >
                   Prêté

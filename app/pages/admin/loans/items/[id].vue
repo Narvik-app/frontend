@@ -15,6 +15,8 @@ import LoanRecordingForm from '~/components/Loan/LoanRecordingForm.vue'
 import type {ChartDataField, ChartLineData} from '~/utils/chart'
 import dayjs from 'dayjs'
 import {formatDate, formatDateTime} from '~/utils/date'
+import {effectiveLoanItemStatus, LOAN_ITEM_STATUS_COLORS, LOAN_ITEM_STATUS_LABELS} from '~/utils/loan'
+import {getMemberDisplayName} from '~/utils/string'
 
 definePageMeta({layout: 'loan'})
 
@@ -70,25 +72,7 @@ const itemQuery = new LoanItemQuery()
 const loanQuery = new LoanQuery()
 const recordingQuery = new LoanRecordingQuery()
 
-const statusLabels: Record<string, string> = {
-  available: 'Disponible',
-  loaned: 'Prêté',
-  maintenance: 'Maintenance',
-  sold: 'Vendu',
-  retired: 'Retiré',
-}
-const statusColors: Record<string, 'success' | 'primary' | 'warning' | 'neutral' | 'error'> = {
-  available: 'success',
-  loaned: 'primary',
-  maintenance: 'warning',
-  sold: 'neutral',
-  retired: 'error',
-}
-
-function effectiveStatus(): string {
-  if (loanItem.value?.isCurrentlyLoaned) return 'loaned'
-  return loanItem.value?.status ?? 'available'
-}
+const currentStatus = computed(() => effectiveLoanItemStatus(loanItem.value))
 
 loadItem().then((ok) => {
   if (!ok) {
@@ -265,12 +249,8 @@ const recordingColumns = [
 ]
 
 function getMemberName(m: unknown): string {
-  if (!m) return '-'
-  if (typeof m === 'object' && m !== null) {
-    const member = m as {fullName?: string; firstname?: string; lastname?: string}
-    return (member.fullName ?? `${member.firstname ?? ''} ${member.lastname ?? ''}`.trim()) || '-'
-  }
-  return '-'
+  if (!m || typeof m !== 'object') return '-'
+  return getMemberDisplayName(m as {fullName?: string; firstname?: string; lastname?: string}) || '-'
 }
 
 function getBorrowerName(loan: Loan): string {
@@ -314,11 +294,11 @@ async function openRecordingModal() {
         {{ loanItem?.name }}
         <UBadge
           v-if="loanItem"
-          :color="statusColors[effectiveStatus()]"
+          :color="LOAN_ITEM_STATUS_COLORS[currentStatus]"
           variant="soft"
           class="self-center"
         >
-          {{ statusLabels[effectiveStatus()] }}
+          {{ LOAN_ITEM_STATUS_LABELS[currentStatus] }}
         </UBadge>
       </div>
 

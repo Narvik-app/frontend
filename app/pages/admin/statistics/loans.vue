@@ -68,15 +68,9 @@ const modeItems = computed(() => {
   return items
 })
 
-const currentNode = computed<Metric<LoanMetricDailyCount[]> | undefined>(() => {
-  if (selectedMode.value === '__global__') return loanMetrics.value
-  return findChild(loanMetrics.value, selectedMode.value)
-})
+const currentNode = computed<Metric<LoanMetricDailyCount[]> | undefined>(() => nodeFor(loanMetrics.value, selectedMode.value))
 
-const previousNode = computed<Metric<LoanMetricDailyCount[]> | undefined>(() => {
-  if (selectedMode.value === '__global__') return loanMetricsPreviousSeason.value
-  return findChild(loanMetricsPreviousSeason.value, selectedMode.value)
-})
+const previousNode = computed<Metric<LoanMetricDailyCount[]> | undefined>(() => nodeFor(loanMetricsPreviousSeason.value, selectedMode.value))
 
 const isGlobalMode = computed(() => selectedMode.value === '__global__')
 const hasData = computed(() => !!currentNode.value)
@@ -112,7 +106,7 @@ function formatRate(value: number): string {
 
 // Real (non-estimated) monthly/yearly totals — fetched as their own fixed rolling windows,
 // independent of the main date-range picker, each compared to the equivalent prior window.
-const metricsQuery = new MetricQuery()
+const metricsQuery = new MetricQuery<LoanMetricDailyCount[]>()
 const monthlyMetric = ref<Metric<LoanMetricDailyCount[]> | undefined>()
 const monthlyMetricPrevious = ref<Metric<LoanMetricDailyCount[]> | undefined>()
 const yearlyMetric = ref<Metric<LoanMetricDailyCount[]> | undefined>()
@@ -135,10 +129,10 @@ async function loadFixedWindowMetrics() {
     metricsQuery.get(buildFixedWindowQuery(365, 0)),
     metricsQuery.get(buildFixedWindowQuery(365, 365)),
   ])
-  monthlyMetric.value = monthly.retrieved as unknown as Metric<LoanMetricDailyCount[]> | undefined
-  monthlyMetricPrevious.value = monthlyPrevious.retrieved as unknown as Metric<LoanMetricDailyCount[]> | undefined
-  yearlyMetric.value = yearly.retrieved as unknown as Metric<LoanMetricDailyCount[]> | undefined
-  yearlyMetricPrevious.value = yearlyPrevious.retrieved as unknown as Metric<LoanMetricDailyCount[]> | undefined
+  monthlyMetric.value = monthly.retrieved
+  monthlyMetricPrevious.value = monthlyPrevious.retrieved
+  yearlyMetric.value = yearly.retrieved
+  yearlyMetricPrevious.value = yearlyPrevious.retrieved
 }
 
 function nodeFor(metric: Metric<LoanMetricDailyCount[]> | undefined, mode: string): Metric<LoanMetricDailyCount[]> | undefined {

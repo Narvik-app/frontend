@@ -20,6 +20,7 @@ export const useMetricStore = defineStore('metric', () => {
   const isLoading: Ref<boolean> = ref(false)
   const lastRefreshDate: Ref<Date> = ref(new Date())
   const metricsQuery = new MetricQuery()
+  const loanMetricsQuery = new MetricQuery<LoanMetricDailyCount[]>()
 
   // Metric data
   const openDaysMetrics: Ref<Metric | undefined> = ref(undefined);
@@ -222,11 +223,11 @@ const selfStore = useSelfUserStore();
     // We get loan stats
     if (selectedProfile.value?.club.loansEnabled) {
       promises.push(
-        metricsQuery.get(buildQueryParams("loans", false, false)).then(value => {
-          loanMetrics.value = value.retrieved as unknown as Metric<LoanMetricDailyCount[]> | undefined
+        loanMetricsQuery.get(buildQueryParams("loans", false, false)).then(value => {
+          loanMetrics.value = value.retrieved
         }),
-        metricsQuery.get(buildQueryParams("loans", false, true)).then(value => {
-          loanMetricsPreviousSeason.value = value.retrieved as unknown as Metric<LoanMetricDailyCount[]> | undefined
+        loanMetricsQuery.get(buildQueryParams("loans", false, true)).then(value => {
+          loanMetricsPreviousSeason.value = value.retrieved
         })
       );
     }
