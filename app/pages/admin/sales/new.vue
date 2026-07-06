@@ -72,6 +72,29 @@ definePageMeta({
     if (idx !== -1) loanItems.value.splice(idx, 1, item)
   }
 
+  const orderedLoanItems = computed(() => {
+    const categories = new Map<string, LoanItem[]>()
+    loanItems.value.forEach(item => {
+      const categoryName = typeof item.category === 'object' ? item.category?.name : undefined
+      if (categoryName) {
+        if (!categories.has(categoryName)) {
+          categories.set(categoryName, [])
+        }
+
+        // @ts-expect-error - categories.get is guaranteed to exist after the if check
+        categories.get(categoryName).push(item)
+      } else {
+        if (!categories.has('Non définie')) {
+          categories.set('Non définie', [])
+        }
+
+        // @ts-expect-error - categories.get is guaranteed to exist after the if check
+        categories.get('Non définie').push(item)
+      }
+    })
+    return categories
+  })
+
   async function openLoanItemModal(item: LoanItem) {
     if (item.isCurrentlyLoaned) {
       toast.add({color: 'warning', title: 'Article déjà en prêt', description: 'Enregistrez le retour avant de créer un nouveau prêt.'})
@@ -340,43 +363,46 @@ definePageMeta({
           <UIcon name="i-heroicons-archive-box" />
           Matériel en prêt
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div
-            v-for="item in loanItems"
-            :key="item.uuid"
-            class="flex items-center gap-2 border rounded-lg p-2"
-          >
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium truncate">{{ item.name }}</p>
-              <p v-if="item.loanPrice" class="text-xs text-muted">{{ item.loanPrice }} €/prêt</p>
-            </div>
-            <UBadge
-              :color="item.isCurrentlyLoaned ? 'primary' : 'success'"
-              variant="soft"
-              size="xs"
+        <div v-for="[title, items] in orderedLoanItems" :key="title" class="mb-4 last:mb-0">
+          <div class="text-sm font-semibold mb-2 border-b">{{ title }}</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div
+              v-for="item in items"
+              :key="item.uuid"
+              class="flex items-center gap-2 border rounded-lg p-2"
             >
-              {{ item.isCurrentlyLoaned ? 'Prêté' : 'Disponible' }}
-            </UBadge>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium truncate">{{ item.name }}</p>
+                <p v-if="item.loanPrice" class="text-xs text-muted">{{ item.loanPrice }} €/prêt</p>
+              </div>
+              <UBadge
+                v-if="item.isCurrentlyLoaned"
+                variant="soft"
+                size="xs"
+              >
+                Prêté
+              </UBadge>
 
-            <UButton
-              v-if="canLoan && !item.isCurrentlyLoaned"
-              size="xs"
-              color="primary"
-              icon="i-heroicons-archive-box-arrow-down"
-              @click="openLoanItemModal(item)"
-            >
-              Prêter
-            </UButton>
-            <UButton
-              v-else-if="canLoan"
-              size="xs"
-              color="success"
-              icon="i-heroicons-arrow-uturn-left"
-              :loading="returningLoanItemUuid === item.uuid"
-              @click="returnLoanItem(item)"
-            >
-              Retourner
-            </UButton>
+              <UButton
+                v-if="canLoan && !item.isCurrentlyLoaned"
+                size="xs"
+                color="primary"
+                icon="i-heroicons-archive-box-arrow-down"
+                @click="openLoanItemModal(item)"
+              >
+                Prêter
+              </UButton>
+              <UButton
+                v-else-if="canLoan"
+                size="xs"
+                color="success"
+                icon="i-heroicons-arrow-uturn-left"
+                :loading="returningLoanItemUuid === item.uuid"
+                @click="returnLoanItem(item)"
+              >
+                Retourner
+              </UButton>
+            </div>
           </div>
         </div>
       </UCard>
