@@ -178,7 +178,7 @@ function getCategoryName(item: LoanItem): string {
             <img
               :src="imageCache[selectedItem.uuid]"
               :alt="selectedItem.name"
-              class="w-full h-32 object-cover rounded"
+              class="w-full h-32 object-contain rounded"
             />
           </div>
           <div class="flex flex-col gap-2 text-sm">
