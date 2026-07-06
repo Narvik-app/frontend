@@ -60,7 +60,7 @@ async function submit() {
       <UFormField label="Emprunteur (optionnel)">
         <div class="flex gap-1 mb-3">
           <UButton
-            label="Membre du club"
+            label="Membre"
             icon="i-heroicons-user"
             size="sm"
             :variant="borrowerType === 'member' ? 'soft' : 'ghost'"

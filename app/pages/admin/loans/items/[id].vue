@@ -273,17 +273,16 @@ async function openRecordingModal() {
         </UBadge>
       </div>
 
-      <UTooltip
-        v-if="canLoan"
-        :text="loanItem?.status !== 'available' ? 'Article non disponible' : loanItem?.isCurrentlyLoaned ? 'Article déjà en prêt' : 'Enregistrer un prêt'"
-      >
         <UButton
+          v-if="canLoan && loanItem?.status == 'available' && !loanItem?.isCurrentlyLoaned"
+
           icon="i-heroicons-archive-box-arrow-down"
           color="primary"
           :disabled="loanItem?.status !== 'available' || loanItem?.isCurrentlyLoaned"
           @click="openLoanModal()"
-        />
-      </UTooltip>
+        >
+          Enregistrer un prêt
+        </UButton>
 
       <UTooltip v-if="canEdit" text="Modifier">
         <UButton icon="i-heroicons-pencil-square" color="warning" @click="itemModalOpen = true" />
