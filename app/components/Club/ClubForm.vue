@@ -46,6 +46,7 @@ function getDefaultItem() {
     isActivated: true,
     presencesEnabled: false,
     salesEnabled: false,
+    loansEnabled: false,
   }
   return item
 }
@@ -74,6 +75,7 @@ async function submitItem() {
     renewDate: item.value.renewDate ?? null,
     presencesEnabled: item.value.presencesEnabled,
     salesEnabled: item.value.salesEnabled,
+    loansEnabled: item.value.loansEnabled,
     isActivated: item.value.isActivated,
     address: item.value.address,
     zipCode: Number(item.value.zipCode) || null,
