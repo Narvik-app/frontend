@@ -10,7 +10,7 @@ import {useSelfUserStore} from '~/stores/useSelfUser'
 import {Permission} from '~/types/api/permissions'
 
 definePageMeta({layout: 'loan'})
-useHead({title: 'Catégories de prêt'})
+useHead({title: 'Catégories'})
 
 const toast = useToast()
 const overlay = useOverlay()

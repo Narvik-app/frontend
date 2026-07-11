@@ -13,7 +13,7 @@ import {loadImageBase64} from '~/utils/file'
 import {LOAN_ITEM_STATUS_COLORS, LOAN_ITEM_STATUS_LABELS} from '~/utils/loan'
 
 definePageMeta({layout: 'loan'})
-useHead({title: 'Articles de prêt'})
+useHead({title: 'Articles'})
 
 const selfStore = useSelfUserStore()
 const canEdit = computed(() => selfStore.can(Permission.LoanItemsEdit))

@@ -12,7 +12,7 @@ import {loadImageBase64} from '~/utils/file'
 import {effectiveLoanItemStatus, groupLoanItemsByCategory} from '~/utils/loan'
 
 definePageMeta({layout: 'loan'})
-useHead({title: 'Prêts'})
+useHead({title: ''})
 
 const toast = useToast()
 const overlay = useOverlay()
