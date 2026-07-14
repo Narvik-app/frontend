@@ -85,9 +85,8 @@ const isActionable = computed(() => ['failed', 'cancelled', 'error'].includes(pr
           </div>
 
           <!-- Action buttons — always visible -->
-          <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+          <div class="flex flex-col gap-2 sm:flex-row sm:justify-between">
             <UButton
-              color="warning"
               variant="soft"
               icon="i-heroicons-pencil-square"
               @click="emit('manual')"

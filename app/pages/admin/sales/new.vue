@@ -365,12 +365,20 @@ definePageMeta({
       return
     }
 
-    // Let the cashier pick which terminal to send the payment to (or manual)
-    const choice = await selectTerminal(terminals)
-    if (!choice) {
-      // Cancelled the selection modal
-      isCreatingSale.value = false
-      return
+    let choice: { type: 'terminal'; terminal: SalePaymentTerminal } | { type: 'manual' } | undefined
+
+    if (terminals.length === 1) {
+      // Only one terminal linked: skip the picker, go straight to it. If the
+      // cashier wants manual, they can still hit "Manuel" on the next step.
+      choice = {type: 'terminal', terminal: terminals[0]!}
+    } else {
+      // Let the cashier pick which terminal to send the payment to (or manual)
+      choice = await selectTerminal(terminals)
+      if (!choice) {
+        // Cancelled the selection modal
+        isCreatingSale.value = false
+        return
+      }
     }
 
     if (choice.type === 'manual') {
