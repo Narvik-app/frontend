@@ -392,7 +392,14 @@ definePageMeta({
 
   // We load the page content
   loadItems()
-  saleStore.getPaymentModes()
+  // selectedPaymentMode is persisted (localStorage) as a plain snapshot; reconcile it
+  // against the freshly-fetched list so it always carries up-to-date paymentTerminals/usable
+  // data instead of a stale copy from before a terminal was linked.
+  saleStore.getPaymentModes().then(() => {
+    if (selectedPaymentMode.value) {
+      selectedPaymentMode.value = paymentModes.value.find(m => m.uuid === selectedPaymentMode.value?.uuid)
+    }
+  })
   saleStore.getSellers()
 
   const isStockRemovalMode = computed(() => selectedPaymentMode.value?.kind === 'stock_removal')
@@ -631,7 +638,7 @@ definePageMeta({
                 :data-testid="'payment-mode-' + paymentMode.name.toLowerCase()"
                 :variant="selectedPaymentMode?.uuid == paymentMode.uuid ? 'solid' : 'soft'"
                 class="basis-[calc(50%-0.25rem)]"
-                @click="selectedPaymentMode = selectedPaymentMode === paymentMode ? null : paymentMode">
+                @click="selectedPaymentMode = selectedPaymentMode?.uuid === paymentMode.uuid ? undefined : paymentMode">
                 <div class="flex items-center w-full">
                   <UIcon :name="'i-heroicons-' + paymentMode.icon" />
                   <div class="flex-1">

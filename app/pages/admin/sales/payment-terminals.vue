@@ -33,6 +33,14 @@ const terminalQuery = new SalePaymentTerminalQuery()
 const connectionQuery = new SalePaymentTerminalConnectionQuery()
 const paymentModeQuery = new SalePaymentModeQuery()
 
+// Auto-save for free-text fields (description/icon) — debounced, keeps the panel open while typing.
+// Destructured (rather than kept as a single object) so `isSavingDetails` is a top-level ref,
+// auto-unwrapped in the template — accessing a ref nested in a plain returned object would not be.
+const {save: saveDetail, isSaving: isSavingDetails} = useAutoSave<SalePaymentTerminal>(terminalQuery, {
+  onSaved: (updated) => syncLocalTerminal(updated.uuid, updated),
+  onError: (error) => toast.add({color: "error", title: "La modification a échouée", description: error.message}),
+})
+
 /** IRI helper: connection/paymentMode fields may come back as an IRI string or, occasionally, an embedded object. */
 function toIri(value?: {'@id'?: string} | string | null): string | null {
   if (!value) return null
@@ -259,30 +267,26 @@ function rowClicked(row: TableRow<SalePaymentTerminal>) {
   isVisible.value = true
 }
 
+/** Merge a patched result into the local terminals array without a network reload. */
+function syncLocalTerminal(uuid: string | undefined, patch: Partial<SalePaymentTerminal>) {
+  if (!uuid) return
+  const idx = terminals.value.findIndex(t => t.uuid === uuid)
+  if (idx !== -1) terminals.value[idx] = {...terminals.value[idx], ...patch}
+}
+
 async function patchTerminal(terminal: SalePaymentTerminal, payload: Partial<SalePaymentTerminal>) {
-  isLoading.value = true
-  const {error} = await terminalQuery.patch(terminal, payload)
-  isLoading.value = false
+  const {updated, error} = await terminalQuery.patch(terminal, payload)
 
   if (error) {
     toast.add({color: "error", title: "La modification a échouée", description: error.message})
     return
   }
   toast.add({color: "success", title: "Terminal modifié"})
-  selectedTerminal.value = undefined
-  await getTerminalsPaginated()
+  syncLocalTerminal(terminal.uuid, updated ?? payload)
 }
 
 async function toggleAvailable(terminal: SalePaymentTerminal) {
   await patchTerminal(terminal, {available: terminal.available})
-}
-
-async function saveDetails(terminal: SalePaymentTerminal) {
-  await patchTerminal(terminal, {
-    description: terminal.description ?? '',
-    icon: terminal.icon ?? '',
-    paymentMode: terminal.paymentMode ?? null,
-  })
 }
 
 async function deleteTerminal() {
@@ -420,7 +424,12 @@ async function deleteTerminal() {
           <UCard>
             <div class="flex gap-3 flex-col">
               <div>
-                <div class="text-lg font-bold">{{ selectedTerminal.name }}</div>
+                <div class="flex items-center gap-2">
+                  <div class="text-lg font-bold">{{ selectedTerminal.name }}</div>
+                  <UTooltip v-if="isSavingDetails" text="Enregistrement...">
+                    <UIcon name="i-heroicons-arrow-path" class="animate-spin text-muted text-xs" />
+                  </UTooltip>
+                </div>
                 <div class="text-sm text-gray-500">{{ connectionOf(selectedTerminal)?.name }}</div>
               </div>
 
@@ -428,12 +437,17 @@ async function deleteTerminal() {
                 <USwitch v-model="selectedTerminal.available" @update:model-value="toggleAvailable(selectedTerminal)" />
               </UFormField>
 
-              <UFormField label="Description" name="description" description="Affichée sur la carte de sélection à la caisse.">
-                <UInput v-model="selectedTerminal.description" placeholder="Ex: Caisse principale" />
+              <UFormField label="Description" name="description" description="Affichée sur la carte de sélection à la caisse. Enregistrée automatiquement.">
+                <UInput
+                  v-model="selectedTerminal.description"
+                  placeholder="Ex: Caisse principale"
+                  @update:model-value="(v: string) => saveDetail(selectedTerminal, {description: v})"
+                />
               </UFormField>
 
               <UFormField label="Icône" name="icon">
                 <template #description>
+                  <div>Enregistrée automatiquement.</div>
                   <ContentLink variant="link" to="https://heroicons.com/" target="_blank">Liste des icônes Heroicons</ContentLink>
                 </template>
 
@@ -441,7 +455,11 @@ async function deleteTerminal() {
                   <UIcon :name="'i-heroicons-' + selectedTerminal.icon" />
                 </template>
 
-                <UInput v-model="selectedTerminal.icon" placeholder="Ex: credit-card" />
+                <UInput
+                  v-model="selectedTerminal.icon"
+                  placeholder="Ex: credit-card"
+                  @update:model-value="(v: string) => saveDetail(selectedTerminal, {icon: v})"
+                />
               </UFormField>
 
               <UFormField
@@ -455,17 +473,9 @@ async function deleteTerminal() {
                   value-key="value"
                   label-key="label"
                   placeholder="Aucun mode de paiement"
+                  @update:model-value="(v: string | null) => patchTerminal(selectedTerminal, {paymentMode: v})"
                 />
               </UFormField>
-
-              <UButton
-                block
-                variant="soft"
-                icon="i-heroicons-check"
-                @click="saveDetails(selectedTerminal)"
-              >
-                Enregistrer
-              </UButton>
 
               <!-- Test connection -->
               <UButton
