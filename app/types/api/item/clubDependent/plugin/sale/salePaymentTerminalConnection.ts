@@ -6,6 +6,8 @@ export interface SalePaymentTerminalConnection extends UuidItem, ClubLinkedItem 
   name?: string;
   provider?: 'sumup';
   available?: boolean;
+  /** When true, the checkout picker is always shown, even if this connection has a single usable device */
+  forceTerminalSelection?: boolean;
   /** Read-only: true if credentials have been configured (credentials themselves are never returned) */
   configured?: boolean;
   /** Write-only: provider-agnostic credentials map, sent on POST/PATCH, never returned */

@@ -367,9 +367,10 @@ definePageMeta({
 
     let choice: { type: 'terminal'; terminal: SalePaymentTerminal } | { type: 'manual' } | undefined
 
-    if (terminals.length === 1) {
-      // Only one terminal linked: skip the picker, go straight to it. If the
-      // cashier wants manual, they can still hit "Manuel" on the next step.
+    if (terminals.length === 1 && !terminals[0]!.forceTerminalSelection) {
+      // Only one terminal linked and its connection doesn't force the picker:
+      // skip it and go straight to the terminal. If the cashier wants manual,
+      // they can still hit "Manuel" on the next step.
       choice = {type: 'terminal', terminal: terminals[0]!}
     } else {
       // Let the cashier pick which terminal to send the payment to (or manual)
