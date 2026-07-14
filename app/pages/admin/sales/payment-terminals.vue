@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import SalePaymentTerminalQuery from "~/composables/api/query/clubDependent/plugin/sale/SalePaymentTerminalQuery";
+import SalePaymentModeQuery from "~/composables/api/query/clubDependent/plugin/sale/SalePaymentModeQuery";
 import type {SalePaymentTerminal, TerminalDevice} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminal";
 import {getTerminalProvider} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminal";
+import type {SalePaymentMode} from "~/types/api/item/clubDependent/plugin/sale/salePaymentMode";
 import type {TableRow} from "#ui/types";
 import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
 import ModalTerminalSetup from "~/components/Sale/ModalTerminalSetup.vue";
@@ -26,11 +28,19 @@ const selfStore = useSelfUserStore();
 const canEdit = computed(() => selfStore.can(Permission.SalePaymentTerminalsEdit));
 
 const apiQuery = new SalePaymentTerminalQuery()
+const paymentModeQuery = new SalePaymentModeQuery()
 
 const terminals: Ref<SalePaymentTerminal[]> = ref([])
+const paymentModes: Ref<SalePaymentMode[]> = ref([])
 const isLoading = ref(true);
 const totalTerminals = ref(0)
 const selectedTerminal: Ref<SalePaymentTerminal | undefined> = ref(undefined)
+
+async function loadPaymentModes() {
+  const {items} = await paymentModeQuery.getAll()
+  paymentModes.value = items
+}
+loadPaymentModes()
 
 const isVisible = ref(false);
 watch(selectedTerminal, (value) => {
@@ -200,6 +210,16 @@ async function toggleAvailable(terminal: SalePaymentTerminal) {
   await patchTerminal(terminal, {available: terminal.available})
 }
 
+async function saveDetails(terminal: SalePaymentTerminal) {
+  await patchTerminal(terminal, {
+    description: terminal.description ?? '',
+    icon: terminal.icon ?? '',
+    paymentMode: terminal.paymentMode && typeof terminal.paymentMode === 'object'
+      ? terminal.paymentMode['@id']
+      : terminal.paymentMode ?? null,
+  })
+}
+
 async function deleteTerminal() {
   isLoading.value = true
   const {error} = await apiQuery.delete(selectedTerminal.value)
@@ -280,6 +300,45 @@ async function deleteTerminal() {
             <UFormField label="Disponible" name="available">
               <USwitch v-model="selectedTerminal.available" @update:model-value="toggleAvailable(selectedTerminal)" />
             </UFormField>
+
+            <UFormField label="Description" name="description" description="Affichée sur la carte de sélection à la caisse.">
+              <UInput v-model="selectedTerminal.description" placeholder="Ex: Caisse principale" />
+            </UFormField>
+
+            <UFormField label="Icône" name="icon">
+              <template #description>
+                <ContentLink variant="link" to="https://heroicons.com/" target="_blank">Liste des icônes Heroicons</ContentLink>
+              </template>
+
+              <template v-if="selectedTerminal.icon" #hint>
+                <UIcon :name="'i-heroicons-' + selectedTerminal.icon" />
+              </template>
+
+              <UInput v-model="selectedTerminal.icon" placeholder="Ex: credit-card" />
+            </UFormField>
+
+            <UFormField
+              label="Mode de paiement"
+              name="paymentMode"
+              description="Le mode de paiement sous lequel ce terminal sera proposé à la caisse."
+            >
+              <USelectMenu
+                v-model="selectedTerminal.paymentMode"
+                :items="[{ label: 'Aucun', value: null }, ...paymentModes.map(m => ({ label: m.name, value: m }))]"
+                value-key="value"
+                label-key="label"
+                placeholder="Aucun mode de paiement"
+              />
+            </UFormField>
+
+            <UButton
+              block
+              variant="soft"
+              icon="i-heroicons-check"
+              @click="saveDetails(selectedTerminal)"
+            >
+              Enregistrer
+            </UButton>
 
             <UButton
               block

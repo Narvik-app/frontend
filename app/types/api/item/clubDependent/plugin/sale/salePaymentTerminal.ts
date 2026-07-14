@@ -1,14 +1,21 @@
 import type {UuidItem} from "~/types/api/uuidItem";
 import type {ClubLinkedItem} from "~/types/api/clubLinkedItem";
+import type {SalePaymentMode} from "~/types/api/item/clubDependent/plugin/sale/salePaymentMode";
 
 export interface SalePaymentTerminal extends UuidItem, ClubLinkedItem {
   name?: string;
+  /** Short description shown alongside the name when picking a terminal at checkout */
+  description?: string;
+  /** Heroicon name (without the "i-heroicons-" prefix), shown on the terminal's checkout card */
+  icon?: string;
   provider?: 'sumup';
   available?: boolean;
   /** Read-only: true if credentials have been configured (credentials themselves are never returned) */
   configured?: boolean;
   /** Write-only: provider-agnostic credentials map, sent on POST/PATCH, never returned */
   credentials?: Record<string, string>;
+  /** The payment mode this terminal is offered under. IRI string on write, full object on read. */
+  paymentMode?: SalePaymentMode | string | null;
 }
 
 export enum SalePaymentTerminalCheckoutStatus {

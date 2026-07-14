@@ -8,6 +8,6 @@ export interface SalePaymentMode extends UuidItem, ClubLinkedItem {
   available?: boolean;
   weight?: number;
   kind?: 'payment' | 'stock_removal';
-  /** Optional linked payment terminal (TPE). IRI string on write, full object on read. */
-  paymentTerminal?: SalePaymentTerminal | string | null;
+  /** Read-only: the terminals (TPE) offered for this payment mode, configured on each terminal. */
+  paymentTerminals?: SalePaymentTerminal[];
 }

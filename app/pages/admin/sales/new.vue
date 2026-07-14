@@ -24,6 +24,7 @@ import {Permission} from "~/types/api/permissions";
 import LoanModalRecord from "~/components/Loan/LoanModalRecord.vue";
 import {groupLoanItemsByCategory} from "~/utils/loan";
 import ModalTerminalPayment from "~/components/Sale/ModalTerminalPayment.vue";
+import ModalTerminalSelect from "~/components/Sale/ModalTerminalSelect.vue";
 
 
 definePageMeta({
@@ -63,6 +64,7 @@ definePageMeta({
   const loanItemQuery = new LoanItemQuery()
   const loanQuery = new LoanQuery()
   const overlay = useOverlay()
+  const overlaySelectTerminal = overlay.create(ModalTerminalSelect)
 
   // Terminal payment modal state (driven by the polling loop below)
   const showTpeModal = ref(false)
@@ -327,21 +329,53 @@ definePageMeta({
     }
   }
 
+  /**
+   * Open the card-grid selection modal (linked terminals + "Manuel").
+   * Resolves with the cashier's choice, or undefined if cancelled.
+   */
+  async function selectTerminal(terminals: SalePaymentTerminal[]): Promise<{ type: 'terminal'; terminal: SalePaymentTerminal } | { type: 'manual' } | undefined> {
+    let choice: { type: 'terminal'; terminal: SalePaymentTerminal } | { type: 'manual' } | undefined
+
+    const instance = overlaySelectTerminal.open({
+      terminals,
+      onSelect(result) {
+        choice = result
+        overlaySelectTerminal.close(true)
+      },
+    })
+    await instance.result
+
+    return choice
+  }
+
   async function createSale() {
     isCreatingSale.value = true
 
-    const terminal = selectedPaymentMode.value?.paymentTerminal
-    const isTerminalLinked = terminal !== null && terminal !== undefined && typeof terminal === 'object'
+    const terminals = (selectedPaymentMode.value?.paymentTerminals ?? []).filter(t => t.available)
 
-    if (!isTerminalLinked) {
-      // Standard flow: no terminal linked
+    if (terminals.length === 0) {
+      // Standard flow: no terminal linked to this payment mode
       await submitSale()
       isCreatingSale.value = false
       return
     }
 
+    // Let the cashier pick which terminal to send the payment to (or manual)
+    const choice = await selectTerminal(terminals)
+    if (!choice) {
+      // Cancelled the selection modal
+      isCreatingSale.value = false
+      return
+    }
+
+    if (choice.type === 'manual') {
+      await submitSale('(paiement manuel)')
+      isCreatingSale.value = false
+      return
+    }
+
     // Terminal payment flow
-    const result = await runTerminalPayment(terminal as SalePaymentTerminal)
+    const result = await runTerminalPayment(choice.terminal)
 
     if (result.type === 'cancel') {
       isCreatingSale.value = false
