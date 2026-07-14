@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import type {InventoryCategory} from "~/types/api/item/clubDependent/plugin/sale/inventoryCategory";
 import SalePaymentModeQuery from "~/composables/api/query/clubDependent/plugin/sale/SalePaymentModeQuery";
-import SalePaymentTerminalQuery from "~/composables/api/query/clubDependent/plugin/sale/SalePaymentTerminalQuery";
 import type {SalePaymentMode} from "~/types/api/item/clubDependent/plugin/sale/salePaymentMode";
-import type {SalePaymentTerminal} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminal";
 import type {FormError, TableRow} from "#ui/types";
 import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
 import type {NuxtError} from "#app";
@@ -27,17 +25,9 @@ definePageMeta({
   const canEdit = computed(() => selfStore.can(Permission.SalePaymentModesEdit));
 
   const apiQuery = new SalePaymentModeQuery()
-  const terminalQuery = new SalePaymentTerminalQuery()
 
   const paymentModes: Ref<SalePaymentMode[]> = ref([])
-  const availableTerminals: Ref<SalePaymentTerminal[]> = ref([])
 
-  // Load available terminals for the selector
-  async function loadTerminals() {
-    const {items} = await terminalQuery.getAll()
-    availableTerminals.value = items.filter(t => t.available)
-  }
-  loadTerminals()
   const isLoading = ref(true);
   const totalPaymentModes = ref(0)
   const selectedPaymentMode: Ref<SalePaymentMode | undefined> = ref(undefined)
@@ -151,17 +141,6 @@ definePageMeta({
 
     if (paymentMode.weight) {
       payload.weight = paymentMode.weight
-    }
-
-    // Terminal link: send IRI if set, null to unlink
-    if (paymentMode.paymentTerminal !== undefined) {
-      if (paymentMode.paymentTerminal === null) {
-        payload.paymentTerminal = null
-      } else if (typeof paymentMode.paymentTerminal === 'string') {
-        payload.paymentTerminal = paymentMode.paymentTerminal
-      } else {
-        payload.paymentTerminal = paymentMode.paymentTerminal['@id'] ?? null
-      }
     }
 
     // We verify if it's a creation or an update
@@ -339,18 +318,29 @@ definePageMeta({
               </UFormField>
 
               <UFormField
-                label="Terminal de paiement (TPE)"
-                name="paymentTerminal"
-                description="Lier un terminal pour déclencher un paiement automatique à la caisse."
+                v-if="selectedPaymentMode.uuid"
+                label="Terminaux de paiement (TPE)"
+                name="paymentTerminals"
+                description="Se configurent depuis la page Terminaux de paiement, en liant chaque terminal à ce mode de paiement."
               >
-                <USelectMenu
-                  v-model="selectedPaymentMode.paymentTerminal"
-                  :items="[{ label: 'Aucun (paiement manuel)', value: null }, ...availableTerminals.map(t => ({ label: t.name + (t.configured ? '' : ' ⚠ non configuré'), value: t }))]"
-                  value-key="value"
-                  label-key="label"
-                  placeholder="Aucun terminal"
-                  :disabled="selectedPaymentMode.kind === 'stock_removal'"
-                />
+                <div v-if="!selectedPaymentMode.paymentTerminals?.length" class="text-sm italic text-gray-500">
+                  Aucun terminal lié.
+                </div>
+                <div v-else class="flex flex-wrap gap-2">
+                  <UBadge v-for="terminal in selectedPaymentMode.paymentTerminals" :key="terminal.uuid" variant="subtle">
+                    <UIcon v-if="terminal.icon" :name="'i-heroicons-' + terminal.icon" class="mr-1" />
+                    {{ terminal.name }}
+                  </UBadge>
+                </div>
+                <UButton
+                  class="mt-2"
+                  size="xs"
+                  variant="link"
+                  icon="i-heroicons-arrow-top-right-on-square"
+                  to="/admin/sales/payment-terminals"
+                >
+                  Gérer les terminaux
+                </UButton>
               </UFormField>
             </div>
 
