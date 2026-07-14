@@ -33,4 +33,15 @@ export default class SalePaymentTerminalQuery extends AbstractClubDependentQuery
       (terminal['@id'] ?? '') + '/checkout-status?clientTransactionId=' + encodeURIComponent(clientTransactionId),
     )
   }
+
+  /**
+   * Abort the checkout the terminal is currently waiting on (e.g. the cashier
+   * cancelled in the UI while the physical terminal was still waiting for a card).
+   */
+  async cancelCheckout(terminal: SalePaymentTerminal) {
+    return usePost<{ cancelled: boolean }>(
+      (terminal['@id'] ?? '') + '/cancel-checkout',
+      {},
+    )
+  }
 }

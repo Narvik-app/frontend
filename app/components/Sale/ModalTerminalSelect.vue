@@ -48,17 +48,16 @@ function selectManual() {
                 <div v-if="terminal.description" class="text-xs text-gray-500 truncate">{{ terminal.description }}</div>
               </div>
             </div>
-
-            <div
-              class="basis-[calc(50%-0.25rem)] flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition border-gray-200 dark:border-gray-700 hover:border-primary"
-              data-testid="terminal-select-manual"
-              @click="selectManual()"
-            >
-              <UIcon name="i-heroicons-hand-raised" class="text-xl shrink-0" />
-              <div class="flex-1 min-w-0">
-                <div class="font-medium truncate">Manuel</div>
-                <div class="text-xs text-gray-500 truncate">Enregistrer directement, sans terminal</div>
-              </div>
+          </div>
+          <div
+            class="basis-[calc(50%-0.25rem)] flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition border-gray-200 dark:border-gray-700 hover:border-primary"
+            data-testid="terminal-select-manual"
+            @click="selectManual()"
+          >
+            <UIcon name="i-heroicons-hand-raised" class="text-xl shrink-0" />
+            <div class="flex-1 min-w-0">
+              <div class="font-medium truncate">Manuel</div>
+              <div class="text-xs text-gray-500 truncate">Enregistrer directement, sans terminal</div>
             </div>
           </div>
 

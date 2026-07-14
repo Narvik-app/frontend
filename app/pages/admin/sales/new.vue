@@ -75,15 +75,19 @@ definePageMeta({
 
   // Promise resolver used to bridge modal button clicks into the async polling loop
   let resolveTerminalAction: ((v: { type: 'success'; transactionId: string } | { type: 'manual' } | { type: 'cancel' }) => void) | null = null
+  // Terminal currently running a checkout, so cancel/manual can tell it to stop waiting
+  let activeTerminal: SalePaymentTerminal | undefined
 
   function onTerminalManual() {
     showTpeModal.value = false
     resolveTerminalAction?.({type: 'manual'})
+    if (activeTerminal) void terminalQuery.cancelCheckout(activeTerminal)
   }
 
   function onTerminalCancel() {
     showTpeModal.value = false
     resolveTerminalAction?.({type: 'cancel'})
+    if (activeTerminal) void terminalQuery.cancelCheckout(activeTerminal)
   }
   
   // Loan items visible on sale page
@@ -267,6 +271,7 @@ definePageMeta({
     tpeAmount.value = String(cartTotalPrice.value)
     tpeTerminalName.value = terminal.name
     showTpeModal.value = true
+    activeTerminal = terminal
 
     const result = new Promise<{ type: 'success'; transactionId: string } | { type: 'manual' } | { type: 'cancel' }>((resolve) => {
       resolveTerminalAction = resolve
