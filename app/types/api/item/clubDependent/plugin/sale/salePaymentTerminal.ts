@@ -19,6 +19,8 @@ export interface SalePaymentTerminal extends UuidItem, ClubLinkedItem {
   lastSeenAt?: string | null;
   /** Read-only: available && connection is available && connection is configured */
   usable?: boolean;
+  /** Read-only: delegated to the connection's forceTerminalSelection */
+  forceTerminalSelection?: boolean;
   /** The payment mode this terminal is offered under. IRI string on write, full object on read. */
   paymentMode?: SalePaymentMode | string | null;
 }

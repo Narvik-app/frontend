@@ -69,6 +69,7 @@ const connectionColumns = [
   {accessorKey: 'available', header: 'Disponible'},
   {accessorKey: 'name', header: 'Nom'},
   {accessorKey: 'provider', header: 'Fournisseur'},
+  {accessorKey: 'forceTerminalSelection', header: 'Toujours lister lors d\'une vente'},
   {accessorKey: 'lastSyncedAt', header: 'Dernière synchronisation'},
   {accessorKey: 'actions', header: ''},
 ]
@@ -89,6 +90,7 @@ function createConnection() {
         name: result.name,
         provider: result.provider as SalePaymentTerminalConnection['provider'],
         available: true,
+        forceTerminalSelection: false,
         credentials: result.credentials,
       })
       if (error || !created) {
@@ -125,6 +127,16 @@ function editConnection(connection: SalePaymentTerminalConnection) {
 
 async function toggleConnectionAvailable(connection: SalePaymentTerminalConnection) {
   const {error} = await connectionQuery.patch(connection, {available: connection.available})
+  if (error) {
+    toast.add({color: "error", title: "La modification a échoué", description: error.message})
+    await loadConnections()
+    return
+  }
+  toast.add({color: "success", title: "Connexion modifiée"})
+}
+
+async function toggleConnectionForceTerminalSelection(connection: SalePaymentTerminalConnection) {
+  const {error} = await connectionQuery.patch(connection, {forceTerminalSelection: connection.forceTerminalSelection})
   if (error) {
     toast.add({color: "error", title: "La modification a échoué", description: error.message})
     await loadConnections()
@@ -336,6 +348,14 @@ async function deleteTerminal() {
 
         <template #provider-cell="{ row }">
           {{ providerLabel(row.original.provider) }}
+        </template>
+
+        <template #forceTerminalSelection-cell="{ row }">
+          <USwitch
+            :model-value="row.original.forceTerminalSelection"
+            :disabled="!canEdit"
+            @update:model-value="(v: boolean) => { row.original.forceTerminalSelection = v; toggleConnectionForceTerminalSelection(row.original) }"
+          />
         </template>
 
         <template #lastSyncedAt-cell="{ row }">
