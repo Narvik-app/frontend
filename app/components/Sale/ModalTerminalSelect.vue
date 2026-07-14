@@ -6,7 +6,7 @@
  */
 import type {SalePaymentTerminal} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminal";
 
-type SelectResult =
+export type SelectResult =
   | { type: 'terminal'; terminal: SalePaymentTerminal }
   | { type: 'manual' }
 
@@ -29,47 +29,43 @@ function selectManual() {
 </script>
 
 <template>
-  <UModal>
-    <template #content>
-      <UCard>
-        <div class="flex flex-col gap-4">
-          <div class="text-xl font-bold text-center">Choisir un terminal de paiement</div>
-
-          <div class="flex flex-wrap gap-2">
-            <div
-              v-for="terminal in props.terminals"
-              :key="terminal.uuid"
-              class="basis-[calc(50%-0.25rem)] flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition border-gray-200 dark:border-gray-700 hover:border-primary"
-              @click="selectTerminal(terminal)"
-            >
-              <UIcon :name="'i-heroicons-' + (terminal.icon || 'device-phone-mobile')" class="text-xl shrink-0" />
-              <div class="flex-1 min-w-0">
-                <div class="font-medium truncate">{{ terminal.name }}</div>
-                <div v-if="terminal.description" class="text-xs text-gray-500 truncate">{{ terminal.description }}</div>
-              </div>
-            </div>
-          </div>
-          <div
-            class="basis-[calc(50%-0.25rem)] flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition border-gray-200 dark:border-gray-700 hover:border-primary"
-            data-testid="terminal-select-manual"
-            @click="selectManual()"
-          >
-            <UIcon name="i-heroicons-hand-raised" class="text-xl shrink-0" />
-            <div class="flex-1 min-w-0">
-              <div class="font-medium truncate">Manuel</div>
-              <div class="text-xs text-gray-500 truncate">Enregistrer directement, sans terminal</div>
-            </div>
-          </div>
-
-          <div class="flex justify-end">
-            <UButton color="neutral" variant="ghost" @click="emit('close', false)">
-              Annuler
-            </UButton>
-          </div>
+  <ModalWithActions
+    title="Choisir un terminal de paiement"
+    :display-cancel-button="false"
+    @close="(state: boolean) => emit('close', state)"
+  >
+    <div class="flex flex-wrap gap-2">
+      <div
+        v-for="terminal in props.terminals"
+        :key="terminal.uuid"
+        class="basis-[calc(50%-0.25rem)] flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition border-gray-200 dark:border-gray-700 hover:border-primary"
+        @click="selectTerminal(terminal)"
+      >
+        <UIcon :name="'i-heroicons-' + (terminal.icon || 'device-phone-mobile')" class="text-xl shrink-0" />
+        <div class="flex-1 min-w-0">
+          <div class="font-medium truncate">{{ terminal.name }}</div>
+          <div v-if="terminal.description" class="text-xs text-gray-500 truncate">{{ terminal.description }}</div>
         </div>
-      </UCard>
+      </div>
+    </div>
+    <div
+      class="basis-[calc(50%-0.25rem)] flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition border-gray-200 dark:border-gray-700 hover:border-primary"
+      data-testid="terminal-select-manual"
+      @click="selectManual()"
+    >
+      <UIcon name="i-heroicons-hand-raised" class="text-xl shrink-0" />
+      <div class="flex-1 min-w-0">
+        <div class="font-medium truncate">Manuel</div>
+        <div class="text-xs text-gray-500 truncate">Enregistrer directement, sans terminal</div>
+      </div>
+    </div>
+
+    <template #actions>
+      <UButton color="neutral" variant="ghost" @click="emit('close', false)">
+        Annuler
+      </UButton>
     </template>
-  </UModal>
+  </ModalWithActions>
 </template>
 
 <style scoped lang="css">

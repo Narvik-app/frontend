@@ -9,6 +9,7 @@ import type {SalePaymentMode} from "~/types/api/item/clubDependent/plugin/sale/s
 import type {TableRow} from "#ui/types";
 import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
 import ModalTerminalConnectionSetup from "~/components/Sale/ModalTerminalConnectionSetup.vue";
+import type {ConnectionSetupResult} from "~/components/Sale/ModalTerminalConnectionSetup.vue";
 import type {TablePaginateInterface} from "~/types/table";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {Permission} from "~/types/api/permissions";
@@ -78,10 +79,6 @@ function providerLabel(value?: string): string {
   return getTerminalProvider(value)?.label ?? value ?? ''
 }
 
-type ConnectionSetupResult =
-  | { mode: 'create'; name: string; provider: string; credentials: Record<string, string> }
-  | { mode: 'edit'; name: string; credentials: Record<string, string> }
-
 function createConnection() {
   overlayConnectionSetup.open({
     async onSubmit(result: ConnectionSetupResult) {
@@ -125,18 +122,8 @@ function editConnection(connection: SalePaymentTerminalConnection) {
   })
 }
 
-async function toggleConnectionAvailable(connection: SalePaymentTerminalConnection) {
-  const {error} = await connectionQuery.patch(connection, {available: connection.available})
-  if (error) {
-    toast.add({color: "error", title: "La modification a échoué", description: error.message})
-    await loadConnections()
-    return
-  }
-  toast.add({color: "success", title: "Connexion modifiée"})
-}
-
-async function toggleConnectionForceTerminalSelection(connection: SalePaymentTerminalConnection) {
-  const {error} = await connectionQuery.patch(connection, {forceTerminalSelection: connection.forceTerminalSelection})
+async function toggleConnectionField(connection: SalePaymentTerminalConnection, field: 'available' | 'forceTerminalSelection') {
+  const {error} = await connectionQuery.patch(connection, {[field]: connection[field]})
   if (error) {
     toast.add({color: "error", title: "La modification a échoué", description: error.message})
     await loadConnections()
@@ -184,6 +171,7 @@ function deleteConnection(connection: SalePaymentTerminalConnection) {
 
 const terminals: Ref<SalePaymentTerminal[]> = ref([])
 const paymentModes: Ref<SalePaymentMode[]> = ref([])
+const paymentModesByIri = computed(() => new Map(paymentModes.value.map(m => [m['@id'], m])))
 const isLoading = ref(true);
 const totalTerminals = ref(0)
 const selectedTerminal: Ref<SalePaymentTerminal | undefined> = ref(undefined)
@@ -263,7 +251,7 @@ function connectionOf(terminal: SalePaymentTerminal): SalePaymentTerminalConnect
 
 function paymentModeNameOf(terminal: SalePaymentTerminal): string | undefined {
   const iri = toIri(terminal.paymentMode)
-  return iri ? paymentModes.value.find(m => m['@id'] === iri)?.name : undefined
+  return iri ? paymentModesByIri.value.get(iri)?.name : undefined
 }
 
 /** A device is stale if it wasn't seen on the connection's most recent sync (never deleted, just flagged). */
@@ -342,7 +330,7 @@ async function deleteTerminal() {
           <USwitch
             :model-value="row.original.available"
             :disabled="!canEdit"
-            @update:model-value="(v: boolean) => { row.original.available = v; toggleConnectionAvailable(row.original) }"
+            @update:model-value="(v: boolean) => { row.original.available = v; toggleConnectionField(row.original, 'available') }"
           />
         </template>
 
@@ -354,7 +342,7 @@ async function deleteTerminal() {
           <USwitch
             :model-value="row.original.forceTerminalSelection"
             :disabled="!canEdit"
-            @update:model-value="(v: boolean) => { row.original.forceTerminalSelection = v; toggleConnectionForceTerminalSelection(row.original) }"
+            @update:model-value="(v: boolean) => { row.original.forceTerminalSelection = v; toggleConnectionField(row.original, 'forceTerminalSelection') }"
           />
         </template>
 
