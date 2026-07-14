@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import SalePaymentTerminalQuery from "~/composables/api/query/clubDependent/plugin/sale/SalePaymentTerminalQuery";
+import SalePaymentTerminalConnectionQuery from "~/composables/api/query/clubDependent/plugin/sale/SalePaymentTerminalConnectionQuery";
 import SalePaymentModeQuery from "~/composables/api/query/clubDependent/plugin/sale/SalePaymentModeQuery";
 import type {SalePaymentTerminal, TerminalDevice} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminal";
 import {getTerminalProvider} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminal";
+import type {SalePaymentTerminalConnection} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminalConnection";
 import type {SalePaymentMode} from "~/types/api/item/clubDependent/plugin/sale/salePaymentMode";
 import type {TableRow} from "#ui/types";
 import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
-import ModalTerminalSetup from "~/components/Sale/ModalTerminalSetup.vue";
+import ModalTerminalConnectionSetup from "~/components/Sale/ModalTerminalConnectionSetup.vue";
 import type {TablePaginateInterface} from "~/types/table";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {Permission} from "~/types/api/permissions";
-import {formatDate} from "~/utils/date";
+import {formatDateTime} from "~/utils/date";
 
 definePageMeta({
   layout: "pos"
@@ -23,12 +25,142 @@ useHead({
 const toast = useToast()
 const overlay = useOverlay()
 const overlayDeleteConfirmation = overlay.create(ModalDeleteConfirmation)
-const overlaySetup = overlay.create(ModalTerminalSetup)
+const overlayConnectionSetup = overlay.create(ModalTerminalConnectionSetup)
 const selfStore = useSelfUserStore();
 const canEdit = computed(() => selfStore.can(Permission.SalePaymentTerminalsEdit));
 
-const apiQuery = new SalePaymentTerminalQuery()
+const terminalQuery = new SalePaymentTerminalQuery()
+const connectionQuery = new SalePaymentTerminalConnectionQuery()
 const paymentModeQuery = new SalePaymentModeQuery()
+
+/** IRI helper: connection/paymentMode fields may come back as an IRI string or, occasionally, an embedded object. */
+function toIri(value?: {'@id'?: string} | string | null): string | null {
+  if (!value) return null
+  return typeof value === 'string' ? value : (value['@id'] ?? null)
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Connections
+// ─────────────────────────────────────────────────────────────────────────
+
+const connections: Ref<SalePaymentTerminalConnection[]> = ref([])
+const isLoadingConnections = ref(true)
+const syncingConnectionUuid = ref<string | undefined>(undefined)
+
+const connectionsByIri = computed(() => new Map(connections.value.map(c => [c['@id'], c])))
+
+async function loadConnections() {
+  isLoadingConnections.value = true
+  const {items} = await connectionQuery.getAll()
+  connections.value = items
+  isLoadingConnections.value = false
+}
+loadConnections()
+
+const connectionColumns = [
+  {accessorKey: 'available', header: 'Disponible'},
+  {accessorKey: 'name', header: 'Nom'},
+  {accessorKey: 'provider', header: 'Fournisseur'},
+  {accessorKey: 'lastSyncedAt', header: 'Dernière synchronisation'},
+  {accessorKey: 'actions', header: ''},
+]
+
+function providerLabel(value?: string): string {
+  return getTerminalProvider(value)?.label ?? value ?? ''
+}
+
+type ConnectionSetupResult =
+  | { mode: 'create'; name: string; provider: string; credentials: Record<string, string> }
+  | { mode: 'edit'; name: string; credentials: Record<string, string> }
+
+function createConnection() {
+  overlayConnectionSetup.open({
+    async onSubmit(result: ConnectionSetupResult) {
+      if (result.mode !== 'create') return
+      const {created, error} = await connectionQuery.post({
+        name: result.name,
+        provider: result.provider as SalePaymentTerminalConnection['provider'],
+        available: true,
+        credentials: result.credentials,
+      })
+      if (error || !created) {
+        toast.add({color: "error", title: "La création a échoué", description: error?.message})
+        return
+      }
+      toast.add({color: "success", title: "Connexion créée"})
+      overlayConnectionSetup.close(true)
+      await loadConnections()
+    },
+  })
+}
+
+function editConnection(connection: SalePaymentTerminalConnection) {
+  overlayConnectionSetup.open({
+    connection,
+    async onSubmit(result: ConnectionSetupResult) {
+      if (result.mode !== 'edit') return
+      const payload: Partial<SalePaymentTerminalConnection> = {name: result.name}
+      if (Object.keys(result.credentials).length > 0) {
+        payload.credentials = result.credentials
+      }
+      const {error} = await connectionQuery.patch(connection, payload)
+      if (error) {
+        toast.add({color: "error", title: "La modification a échoué", description: error.message})
+        return
+      }
+      toast.add({color: "success", title: "Connexion modifiée"})
+      overlayConnectionSetup.close(true)
+      await loadConnections()
+    },
+  })
+}
+
+async function toggleConnectionAvailable(connection: SalePaymentTerminalConnection) {
+  const {error} = await connectionQuery.patch(connection, {available: connection.available})
+  if (error) {
+    toast.add({color: "error", title: "La modification a échoué", description: error.message})
+    await loadConnections()
+    return
+  }
+  toast.add({color: "success", title: "Connexion modifiée"})
+}
+
+async function syncDevices(connection: SalePaymentTerminalConnection) {
+  syncingConnectionUuid.value = connection.uuid
+  const {item, error} = await connectionQuery.syncDevices(connection)
+  syncingConnectionUuid.value = undefined
+
+  if (error || !item) {
+    toast.add({color: "error", title: "La synchronisation a échoué", description: error?.message})
+    await loadConnections()
+    return
+  }
+
+  toast.add({
+    color: "success",
+    title: "Terminaux synchronisés",
+    description: `${item.devicesFound} terminal(aux) détecté(s), ${item.devicesCreated} nouveau(x).`,
+  })
+  await Promise.all([loadConnections(), getTerminalsPaginated()])
+}
+
+function deleteConnection(connection: SalePaymentTerminalConnection) {
+  overlayDeleteConfirmation.open({
+    async onDelete() {
+      const {error} = await connectionQuery.delete(connection)
+      if (error) {
+        toast.add({color: "error", title: "La suppression a échoué", description: error.message})
+        return
+      }
+      overlayDeleteConfirmation.close(true)
+      await Promise.all([loadConnections(), getTerminalsPaginated()])
+    }
+  })
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Devices
+// ─────────────────────────────────────────────────────────────────────────
 
 const terminals: Ref<SalePaymentTerminal[]> = ref([])
 const paymentModes: Ref<SalePaymentMode[]> = ref([])
@@ -60,7 +192,7 @@ async function testConnection(terminal: SalePaymentTerminal) {
   deviceStatus.value = undefined
   deviceStatusError.value = undefined
 
-  const {retrieved, error} = await apiQuery.deviceStatus(terminal)
+  const {retrieved, error} = await terminalQuery.deviceStatus(terminal)
 
   isTestingConnection.value = false
 
@@ -76,23 +208,14 @@ const page = ref(1);
 const itemsPerPage = ref(30);
 
 const columns = [
-  {
-    accessorKey: 'available',
-    header: 'Disponible'
-  },
+  {accessorKey: 'available', header: 'Disponible'},
   {
     accessorKey: 'name',
     header: 'Nom',
-    meta: {
-      class: {
-        th: 'w-full',
-      }
-    }
+    meta: {class: {th: 'w-full'}}
   },
-  {
-    accessorKey: 'provider',
-    header: 'Fournisseur'
-  },
+  {accessorKey: 'connection', header: 'Connexion'},
+  {accessorKey: 'paymentMode', header: 'Mode de paiement'},
 ]
 
 getTerminalsPaginated()
@@ -106,95 +229,39 @@ async function getTerminalsPaginated() {
     itemsPerPage: itemsPerPage.value.toString(),
   });
 
-  const {totalItems, items} = await apiQuery.getAll(urlParams)
+  const {totalItems, items} = await terminalQuery.getAll(urlParams)
   terminals.value = items
   if (totalItems) totalTerminals.value = totalItems
 
   isLoading.value = false
 }
 
+function connectionOf(terminal: SalePaymentTerminal): SalePaymentTerminalConnection | undefined {
+  const iri = toIri(terminal.connection)
+  return iri ? connectionsByIri.value.get(iri) : undefined
+}
+
+function paymentModeNameOf(terminal: SalePaymentTerminal): string | undefined {
+  const iri = toIri(terminal.paymentMode)
+  return iri ? paymentModes.value.find(m => m['@id'] === iri)?.name : undefined
+}
+
+/** A device is stale if it wasn't seen on the connection's most recent sync (never deleted, just flagged). */
+function isStale(terminal: SalePaymentTerminal): boolean {
+  const connection = connectionOf(terminal)
+  if (!connection?.lastSyncedAt) return false
+  if (!terminal.lastSeenAt) return true
+  return new Date(terminal.lastSeenAt).getTime() < new Date(connection.lastSyncedAt).getTime()
+}
+
 function rowClicked(row: TableRow<SalePaymentTerminal>) {
-  selectedTerminal.value = {...row.original}
+  selectedTerminal.value = {...row.original, paymentMode: toIri(row.original.paymentMode)}
   isVisible.value = true
-}
-
-function providerLabel(value?: string): string {
-  return getTerminalProvider(value)?.label ?? value ?? ''
-}
-
-type SetupResult =
-  | { mode: 'create'; name: string; provider: string; credentials: Record<string, string> }
-  | { mode: 'reconfigure'; name: string; deviceId: string }
-
-/** Open the multi-step setup modal to create a terminal (provider picked inside) */
-function createTerminal() {
-  overlaySetup.open({
-    async onSubmit(result: SetupResult) {
-      if (result.mode !== 'create') return
-      await saveNewTerminal({
-        name: result.name,
-        provider: result.provider as SalePaymentTerminal['provider'],
-        available: true,
-        credentials: result.credentials,
-      })
-      overlaySetup.close(true)
-    },
-  })
-}
-
-/** Reconfigure an existing terminal: re-pick the device (credentials stay stored) */
-function reconfigureTerminal(terminal: SalePaymentTerminal) {
-  overlaySetup.open({
-    provider: terminal.provider ?? 'sumup',
-    terminal,
-    async onSubmit(result: SetupResult) {
-      if (result.mode !== 'reconfigure') return
-      await applyReconfigure(terminal, result.name, result.deviceId)
-      overlaySetup.close(true)
-    },
-  })
-}
-
-async function applyReconfigure(terminal: SalePaymentTerminal, newName: string, deviceId: string) {
-  isLoading.value = true
-
-  // Update the device first (preserves stored secret credentials)
-  const {error: deviceError} = await apiQuery.setDevice(terminal, deviceId)
-  // Update the name if it changed
-  let nameError = undefined
-  if (!deviceError && newName && newName !== terminal.name) {
-    const {error} = await apiQuery.patch(terminal, {name: newName} as SalePaymentTerminal)
-    nameError = error
-  }
-
-  isLoading.value = false
-
-  const error = deviceError ?? nameError
-  if (error) {
-    toast.add({color: "error", title: "La modification a échouée", description: error.message})
-    return
-  }
-  toast.add({color: "success", title: "Terminal modifié"})
-  selectedTerminal.value = undefined
-  await getTerminalsPaginated()
-}
-
-async function saveNewTerminal(payload: SalePaymentTerminal) {
-  isLoading.value = true
-  const {created, error} = await apiQuery.post(payload)
-  isLoading.value = false
-
-  if (error || !created) {
-    toast.add({color: "error", title: "La création a échouée", description: error?.message})
-    return
-  }
-  toast.add({color: "success", title: "Terminal créé"})
-  await getTerminalsPaginated()
 }
 
 async function patchTerminal(terminal: SalePaymentTerminal, payload: Partial<SalePaymentTerminal>) {
   isLoading.value = true
-  const {error} = await apiQuery.patch(terminal, payload)
+  const {error} = await terminalQuery.patch(terminal, payload)
   isLoading.value = false
 
   if (error) {
@@ -214,15 +281,13 @@ async function saveDetails(terminal: SalePaymentTerminal) {
   await patchTerminal(terminal, {
     description: terminal.description ?? '',
     icon: terminal.icon ?? '',
-    paymentMode: terminal.paymentMode && typeof terminal.paymentMode === 'object'
-      ? terminal.paymentMode['@id']
-      : terminal.paymentMode ?? null,
+    paymentMode: terminal.paymentMode ?? null,
   })
 }
 
 async function deleteTerminal() {
   isLoading.value = true
-  const {error} = await apiQuery.delete(selectedTerminal.value)
+  const {error} = await terminalQuery.delete(selectedTerminal.value)
   isLoading.value = false
 
   if (error) {
@@ -236,121 +301,173 @@ async function deleteTerminal() {
 </script>
 
 <template>
-  <GenericLayoutContentWithStickySide
-    :has-side-content="isVisible"
-    :mobile-side-title="selectedTerminal?.name"
-    tabindex="-1"
-    @keyup.esc="isVisible = false; selectedTerminal = undefined"
-  >
-    <template #main>
-      <UCard>
-        <div>
-          <div class="flex gap-4 mb-4 items-center">
-            <div class="flex-1" />
-            <UButton v-if="canEdit" icon="i-heroicons-plus" @click="createTerminal()">
-              Ajouter un terminal
-            </UButton>
+  <div class="flex flex-col gap-4">
+    <UCard>
+      <div class="flex gap-4 mb-4 items-center">
+        <div class="text-lg font-bold flex-1">Connexions</div>
+        <UButton v-if="canEdit" icon="i-heroicons-plus" @click="createConnection()">
+          Ajouter une connexion
+        </UButton>
+      </div>
+
+      <UTable
+        class="w-full"
+        :loading="isLoadingConnections"
+        :columns="connectionColumns"
+        :data="connections"
+      >
+        <template #empty>
+          <div class="flex flex-col items-center justify-center py-6 gap-3">
+            <span class="italic text-sm">Aucune connexion configurée.</span>
           </div>
+        </template>
 
-          <UTable
-            class="w-full"
-            :loading="isLoading"
-            :columns="columns"
-            :data="terminals"
-            @select="(evt, row) => rowClicked(row)"
-          >
-            <template #empty>
-              <div class="flex flex-col items-center justify-center py-6 gap-3">
-                <span class="italic text-sm">Aucun terminal de paiement.</span>
-              </div>
-            </template>
-
-            <template #available-cell="{ row }">
-              <USwitch class="pointer-events-none" :model-value="row.original.available" />
-            </template>
-
-            <template #name-cell="{ row }">
-              {{ row.original.name }}
-            </template>
-
-            <template #provider-cell="{ row }">
-              {{ providerLabel(row.original.provider) }}
-            </template>
-          </UTable>
-
-          <GenericTablePagination
-            v-model:page="page"
-            v-model:items-per-page="itemsPerPage"
-            :total-items="totalTerminals"
-            @paginate="(_: TablePaginateInterface) => { getTerminalsPaginated() }"
+        <template #available-cell="{ row }">
+          <USwitch
+            :model-value="row.original.available"
+            :disabled="!canEdit"
+            @update:model-value="(v: boolean) => { row.original.available = v; toggleConnectionAvailable(row.original) }"
           />
-        </div>
-      </UCard>
-    </template>
+        </template>
 
-    <template #side>
-      <template v-if="selectedTerminal && canEdit">
+        <template #provider-cell="{ row }">
+          {{ providerLabel(row.original.provider) }}
+        </template>
+
+        <template #lastSyncedAt-cell="{ row }">
+          <span class="text-sm text-gray-500">{{ formatDateTime(row.original.lastSyncedAt ?? undefined) ?? 'Jamais' }}</span>
+        </template>
+
+        <template #actions-cell="{ row }">
+          <div v-if="canEdit" class="flex items-center gap-1 justify-end">
+            <UButton
+              size="xs"
+              variant="soft"
+              icon="i-heroicons-arrow-path"
+              :loading="syncingConnectionUuid === row.original.uuid"
+              :disabled="!row.original.configured"
+              @click="syncDevices(row.original)"
+            >
+              Synchroniser
+            </UButton>
+            <UButton size="xs" variant="ghost" icon="i-heroicons-pencil-square" @click="editConnection(row.original)" />
+            <UButton size="xs" variant="ghost" color="error" icon="i-heroicons-trash" @click="deleteConnection(row.original)" />
+          </div>
+        </template>
+      </UTable>
+    </UCard>
+
+    <GenericLayoutContentWithStickySide
+      :has-side-content="isVisible"
+      :mobile-side-title="selectedTerminal?.name"
+      tabindex="-1"
+      @keyup.esc="isVisible = false; selectedTerminal = undefined"
+    >
+      <template #main>
         <UCard>
-          <div class="flex gap-3 flex-col">
-            <div>
-              <div class="text-lg font-bold">{{ selectedTerminal.name }}</div>
-              <div class="text-sm text-gray-500">{{ providerLabel(selectedTerminal.provider) }}</div>
-            </div>
+          <div>
+            <div class="text-lg font-bold mb-4">Terminaux</div>
 
-            <UFormField label="Disponible" name="available">
-              <USwitch v-model="selectedTerminal.available" @update:model-value="toggleAvailable(selectedTerminal)" />
-            </UFormField>
-
-            <UFormField label="Description" name="description" description="Affichée sur la carte de sélection à la caisse.">
-              <UInput v-model="selectedTerminal.description" placeholder="Ex: Caisse principale" />
-            </UFormField>
-
-            <UFormField label="Icône" name="icon">
-              <template #description>
-                <ContentLink variant="link" to="https://heroicons.com/" target="_blank">Liste des icônes Heroicons</ContentLink>
+            <UTable
+              class="w-full"
+              :loading="isLoading"
+              :columns="columns"
+              :data="terminals"
+              @select="(evt, row) => rowClicked(row)"
+            >
+              <template #empty>
+                <div class="flex flex-col items-center justify-center py-6 gap-3">
+                  <span class="italic text-sm">Aucun terminal de paiement. Ajoutez une connexion puis synchronisez.</span>
+                </div>
               </template>
 
-              <template v-if="selectedTerminal.icon" #hint>
-                <UIcon :name="'i-heroicons-' + selectedTerminal.icon" />
+              <template #available-cell="{ row }">
+                <USwitch class="pointer-events-none" :model-value="row.original.available" />
               </template>
 
-              <UInput v-model="selectedTerminal.icon" placeholder="Ex: credit-card" />
-            </UFormField>
+              <template #name-cell="{ row }">
+                <div class="flex items-center gap-2">
+                  {{ row.original.name }}
+                  <UTooltip v-if="isStale(row.original)" text="Non détecté à la dernière synchronisation">
+                    <UBadge color="warning" variant="subtle" size="sm">
+                      <UIcon name="i-heroicons-exclamation-triangle" />
+                    </UBadge>
+                  </UTooltip>
+                </div>
+              </template>
 
-            <UFormField
-              label="Mode de paiement"
-              name="paymentMode"
-              description="Le mode de paiement sous lequel ce terminal sera proposé à la caisse."
-            >
-              <USelectMenu
-                v-model="selectedTerminal.paymentMode"
-                :items="[{ label: 'Aucun', value: null }, ...paymentModes.map(m => ({ label: m.name, value: m }))]"
-                value-key="value"
-                label-key="label"
-                placeholder="Aucun mode de paiement"
-              />
-            </UFormField>
+              <template #connection-cell="{ row }">
+                {{ connectionOf(row.original)?.name ?? '—' }}
+              </template>
 
-            <UButton
-              block
-              variant="soft"
-              icon="i-heroicons-check"
-              @click="saveDetails(selectedTerminal)"
-            >
-              Enregistrer
-            </UButton>
+              <template #paymentMode-cell="{ row }">
+                {{ paymentModeNameOf(row.original) ?? '—' }}
+              </template>
+            </UTable>
 
-            <UButton
-              block
-              variant="soft"
-              icon="i-heroicons-wrench-screwdriver"
-              @click="reconfigureTerminal(selectedTerminal)"
-            >
-              Reconfigurer
-            </UButton>
+            <GenericTablePagination
+              v-model:page="page"
+              v-model:items-per-page="itemsPerPage"
+              :total-items="totalTerminals"
+              @paginate="(_: TablePaginateInterface) => { getTerminalsPaginated() }"
+            />
+          </div>
+        </UCard>
+      </template>
 
-            <!-- Test connection -->
-            <template v-if="selectedTerminal.configured">
+      <template #side>
+        <template v-if="selectedTerminal && canEdit">
+          <UCard>
+            <div class="flex gap-3 flex-col">
+              <div>
+                <div class="text-lg font-bold">{{ selectedTerminal.name }}</div>
+                <div class="text-sm text-gray-500">{{ connectionOf(selectedTerminal)?.name }}</div>
+              </div>
+
+              <UFormField label="Disponible" name="available">
+                <USwitch v-model="selectedTerminal.available" @update:model-value="toggleAvailable(selectedTerminal)" />
+              </UFormField>
+
+              <UFormField label="Description" name="description" description="Affichée sur la carte de sélection à la caisse.">
+                <UInput v-model="selectedTerminal.description" placeholder="Ex: Caisse principale" />
+              </UFormField>
+
+              <UFormField label="Icône" name="icon">
+                <template #description>
+                  <ContentLink variant="link" to="https://heroicons.com/" target="_blank">Liste des icônes Heroicons</ContentLink>
+                </template>
+
+                <template v-if="selectedTerminal.icon" #hint>
+                  <UIcon :name="'i-heroicons-' + selectedTerminal.icon" />
+                </template>
+
+                <UInput v-model="selectedTerminal.icon" placeholder="Ex: credit-card" />
+              </UFormField>
+
+              <UFormField
+                label="Mode de paiement"
+                name="paymentMode"
+                description="Le mode de paiement sous lequel ce terminal sera proposé à la caisse."
+              >
+                <USelectMenu
+                  v-model="selectedTerminal.paymentMode"
+                  :items="[{ label: 'Aucun', value: null }, ...paymentModes.map(m => ({ label: m.name, value: m['@id'] }))]"
+                  value-key="value"
+                  label-key="label"
+                  placeholder="Aucun mode de paiement"
+                />
+              </UFormField>
+
+              <UButton
+                block
+                variant="soft"
+                icon="i-heroicons-check"
+                @click="saveDetails(selectedTerminal)"
+              >
+                Enregistrer
+              </UButton>
+
+              <!-- Test connection -->
               <UButton
                 block
                 variant="soft"
@@ -388,7 +505,7 @@ async function deleteTerminal() {
                     <dt>Batterie</dt><dd class="text-right">{{ Math.round(deviceStatus.batteryLevel) }}%</dd>
                   </template>
                   <template v-if="deviceStatus.lastActivity">
-                    <dt>Dernière activité</dt><dd class="text-right">{{ formatDate(deviceStatus.lastActivity) }}</dd>
+                    <dt>Dernière activité</dt><dd class="text-right">{{ formatDateTime(deviceStatus.lastActivity) }}</dd>
                   </template>
                 </dl>
               </div>
@@ -400,29 +517,29 @@ async function deleteTerminal() {
                 icon="i-heroicons-exclamation-triangle"
                 :description="deviceStatusError"
               />
-            </template>
-          </div>
-        </UCard>
+            </div>
+          </UCard>
 
-        <UButton
-          block
-          color="error"
-          class="mt-2"
-          :loading="isLoading"
-          @click="
-            overlayDeleteConfirmation.open({
-              async onDelete() {
-                await deleteTerminal()
-                overlayDeleteConfirmation.close(true)
-              }
-            })
-          "
-        >
-          Supprimer
-        </UButton>
+          <UButton
+            block
+            color="error"
+            class="mt-2"
+            :loading="isLoading"
+            @click="
+              overlayDeleteConfirmation.open({
+                async onDelete() {
+                  await deleteTerminal()
+                  overlayDeleteConfirmation.close(true)
+                }
+              })
+            "
+          >
+            Supprimer
+          </UButton>
+        </template>
       </template>
-    </template>
-  </GenericLayoutContentWithStickySide>
+    </GenericLayoutContentWithStickySide>
+  </div>
 </template>
 
 <style scoped lang="css">

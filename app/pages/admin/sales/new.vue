@@ -351,7 +351,7 @@ definePageMeta({
   async function createSale() {
     isCreatingSale.value = true
 
-    const terminals = (selectedPaymentMode.value?.paymentTerminals ?? []).filter(t => t.available)
+    const terminals = (selectedPaymentMode.value?.paymentTerminals ?? []).filter(t => t.usable)
 
     if (terminals.length === 0) {
       // Standard flow: no terminal linked to this payment mode

@@ -1,19 +1,24 @@
 import type {UuidItem} from "~/types/api/uuidItem";
 import type {ClubLinkedItem} from "~/types/api/clubLinkedItem";
 import type {SalePaymentMode} from "~/types/api/item/clubDependent/plugin/sale/salePaymentMode";
+import type {SalePaymentTerminalConnection} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminalConnection";
 
+/** A physical device (e.g. a SumUp reader), discovered under a connection via sync-devices. */
 export interface SalePaymentTerminal extends UuidItem, ClubLinkedItem {
   name?: string;
   /** Short description shown alongside the name when picking a terminal at checkout */
   description?: string;
   /** Heroicon name (without the "i-heroicons-" prefix), shown on the terminal's checkout card */
   icon?: string;
-  provider?: 'sumup';
   available?: boolean;
-  /** Read-only: true if credentials have been configured (credentials themselves are never returned) */
-  configured?: boolean;
-  /** Write-only: provider-agnostic credentials map, sent on POST/PATCH, never returned */
-  credentials?: Record<string, string>;
+  /** The provider connection (shared credentials) this device belongs to. IRI string on write, full object on read. */
+  connection?: SalePaymentTerminalConnection | string;
+  /** Read-only: the provider's own device/reader id, fixed at discovery time */
+  externalDeviceId?: string;
+  /** Read-only: last time sync-devices still found this device on the provider's side */
+  lastSeenAt?: string | null;
+  /** Read-only: available && connection is available && connection is configured */
+  usable?: boolean;
   /** The payment mode this terminal is offered under. IRI string on write, full object on read. */
   paymentMode?: SalePaymentMode | string | null;
 }
@@ -35,7 +40,7 @@ export interface TerminalCheckoutStatusResult {
   transactionId?: string | null;
 }
 
-/** A device discovered from a provider during setup, with optional live diagnostics. */
+/** A device discovered from a provider, with optional live diagnostics. */
 export interface TerminalDevice {
   id: string;
   name: string;
@@ -55,37 +60,26 @@ export interface ListDevicesResult {
   devices: TerminalDevice[];
 }
 
-/** A single step inside a provider's setup flow. */
-export interface TerminalStep {
-  id: string;    // unique step value, e.g. 'credentials', 'device'
-  title: string; // label shown in the stepper
-  icon: string;  // heroicon name
+export interface SyncDevicesResult {
+  lastSyncedAt?: string | null;
+  devicesFound: number;
+  devicesCreated: number;
 }
 
 /**
  * Provider-agnostic definition (the front-end "interface" for a terminal provider).
  *
- * To support a new provider, add an entry here describing its credential fields,
- * setup steps, and capabilities — the setup modal renders itself from this config,
- * no per-provider UI code needed.
+ * To support a new provider, add an entry here describing its credential fields —
+ * the connection setup form renders itself from this config, no per-provider UI
+ * code needed. Device discovery/naming happens via sync-devices, not here.
  */
 export interface TerminalProviderDefinition {
   value: string;
   label: string;
-  /** Whether the provider can enumerate physical devices (drives the device-selection step) */
+  /** Whether the provider can enumerate physical devices (drives the "Synchroniser" action) */
   supportsDeviceListing: boolean;
-  /**
-   * Ordered list of provider-specific setup steps (shown after the "Provider" step).
-   * Each step's `id` maps to a block of form content in ModalTerminalSetup.
-   */
-  steps: TerminalStep[];
-  /**
-   * Credentials collected during the 'credentials' step (everything except the device).
-   * For providers that list devices, the chosen device id is merged in under `deviceCredentialKey`.
-   */
+  /** Credential fields collected when adding/editing a connection. */
   credentialFields: TerminalCredentialField[];
-  /** Credential key that receives the selected device id (e.g. 'readerId' for SumUp) */
-  deviceCredentialKey?: string;
 }
 
 export interface TerminalCredentialField {
@@ -101,15 +95,9 @@ export const TERMINAL_PROVIDERS: Record<string, TerminalProviderDefinition> = {
     value: 'sumup',
     label: 'SumUp',
     supportsDeviceListing: true,
-    deviceCredentialKey: 'readerId',
-    steps: [
-      {id: 'credentials', title: 'Identifiants', icon: 'i-heroicons-key'},
-      {id: 'device',      title: 'Terminal',     icon: 'i-heroicons-device-phone-mobile'},
-    ],
     credentialFields: [
       {key: 'apiKey',       label: 'Clé API',       required: true,  secret: true, help: 'Clé API SumUp (Bearer token)'},
       {key: 'merchantCode', label: 'Code marchand', required: true},
-      {key: 'affiliateKey', label: 'Clé affilié',   required: false, secret: true},
     ],
   },
 }
