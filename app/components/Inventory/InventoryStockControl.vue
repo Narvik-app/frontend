@@ -24,7 +24,6 @@ const query = new InventoryItemQuery()
 const pendingQuantity = ref<number | null>(
   props.item.quantity ?? null
 )
-const isSaving = ref(false)
 
 watch(() => props.item.quantity, (val) => {
   pendingQuantity.value = val ?? null
@@ -36,11 +35,23 @@ const isLowStock = computed(() =>
   pendingQuantity.value <= props.item.quantityAlert
 )
 
-let debounceTimer: ReturnType<typeof setTimeout> | null = null
+// Reverted to on save error; tracked separately from props.item.quantity since
+// the prop only updates once the patch round-trips.
+let lastConfirmedQuantity = props.item.quantity ?? null
+
+const {save, isSaving} = useAutoSave<InventoryItem>(query, {
+  onSaved: (updated) => {
+    lastConfirmedQuantity = updated.quantity ?? null
+    emit('updated', updated)
+  },
+  onError: (error) => {
+    pendingQuantity.value = lastConfirmedQuantity
+    toast.add({ title: 'Erreur', description: error.message, color: 'error' })
+  },
+})
 
 function scheduleUpdate(newValue: number | null) {
-  if (debounceTimer) clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(() => save(newValue), 500)
+  save(props.item, { quantity: newValue })
 }
 
 function onStepChanged(delta: number) {
@@ -55,28 +66,6 @@ function onInput(raw: string) {
   const parsed = raw === '' ? null : Number(raw)
   pendingQuantity.value = parsed === null || Number.isNaN(parsed) ? null : parsed
   scheduleUpdate(pendingQuantity.value)
-}
-
-async function save(value: number | null) {
-  isSaving.value = true
-  const previous = props.item.quantity ?? null
-
-  const { updated, error } = await query.patch(props.item, {
-    '@id': props.item['@id'],
-    quantity: value,
-  } as InventoryItem)
-
-  isSaving.value = false
-
-  if (error) {
-    pendingQuantity.value = previous
-    toast.add({ title: 'Erreur', description: error.message, color: 'error' })
-    return
-  }
-
-  if (updated) {
-    emit('updated', updated)
-  }
 }
 </script>
 

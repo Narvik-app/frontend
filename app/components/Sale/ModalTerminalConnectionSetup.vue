@@ -19,7 +19,7 @@ import SalePaymentTerminalConnectionQuery from "~/composables/api/query/clubDepe
 import {TERMINAL_PROVIDER_OPTIONS, getTerminalProvider} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminal";
 import type {SalePaymentTerminalConnection} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminalConnection";
 
-type ConnectionSetupResult =
+export type ConnectionSetupResult =
   | { mode: 'create'; name: string; provider: string; credentials: Record<string, string> }
   | { mode: 'edit'; name: string; credentials: Record<string, string> } // credentials empty = keep unchanged
 
@@ -99,68 +99,58 @@ async function submit() {
 </script>
 
 <template>
-  <UModal :dismissible="false">
-    <template #content>
-      <UCard>
-        <div class="flex flex-col gap-4">
-          <div class="text-xl font-bold text-center">
-            {{ isEdit ? 'Modifier la connexion' : 'Ajouter une connexion' }}
-          </div>
+  <ModalWithActions
+    :title="isEdit ? 'Modifier la connexion' : 'Ajouter une connexion'"
+    :dismissible="false"
+    @close="(state: boolean) => emit('close', state)"
+  >
+    <UFormField v-if="!isEdit" label="Fournisseur" name="provider" required>
+      <USelect
+        v-model="selectedProviderValue"
+        :items="TERMINAL_PROVIDER_OPTIONS"
+        value-key="value"
+        label-key="label"
+        placeholder="Sélectionnez un fournisseur"
+      />
+    </UFormField>
 
-          <UFormField v-if="!isEdit" label="Fournisseur" name="provider" required>
-            <USelect
-              v-model="selectedProviderValue"
-              :items="TERMINAL_PROVIDER_OPTIONS"
-              value-key="value"
-              label-key="label"
-              placeholder="Sélectionnez un fournisseur"
-            />
-          </UFormField>
+    <UFormField label="Nom" name="name" required>
+      <UInput v-model="name" placeholder="Ex: SumUp — Caisse principale" />
+    </UFormField>
 
-          <UFormField label="Nom" name="name" required>
-            <UInput v-model="name" placeholder="Ex: SumUp — Caisse principale" />
-          </UFormField>
+    <UAlert
+      v-if="isEdit"
+      color="neutral"
+      variant="subtle"
+      icon="i-heroicons-lock-closed"
+      description="Laissez les champs ci-dessous vides pour conserver les identifiants actuels."
+    />
 
-          <UAlert
-            v-if="isEdit"
-            color="neutral"
-            variant="subtle"
-            icon="i-heroicons-lock-closed"
-            description="Laissez les champs ci-dessous vides pour conserver les identifiants actuels."
-          />
+    <UFormField
+      v-for="field in definition?.credentialFields ?? []"
+      :key="field.key"
+      :label="field.label"
+      :name="field.key"
+      :required="!isEdit && field.required"
+      :help="field.help"
+    >
+      <UInput
+        v-model="credentials[field.key]"
+        :type="field.secret ? 'password' : 'text'"
+        :placeholder="isEdit ? '•••••••• (inchangé)' : (field.required ? 'Requis' : 'Optionnel')"
+      />
+    </UFormField>
 
-          <UFormField
-            v-for="field in definition?.credentialFields ?? []"
-            :key="field.key"
-            :label="field.label"
-            :name="field.key"
-            :required="!isEdit && field.required"
-            :help="field.help"
-          >
-            <UInput
-              v-model="credentials[field.key]"
-              :type="field.secret ? 'password' : 'text'"
-              :placeholder="isEdit ? '•••••••• (inchangé)' : (field.required ? 'Requis' : 'Optionnel')"
-            />
-          </UFormField>
-
-          <div class="flex gap-2 justify-between">
-            <UButton color="neutral" variant="ghost" @click="emit('close', false)">
-              Annuler
-            </UButton>
-
-            <UButton
-              :loading="isVerifying"
-              :disabled="!formValid"
-              @click="submit"
-            >
-              {{ primaryButtonLabel }}
-            </UButton>
-          </div>
-        </div>
-      </UCard>
+    <template #actions>
+      <UButton
+        :loading="isVerifying"
+        :disabled="!formValid"
+        @click="submit"
+      >
+        {{ primaryButtonLabel }}
+      </UButton>
     </template>
-  </UModal>
+  </ModalWithActions>
 </template>
 
 <style scoped lang="css">

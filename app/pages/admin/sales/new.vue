@@ -24,7 +24,9 @@ import {Permission} from "~/types/api/permissions";
 import LoanModalRecord from "~/components/Loan/LoanModalRecord.vue";
 import {groupLoanItemsByCategory} from "~/utils/loan";
 import ModalTerminalPayment from "~/components/Sale/ModalTerminalPayment.vue";
+import type {TerminalPaymentPhase} from "~/components/Sale/ModalTerminalPayment.vue";
 import ModalTerminalSelect from "~/components/Sale/ModalTerminalSelect.vue";
+import type {SelectResult} from "~/components/Sale/ModalTerminalSelect.vue";
 
 
 definePageMeta({
@@ -68,13 +70,15 @@ definePageMeta({
 
   // Terminal payment modal state (driven by the polling loop below)
   const showTpeModal = ref(false)
-  const tpePhase = ref<'waiting' | 'success' | 'failed' | 'cancelled' | 'error'>('waiting')
+  const tpePhase = ref<TerminalPaymentPhase>('waiting')
   const tpeError = ref<string | undefined>(undefined)
   const tpeAmount = ref('')
   const tpeTerminalName = ref<string | undefined>(undefined)
 
+  type TerminalActionResult = { type: 'success'; transactionId: string } | { type: 'manual' } | { type: 'cancel' }
+
   // Promise resolver used to bridge modal button clicks into the async polling loop
-  let resolveTerminalAction: ((v: { type: 'success'; transactionId: string } | { type: 'manual' } | { type: 'cancel' }) => void) | null = null
+  let resolveTerminalAction: ((v: TerminalActionResult) => void) | null = null
   // Terminal currently running a checkout, so cancel/manual can tell it to stop waiting
   let activeTerminal: SalePaymentTerminal | undefined
 
@@ -265,7 +269,7 @@ definePageMeta({
    * Resolves when the terminal confirms, or when the user clicks manual/cancel.
    * The modal (ModalTerminalPayment) is driven by reactive refs.
    */
-  function runTerminalPayment(terminal: SalePaymentTerminal): Promise<{ type: 'success'; transactionId: string } | { type: 'manual' } | { type: 'cancel' }> {
+  function runTerminalPayment(terminal: SalePaymentTerminal): Promise<TerminalActionResult> {
     tpePhase.value = 'waiting'
     tpeError.value = undefined
     tpeAmount.value = String(cartTotalPrice.value)
@@ -273,7 +277,7 @@ definePageMeta({
     showTpeModal.value = true
     activeTerminal = terminal
 
-    const result = new Promise<{ type: 'success'; transactionId: string } | { type: 'manual' } | { type: 'cancel' }>((resolve) => {
+    const result = new Promise<TerminalActionResult>((resolve) => {
       resolveTerminalAction = resolve
     })
 
@@ -338,8 +342,8 @@ definePageMeta({
    * Open the card-grid selection modal (linked terminals + "Manuel").
    * Resolves with the cashier's choice, or undefined if cancelled.
    */
-  async function selectTerminal(terminals: SalePaymentTerminal[]): Promise<{ type: 'terminal'; terminal: SalePaymentTerminal } | { type: 'manual' } | undefined> {
-    let choice: { type: 'terminal'; terminal: SalePaymentTerminal } | { type: 'manual' } | undefined
+  async function selectTerminal(terminals: SalePaymentTerminal[]): Promise<SelectResult | undefined> {
+    let choice: SelectResult | undefined
 
     const instance = overlaySelectTerminal.open({
       terminals,
@@ -365,7 +369,7 @@ definePageMeta({
       return
     }
 
-    let choice: { type: 'terminal'; terminal: SalePaymentTerminal } | { type: 'manual' } | undefined
+    let choice: SelectResult | undefined
 
     if (terminals.length === 1 && !terminals[0]!.forceTerminalSelection) {
       // Only one terminal linked and its connection doesn't force the picker:
