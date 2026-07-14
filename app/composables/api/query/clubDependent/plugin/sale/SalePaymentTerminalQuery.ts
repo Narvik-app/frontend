@@ -1,4 +1,4 @@
-import type {SalePaymentTerminal, TerminalCheckoutResult, TerminalCheckoutStatusResult, ListDevicesResult, TerminalDevice} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminal";
+import type {SalePaymentTerminal, TerminalCheckoutResult, TerminalCheckoutStatusResult, TerminalDevice} from "~/types/api/item/clubDependent/plugin/sale/salePaymentTerminal";
 import {AbstractClubDependentQuery} from "~/composables/api/query/AbstractClubDependentQuery";
 import {usePost, useFetchItem} from "~/composables/api/api";
 
@@ -6,41 +6,11 @@ export default class SalePaymentTerminalQuery extends AbstractClubDependentQuery
   rootPath = "sale-payment-terminals";
 
   /**
-   * Validate credentials and list the devices available for a provider (setup step).
-   * A successful response means the credentials are valid.
-   */
-  async listDevices(provider: string, credentials: Record<string, string>) {
-    return usePost<ListDevicesResult>(
-      this.getRootUrl() + '/-/list-devices',
-      {provider, credentials},
-    )
-  }
-
-  /**
-   * Test connection: live status of the device configured on an existing terminal.
+   * Test connection: live status of this device (using its connection's stored credentials).
    */
   async deviceStatus(terminal: SalePaymentTerminal) {
     return useFetchItem<TerminalDevice>(
       (terminal['@id'] ?? '') + '/device-status',
-    )
-  }
-
-  /**
-   * List devices for an existing terminal using its stored credentials (reconfiguration).
-   */
-  async terminalDevices(terminal: SalePaymentTerminal) {
-    return useFetchItem<ListDevicesResult>(
-      (terminal['@id'] ?? '') + '/devices',
-    )
-  }
-
-  /**
-   * Re-select the active device for an existing terminal (preserves stored credentials).
-   */
-  async setDevice(terminal: SalePaymentTerminal, deviceId: string) {
-    return usePost<{ configured: boolean }>(
-      (terminal['@id'] ?? '') + '/device',
-      {deviceId},
     )
   }
 
