@@ -14,6 +14,7 @@ import type {TablePaginateInterface} from "~/types/table";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {Permission} from "~/types/api/permissions";
 import {formatDateTime} from "~/utils/date";
+import {toIri} from "~/utils/resource";
 
 definePageMeta({
   layout: "pos"
@@ -41,12 +42,6 @@ const {save: saveDetail, isSaving: isSavingDetails} = useAutoSave<SalePaymentTer
   onSaved: (updated) => syncLocalTerminal(updated.uuid, updated),
   onError: (error) => toast.add({color: "error", title: "La modification a échouée", description: error.message}),
 })
-
-/** IRI helper: connection/paymentMode fields may come back as an IRI string or, occasionally, an embedded object. */
-function toIri(value?: {'@id'?: string} | string | null): string | null {
-  if (!value) return null
-  return typeof value === 'string' ? value : (value['@id'] ?? null)
-}
 
 // ─────────────────────────────────────────────────────────────────────────
 // Connections
@@ -445,7 +440,7 @@ async function deleteTerminal() {
                 <USwitch v-model="selectedTerminal.available" @update:model-value="toggleAvailable(selectedTerminal)" />
               </UFormField>
 
-              <UFormField label="Description" name="description" description="Affichée sur la carte de sélection à la caisse. Enregistrée automatiquement.">
+              <UFormField label="Description" name="description" description="Affichée sur la carte de sélection à la caisse.">
                 <UInput
                   v-model="selectedTerminal.description"
                   placeholder="Ex: Caisse principale"
@@ -455,7 +450,6 @@ async function deleteTerminal() {
 
               <UFormField label="Icône" name="icon">
                 <template #description>
-                  <div>Enregistrée automatiquement.</div>
                   <ContentLink variant="link" to="https://heroicons.com/" target="_blank">Liste des icônes Heroicons</ContentLink>
                 </template>
 
