@@ -110,12 +110,11 @@ async function submit() {
         :items="TERMINAL_PROVIDER_OPTIONS"
         value-key="value"
         label-key="label"
-        placeholder="Sélectionnez un fournisseur"
       />
     </UFormField>
 
     <UFormField label="Nom" name="name" required>
-      <UInput v-model="name" placeholder="Ex: SumUp — Caisse principale" />
+      <UInput v-model="name" />
     </UFormField>
 
     <UAlert
@@ -137,7 +136,7 @@ async function submit() {
       <UInput
         v-model="credentials[field.key]"
         :type="field.secret ? 'password' : 'text'"
-        :placeholder="isEdit ? '•••••••• (inchangé)' : (field.required ? 'Requis' : 'Optionnel')"
+        :placeholder="isEdit ? '••••••••' : ''"
       />
     </UFormField>
 

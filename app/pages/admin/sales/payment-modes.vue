@@ -321,7 +321,6 @@ definePageMeta({
                 v-if="selectedPaymentMode.uuid"
                 label="Terminaux de paiement (TPE)"
                 name="paymentTerminals"
-                description="Se configurent depuis la page Terminaux de paiement, en liant chaque terminal à ce mode de paiement."
               >
                 <div v-if="!selectedPaymentMode.paymentTerminals?.length" class="text-sm italic text-gray-500">
                   Aucun terminal lié.

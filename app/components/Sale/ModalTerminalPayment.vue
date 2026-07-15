@@ -47,18 +47,12 @@ const isActionable = computed(() => ['failed', 'cancelled', 'error'].includes(pr
     <template #content>
       <UCard>
         <div class="flex flex-col gap-4">
-          <!-- Title -->
           <div class="text-xl font-bold text-center">Paiement par terminal</div>
-
-          <!-- Amount -->
           <div class="text-3xl font-bold text-center">{{ props.amountDisplay }}</div>
-
-          <!-- Terminal name -->
           <div v-if="props.terminalName" class="text-sm text-gray-500 text-center">
             {{ props.terminalName }}
           </div>
 
-          <!-- Status icon + label -->
           <div class="flex flex-col items-center gap-2 py-2">
             <UIcon
               v-if="props.phase === 'waiting'"
@@ -84,7 +78,6 @@ const isActionable = computed(() => ['failed', 'cancelled', 'error'].includes(pr
             </p>
           </div>
 
-          <!-- Action buttons — always visible -->
           <div class="flex flex-col gap-2 sm:flex-row sm:justify-between">
             <UButton
               variant="soft"
