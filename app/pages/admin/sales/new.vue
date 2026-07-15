@@ -93,7 +93,7 @@ definePageMeta({
     resolveTerminalAction?.({type: 'cancel'})
     if (activeTerminal) void terminalQuery.cancelCheckout(activeTerminal)
   }
-  
+
   // Loan items visible on sale page
   const selfStore = useSelfUserStore()
   const canLoan = computed(() => selfStore.can(Permission.LoanEdit))
@@ -239,7 +239,7 @@ definePageMeta({
 
   /** Post the sale to the API and navigate on success */
   async function submitSale(extraComment?: string) {
-    const comment = [cartComment.value, extraComment].filter(Boolean).join(' ').trim()
+    const comment = [cartComment.value, extraComment].filter(Boolean).join('\n\n').trim()
     const payload: Sale = {
       seller: seller.value?.["@id"],
       comment: comment.length ? comment : undefined,
@@ -401,7 +401,7 @@ definePageMeta({
     }
 
     const extraComment = result.type === 'success'
-      ? `sumup: ${result.transactionId}`
+      ? `transactionId: ${result.transactionId}`
       : '(paiement manuel)'
 
     await submitSale(extraComment)
