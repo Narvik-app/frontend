@@ -141,7 +141,7 @@ async function syncDevices(connection: SalePaymentTerminalConnection) {
   toast.add({
     color: "success",
     title: "Terminaux synchronisés",
-    description: `${item.devicesFound} terminal(aux) détecté(s), ${item.devicesCreated} nouveau(x).`,
+    description: `${item.devicesFound} terminaux détectés, ${item.devicesCreated} nouveaux.`,
   })
   await Promise.all([loadConnections(), getTerminalsPaginated()])
 }
@@ -443,7 +443,6 @@ async function deleteTerminal() {
               <UFormField label="Description" name="description" description="Affichée sur la carte de sélection à la caisse.">
                 <UInput
                   v-model="selectedTerminal.description"
-                  placeholder="Ex: Caisse principale"
                   @update:model-value="(v: string) => saveDetail(selectedTerminal, {description: v})"
                 />
               </UFormField>
@@ -459,7 +458,6 @@ async function deleteTerminal() {
 
                 <UInput
                   v-model="selectedTerminal.icon"
-                  placeholder="Ex: credit-card"
                   @update:model-value="(v: string) => saveDetail(selectedTerminal, {icon: v})"
                 />
               </UFormField>
