@@ -13,6 +13,13 @@ export const getIdFromIri = (iri?: string): string => {
   return id;
 };
 
+/** IRI helper: relation fields may come back as an IRI string or, occasionally, an embedded object. */
+export function toIri(value?: {'@id'?: string} | string | null): string | null {
+  if (!value) return null
+  return typeof value === 'string' ? value : (value['@id'] ?? null)
+}
+
+
 export function convertUuidToUrlUuid(uuid?: string): string {
   if (!uuid) {
     return ''
