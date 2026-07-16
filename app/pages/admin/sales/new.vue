@@ -422,6 +422,23 @@ definePageMeta({
 
   const isStockRemovalMode = computed(() => selectedPaymentMode.value?.kind === 'stock_removal')
 
+  const finalizeSaleLabel = computed(() => {
+    if (isStockRemovalMode.value) {
+      return 'Enregistrer la sortie de stock'
+    }
+
+    const terminals = (selectedPaymentMode.value?.paymentTerminals ?? []).filter(t => t.usable)
+
+    if (terminals.length === 0) {
+      return 'Finaliser la vente'
+    }
+    if (terminals.length === 1 && !terminals[0]!.forceTerminalSelection) {
+      return 'Envoyer au TPE'
+    }
+
+    return 'Étape suivante'
+  })
+
   const mobileSideTitle: Ref<string|undefined> = ref(undefined)
   watchEffect(() => {
     mobileSideTitle.value = `Panier (${cartStore.cartTotalItems} `
@@ -676,7 +693,7 @@ definePageMeta({
             :disabled="cart.length < 1 || !selectedPaymentMode || !sellerSelected"
             @click="createSale()"
           >
-            {{ isStockRemovalMode ? 'Enregistrer la sortie de stock' : 'Finaliser la vente' }}
+            {{ finalizeSaleLabel }}
           </UButton>
         </UCard>
       </div>
