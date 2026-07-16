@@ -64,15 +64,17 @@ const isActionable = computed(() => ['failed', 'cancelled', 'error'].includes(pr
               name="i-heroicons-check-circle"
               class="text-success text-5xl"
             />
-            <UIcon
+            <UAlert
               v-else
-              name="i-heroicons-exclamation-triangle"
-              class="text-warning text-5xl"
+              icon="i-heroicons-exclamation-triangle"
+              color="error"
+              variant="subtle"
+              :title="statusLabel"
             />
 
             <p
+              v-if="!isActionable"
               class="text-center text-sm"
-              :class="isActionable ? 'text-warning font-medium' : ''"
             >
               {{ statusLabel }}
             </p>
