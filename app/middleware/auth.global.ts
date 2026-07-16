@@ -26,7 +26,7 @@ const supervisorOnlyPaths = [
 
 // Permission-based paths: supervisors need specific permissions to access these
 // For viewing pages, ACCESS is enough. For actions, EDIT is required (handled by backend).
-const permissionPaths: { pattern: string; permission: Permission }[] = [
+const permissionPaths: { pattern: string; permission: Permission | Permission[] }[] = [
   // Email paths - need ACCESS to view
   { pattern: "^/admin/email$", permission: Permission.EmailAccess },
   { pattern: "^/admin/email/new", permission: Permission.EmailEdit },
@@ -42,7 +42,8 @@ const permissionPaths: { pattern: string; permission: Permission }[] = [
 
   // Sale paths - need ACCESS to view pages
   // Note: specific paths must come BEFORE generic [id] pattern to avoid collision
-  { pattern: "^/admin/sales/new$", permission: Permission.SaleNew },
+  // /admin/sales/new also hosts loan creation/return - allow LoanEdit-only users in too
+  { pattern: "^/admin/sales/new$", permission: [Permission.SaleNew, Permission.LoanEdit] },
   { pattern: "^/admin/sales$", permission: Permission.SaleHistoryAccess },
   { pattern: "^/admin/sales/history", permission: Permission.SaleHistoryAccess },
   { pattern: "^/admin/sales/payment-modes", permission: Permission.SalePaymentModesAccess },
@@ -51,6 +52,13 @@ const permissionPaths: { pattern: string; permission: Permission }[] = [
   { pattern: "^/admin/inventories$", permission: Permission.SaleInventoryAccess },
   { pattern: "^/admin/inventories/items", permission: Permission.SaleInventoryAccess },
   { pattern: "^/admin/inventories/categories", permission: Permission.SaleCategoriesAccess },
+
+  // Loan paths - need ACCESS to view pages
+  { pattern: "^/admin/loans$", permission: Permission.LoanAccess },
+  { pattern: "^/admin/loans/items/[^/]+$", permission: Permission.LoanItemsAccess }, // Loan item detail [id] - must come before generic items path
+  { pattern: "^/admin/loans/items", permission: Permission.LoanItemsAccess },
+  { pattern: "^/admin/loans/categories", permission: Permission.LoanCategoriesAccess },
+  { pattern: "^/admin/loans/recording-types", permission: Permission.LoanRecordingsAccess },
 ]
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -121,8 +129,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       // Check if path matches permission-based paths
       for (const { pattern, permission } of permissionPaths) {
         if (pathsMatch([pattern], to.fullPath)) {
-          if (selfStore.can(permission)) {
-            return; // Has permission, allow access
+          const permissions = Array.isArray(permission) ? permission : [permission];
+          if (permissions.some(p => selfStore.can(p))) {
+            return; // Has at least one required permission, allow access
           } else {
             return navigateTo('/admin'); // No permission, redirect
           }

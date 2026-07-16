@@ -295,6 +295,17 @@ if (selfStore.can(Permission.EmailEdit)) { /* ... */ }
 
 **Admins**: `can()` returns `true` for all permissions when user is admin or super-admin.
 
+### Route-Level Permission Enforcement
+
+Component-level `can()` checks control what's *rendered*, but routes must also be gated in `app/middleware/auth.global.ts` — otherwise a non-admin supervisor without the right permission can still navigate to the page (and only find out it's forbidden once an in-page action fails, or worse, see a page they shouldn't).
+
+The middleware checks `/admin/*` routes in this order:
+1. **`supervisorOnlyPaths`** - route patterns any supervisor can reach, no specific permission required (e.g. `/admin`, `/admin/members`).
+2. **`permissionPaths`** - route patterns mapped to the `Permission` required to view them. Each entry is `{ pattern, permission }`, where `permission` can be a single `Permission` or an array (the user needs **any one** of them - use an array when a page serves more than one feature, e.g. `/admin/sales/new` accepts `SaleNew` OR `LoanEdit` because it hosts both sale creation and loan creation/return).
+3. Anything matching `/admin/*` but not listed in either array is **denied** (redirects to `/admin`) for non-admin supervisors, even if the page itself checks permissions correctly.
+
+**When adding a new admin page gated by a `Permission`, add a matching entry to `permissionPaths` in the same change** - it's easy to gate the page's own UI with `can()` and forget the route is still unreachable for non-admin supervisors. Order matters: more specific patterns (e.g. `/admin/sales/new`, `/admin/loans/items/[id]`) must come before more generic ones (e.g. `/admin/sales/[id]`, `/admin/loans/items`) since patterns are tested in array order and the first match wins.
+
 ## Key Features
 
 ### 1. **Multi-Role Interface**
