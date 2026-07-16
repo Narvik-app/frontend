@@ -439,6 +439,23 @@ definePageMeta({
     return 'Étape suivante'
   })
 
+  const finalizeSaleIcon = computed(() => {
+    if (isStockRemovalMode.value) {
+      return 'i-heroicons-archive-box-arrow-down'
+    }
+
+    const terminals = (selectedPaymentMode.value?.paymentTerminals ?? []).filter(t => t.usable)
+
+    if (terminals.length === 0) {
+      return 'i-heroicons-check'
+    }
+    if (terminals.length === 1 && !terminals[0]!.forceTerminalSelection) {
+      return 'i-heroicons-arrow-up-tray'
+    }
+
+    return 'i-heroicons-arrow-right'
+  })
+
   const mobileSideTitle: Ref<string|undefined> = ref(undefined)
   watchEffect(() => {
     mobileSideTitle.value = `Panier (${cartStore.cartTotalItems} `
@@ -690,10 +707,15 @@ definePageMeta({
             class="mt-4"
             block
             :color="isStockRemovalMode ? 'warning' : 'success'"
+            :icon="finalizeSaleIcon"
             :disabled="cart.length < 1 || !selectedPaymentMode || !sellerSelected"
             @click="createSale()"
           >
-            {{ finalizeSaleLabel }}
+            <div class="flex items-center w-full">
+              <div class="flex-1">
+                {{ finalizeSaleLabel }}
+              </div>
+            </div>
           </UButton>
         </UCard>
       </div>
