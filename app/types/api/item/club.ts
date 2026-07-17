@@ -94,7 +94,7 @@ export interface ClubPluginInfo {
 export const clubPlugins: ClubPluginInfo[] = [
   { key: 'presencesEnabled', label: 'Présences', description: 'Enregistrement des présences' },
   { key: 'salesEnabled', label: 'Ventes', description: 'Ventes et gestion des stocks' },
-  { key: 'loansEnabled', label: 'Prêts', description: 'Prêt de matériel aux membres' },
+  { key: 'loansEnabled', label: 'Prêts', description: 'Prêt de matériel' },
 ];
 
 interface _Club extends UuidItem, TimestampItem {
