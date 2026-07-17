@@ -27,6 +27,7 @@ definePageMeta({
   const apiQuery = new SalePaymentModeQuery()
 
   const paymentModes: Ref<SalePaymentMode[]> = ref([])
+
   const isLoading = ref(true);
   const totalPaymentModes = ref(0)
   const selectedPaymentMode: Ref<SalePaymentMode | undefined> = ref(undefined)
@@ -135,7 +136,7 @@ definePageMeta({
       available: paymentMode.available,
       name: paymentMode.name,
       icon: paymentMode.icon,
-      kind: paymentMode.kind
+      kind: paymentMode.kind,
     }
 
     if (paymentMode.weight) {
@@ -314,6 +315,31 @@ definePageMeta({
 
               <UFormField label="Poids dans la liste" name="weight">
                 <UInput v-model="selectedPaymentMode.weight" type="number" />
+              </UFormField>
+
+              <UFormField
+                v-if="selectedPaymentMode.uuid"
+                label="Terminaux de paiement (TPE)"
+                name="paymentTerminals"
+              >
+                <div v-if="!selectedPaymentMode.paymentTerminals?.length" class="text-sm italic text-gray-500">
+                  Aucun terminal lié.
+                </div>
+                <div v-else class="flex flex-wrap gap-2">
+                  <UBadge v-for="terminal in selectedPaymentMode.paymentTerminals" :key="terminal.uuid" variant="subtle">
+                    <UIcon v-if="terminal.icon" :name="'i-heroicons-' + terminal.icon" class="mr-1" />
+                    {{ terminal.name }}
+                  </UBadge>
+                </div>
+                <UButton
+                  class="mt-2"
+                  size="xs"
+                  variant="link"
+                  icon="i-heroicons-arrow-top-right-on-square"
+                  to="/admin/sales/payment-terminals"
+                >
+                  Gérer les terminaux
+                </UButton>
               </UFormField>
             </div>
 
