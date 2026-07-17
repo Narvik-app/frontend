@@ -565,6 +565,7 @@ definePageMeta({
             >
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium truncate">{{ item.name }}</p>
+                <p v-if="item.description" class="text-xs text-muted">{{ item.description }}</p>
                 <p v-if="item.loanPrice" class="text-xs text-muted">{{ item.loanPrice }} €/prêt</p>
               </div>
               <UBadge
