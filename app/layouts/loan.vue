@@ -24,6 +24,11 @@ if (canAccessLoans) {
     icon: 'i-heroicons-archive-box-arrow-down',
     to: '/admin/loans'
   })
+  loansSection.push({
+    label: 'Statistiques',
+    icon: 'i-heroicons-chart-bar',
+    to: '/admin/statistics/loans'
+  })
 }
 
 const itemsSection: { label: string; icon: string; to: string }[] = []
