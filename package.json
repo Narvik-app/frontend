@@ -36,7 +36,7 @@
     "mergician": "^2.0.2",
     "nuxt": "^4.5.0",
     "nuxt-api-party": "^3.4.2",
-    "pinia": "^3.0.4",
+    "pinia": "^4.0.2",
     "pinia-plugin-persistedstate": "^4.7.1",
     "qs": "^6.15.3",
     "tailwindcss": "^4.3.3",
