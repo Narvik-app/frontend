@@ -50,7 +50,7 @@
     "@nuxt/eslint": "^1.16.0",
     "@playwright/test": "^1.61.1",
     "eslint": "^10.7.0",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "packageManager": "pnpm@11.16.0"
 }
