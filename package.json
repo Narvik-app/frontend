@@ -29,6 +29,7 @@
     "@tiptap/extension-text-style": "^3.28.0",
     "@types/qs": "^6.15.1",
     "@unhead/vue": "^3.2.3",
+    "@vue/devtools-api": "^8.1.5",
     "chart.js": "^4.5.1",
     "clipboardy": "^5.3.1",
     "dayjs": "^1.11.21",
@@ -36,7 +37,7 @@
     "mergician": "^2.0.2",
     "nuxt": "^4.5.0",
     "nuxt-api-party": "^3.4.2",
-    "pinia": "^3.0.4",
+    "pinia": "^4.0.2",
     "pinia-plugin-persistedstate": "^4.7.1",
     "qs": "^6.15.3",
     "tailwindcss": "^4.3.3",
@@ -51,5 +52,5 @@
     "eslint": "^10.7.0",
     "typescript": "^6.0.3"
   },
-  "packageManager": "pnpm@11.2.2+sha512.36e6621fad506178936455e70247b8808ef4ec25797a9f437a93281a020484e2607f6a469a22e982987c3dbb8866e3071514ab10a4a1749e06edcd1ec118436f"
+  "packageManager": "pnpm@11.16.0"
 }
