@@ -338,7 +338,17 @@ async function deleteTerminal() {
             :model-value="row.original.forceTerminalSelection"
             :disabled="!canEdit"
             @update:model-value="(v: boolean) => { row.original.forceTerminalSelection = v; toggleConnectionField(row.original, 'forceTerminalSelection') }"
-          />
+          >
+            <template #description>
+              <p v-if="row.original.forceTerminalSelection">
+                Affichera toujours l'étape de sélection du TPE / mode manuel.
+              </p>
+              <p v-else>
+                Passera l'étape de sélection de TPE.
+              </p>
+            </template>
+
+          </USwitch>
         </template>
 
         <template #lastSyncedAt-cell="{ row }">
