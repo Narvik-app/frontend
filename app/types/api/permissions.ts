@@ -43,6 +43,7 @@ export enum Permission {
   LoanCategoriesEdit = 'LOAN_CATEGORIES_EDIT',
   LoanRecordingsAccess = 'LOAN_RECORDINGS_ACCESS',
   LoanRecordingsEdit = 'LOAN_RECORDINGS_EDIT',
+  LoanBackdate = 'LOAN_BACKDATE',
 }
 
 // Feature definition with Access and Edit permissions
@@ -167,6 +168,11 @@ export const permissionSections: PermissionSection[] = [
         name: 'Enregistrements',
         accessPermission: Permission.LoanRecordingsAccess,
         editPermission: Permission.LoanRecordingsEdit,
+      },
+      {
+        name: 'Antidater les prêts',
+        accessPermission: Permission.LoanBackdate,
+        editOnly: true,
       },
     ],
   },

@@ -19,8 +19,6 @@ useHead({
 const toast = useToast()
 const isUploading = ref(false)
 
-const popoverLegalsOpen = ref(false)
-
 const legalsLastUpdate: Ref<Date|undefined> = ref(undefined)
 const legalsCguLink: Ref<string|undefined> = ref(undefined)
 const legalsCgvLink: Ref<string|undefined> = ref(undefined)
@@ -65,6 +63,11 @@ async function loadLegals() {
     loadLegalsPrivacy()
   ])
   isUploading.value = false
+}
+
+async function onLegalsDateChange(value: Date | string | null) {
+  legalsLastUpdate.value = (value as Date | undefined) ?? undefined
+  await updateLegalsDate()
 }
 
 async function updateLegalsDate() {
@@ -127,15 +130,12 @@ loadLegals()
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
     <GenericCard title="Date de dernière mise à jour">
       <p class="text-xs mb-2">Utilisée pour afficher la modal de consentement à la connexion.</p>
-      <UPopover v-model:open="popoverLegalsOpen">
-        <UButton icon="i-heroicons-calendar-days-20-solid" :label="formatDateReadable(legalsLastUpdate?.toString()) || 'Choisir une date'" :loading="isUploading" />
-
-        <template #content>
-          <div>
-            <GenericDatePicker v-model="legalsLastUpdate" mode="date" @close="popoverLegalsOpen = false; updateLegalsDate()" />
-          </div>
-        </template>
-      </UPopover>
+      <GenericDatePickerField
+        :model-value="legalsLastUpdate"
+        mode="date"
+        :loading="isUploading"
+        @update:model-value="onLegalsDateChange"
+      />
     </GenericCard>
     <GenericCard title="Conditions Générales de vente">
       <UInput

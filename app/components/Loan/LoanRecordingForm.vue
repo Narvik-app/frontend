@@ -18,6 +18,10 @@ const props = defineProps({
     type: Object as PropType<LoanRecording>,
     default: undefined,
   },
+  dateEditable: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['updated', 'close'])
@@ -30,6 +34,7 @@ const isEditing = computed(() => !!props.recording)
 
 const isLoading = ref(false)
 const description = ref(props.recording?.description ?? '')
+const selectedDate = ref<Date | null>(props.recording?.date ? new Date(props.recording.date) : null)
 
 // Recording type
 const recordingTypes = ref<LoanRecordingType[]>([])
@@ -71,6 +76,9 @@ async function submit() {
     description: description.value.trim() || null,
     date: props.recording?.date ?? new Date().toISOString(),
   }
+  if (props.dateEditable && selectedDate.value) {
+    payload.date = selectedDate.value.toISOString()
+  }
   const {created, updated, error} = isEditing.value
     ? await recordingQuery.patch(props.recording!, payload)
     : await recordingQuery.post(payload)
@@ -88,6 +96,11 @@ async function submit() {
 <template>
   <ModalWithActions :title="isEditing ? `Modifier l'enregistrement` : 'Ajouter un enregistrement'" @close="emit('close', false)">
     <div class="flex flex-col gap-4">
+      <!-- Date (backdate) -->
+      <UFormField v-if="dateEditable" label="Date">
+        <GenericDatePickerField v-model="selectedDate" mode="dateTime" placeholder="Choisir une date" />
+      </UFormField>
+
       <!-- Recording type -->
       <UFormField label="Type d'enregistrement">
         <USelectMenu

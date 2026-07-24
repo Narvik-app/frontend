@@ -35,8 +35,6 @@ const emit = defineEmits([
 ])
 
 const isUpdating = ref(false)
-const popoverOpen = ref(false)
-const popoverMedicalOpen = ref(false)
 
 const toast = useToast()
 const memberQuery = new MemberQuery()
@@ -132,35 +130,25 @@ async function submitItem() {
 
     <div class="flex justify-between">
       <UFormField label="Date de naissance" name="birthday">
-        <UPopover v-model:open="popoverOpen">
-          <UButton icon="i-heroicons-calendar-days-20-solid" :label="formatDateReadable(item.birthday?.toString()) || 'Choisir une date'" />
-
-          <template #content>
-            <div>
-              <div class="p-2 text-xs text-center">
-                <p>Vous pouvez cliquer sur l'année</p>
-                <p>afin de changer celle-ci</p>
-              </div>
-              <GenericDatePicker v-model="item.birthday" class="!w-full" mode="date" @close="popoverOpen = false" />
+        <GenericDatePickerField v-model="item.birthday" mode="date" calendar-class="!w-full">
+          <template #hint>
+            <div class="p-2 text-xs text-center">
+              <p>Vous pouvez cliquer sur l'année</p>
+              <p>afin de changer celle-ci</p>
             </div>
           </template>
-        </UPopover>
+        </GenericDatePickerField>
       </UFormField>
 
       <UFormField label="Certificat médical" name="medicalCertificateExpiration">
-        <UPopover v-model:open="popoverMedicalOpen">
-          <UButton icon="i-heroicons-calendar-days-20-solid" :label="formatDateReadable(item.medicalCertificateExpiration?.toString()) || 'Choisir une date'" />
-
-          <template #content>
-            <div>
-              <div class="p-2 text-xs text-center">
-                <p>Date d'expiration du</p>
-                <p>certificat médical</p>
-              </div>
-              <GenericDatePicker v-model="item.medicalCertificateExpiration" class="!w-full" mode="date" @close="popoverMedicalOpen = false" />
+        <GenericDatePickerField v-model="item.medicalCertificateExpiration" mode="date" calendar-class="!w-full">
+          <template #hint>
+            <div class="p-2 text-xs text-center">
+              <p>Date d'expiration du</p>
+              <p>certificat médical</p>
             </div>
           </template>
-        </UPopover>
+        </GenericDatePickerField>
       </UFormField>
     </div>
     <UAlert v-if="memberAge < 18" icon="i-heroicons-exclamation-triangle" color="error" variant="subtle" title="Consentement recueil des données (RGPD)">
