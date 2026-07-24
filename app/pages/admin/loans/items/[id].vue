@@ -25,6 +25,8 @@ const overlay = useOverlay()
 const selfStore = useSelfUserStore()
 const canEdit = computed(() => selfStore.can(Permission.LoanItemsEdit))
 const canLoan = computed(() => selfStore.can(Permission.LoanEdit))
+const canBackdate = computed(() => selfStore.can(Permission.LoanBackdate))
+const isAdmin = computed(() => selfStore.isAdmin())
 
 const route = useRoute()
 const itemId = decodeUrlUuid(route.params.id.toString())
@@ -178,7 +180,7 @@ function isToday(date?: string | null): boolean {
 
 async function openEditLoanModal(loan: Loan) {
   if (!loanItem.value) return
-  const instance = overlay.create(LoanModalRecord).open({loanItem: loanItem.value, loan})
+  const instance = overlay.create(LoanModalRecord).open({loanItem: loanItem.value, loan, dateEditable: canBackdate.value})
   if (await instance.result) await loadLoans()
 }
 
@@ -200,7 +202,7 @@ async function deleteLoan(loan: Loan) {
 
 async function openEditRecordingModal(recording: LoanRecording) {
   if (!loanItem.value) return
-  const instance = overlay.create(LoanRecordingForm).open({loanItem: loanItem.value, recording})
+  const instance = overlay.create(LoanRecordingForm).open({loanItem: loanItem.value, recording, dateEditable: canBackdate.value})
   if (await instance.result) await loadRecordings()
 }
 
@@ -270,13 +272,13 @@ async function openLoanModal() {
     toast.add({color: 'warning', title: 'Article déjà en prêt', description: 'Enregistrez le retour avant de créer un nouveau prêt.'})
     return
   }
-  const instance = overlay.create(LoanModalRecord).open({loanItem: loanItem.value})
+  const instance = overlay.create(LoanModalRecord).open({loanItem: loanItem.value, dateEditable: canBackdate.value})
   if (await instance.result) await loadItem()
 }
 
 async function openRecordingModal() {
   if (!loanItem.value) return
-  const instance = overlay.create(LoanRecordingForm).open({loanItem: loanItem.value})
+  const instance = overlay.create(LoanRecordingForm).open({loanItem: loanItem.value, dateEditable: canBackdate.value})
   if (await instance.result) await loadRecordings()
 }
 </script>
@@ -414,7 +416,7 @@ async function openRecordingModal() {
             >
               Retourner
             </UButton>
-            <template v-if="canLoan && isToday(row.original.startDate)">
+            <template v-if="isAdmin || (canLoan && isToday(row.original.createdAt))">
               <UTooltip text="Modifier">
                 <UButton icon="i-heroicons-pencil-square" size="xs" color="warning" variant="ghost" @click="openEditLoanModal(row.original)" />
               </UTooltip>
@@ -455,7 +457,7 @@ async function openRecordingModal() {
           <span class="text-xs">{{ row.original.description ?? '-' }}</span>
         </template>
         <template #actions-cell="{ row }">
-          <div v-if="canEdit && isToday(row.original.date)" class="flex items-center gap-1 justify-end">
+          <div v-if="isAdmin || (canEdit && isToday(row.original.createdAt))" class="flex items-center gap-1 justify-end">
             <UTooltip text="Modifier">
               <UButton icon="i-heroicons-pencil-square" size="xs" color="warning" variant="ghost" @click="openEditRecordingModal(row.original)" />
             </UTooltip>

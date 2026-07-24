@@ -4,7 +4,6 @@ import type {PropType} from "vue";
 import type {Sale} from "~/types/api/item/clubDependent/plugin/sale/sale";
 import type {FormError} from "#ui/types";
 import SaleQuery from "~/composables/api/query/clubDependent/plugin/sale/SaleQuery";
-import {formatDateTimeReadable} from "~/utils/date";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {useSaleStore} from "~/stores/useSaleStore";
 import SalePaymentModeQuery from "~/composables/api/query/clubDependent/plugin/sale/SalePaymentModeQuery";
@@ -29,7 +28,6 @@ const saleStore = useSaleStore()
 const isAdmin = selfStore.isAdmin();
 
 const isLoading = ref(false)
-const popoverOpen = ref(false)
 
 const saleQuery = new SaleQuery()
 const sale: Sale = {...props.sale}
@@ -125,13 +123,7 @@ async function updateSale() {
         label="Date"
         name="createdAt"
       >
-        <UPopover v-model:open="popoverOpen">
-          <UButton icon="i-heroicons-calendar-days-20-solid" :label="formatDateTimeReadable(sale.createdAt) || 'Choisir une date'" />
-
-          <template #content>
-            <GenericDatePicker v-model="sale.createdAt" mode="dateTime" @close="popoverOpen = false" />
-          </template>
-        </UPopover>
+        <GenericDatePickerField v-model="sale.createdAt" mode="dateTime" placeholder="Choisir une date" />
       </UFormField>
 
       <UFormField label="Moyen de paiement" name="paymentMode">

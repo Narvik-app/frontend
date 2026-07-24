@@ -6,7 +6,7 @@ import type {Member} from "~/types/api/item/clubDependent/member";
 import type {FormSubmitEvent} from "#ui/types";
 import type {MemberPresence} from "~/types/api/item/clubDependent/plugin/presence/memberPresence";
 import MemberPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/MemberPresenceQuery";
-import {formatDateInput, formatDateReadable} from "~/utils/date";
+import {formatDateInput} from "~/utils/date";
 import {ClubRole, getAvailableClubRole, hasClubSupervisorRole, isClubAdmin} from "~/types/api/item/club";
 
 const props = defineProps({
@@ -33,7 +33,6 @@ const emit = defineEmits([
 ])
 
 const toast = useToast()
-const popoverOpen = ref(false)
 
 const memberPresenceQuery = new MemberPresenceQuery();
 
@@ -165,16 +164,7 @@ async function onSubmit(event: FormSubmitEvent<MemberPresenceFormState>) {
       <div class="text-2xl">Enregistrement pour <b>{{ state.member.fullName }}</b></div>
 
       <UForm :state="state" @submit="onSubmit">
-        <UPopover
-            v-if="props.dateEditable"
-            v-model:open="popoverOpen"
-            class="mt-4">
-          <UButton icon="i-heroicons-calendar-days-20-solid" :label="formatDateReadable(selectedDate?.toString()) || 'Choisir une date'" />
-
-          <template #content>
-            <GenericDatePicker v-model="selectedDate" @close="popoverOpen = false" />
-          </template>
-        </UPopover>
+        <GenericDatePickerField v-if="props.dateEditable" v-model="selectedDate" class="mt-4" placeholder="Choisir une date" />
 
         <div class="mt-4">Activités</div>
         <div class="my-4">
