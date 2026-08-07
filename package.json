@@ -47,8 +47,8 @@
     "vue-qrcode-reader": "^5.7.3"
   },
   "devDependencies": {
-    "@nuxt/eslint": "^1.16.0",
-    "@playwright/test": "^1.62.0",
+    "@nuxt/eslint": "^1.17.0",
+    "@playwright/test": "^1.62.1",
     "eslint": "^10.8.0",
     "typescript": "^6.0.3"
   },
