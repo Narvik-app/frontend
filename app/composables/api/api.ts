@@ -17,14 +17,6 @@ export const MIME_TYPE_CSV = "text/csv"
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const CONTENT_TYPE_FORM_DATA = "multipart/form-data"
 
-function getBasicAuthorization(isBadger: boolean = false): string {
-  let bearer = useRuntimeConfig().public.clientId + ':' + useRuntimeConfig().public.clientSecret
-  if (isBadger || useSelfUserStore().selfJwtToken?.isBadger) {
-    bearer = useRuntimeConfig().public.badgerClientId + ':' + useRuntimeConfig().public.badgerClientSecret
-  }
-  return `Basic ${btoa(bearer)}`
-}
-
 async function useApi<T>(path: string, options: UseApiDataOptions<T> = {}, requireLogin: boolean = true, timeout: number = 30000): Promise<T | undefined> {
   let overloadedOptions: UseApiDataOptions<T> = {
     mode: "cors",
@@ -39,14 +31,14 @@ async function useApi<T>(path: string, options: UseApiDataOptions<T> = {}, requi
   if (requireLogin) {
     const selfStore = useSelfUserStore()
     const jwtToken = await selfStore.enhanceJwtTokenDefined()
-    
+
     // enhanceJwtTokenDefined handles token refresh, expiry checks, and logout on fatal failure.
     // On a transient refresh failure the token ref is returned but the access token is stale
     const token = jwtToken.value
     if (!token?.access?.token || !selfStore.isAccessTokenValid(token)) {
       return undefined
     }
-    
+
     overloadedOptions = mergician({
       headers: {
         Authorization: `Bearer ${token.access!.token}`
@@ -67,15 +59,17 @@ async function useApi<T>(path: string, options: UseApiDataOptions<T> = {}, requi
     overloadedOptions.body = options.body
   }
 
-  if (!overloadedOptions?.headers?.Authorization) {
-    overloadedOptions = mergician({
-      headers: {
-        Authorization: getBasicAuthorization()
-      }
-    }, options);
+  if (overloadedOptions?.headers?.Authorization) {
+    // Already carrying a Bearer token: use the plain endpoint, which sets no client
+    // Authorization header of its own (mixing it with the Bearer token would corrupt
+    // the request - see server/plugins/configure-api-party-auth.ts).
+    return await $localApi<T>(path, overloadedOptions);
   }
 
-  return await $localApi<T>(path, overloadedOptions);
+  // No Bearer token: authenticate this call as the main OAuth client instead. The
+  // Authorization header is injected server-side, never computed in the browser.
+  overloadedOptions = mergician({ headers: {} }, options);
+  return await $localApiClientAuth<T>(path, overloadedOptions);
 }
 
 export async function useLoginUser(email: string, password: string) {
@@ -118,12 +112,16 @@ export async function usePostRawJson(path: string, payload?: object, isBadger: b
   let data: unknown | undefined = undefined;
   let error: NuxtError | undefined = undefined;
 
+  // The Authorization header (main client vs badger client) is injected server-side by
+  // the corresponding endpoint - see server/plugins/configure-api-party-auth.ts.
+  const useBadgerAuth = isBadger || useSelfUserStore().selfJwtToken?.isBadger;
+  const fetcher = useBadgerAuth ? $badgerApi : $localApiClientAuth;
+
   try {
-    data = await $localApi(path, {
+    data = await fetcher(path, {
       method: "POST",
       headers: {
         Accept: MIME_TYPE_JSON,
-        Authorization: getBasicAuthorization(isBadger)
       },
       body: payload
     });
