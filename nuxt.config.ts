@@ -72,23 +72,39 @@ export default defineNuxtConfig({
     }
   },
 
+  // Three endpoints, all proxied server-side (client: false), so that OAuth client
+  // credentials never reach the browser:
+  // - localApi: used once the user holds a Bearer token. No client Authorization header
+  //   here - the browser sends its own Bearer token, and mixing it with a static client
+  //   Basic header would corrupt the request (see server/plugins/configure-api-party-auth.ts).
+  // - localApiClientAuth: used for anonymous calls authenticated as the main OAuth client
+  //   (login, register, reset-password, unauthenticated config fetch).
+  // - badgerApi: used for badger kiosk calls. The badger OAuth client is public (no real
+  //   secret - see narvik-back's install:oauth), so this header carries no secret either.
   apiParty: {
     client: false, // Force server-side proxy even with SSR disabled
     endpoints: {
       localApi: {
         url: process.env.NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL || 'http://php',
-      }
+      },
+      localApiClientAuth: {
+        url: process.env.NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL || 'http://php',
+      },
+      badgerApi: {
+        url: process.env.NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL || 'http://php',
+      },
     }
   },
 
   runtimeConfig: {
+    // Server-only: read by server/plugins/configure-api-party-auth.ts to build the
+    // Authorization headers above. Never exposed to the browser (that's the point).
+    oauthClientId: '', // can be overridden by NUXT_OAUTH_CLIENT_ID environment variable
+    oauthClientSecret: '', // can be overridden by NUXT_OAUTH_CLIENT_SECRET environment variable
+    oauthBadgerClientId: '', // can be overridden by NUXT_OAUTH_BADGER_CLIENT_ID environment variable
+
     public: {
       clientVersion: pkg.version,
-      clientId: '', // can be overridden by NUXT_PUBLIC_CLIENT_ID environment variable
-      clientSecret: '', // can be overridden by NUXT_PUBLIC_CLIENT_SECRET environment variable
-
-      badgerClientId: '', // can be overridden by NUXT_PUBLIC_BADGER_CLIENT_ID environment variable
-      badgerClientSecret: '', // can be overridden by NUXT_PUBLIC_BADGER_CLIENT_SECRET environment variable
 
       clientTurnstile: false,
 
