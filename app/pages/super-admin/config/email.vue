@@ -23,6 +23,7 @@ const globalSettingQuery = new GlobalSettingQuery();
 
 const smtpSetting: Ref<SmtpConfig> = ref({});
 const smtpEnabled: Ref<boolean> = ref(false)
+const smtpPasswordConfigured: Ref<boolean> = ref(false)
 const testEmail = ref('')
 loadSmtpSettings()
 
@@ -49,6 +50,14 @@ async function loadSmtpSettings() {
   for (const [key, value] of Object.entries(GLOBAL_SETTINGS_SMTP_STRING_MAPPING)) {
     const { retrieved } = await globalSettingQuery.get(value)
     if (retrieved) {
+      // The password is never returned by the API, even encrypted: it's
+      // always masked to null. Track whether one is configured instead of
+      // prefilling the field with it.
+      if (key === 'password') {
+        smtpPasswordConfigured.value = !!retrieved.hasValue
+        continue
+      }
+
       let setValue: string|null = null
       if (retrieved.value) {
         setValue = retrieved.value
@@ -148,8 +157,16 @@ async function testSmtp() {
               <UInput v-model="smtpSetting.username" />
             </UFormField>
 
-            <UFormField label="Mot de passe" name="password">
-              <UInput v-model="smtpSetting.password" type="password" />
+            <UFormField
+              label="Mot de passe"
+              name="password"
+              :hint="smtpPasswordConfigured ? 'Laissez vide pour conserver le mot de passe actuel' : undefined"
+            >
+              <UInput
+                v-model="smtpSetting.password"
+                type="password"
+                :placeholder="smtpPasswordConfigured ? '••••••••' : undefined"
+              />
             </UFormField>
 
             <UFormField label="Email expéditeur" name="sender" required>

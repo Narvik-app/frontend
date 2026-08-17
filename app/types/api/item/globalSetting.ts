@@ -10,4 +10,7 @@ export enum GlobalSettingPublicEnum {
 export interface GlobalSetting extends Item {
   name?: string;
   value?: string;
+  // Some settings (e.g. SMTP_PASSWORD) never return their value, even
+  // encrypted; hasValue lets the UI know one is configured anyway.
+  hasValue?: boolean;
 }
