@@ -457,20 +457,10 @@ async function deleteTerminal() {
                 />
               </UFormField>
 
-              <UFormField label="Icône" name="icon">
-                <template #description>
-                  <ContentLink variant="link" to="https://heroicons.com/" target="_blank">Liste des icônes Heroicons</ContentLink>
-                </template>
-
-                <template v-if="selectedTerminal.icon" #hint>
-                  <UIcon :name="'i-heroicons-' + selectedTerminal.icon" />
-                </template>
-
-                <UInput
-                  v-model="selectedTerminal.icon"
-                  @update:model-value="(v: string) => saveDetail(selectedTerminal, {icon: v})"
-                />
-              </UFormField>
+              <GenericIconPickerField
+                :model-value="selectedTerminal.icon"
+                @update:model-value="(v: string) => saveDetail(selectedTerminal, {icon: v})"
+              />
 
               <UFormField
                 label="Mode de paiement"

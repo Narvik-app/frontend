@@ -39,11 +39,6 @@ export function getSelectMenuClubActivity(): SelectMenuItem[] {
     }
   ]
 }
-export function clubHasControlActivity(activity: ClubActivity|undefined): boolean {
-  if (!activity) return false
-  return [ClubActivity.Generic, ClubActivity.SPORT_FFTIR].includes(activity)
-}
-
 export enum ClubRole {
   Badger = 'CLUB_BADGER',
 

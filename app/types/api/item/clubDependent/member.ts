@@ -4,12 +4,12 @@ import type {ClubLinkedItem} from "~/types/api/clubLinkedItem";
 import type {ClubRole} from "~/types/api/item/club";
 import type {File} from "~/types/api/item/file";
 import type {PermissionTemplate} from "~/types/api/item/clubDependent/permissionTemplate";
+import type {MemberControl} from "~/types/api/item/clubDependent/memberControl";
 
 export interface Member extends UuidItem, ClubLinkedItem {
   profileImage?: File;
   profileImageBase64?: string;
-  lastControlActivity?: Date;
-  controlActivityAlertDisabled?: boolean;
+  controls?: MemberControl[];
   currentSeason?: MemberSeason;
   plainPassword?: string;
 

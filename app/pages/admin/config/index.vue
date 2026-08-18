@@ -7,7 +7,7 @@ import type {WriteClubSetting} from "~/types/api/item/clubDependent/clubSetting"
 import ClubSettingQuery from "~/composables/api/query/clubDependent/ClubSettingQuery";
 import type {SelectApiItem} from "~/types/select";
 import type {Season} from "~/types/api/item/season";
-import {clubHasControlActivity, getSelectMenuClubActivity} from "~/types/api/item/club";
+import {getSelectMenuClubActivity} from "~/types/api/item/club";
 import {displayApiError} from "~/utils/resource";
 
 definePageMeta({
@@ -27,14 +27,12 @@ const clubSettingQuery = new ClubSettingQuery();
 const activityQuery = new ActivityQuery();
 
 const configState = reactive({
-  selectedControlActivity: selectedProfile.value?.club.settings.controlActivity?.uuid,
   excludedActivitiesFromOpeningDays: selectedProfile.value?.club.settings.excludedActivitiesFromOpeningDays?.map((a: Activity) => a.uuid),
   selectedMonth: selectedProfile.value?.club.settings.seasonEnd.split('-')[0].toString(),
   selectedDay: selectedProfile.value?.club.settings.seasonEnd.split('-')[1].toString(),
   activity: getSelectMenuClubActivity().find((item) => item.value === selectedProfile.value?.club.settings.activity),
   emailReplyTo: selectedProfile.value?.club.settings.emailReplyTo
 })
-const selectedControlActivity: Ref<Activity | undefined> = ref(undefined);
 
 const activities: Ref<Activity[] | undefined> = ref(undefined);
 activityQuery.getAll().then(value => {
@@ -129,34 +127,6 @@ const daysSelect = computed( () => {
   return items;
 })
 
-async function controlActivityUpdated() {
-  if (!selectedProfile.value?.club.settings) return;
-
-  if (configState.selectedControlActivity) {
-    selectedControlActivity.value = await getActivity(configState.selectedControlActivity)
-  } else {
-    selectedControlActivity.value = undefined
-  }
-
-  const payload: WriteClubSetting = {
-    controlActivity: selectedControlActivity.value? selectedControlActivity.value["@id"] : null
-  }
-
-  const { error } = await clubSettingQuery.patch(selectedProfile.value.club.settings, payload);
-
-  if (error) {
-    displayApiError(error)
-    return;
-  }
-
-  selfStore.refreshSelectedClub().then()
-
-  toast.add({
-    color: "success",
-    title: "Paramètre enregistré"
-  });
-}
-
 async function ignoredActivitiesDaysUpdated() {
   if (!selectedProfile.value?.club.settings) return;
 
@@ -184,11 +154,6 @@ async function ignoredActivitiesDaysUpdated() {
     color: "success",
     title: "Paramètre enregistré"
   });
-}
-
-async function getActivity(id: string) {
-  const response = await activityQuery.get(id);
-  return response.retrieved;
 }
 
 async function uploadLogo(event: Event) {
@@ -363,32 +328,6 @@ async function emailReplyToUpdated() {
               <span v-else>Aucune activité exclue</span>
             </template>
           </USelectMenu>
-        </div>
-      </GenericCard>
-
-      <GenericCard v-if="clubHasControlActivity(selectedProfile?.club.settings.activity)" title="Activité correspondante au contrôle">
-        <div class="flex flex-col gap-2">
-          <div class="text-xs">
-            <p>Certaines activités sportives peuvent avoir un contrôle annuel obligatoire.</p>
-            <p>En créant une activité dédié pour, cela permettra d'alerter le membre lorsque ce contrôle doit de nouveau être effectué.</p>
-          </div>
-
-          <USelect
-            v-model="configState.selectedControlActivity"
-            :items="activitiesSelect"
-            placeholder="Aucun contrôle défini"
-            @change="controlActivityUpdated" />
-
-          <UButton
-v-if="configState.selectedControlActivity"
-                   class="w-fit"
-                   @click="
-                  configState.selectedControlActivity = undefined;
-                  controlActivityUpdated()
-                 "
-          >
-            Désactiver l'activité de contrôle
-          </UButton>
         </div>
       </GenericCard>
     </div>

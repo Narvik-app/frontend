@@ -9,7 +9,6 @@ interface _ClubSetting extends UuidItem, ClubLinkedItem {
   logo?: File | string
   logoBase64?: string
   activity?: ClubActivity
-  controlActivity?: Activity | string | null
   excludedActivitiesFromOpeningDays?: Activity[] | string[]
   seasonEnd?: string
   itacImportDate?: Date
@@ -22,13 +21,11 @@ interface _ClubSetting extends UuidItem, ClubLinkedItem {
 
 export interface ClubSetting extends _ClubSetting {
   logo?: File
-  controlActivity?: Activity
   excludedActivitiesFromOpeningDays?: Activity[],
   currentSeason?: Season
 }
 
 
 export interface WriteClubSetting extends _ClubSetting {
-  controlActivity?: Activity|string|null
   excludedActivitiesFromOpeningDays?: Activity[]|string[]
 }
