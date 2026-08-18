@@ -10,6 +10,11 @@ import {formatDateReadable} from "~/utils/date";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import MemberPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/MemberPresenceQuery";
 import {convertUuidToUrlUuid} from "~/utils/resource";
+import {memberControlColor} from "~/utils/memberControl";
+
+function visibleControls(member: Member) {
+  return (member.controls ?? []).filter(c => c.type?.displayOnPresenceCard)
+}
 
 const selfStore = useSelfUserStore()
 const isSupervisor = selfStore.hasSupervisorRole()
@@ -238,12 +243,18 @@ async function deletePresence() {
                 color="error">
                 Saison non renouvelée
               </UButton>
+
+              <div
+                v-for="control in visibleControls(member)"
+                :key="control.uuid"
+                class="basis-full text-center">
+                <UButton :icon="control.type?.icon ? 'i-heroicons-' + control.type.icon : undefined" :color="memberControlColor(control)">
+                  {{ control.type?.name }} : {{ control.date ? formatDateReadable(control.date) : 'Aucun enregistrement' }}
+                </UButton>
+              </div>
             </div>
             <div class="flex items-center justify-center text-xl">
               <MemberLicence :member="member" size="lg" :copyable="selfStore.hasSupervisorRole()" :icon="true" />
-            </div>
-            <div v-if="member.lastControlActivity" class="text-center text-xl">
-              Dernier contrôle : {{ formatDateReadable(member.lastControlActivity.toString()) }}
             </div>
             <div class="flex gap-4 justify-center flex-wrap">
               <UButton
