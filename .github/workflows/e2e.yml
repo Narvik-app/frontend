@@ -127,6 +127,7 @@ jobs:
                 CORS_ALLOW_ORIGIN: "^https?://localhost(:[0-9]+)?$"
                 TRUSTED_HOSTS: ^localhost|php$$
                 OAUTH_PASSPHRASE: changeme
+                ENCRYPTION_KEY: Cf6W9EQOk9ft8VQ04By2VCW55dQVJ4VWEfwTPqHIcL8=
                 MERCURE_JWT_SECRET: '!ChangeThisMercureHubJWTSecretKey!'
                 MERCURE_PUBLISHER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
                 MERCURE_SUBSCRIBER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
