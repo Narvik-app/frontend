@@ -284,7 +284,7 @@ getTypes()
               <UFormField
                 label="Sans expiration"
                 name="lifetime"
-                description="Contrôle simple oui/non (ex: QCM), valable à vie une fois renseigné — sans délai d'avertissement ni d'alerte."
+                description="Contrôle simple oui/non (ex: QCM), valable à vie une fois renseigné."
               >
                 <USwitch :model-value="isLifetimeMode" @update:model-value="toggleLifetimeMode" />
               </UFormField>
