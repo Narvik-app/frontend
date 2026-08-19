@@ -130,41 +130,45 @@ async function loadPermissions() {
   }
 }
 
-async function addPermission(permission: Permission): Promise<boolean> {
+async function addPermission(permission: Permission): Promise<NuxtError | undefined> {
   if (props.mode === 'member' && memberPermissionQuery.value) {
     const { created, error } = await memberPermissionQuery.value.addPermission(permission);
     if (!error && created) {
       permissionItems.value.push(created);
-      return true;
+      return undefined;
     }
+    return error;
   } else if (props.mode === 'template' && props.template) {
     const { created, error } = await templateQuery.value.addPermission(props.template, permission);
     if (!error && created) {
       permissionItems.value.push(created);
-      return true;
+      return undefined;
     }
+    return error;
   }
-  return false;
+  return undefined;
 }
 
-async function removePermission(permission: Permission): Promise<boolean> {
+async function removePermission(permission: Permission): Promise<NuxtError | undefined> {
   const existingItem = permissionItems.value.find(p => p.permission === permission);
-  if (!existingItem) return false;
+  if (!existingItem) return undefined;
 
   if (props.mode === 'member' && memberPermissionQuery.value) {
     const { error } = await memberPermissionQuery.value.removePermission(existingItem);
     if (!error) {
       permissionItems.value = permissionItems.value.filter(p => p.uuid !== existingItem.uuid);
-      return true;
+      return undefined;
     }
+    return error;
   } else if (props.mode === 'template' && props.template) {
     const { error } = await templateQuery.value.removePermission(props.template, existingItem);
     if (!error) {
       permissionItems.value = permissionItems.value.filter(p => p.uuid !== existingItem.uuid);
-      return true;
+      return undefined;
     }
+    return error;
   }
-  return false;
+  return undefined;
 }
 
 async function togglePermission(permission: Permission, linkedPermission?: Permission, isEditToggle: boolean = false) {
@@ -174,22 +178,28 @@ async function togglePermission(permission: Permission, linkedPermission?: Permi
 
   try {
     const hasPerm = hasPermission(permission);
+    let toggleError: NuxtError | undefined;
 
     if (hasPerm) {
       // Removing permission
       if (!isEditToggle && linkedPermission && hasPermission(linkedPermission)) {
         // When removing access, also remove edit
-        await removePermission(linkedPermission);
+        toggleError = await removePermission(linkedPermission);
       }
-      await removePermission(permission);
+      toggleError = toggleError ?? await removePermission(permission);
     } else {
       // Adding permission
       if (isEditToggle && linkedPermission && !hasPermission(linkedPermission)) {
         // When adding edit, also add access if not present
-        await addPermission(linkedPermission);
+        toggleError = await addPermission(linkedPermission);
       }
-      await addPermission(permission);
+      toggleError = toggleError ?? await addPermission(permission);
     }
+
+    if (toggleError) {
+      displayApiError(toggleError);
+    }
+
     // Reload permissions to sync with any backend auto-grants
     await loadPermissions();
     emit('updated');
