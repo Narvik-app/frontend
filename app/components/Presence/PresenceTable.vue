@@ -212,7 +212,7 @@ function getPresenceMember(item: ExternalPresence|MemberPresence) {
           </div>
 
           <div
-            v-for="control in (row.original.member.controls ?? []).filter(memberControlIsAlerting)"
+            v-for="control in (row.original.member.controls ?? []).filter(memberControlIsAlerting).sort((a, b) => (a.type?.weight ?? Infinity) - (b.type?.weight ?? Infinity))"
             :key="control.uuid"
             class="basis-full">
             <UButton

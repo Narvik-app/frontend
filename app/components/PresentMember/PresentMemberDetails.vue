@@ -13,7 +13,9 @@ import {convertUuidToUrlUuid} from "~/utils/resource";
 import {memberControlColor} from "~/utils/memberControl";
 
 function visibleControls(member: Member) {
-  return (member.controls ?? []).filter(c => c.type?.displayOnPresenceCard)
+  return (member.controls ?? [])
+    .filter(c => c.type?.displayOnPresenceCard)
+    .sort((a, b) => (a.type?.weight ?? Infinity) - (b.type?.weight ?? Infinity))
 }
 
 const selfStore = useSelfUserStore()
@@ -216,6 +218,11 @@ async function deletePresence() {
                 {{ member.fullName }}
               </template>
             </div>
+
+            <div class="flex items-center justify-center text-xl">
+              <MemberLicence :member="member" size="lg" :copyable="selfStore.hasSupervisorRole()" :icon="true" />
+            </div>
+
             <div class="flex justify-center flex-wrap gap-2">
               <UBadge
                 v-if="member.currentSeason && member.currentSeason.ageCategory"
@@ -248,14 +255,12 @@ async function deletePresence() {
                 v-for="control in visibleControls(member)"
                 :key="control.uuid"
                 class="basis-full text-center">
-                <UButton :icon="control.type?.icon ? 'i-heroicons-' + control.type.icon : undefined" :color="memberControlColor(control)">
+                <UButton :icon="control.type?.icon ? 'i-heroicons-' + control.type.icon : undefined" :color="memberControlColor(control)" variant="subtle">
                   {{ control.type?.name }} : {{ control.date ? formatDateReadable(control.date) : 'Aucun enregistrement' }}
                 </UButton>
               </div>
             </div>
-            <div class="flex items-center justify-center text-xl">
-              <MemberLicence :member="member" size="lg" :copyable="selfStore.hasSupervisorRole()" :icon="true" />
-            </div>
+
             <div class="flex gap-4 justify-center flex-wrap">
               <UButton
                 v-for="activity in memberPresence?.activities?.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))"

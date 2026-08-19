@@ -713,6 +713,23 @@ async function deleteMember() {
               <template v-if="displayedControlTypes.length || memberRef.medicalCertificateExpiration">
                 <USeparator label="Autre" class="xl:col-span-2" />
 
+                <div v-if="memberRef.medicalCertificateExpiration" class="flex items-center justify-between">
+                  <span>Certificat médical :
+                    <UBadge v-if="memberRef.medicalCertificateStatus !== 'valid'"
+                            :color="memberRef.medicalCertificateStatus === 'expired' ? 'error' : 'warning'">
+                      {{ formatDateReadable(memberRef.medicalCertificateExpiration.toString()) }}
+                    </UBadge>
+                    <UBadge v-else
+                            variant="soft"
+                            color="neutral"
+                    >
+                      {{ formatDateReadable(memberRef.medicalCertificateExpiration.toString()) }}
+                    </UBadge>
+                  </span>
+                </div>
+
+                <div class="flex-1"></div>
+
                 <div
                   v-for="type in displayedControlTypes"
                   :key="type.uuid"
@@ -754,21 +771,6 @@ async function deleteMember() {
                       {{ controlForType(type.uuid)?.alertDisabled ? 'Alerte désactivée' : 'Alerte active' }}
                     </span>
                   </div>
-                </div>
-
-                <div v-if="memberRef.medicalCertificateExpiration" class="flex items-center justify-between">
-                  <span>Certificat médical :
-                    <UBadge v-if="memberRef.medicalCertificateStatus !== 'valid'"
-                      :color="memberRef.medicalCertificateStatus === 'expired' ? 'error' : 'warning'">
-                      {{ formatDateReadable(memberRef.medicalCertificateExpiration.toString()) }}
-                    </UBadge>
-                    <UBadge v-else
-                      variant="soft"
-                      color="neutral"
-                    >
-                      {{ formatDateReadable(memberRef.medicalCertificateExpiration.toString()) }}
-                    </UBadge>
-                  </span>
                 </div>
 
               </template>
