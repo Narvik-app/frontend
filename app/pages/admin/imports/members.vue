@@ -7,6 +7,8 @@ import dayjs from "dayjs";
 import MemberPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/MemberPresenceQuery";
 import {ClubActivity} from "~/types/api/item/club";
 import {Permission} from "~/types/api/permissions";
+import ClubJobQuery from "~/composables/api/query/clubDependent/ClubJobQuery";
+import type {ClubJob, ClubJobKey} from "~/types/api/item/clubDependent/clubJob";
 
 definePageMeta({
   layout: "admin"
@@ -26,6 +28,18 @@ const fileUploading = ref(false)
 
 const memberQuery = new MemberQuery()
 const memberPresenceQuery = new MemberPresenceQuery()
+const clubJobQuery = new ClubJobQuery()
+
+const jobs: Ref<ClubJob[]> = ref([])
+async function refreshJobs() {
+  const {items} = await clubJobQuery.getAll()
+  jobs.value = items
+}
+refreshJobs()
+
+function jobFor(key: ClubJobKey): ClubJob | undefined {
+  return jobs.value.find(j => j.key === key)
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
 async function importFromItac(event: any) {
@@ -44,7 +58,7 @@ async function importFromItac(event: any) {
   }
 
   displayFileSuccessToast()
-  selfStore.refreshSelectedClubSettings()
+  refreshJobs()
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: Type the event parameter properly
@@ -63,7 +77,7 @@ async function importFromItacSecondary(event: any) {
     return displayFileErrorToast(error.message)
   }
 
-  selfStore.refreshSelectedClubSettings()
+  refreshJobs()
   displayFileSuccessToast();
 }
 
@@ -79,7 +93,7 @@ async function migrateExternal() {
     return
   }
 
-  selfStore.refreshSelectedClubSettings()
+  refreshJobs()
 
   toast.add({
     title: "Présences migrées",
@@ -121,15 +135,15 @@ async function importFromEden(event: any) {
           <div class="col-span-5 space-y-4">
             <p class="font-bold">Club principal</p>
             <UAlert
-v-if="selfStore.selectedProfile?.club.settings.itacImportDate"
-                    variant="soft"
-                    :title="'Dernier import effectué le ' + formatDateReadable(selfStore.selectedProfile.club.settings.itacImportDate.toString())"
-                    :color="dayjs(selfStore.selectedProfile.club.settings.itacImportDate).isBefore(dayjs().subtract(1, 'months')) ? 'error' : 'success' "
+              v-if="jobFor('itac_import')?.updatedAt"
+              variant="soft"
+              :title="'Dernier import effectué le ' + formatDateReadable(jobFor('itac_import')!.updatedAt)"
+              :color="dayjs(jobFor('itac_import')!.updatedAt).isBefore(dayjs().subtract(1, 'months')) ? 'error' : 'success' "
             />
             <UAlert
-v-else
-                    title="Aucun import effectué"
-                    color="error"
+              v-else
+              title="Aucun import effectué"
+              color="error"
             />
 
             <UInput
@@ -147,15 +161,15 @@ v-else
           <div class="col-span-5 space-y-4">
             <p class="font-bold">Club secondaire</p>
             <UAlert
-                v-if="selfStore.selectedProfile?.club.settings.itacSecondaryImportDate"
-                variant="soft"
-                :title="'Dernier import effectué le ' + formatDateReadable(selfStore.selectedProfile.club.settings.itacSecondaryImportDate.toString())"
-                :color="dayjs(selfStore.selectedProfile.club.settings.itacSecondaryImportDate).isBefore(dayjs().subtract(1, 'months')) ? 'error' : 'success' "
+              v-if="jobFor('itac_secondary_import')?.updatedAt"
+              variant="soft"
+              :title="'Dernier import effectué le ' + formatDateReadable(jobFor('itac_secondary_import')!.updatedAt)"
+              :color="dayjs(jobFor('itac_secondary_import')!.updatedAt).isBefore(dayjs().subtract(1, 'months')) ? 'error' : 'success' "
             />
             <UAlert
-                v-else
-                title="Aucun import effectué"
-                color="error"
+              v-else
+              title="Aucun import effectué"
+              color="error"
             />
 
             <UInput
@@ -172,7 +186,7 @@ v-else
         <div class="flex gap-2">
           <UButton target="_blank" to="https://docs.narvik.app/frontend/docs/import/fftir-itac.html#import-des-membres">Documentation</UButton>
           <div class="flex-1"/>
-          <UButton variant="ghost" color="success" :disabled="!canEdit || ((selfStore.selectedProfile?.club.settings.itacSecondaryImportRemaining && selfStore.selectedProfile.club.settings.itacSecondaryImportRemaining) ?? 0) > 0" @click="migrateExternal()">Migration présence externe vers présence membres</UButton>
+          <UButton variant="ghost" color="success" :disabled="!canEdit || jobFor('itac_secondary_import')?.status === 'in_progress'" @click="migrateExternal()">Migration présence externe vers présence membres</UButton>
         </div>
 
       </UCard>

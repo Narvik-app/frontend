@@ -1,26 +1,29 @@
 <script lang="ts" setup>
-import {useSelfUserStore} from "~/stores/useSelfUser";
+import ClubJobQuery from "~/composables/api/query/clubDependent/ClubJobQuery";
+import type {ClubJob, ClubJobKey} from "~/types/api/item/clubDependent/clubJob";
 
-const selfStore =  useSelfUserStore()
-const { selectedProfile } = useSelfUserStore()
+const clubJobQuery = new ClubJobQuery();
+const jobs: Ref<ClubJob[]> = ref([])
 
-const itacImportRemaining: Ref<number | undefined> = ref(undefined)
-const itacSecondaryImportRemaining: Ref<number | undefined> = ref(undefined)
-const cerbereImportRemaining: Ref<number | undefined> = ref(undefined)
+const labels: Record<ClubJobKey, string> = {
+  itac_import: 'Membres',
+  itac_secondary_import: 'Membres club secondaire',
+  cerbere_import: 'Cerbère',
+  member_control_sync: 'Contrôles des membres',
+}
 
+const inProgressJobs = computed(() => jobs.value.filter(j => j.status === 'in_progress' && (j.remaining ?? 0) > 0))
 
-function refreshMetrics() {
-  selfStore.refreshSelectedClubSettings()
-  itacImportRemaining.value = selectedProfile?.club.settings.itacImportRemaining
-  itacSecondaryImportRemaining.value = selectedProfile?.club.settings.itacSecondaryImportRemaining
-  cerbereImportRemaining.value = selectedProfile?.club.settings.cerbereImportRemaining
+async function refreshJobs() {
+  const {items} = await clubJobQuery.getAll()
+  jobs.value = items
 }
 
 let refreshInterval: NodeJS.Timeout
-refreshMetrics()
+refreshJobs()
 onMounted(() => {
   refreshInterval = setInterval(() => {
-    refreshMetrics()
+    refreshJobs()
   }, 5000)
 })
 
@@ -32,21 +35,19 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div v-if="(itacImportRemaining??0) > 0 || (itacSecondaryImportRemaining??0) > 0 || (cerbereImportRemaining??0) > 0">
-
+  <div v-if="inProgressJobs.length > 0">
     <UAlert
-            class="mb-4"
-            variant="subtle"
-            icon="i-heroicons-exclamation-triangle"
-            color="warning"
-            title="Des imports sont en cours"
+      class="mb-4"
+      variant="subtle"
+      icon="i-heroicons-exclamation-triangle"
+      color="warning"
+      title="Des imports sont en cours"
     >
       <template #description>
-        <p v-if="itacImportRemaining && itacImportRemaining >0">Membres : {{ itacImportRemaining }} lots restants</p>
-        <p v-if="itacSecondaryImportRemaining && itacSecondaryImportRemaining >0">Membres club secondaire : {{ itacSecondaryImportRemaining }} lots restants</p>
-        <p v-if="cerbereImportRemaining && cerbereImportRemaining >0">Cerbère : {{ cerbereImportRemaining }} lots restants</p>
+        <p v-for="job in inProgressJobs" :key="job.uuid">
+          {{ job.key ? labels[job.key] : job.key }} : {{ job.remaining }} lots restants
+        </p>
       </template>
     </UAlert>
-
   </div>
 </template>
