@@ -14,6 +14,9 @@ import type {ColumnDef} from '@tanstack/vue-table'
 import type {ColumnSort} from "@tanstack/table-core";
 import {getTableSortVal} from "~/utils/table";
 import {UCheckbox} from '#components';
+import MemberControlTypeQuery from "~/composables/api/query/clubDependent/MemberControlTypeQuery";
+import type {MemberControlType} from "~/types/api/item/clubDependent/memberControlType";
+import {memberControlColor} from "~/utils/memberControl";
 
 definePageMeta({
   layout: "admin"
@@ -34,7 +37,12 @@ interface MemberPresenceStat {
   licence: string;
   member?: Member;
   medicalCertificateExpiration?: string | null;
-  lastControlActivity?: string | null;
+  // one `control_<uuid>` key per club MemberControlType, dynamically indexed below
+  [controlAlias: `control_${string}`]: string | null | undefined;
+}
+
+function controlAlias(type: MemberControlType): string {
+  return 'control_' + (type.uuid ?? '').replace(/-/g, '_');
 }
 
 // Stores
@@ -61,8 +69,10 @@ const sort = ref([{ id: 'presenceCount', desc: true }] as ColumnSort[]);
 const popoverOpen = ref(false);
 const selectedMembers = ref<MemberPresenceStat[]>([]);
 
-const hasControlActivity = computed(() => {
-  return !!selfStore.selectedProfile?.club?.settings?.controlActivity
+const memberControlTypeQuery = new MemberControlTypeQuery();
+const controlTypes = ref<MemberControlType[]>([]);
+memberControlTypeQuery.getAll(new URLSearchParams({'order[weight]': 'ASC'})).then(({items}) => {
+  controlTypes.value = items
 })
 
 const columns = computed<ColumnDef<MemberPresenceStat>[]>(() => {
@@ -128,12 +138,12 @@ const columns = computed<ColumnDef<MemberPresenceStat>[]>(() => {
     },
   ];
 
-  if (hasControlActivity.value) {
+  controlTypes.value.forEach(type => {
     cols.push({
-      accessorKey: 'lastControlActivity',
-      header: 'Dernier contrôle',
+      accessorKey: controlAlias(type),
+      header: type.name,
     });
-  }
+  })
 
   cols.push({
     accessorKey: 'actions',
@@ -160,15 +170,11 @@ function getMedicalCertificateColor(expiration: string | null | undefined): 'err
   return 'neutral';
 }
 
-function getControlActivityColor(date: string | null | undefined): 'error' | 'warning' | 'neutral' {
+function getControlColor(date: string | null | undefined, type: MemberControlType): 'error' | 'warning' | 'neutral' {
   if (!date) return 'neutral';
-  const d = new Date(date);
-  const oneYearAgo = new Date();
-  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-  const nineMonthsAgo = new Date();
-  nineMonthsAgo.setMonth(nineMonthsAgo.getMonth() - 9);
-  if (d <= oneYearAgo) return 'error';
-  if (d <= nineMonthsAgo) return 'warning';
+  const daysSince = Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24));
+  if (type.alertDays != null && daysSince >= type.alertDays) return 'error';
+  if (type.warningDays != null && daysSince >= type.warningDays) return 'warning';
   return 'neutral';
 }
 
@@ -395,7 +401,7 @@ onMounted(() => {
              <MemberLicence :member="row.original.member" />
            </template>
 
-           <template v-if="hasControlActivity" #lastControlActivity-header="{ column }">
+           <template v-for="type in controlTypes" :key="type.uuid" #[`${controlAlias(type)}-header`]="{ column }">
              <GenericTableSortButton :column="column" :can-be-unsorted="true" />
            </template>
 
@@ -419,20 +425,27 @@ onMounted(() => {
              <i v-else>Non défini</i>
            </template>
 
-           <template v-if="hasControlActivity" #lastControlActivity-cell="{ row }">
-             <template v-if="!row.original.member?.controlActivityAlertDisabled">
+           <template v-for="type in controlTypes" :key="type.uuid" #[`${controlAlias(type)}-cell`]="{ row }">
+             <template v-if="row.original.member?.controls?.find(c => c.type?.uuid === type.uuid)">
                <UBadge
-                 v-if="row.original.lastControlActivity"
-                 :color="getControlActivityColor(row.original.lastControlActivity)"
+                 v-if="row.original[controlAlias(type)]"
+                 :color="memberControlColor(row.original.member.controls.find(c => c.type?.uuid === type.uuid)!)"
                  variant="soft"
                >
-                 {{ formatDateReadable(row.original.lastControlActivity) }}
+                 {{ formatDateReadable(row.original[controlAlias(type)] ?? undefined) }}
                </UBadge>
                <i v-else>Aucun enregistrement</i>
              </template>
-             <span v-else class="text-sm text-muted">
-               {{ row.original.lastControlActivity ? formatDateReadable(row.original.lastControlActivity) : '—' }}
-             </span>
+             <template v-else>
+               <UBadge
+                 v-if="row.original[controlAlias(type)]"
+                 :color="getControlColor(row.original[controlAlias(type)], type)"
+                 variant="soft"
+               >
+                 {{ formatDateReadable(row.original[controlAlias(type)] ?? undefined) }}
+               </UBadge>
+               <i v-else>Aucun enregistrement</i>
+             </template>
            </template>
 
            <template #actions-cell="{ row }">

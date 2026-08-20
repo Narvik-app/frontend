@@ -6,7 +6,7 @@ import type {ExposedFile} from "~/types/api/item/exposedFile";
 import FileQuery from "~/composables/api/query/FileQuery";
 import type {MemberPresence} from "~/types/api/item/clubDependent/plugin/presence/memberPresence";
 import MemberPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/MemberPresenceQuery";
-import {formatDate, formatDateReadable} from "~/utils/date"
+import {formatDate, formatDateInput, formatDateReadable} from "~/utils/date"
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import RegisterMemberPresence from "~/components/PresentMember/RegisterMemberPresence.vue";
 import ActivityQuery from "~/composables/api/query/clubDependent/plugin/presence/ActivityQuery";
@@ -24,6 +24,11 @@ import {createBrowserCsvDownload} from "~/utils/browser";
 import type {ColumnSort} from "@tanstack/table-core";
 import {getTableSortVal} from "~/utils/table";
 import {Permission} from "~/types/api/permissions";
+import type {MemberControl} from "~/types/api/item/clubDependent/memberControl";
+import {memberControlTypeIsAutomatic, memberControlTypeIsLifetime} from "~/types/api/item/clubDependent/memberControlType";
+import MemberControlQuery from "~/composables/api/query/clubDependent/MemberControlQuery";
+import MemberControlTypeQuery from "~/composables/api/query/clubDependent/MemberControlTypeQuery";
+import {memberControlColor} from "~/utils/memberControl";
 
 
 const props = defineProps({
@@ -349,18 +354,62 @@ function presenceUpdated(_presence?: MemberPresence) {
   getMemberPresences()
 }
 
-const hasControlActivity = computed(() => !!selfStore.selectedProfile?.club?.settings?.controlActivity)
+const memberControlQuery = new MemberControlQuery();
+const memberControlTypeQuery = new MemberControlTypeQuery();
 
-async function toggleControlActivityAlert() {
+const controlTypes: Ref<import('~/types/api/item/clubDependent/memberControlType').MemberControlType[]> = ref([])
+memberControlTypeQuery.getAll(new URLSearchParams({'order[weight]': 'ASC'})).then(({items}) => { controlTypes.value = items })
+
+const displayedControlTypes = computed(() => controlTypes.value.filter(t => t.displayOnPresenceCard || isSupervisor))
+
+function controlForType(typeUuid?: string): MemberControl | undefined {
+  return memberRef.value?.controls?.find(c => c.type?.uuid === typeUuid)
+}
+
+async function toggleControlAlert(typeUuid: string, value: boolean) {
   if (!memberRef.value || !isSupervisor) return;
-  const newValue = !memberRef.value.controlActivityAlertDisabled;
-  const { updated, error } = await memberQuery.patch(memberRef.value, { controlActivityAlertDisabled: newValue });
+  await upsertControl(typeUuid, {alertDisabled: !value})
+}
+
+async function updateControlDate(typeUuid: string, date: Date | string | null) {
+  if (!memberRef.value || !isSupervisor) return;
+  const formatted = date ? formatDateInput(date instanceof Date ? date.toISOString() : date) : null
+  await upsertControl(typeUuid, {date: formatted})
+}
+
+async function togglePassed(typeUuid: string, passed: boolean) {
+  if (!memberRef.value || !isSupervisor) return;
+  await upsertControl(typeUuid, {date: passed ? formatDateInput(new Date().toISOString()) : null})
+}
+
+async function upsertControl(typeUuid: string, payload: {date?: string | null, alertDisabled?: boolean}) {
+  if (!memberRef.value) return;
+
+  const existing = controlForType(typeUuid)
+  // Nested objects embedded under member.controls should carry their own `@id`, but fall back
+  // to reconstructing it from the uuid so a PATCH never silently targets the API root (405).
+  const existingIri = existing?.['@id'] ?? (existing?.uuid ? `${memberControlQuery.getRootUrl()}/${existing.uuid}` : undefined)
+  const {error, updated, created} = existingIri
+    ? await memberControlQuery.patch({...existing, '@id': existingIri}, payload)
+    : await memberControlQuery.post({
+      member: memberRef.value['@id'],
+      type: controlTypes.value.find(t => t.uuid === typeUuid)?.['@id'],
+      ...payload,
+    })
+
   if (error) {
     toast.add({ color: 'error', title: 'Une erreur est survenue', description: error.message });
     return;
   }
-  if (updated) memberRef.value = updated;
-  toast.add({ color: 'success', title: newValue ? 'Alerte contrôle désactivée' : 'Alerte contrôle activée' });
+
+  const result = updated ?? created
+  if (result && memberRef.value) {
+    const controls = (memberRef.value.controls ?? []).filter(c => c.type?.uuid !== typeUuid)
+    controls.push(result)
+    memberRef.value = {...memberRef.value, controls}
+  }
+
+  toast.add({ color: 'success', title: 'Contrôle mis à jour' });
 }
 
 async function downloadCsv() {
@@ -661,40 +710,68 @@ async function deleteMember() {
                 <p>{{ memberRef.country }}</p>
               </div>
 
-              <template v-if="hasControlActivity || memberRef.medicalCertificateExpiration">
+              <template v-if="displayedControlTypes.length || memberRef.medicalCertificateExpiration">
                 <USeparator label="Autre" class="xl:col-span-2" />
-
-                <div v-if="hasControlActivity" class="flex items-center gap-4">
-                  <div class="flex flex-col gap-1">
-                    <div>
-                      Dernier contrôle :
-                      <span v-if="memberRef.lastControlActivity">{{ formatDateReadable(memberRef.lastControlActivity.toString()) }}</span>
-                      <i v-else class="text-muted">Aucun enregistrement</i>
-                    </div>
-                      <USwitch
-                        checked-icon="i-heroicons-bell"
-                        :description="memberRef.controlActivityAlertDisabled ? 'Alerte désactivée' : 'Alerte active'"
-                        :model-value="!memberRef.controlActivityAlertDisabled"
-                        :disabled="!isSupervisor"
-                        @update:model-value="toggleControlActivityAlert"
-                      />
-                  </div>
-
-                </div>
 
                 <div v-if="memberRef.medicalCertificateExpiration" class="flex items-center justify-between">
                   <span>Certificat médical :
                     <UBadge v-if="memberRef.medicalCertificateStatus !== 'valid'"
-                      :color="memberRef.medicalCertificateStatus === 'expired' ? 'error' : 'warning'">
+                            variant="subtle"
+                            :color="memberRef.medicalCertificateStatus === 'expired' ? 'error' : 'warning'">
                       {{ formatDateReadable(memberRef.medicalCertificateExpiration.toString()) }}
                     </UBadge>
                     <UBadge v-else
-                      variant="soft"
-                      color="neutral"
+                            variant="subtle"
+                            color="neutral"
                     >
                       {{ formatDateReadable(memberRef.medicalCertificateExpiration.toString()) }}
                     </UBadge>
                   </span>
+                </div>
+
+                <div class="flex-1"></div>
+
+                <div
+                  v-for="type in displayedControlTypes"
+                  :key="type.uuid"
+                  class="flex flex-col gap-1"
+                >
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                      <UIcon v-if="type.icon" :name="'i-heroicons-' + type.icon" class="text-lg shrink-0" />
+                      <span>{{ type.name }} :</span>
+
+                      <USwitch
+                        v-if="isSupervisor && !memberControlTypeIsAutomatic(type) && memberControlTypeIsLifetime(type)"
+                        size="sm"
+                        :model-value="!!controlForType(type.uuid)?.date"
+                        @update:model-value="(value: boolean) => togglePassed(type.uuid!, value)"
+                      />
+                      <GenericDatePickerField
+                        v-else
+                        :model-value="controlForType(type.uuid)?.date"
+                        :color="memberControlColor(controlForType(type.uuid) ?? {})"
+                        variant="subtle"
+                        size="xs"
+                        :disabled="!isSupervisor || memberControlTypeIsAutomatic(type)"
+                        :can-be-clear="isSupervisor && !memberControlTypeIsAutomatic(type)"
+                        placeholder="Aucun enregistrement"
+                        @update:model-value="(value) => updateControlDate(type.uuid!, value)"
+                      />
+                    </div>
+                  </div>
+
+                  <div v-if="isSupervisor" class="flex items-center gap-2">
+                    <USwitch
+                      checked-icon="i-heroicons-bell"
+                      size="sm"
+                      :model-value="!controlForType(type.uuid)?.alertDisabled"
+                      @update:model-value="(value: boolean) => toggleControlAlert(type.uuid!, value)"
+                    />
+                    <span class="text-xs text-muted">
+                      {{ controlForType(type.uuid)?.alertDisabled ? 'Alerte désactivée' : 'Alerte active' }}
+                    </span>
+                  </div>
                 </div>
 
               </template>

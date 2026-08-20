@@ -6,6 +6,7 @@ import {formatDateReadable} from "~/utils/date";
 import type {TablePaginateInterface} from "~/types/table";
 import type {TableRow} from "#ui/types";
 import type {ColumnSort} from "@tanstack/table-core";
+import {memberControlColor, memberControlIsAlerting} from "~/utils/memberControl";
 
 const props = defineProps({
   presences: {
@@ -211,14 +212,14 @@ function getPresenceMember(item: ExternalPresence|MemberPresence) {
           </div>
 
           <div
-              v-if="!row.original.member.controlActivityAlertDisabled
-                    && row.original.member.lastControlActivity
-                    && new Date((new Date()).setFullYear((new Date().getFullYear() - 1))) > new Date(row.original.member.lastControlActivity)"
-              class="basis-full">
+            v-for="control in (row.original.member.controls ?? []).filter(memberControlIsAlerting).sort((a, b) => (a.type?.weight ?? Infinity) - (b.type?.weight ?? Infinity))"
+            :key="control.uuid"
+            class="basis-full">
             <UButton
-                color="error"
+              :icon="control.type?.icon ? 'i-heroicons-' + control.type.icon : undefined"
+              :color="memberControlColor(control)"
             >
-              Dernier contrôle : {{ formatDateReadable(row.original.member.lastControlActivity) }}
+              {{ control.type?.name }} : {{ control.date ? formatDateReadable(control.date) : 'Aucun enregistrement' }}
             </UButton>
           </div>
         </template>

@@ -10,6 +10,13 @@ import {formatDateReadable} from "~/utils/date";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import MemberPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/MemberPresenceQuery";
 import {convertUuidToUrlUuid} from "~/utils/resource";
+import {memberControlColor} from "~/utils/memberControl";
+
+function visibleControls(member: Member) {
+  return (member.controls ?? [])
+    .filter(c => c.type?.displayOnPresenceCard)
+    .sort((a, b) => (a.type?.weight ?? Infinity) - (b.type?.weight ?? Infinity))
+}
 
 const selfStore = useSelfUserStore()
 const isSupervisor = selfStore.hasSupervisorRole()
@@ -211,6 +218,11 @@ async function deletePresence() {
                 {{ member.fullName }}
               </template>
             </div>
+
+            <div class="flex items-center justify-center text-xl">
+              <MemberLicence :member="member" size="lg" :copyable="selfStore.hasSupervisorRole()" :icon="true" />
+            </div>
+
             <div class="flex justify-center flex-wrap gap-2">
               <UBadge
                 v-if="member.currentSeason && member.currentSeason.ageCategory"
@@ -238,13 +250,17 @@ async function deletePresence() {
                 color="error">
                 Saison non renouvelée
               </UButton>
+
+              <div
+                v-for="control in visibleControls(member)"
+                :key="control.uuid"
+                class="basis-full text-center">
+                <UButton :icon="control.type?.icon ? 'i-heroicons-' + control.type.icon : undefined" :color="memberControlColor(control)" variant="subtle">
+                  {{ control.type?.name }} : {{ control.date ? formatDateReadable(control.date) : 'Aucun enregistrement' }}
+                </UButton>
+              </div>
             </div>
-            <div class="flex items-center justify-center text-xl">
-              <MemberLicence :member="member" size="lg" :copyable="selfStore.hasSupervisorRole()" :icon="true" />
-            </div>
-            <div v-if="member.lastControlActivity" class="text-center text-xl">
-              Dernier contrôle : {{ formatDateReadable(member.lastControlActivity.toString()) }}
-            </div>
+
             <div class="flex gap-4 justify-center flex-wrap">
               <UButton
                 v-for="activity in memberPresence?.activities?.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))"

@@ -35,23 +35,32 @@ useHead({
     })
   }
 
-  const configsSection = [
-    {
+  const configsSection = []
+  if (isAdmin) {
+    configsSection.push({
       label: 'Activités',
       icon: 'i-heroicons-rocket-launch',
       to: '/admin/config/activities'
-    },
-    {
+    })
+    configsSection.push({
       label: 'Permissions',
       icon: 'i-heroicons-key',
       to: '/admin/config/permissions'
-    },
-  ]
-  if (selfStore.selectedProfile?.club.presencesEnabled) {
+    })
+    if (selfStore.selectedProfile?.club.presencesEnabled) {
+      configsSection.push({
+        label: 'Présences',
+        icon: 'i-heroicons-calendar-days',
+        to: '/admin/config/presences'
+      })
+    }
+  }
+  // Delegable to supervisors via MemberControlTypesAccess, so it's not gated by isAdmin
+  if (selfStore.can(Permission.MemberControlTypesAccess)) {
     configsSection.push({
-      label: 'Présences',
-      icon: 'i-heroicons-calendar-days',
-      to: '/admin/config/presences'
+      label: 'Contrôles & suivis',
+      icon: 'i-heroicons-clipboard-document-check',
+      to: '/admin/config/member-controls'
     })
   }
 
@@ -120,7 +129,7 @@ useHead({
     })
   }
 
-  if (isAdmin) {
+  if (configsSection.length > 0) {
     links.push({
       title: 'Paramétrage',
       links: configsSection,

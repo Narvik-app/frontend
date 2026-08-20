@@ -29,6 +29,26 @@ const props = defineProps({
   calendarClass: {
     type: String,
     default: undefined
+  },
+  /** Forwarded to the trigger button, e.g. to color-code by status (error/warning/neutral). */
+  color: {
+    type: String,
+    default: 'primary'
+  },
+  /** Forwarded to the trigger/clear buttons, e.g. "solid" (default) or "subtle" for a more discreet look. */
+  variant: {
+    type: String,
+    default: 'solid'
+  },
+  /** Forwarded to the trigger/clear buttons, e.g. "xs" for a more compact field. */
+  size: {
+    type: String,
+    default: undefined
+  },
+  /** Renders a plain, non-interactive button with the same label/color (no popover) — for read-only/auto-managed values. */
+  disabled: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -45,13 +65,23 @@ const label = computed(() => {
 </script>
 
 <template>
-    <UPopover v-model:open="popoverOpen">
+    <UButton
+      v-if="disabled"
+      icon="i-heroicons-calendar-days-20-solid"
+      :label="label"
+      :color="color"
+      :variant="variant"
+      :size="size"
+      disabled
+    />
+    <UPopover v-else v-model:open="popoverOpen">
       <UFieldGroup>
-        <UButton icon="i-heroicons-calendar-days-20-solid" :label="label" :loading="loading" />
+        <UButton icon="i-heroicons-calendar-days-20-solid" :label="label" :color="color" :variant="variant" :size="size" :loading="loading" />
         <UButton
           v-if="canBeClear && modelValue"
           icon="i-heroicons-x-mark"
           variant="soft"
+          :size="size"
           @click="emit('update:modelValue', null)"
         />
       </UFieldGroup>

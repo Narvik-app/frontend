@@ -294,24 +294,15 @@ definePageMeta({
                 <UInput v-model="selectedPaymentMode.name" />
               </UFormField>
 
-              <UFormField label="Icône" name="icon">
-
-                <template #description>
-                  <ContentLink variant="link" to="https://heroicons.com/" target="_blank">Liste des icônes Heroicons</ContentLink>
+              <GenericIconPickerField v-model="selectedPaymentMode.icon">
+                <template #hint>
                   <ul class="text-xs">
                     <li>Espèces : <code>banknotes</code></li>
                     <li>Chèque : <code>ticket</code></li>
                     <li>Carte : <code>credit-card</code></li>
                   </ul>
                 </template>
-
-                <template v-if="selectedPaymentMode.icon" #hint>
-                  <UIcon :name="'i-heroicons-' + selectedPaymentMode.icon" />
-                </template>
-
-                <UInput v-model="selectedPaymentMode.icon" />
-
-              </UFormField>
+              </GenericIconPickerField>
 
               <UFormField label="Poids dans la liste" name="weight">
                 <UInput v-model="selectedPaymentMode.weight" type="number" />

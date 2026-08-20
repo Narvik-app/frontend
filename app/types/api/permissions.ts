@@ -44,6 +44,10 @@ export enum Permission {
   LoanRecordingsAccess = 'LOAN_RECORDINGS_ACCESS',
   LoanRecordingsEdit = 'LOAN_RECORDINGS_EDIT',
   LoanBackdate = 'LOAN_BACKDATE',
+
+  // Member control permissions
+  MemberControlTypesAccess = 'MEMBER_CONTROL_TYPES_ACCESS',
+  MemberControlTypesEdit = 'MEMBER_CONTROL_TYPES_EDIT',
 }
 
 // Feature definition with Access and Edit permissions
@@ -173,6 +177,16 @@ export const permissionSections: PermissionSection[] = [
         name: 'Antidater les prêts',
         accessPermission: Permission.LoanBackdate,
         editOnly: true,
+      },
+    ],
+  },
+  {
+    label: 'Membres',
+    features: [
+      {
+        name: 'Contrôles & suivis',
+        accessPermission: Permission.MemberControlTypesAccess,
+        editPermission: Permission.MemberControlTypesEdit,
       },
     ],
   },

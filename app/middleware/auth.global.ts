@@ -59,6 +59,9 @@ const permissionPaths: { pattern: string; permission: Permission | Permission[] 
   { pattern: "^/admin/loans/items", permission: Permission.LoanItemsAccess },
   { pattern: "^/admin/loans/categories", permission: Permission.LoanCategoriesAccess },
   { pattern: "^/admin/loans/recording-types", permission: Permission.LoanRecordingsAccess },
+
+  // Member control types - delegable to supervisors
+  { pattern: "^/admin/config/member-controls", permission: Permission.MemberControlTypesAccess },
 ]
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
