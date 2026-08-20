@@ -6,9 +6,9 @@ const clubJobQuery = new ClubJobQuery();
 const jobs: Ref<ClubJob[]> = ref([])
 
 const labels: Record<ClubJobKey, string> = {
-  itac_import: 'Membres',
-  itac_secondary_import: 'Membres club secondaire',
-  cerbere_import: 'Cerbère',
+  import_itac: 'Membres',
+  import_itac_secondary: 'Membres club secondaire',
+  import_cerbere: 'Cerbère',
   member_control_sync: 'Contrôles des membres',
 }
 

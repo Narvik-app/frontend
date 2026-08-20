@@ -135,10 +135,10 @@ async function importFromEden(event: any) {
           <div class="col-span-5 space-y-4">
             <p class="font-bold">Club principal</p>
             <UAlert
-              v-if="jobFor('itac_import')?.updatedAt"
+              v-if="jobFor('import_itac')?.updatedAt"
               variant="soft"
-              :title="'Dernier import effectué le ' + formatDateReadable(jobFor('itac_import')!.updatedAt)"
-              :color="dayjs(jobFor('itac_import')!.updatedAt).isBefore(dayjs().subtract(1, 'months')) ? 'error' : 'success' "
+              :title="'Dernier import effectué le ' + formatDateReadable(jobFor('import_itac')!.updatedAt)"
+              :color="dayjs(jobFor('import_itac')!.updatedAt).isBefore(dayjs().subtract(1, 'months')) ? 'error' : 'success' "
             />
             <UAlert
               v-else
@@ -161,10 +161,10 @@ async function importFromEden(event: any) {
           <div class="col-span-5 space-y-4">
             <p class="font-bold">Club secondaire</p>
             <UAlert
-              v-if="jobFor('itac_secondary_import')?.updatedAt"
+              v-if="jobFor('import_itac_secondary')?.updatedAt"
               variant="soft"
-              :title="'Dernier import effectué le ' + formatDateReadable(jobFor('itac_secondary_import')!.updatedAt)"
-              :color="dayjs(jobFor('itac_secondary_import')!.updatedAt).isBefore(dayjs().subtract(1, 'months')) ? 'error' : 'success' "
+              :title="'Dernier import effectué le ' + formatDateReadable(jobFor('import_itac_secondary')!.updatedAt)"
+              :color="dayjs(jobFor('import_itac_secondary')!.updatedAt).isBefore(dayjs().subtract(1, 'months')) ? 'error' : 'success' "
             />
             <UAlert
               v-else
@@ -186,7 +186,7 @@ async function importFromEden(event: any) {
         <div class="flex gap-2">
           <UButton target="_blank" to="https://docs.narvik.app/frontend/docs/import/fftir-itac.html#import-des-membres">Documentation</UButton>
           <div class="flex-1"/>
-          <UButton variant="ghost" color="success" :disabled="!canEdit || jobFor('itac_secondary_import')?.status === 'in_progress'" @click="migrateExternal()">Migration présence externe vers présence membres</UButton>
+          <UButton variant="ghost" color="success" :disabled="!canEdit || jobFor('import_itac_secondary')?.status === 'in_progress'" @click="migrateExternal()">Migration présence externe vers présence membres</UButton>
         </div>
 
       </UCard>
