@@ -11,11 +11,6 @@ interface _ClubSetting extends UuidItem, ClubLinkedItem {
   activity?: ClubActivity
   excludedActivitiesFromOpeningDays?: Activity[] | string[]
   seasonEnd?: string
-  itacImportDate?: Date
-  itacImportRemaining?: number
-  itacSecondaryImportDate?: Date
-  itacSecondaryImportRemaining?: number
-  cerbereImportRemaining?: number,
   emailReplyTo?: string
 }
 
