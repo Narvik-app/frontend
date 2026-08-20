@@ -716,11 +716,12 @@ async function deleteMember() {
                 <div v-if="memberRef.medicalCertificateExpiration" class="flex items-center justify-between">
                   <span>Certificat médical :
                     <UBadge v-if="memberRef.medicalCertificateStatus !== 'valid'"
+                            variant="subtle"
                             :color="memberRef.medicalCertificateStatus === 'expired' ? 'error' : 'warning'">
                       {{ formatDateReadable(memberRef.medicalCertificateExpiration.toString()) }}
                     </UBadge>
                     <UBadge v-else
-                            variant="soft"
+                            variant="subtle"
                             color="neutral"
                     >
                       {{ formatDateReadable(memberRef.medicalCertificateExpiration.toString()) }}

@@ -33,7 +33,7 @@ const props = defineProps({
   /** Forwarded to the trigger button, e.g. to color-code by status (error/warning/neutral). */
   color: {
     type: String,
-    default: undefined
+    default: 'primary'
   },
   /** Forwarded to the trigger/clear buttons, e.g. "solid" (default) or "subtle" for a more discreet look. */
   variant: {
