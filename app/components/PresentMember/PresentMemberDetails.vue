@@ -209,7 +209,7 @@ async function deletePresence() {
           </div>
 
           <div class="space-y-4 w-full my-4">
-            <div class="text-center text-2xl font-bold">
+            <div class="text-center text-2xl font-bold flex flex-wrap items-center justify-center gap-2">
               <ContentLink v-if="isSupervisor" class="!text-(--ui-text)" :to="`/admin/members/${convertUuidToUrlUuid(member.uuid)}`">
                 {{ member.fullName }}
               </ContentLink>
@@ -217,6 +217,14 @@ async function deletePresence() {
               <template v-else>
                 {{ member.fullName }}
               </template>
+
+              <UBadge
+                v-if="member.currentSeason && member.currentSeason.ageCategory"
+                variant="soft"
+                size="sm"
+                color="neutral">
+                {{ member.currentSeason.ageCategory.name }}
+              </UBadge>
             </div>
 
             <div class="flex items-center justify-center text-xl">
@@ -224,13 +232,6 @@ async function deletePresence() {
             </div>
 
             <div class="flex justify-center flex-wrap gap-2">
-              <UBadge
-                v-if="member.currentSeason && member.currentSeason.ageCategory"
-                variant="subtle"
-                color="warning">
-                {{ member.currentSeason.ageCategory.name }}
-              </UBadge>
-
               <div v-if="member.blacklisted" class="basis-full text-center">
                 <UButton
                   color="neutral">
