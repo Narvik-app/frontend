@@ -36,7 +36,7 @@
     "jwt-decode": "^4.0.0",
     "mergician": "^2.0.2",
     "nuxt": "^4.5.2",
-    "nuxt-api-party": "^3.4.2",
+    "nuxt-api-party": "^4.0.0",
     "pinia": "^4.0.3",
     "pinia-plugin-persistedstate": "^4.7.1",
     "qs": "^6.15.3",
