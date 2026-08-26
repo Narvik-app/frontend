@@ -21,7 +21,7 @@ export default class SalePaymentTerminalQuery extends AbstractClubDependentQuery
   async checkout(terminal: SalePaymentTerminal, amount: string, description?: string) {
     return usePost<TerminalCheckoutResult>(
       (terminal['@id'] ?? '') + '/checkout',
-      {amount, description: description ?? 'Vente'},
+      {amount, ...(description ? {description} : {})},
     )
   }
 

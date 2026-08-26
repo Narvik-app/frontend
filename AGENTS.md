@@ -230,6 +230,7 @@ Unlike the backend which requires container execution for PHP commands, the fron
 - nuxt-api-party for type-safe API calls
 - Abstract query classes for consistent data fetching
 - Real-time updates via Mercure integration
+- Single source of truth: don't duplicate backend default/fallback logic here. When an optional field has no value, omit it from the request payload instead of filling in a hardcoded default — let the backend's own default apply.
 
 ### 4. **Type Safety**
 - Comprehensive TypeScript usage throughout the application
