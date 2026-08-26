@@ -12,7 +12,16 @@ export interface LoanMetricDailyCount {
   count: number
 }
 
+// Default date range for pages that don't offer the "current season" filter
+// (e.g. loans, which need a concrete range to align current/previous periods).
+export function getLast12MonthsDateRange(): DateRange {
+  return { start: dayjs().subtract(1, 'year').toDate(), end: new Date() }
+}
+
 export const useMetricStore = defineStore('metric', () => {
+  const selfStore = useSelfUserStore();
+  const { selectedProfile } = storeToRefs(selfStore)
+
   // Filter settings
   const previousSeason: Ref<boolean> = ref(false)
   const dateRange: Ref<DateRange | DateRangeFilter | undefined> = ref(DateRangeFilter.curent())
@@ -32,9 +41,6 @@ export const useMetricStore = defineStore('metric', () => {
   const externalPresenceMetricsPreviousSeason: Ref<Metric | undefined> = ref(undefined);
   const loanMetrics: Ref<Metric<LoanMetricDailyCount[]> | undefined> = ref(undefined);
   const loanMetricsPreviousSeason: Ref<Metric<LoanMetricDailyCount[]> | undefined> = ref(undefined);
-
-const selfStore = useSelfUserStore();
-  const { selectedProfile } = storeToRefs(selfStore)
 
   function getPreviousPeriodDates(currentDateRange: DateRange): { start: dayjs.Dayjs, end: dayjs.Dayjs } {
     const start = dayjs(currentDateRange.start).subtract(1, 'year');

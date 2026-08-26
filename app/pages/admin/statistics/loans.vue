@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {useSelfUserStore} from "~/stores/useSelfUser";
-import {useMetricStore, type LoanMetricDailyCount} from "~/stores/useMetricStore";
+import {useMetricStore, getLast12MonthsDateRange, type LoanMetricDailyCount} from "~/stores/useMetricStore";
 import MetricQuery from "~/composables/api/query/MetricQuery";
 import LoanItemQuery from "~/composables/api/query/clubDependent/plugin/loan/LoanItemQuery";
 import type {Metric} from "~/types/api/item/metric";
@@ -247,10 +247,11 @@ function refreshMetrics() {
 }
 
 onMounted(() => {
-  // Loans aren't season-bound — force a concrete date range (default: last 30 days) so daily
-  // counts from the current and previous period can be aligned by day-offset in the chart.
+  // Loans don't offer the season filter (no season-selectors on this page) — force a concrete
+  // date range (default: last 12 months) so daily counts from the current and previous period
+  // can be aligned by day-offset in the chart.
   if (dateRange.value && 'value' in dateRange.value) {
-    metricStore.setDateRange({start: dayjs().subtract(29, 'day').toDate(), end: new Date()})
+    metricStore.setDateRange(getLast12MonthsDateRange())
   } else {
     metricStore.getMetrics()
   }
