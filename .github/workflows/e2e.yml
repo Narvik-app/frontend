@@ -30,43 +30,53 @@ jobs:
         with:
           github-token: ${{ secrets.GH_PAT || github.token }}
           script: |
-            const targetBranch = context.eventName === 'pull_request'
-              ? context.payload.pull_request.base.ref
+            // Pick the backend ref to test against, in order:
+            // 1. main, if that's the branch being built
+            // 2. a backend branch with the same name (stacked cross-repo PR)
+            // 3. the PR's base branch, if it's a version branch that exists on backend (e.g. backport into 3.22)
+            // 4. main
+            const headBranch = context.eventName === 'pull_request'
+              ? context.payload.pull_request.head.ref
               : context.ref.replace('refs/heads/', '');
+            const baseBranch = context.eventName === 'pull_request'
+              ? context.payload.pull_request.base.ref
+              : headBranch;
 
-            let backendRef = 'main';
-            let reason = 'Not a version branch, using default (main).';
             const backendRepoStr = process.env.BACKEND_REPOSITORY;
             const [owner, repo] = backendRepoStr.split('/');
 
-            if (/^[0-9]+\.[0-9]+/.test(targetBranch)) {
+            async function backendBranchExists(branch) {
               try {
-                await github.rest.repos.getBranch({
-                  owner,
-                  repo,
-                  branch: targetBranch
-                });
-                backendRef = targetBranch;
-                reason = `PR/Push is targeting a version branch (${targetBranch}), checking out the same branch on backend.`;
+                await github.rest.repos.getBranch({ owner, repo, branch });
+                return true;
               } catch (error) {
-                if (error.status === 404) {
-                  reason = `⚠️ Version branch (${targetBranch}) DOES NOT exist on backend (${owner}/${repo}). Falling back to main.`;
-                  core.warning(reason);
-                } else {
-                  reason = `⚠️ Error checking backend branch on ${owner}/${repo} (${error.message}). Falling back to main.`;
-                  core.warning(reason);
+                if (error.status !== 404) {
+                  core.warning(`⚠️ Error checking backend branch '${branch}' on ${owner}/${repo} (${error.message}).`);
                 }
-                backendRef = 'main';
+                return false;
               }
-            } else if (targetBranch === 'main') {
+            }
+
+            let backendRef = 'main';
+            let reason = `No backend branch named '${headBranch}' found - falling back to main.`;
+
+            if (headBranch === 'main') {
               backendRef = 'main';
-              reason = 'Target branch is main, checking out main on backend.';
+              reason = 'Branch is main, checking out main on backend.';
+            } else if (await backendBranchExists(headBranch)) {
+              backendRef = headBranch;
+              reason = `A branch named '${headBranch}' exists on backend (${owner}/${repo}) - checking it out.`;
+            } else if (/^[0-9]+\.[0-9]+/.test(baseBranch) && await backendBranchExists(baseBranch)) {
+              backendRef = baseBranch;
+              reason = `No matching '${headBranch}' branch on backend, but PR targets version branch (${baseBranch}) which does exist there - checking it out.`;
+            } else {
+              core.warning(reason);
             }
 
             const summaryTable = `
               | Property | Value |
               | --- | --- |
-              | Frontend Target Branch | \`${targetBranch}\` |
+              | Frontend Branch | \`${headBranch}\` |
               | Backend Checkout Ref | \`${backendRef}\` |
               | Event | \`${context.eventName}\` |
               | Reason | ${reason} |
