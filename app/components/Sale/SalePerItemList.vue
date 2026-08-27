@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type {Ref} from "vue";
-import type {SalePurchasedItem} from "~/types/api/item/clubDependent/plugin/sale/salePurchasedItem";
 import {formatMonetary} from "~/utils/string";
 
 const props = defineProps({
@@ -16,7 +15,7 @@ interface CategoryMapping {
 }
 
 interface ItemMapping {
-  item: SalePurchasedItem,
+  itemName: string,
   counts: Map<string, PaymentModeCountMapping>
 }
 
@@ -26,7 +25,7 @@ interface PaymentModeCountMapping {
 }
 
 const saleStore = useSaleStore()
-const { paymentModes, sales } = storeToRefs(saleStore)
+const { paymentModes, perItemStats } = storeToRefs(saleStore)
 
 const categories: Ref<Map<string, CategoryMapping>> = ref(new Map())
 const mapping: Ref<CategoryMapping[]> = ref([])
@@ -51,59 +50,33 @@ function getDefaultPaymentMapping(): Map<string, PaymentModeCountMapping> {
 function generateList() {
   categories.value = new Map()
 
-  sales.value.forEach((sale) => {
-    if (
-      !sale.salePurchasedItems
-      || !sale.paymentMode
-      || typeof sale.paymentMode == 'string'
-    ) {
-      return
+  perItemStats.value.forEach((stat) => {
+    const purchasedCategory = stat.category ?? '000'
+    let categoryMapping = categories.value.get(purchasedCategory)
+    if (!categoryMapping) {
+      categoryMapping = {
+        name: purchasedCategory,
+        items: new Map<string, ItemMapping>()
+      }
     }
 
-    const salePaymentMode = sale.paymentMode.name
-    if (!salePaymentMode) return
-
-    // We loop through each purchases
-    sale.salePurchasedItems.forEach((salePurchasedItem) => {
-      if (
-        !salePurchasedItem.itemName
-        || !salePurchasedItem.itemPrice
-      ) {
-        return
+    let itemMapping = categoryMapping.items.get(stat.itemName)
+    if (!itemMapping) {
+      itemMapping = {
+        itemName: stat.itemName,
+        counts: getDefaultPaymentMapping()
       }
+    }
 
-      const purchasedCategory = salePurchasedItem.itemCategory ?? '000'
-      let categoryMapping = categories.value.get(purchasedCategory)
-      if (!categoryMapping) {
-        categoryMapping = {
-          name: purchasedCategory,
-          items: new Map<string, ItemMapping>()
-        }
-      }
+    const mappedPaymentMode = itemMapping.counts.get(stat.paymentModeName)
+    if (mappedPaymentMode) {
+      mappedPaymentMode.count += stat.count
+      mappedPaymentMode.amount += stat.amount
+      itemMapping.counts.set(stat.paymentModeName, mappedPaymentMode)
+    }
 
-      let salePurchasedItemMap = categoryMapping.items.get(salePurchasedItem.itemName)
-      if (!salePurchasedItemMap) {
-        salePurchasedItemMap = {
-          item: salePurchasedItem,
-          counts: getDefaultPaymentMapping()
-        }
-      }
-
-      // We update the item count
-      const mappedPaymentMode = salePurchasedItemMap.counts.get(salePaymentMode)
-      if (!mappedPaymentMode) return
-
-      mappedPaymentMode.count += salePurchasedItem.quantity ?? 0
-      if (typeof sale.paymentMode !== 'string' && sale.paymentMode?.kind !== 'stock_removal') {
-        mappedPaymentMode.amount += Number(salePurchasedItem.itemPrice) * Number(salePurchasedItem.quantity ?? 0)
-      }
-      salePurchasedItemMap.counts.set(salePaymentMode, mappedPaymentMode)
-
-      categoryMapping.items.set(salePurchasedItem.itemName, salePurchasedItemMap)
-
-      // We update the category mapping
-      categories.value.set(purchasedCategory, categoryMapping)
-    })
+    categoryMapping.items.set(stat.itemName, itemMapping)
+    categories.value.set(purchasedCategory, categoryMapping)
   })
 
   mapping.value = Array.from(categories.value.values()).sort((a, b) => {
@@ -128,9 +101,9 @@ function generateList() {
     <div>
       <div class="text-xl font-bold mb-4">{{ categoryMap.name == '000' ? 'Sans catégorie' : categoryMap.name }}</div>
       <div class="gap-2 grid grid-flow-row grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        <UCard v-for="(itemMap, iIndex) in Array.from(categoryMap.items.values()).sort((a, b) => { return (a.item.itemName?.toLowerCase() ?? '') > (b.item.itemName?.toLowerCase() ?? '') ? 1 : -1 })" :key="iIndex">
+        <UCard v-for="(itemMap, iIndex) in Array.from(categoryMap.items.values()).sort((a, b) => { return a.itemName.toLowerCase() > b.itemName.toLowerCase() ? 1 : -1 })" :key="iIndex">
           <div class="flex flex-col gap-2">
-            <div class="text-lg font-bold text-center">{{ itemMap.item.itemName }}</div>
+            <div class="text-lg font-bold text-center">{{ itemMap.itemName }}</div>
 
             <div class="flex flex-col">
               <div

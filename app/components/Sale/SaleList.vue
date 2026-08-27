@@ -5,6 +5,8 @@ import type {SalePaymentMode} from "~/types/api/item/clubDependent/plugin/sale/s
 import {useSaleStore} from "~/stores/useSaleStore";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {convertUuidToUrlUuid} from "~/utils/resource";
+import type {TablePaginateInterface} from "~/types/table";
+import type {ColumnSort} from "@tanstack/table-core";
 
 const props = defineProps({
   perItem: {
@@ -16,52 +18,52 @@ const props = defineProps({
 
 const selfStore = useSelfUserStore()
 const saleStore = useSaleStore()
-const { selectedRange, isLoading, lastRefreshDate, sales, paymentModes } = storeToRefs(saleStore)
+const {
+  selectedRange, isLoading, isLoadingStats, lastRefreshDate,
+  sales, totalItems, page, itemsPerPage, sortDesc,
+  saleStats, totalCount, totalAmount,
+} = storeToRefs(saleStore)
 
 const isAdmin = selfStore.isAdmin()
 
 const popoverOpen = ref(false)
+const sort = ref(sortDesc.value === undefined ? [] : [{id: 'createdAt', desc: sortDesc.value}] as ColumnSort[])
 
 const isStockRemoval = (sale: { paymentMode?: SalePaymentMode | string | null }) =>
   typeof sale.paymentMode === 'object' && sale.paymentMode?.kind === 'stock_removal'
 
-const totalAmountSales = computed(() => {
-  let amount = 0
-  sales.value.forEach(sale => {
-    if (!isStockRemoval(sale)) amount += Number(sale.price)
-  })
-  return amount
-})
+function refresh() {
+  if (props.perItem) {
+    saleStore.getSalePerItemStats()
+  } else {
+    saleStore.getSales()
+  }
+}
 
-const totalPerPaymentMode = computed(() => {
-  const amountPerPayment: Map<string, {count: number, amount: number, icon: string}> = new Map()
-  paymentModes.value.forEach(paymentMode => {
-    if (!paymentMode.name || paymentMode.kind === 'stock_removal') return
-    amountPerPayment.set(paymentMode.name, {
-      count: 0,
-      amount: 0,
-      icon: paymentMode.icon ?? ''
-    })
-  })
+function onRangeUpdated(range: Parameters<typeof saleStore.setSelectedRange>[0]) {
+  saleStore.setSelectedRange(range)
+  popoverOpen.value = false
+  refresh()
+}
 
-  sales.value.forEach(sale => {
-    const paymentModeObject: SalePaymentMode = sale.paymentMode as SalePaymentMode
-    if (!sale.paymentMode || !paymentModeObject.name || isStockRemoval(sale)) { return }
+function onPaginate(pagination: TablePaginateInterface) {
+  page.value = pagination.page
+  itemsPerPage.value = pagination.itemsPerPage
+  saleStore.getSales()
+}
 
-    const paymentMode = amountPerPayment.get(paymentModeObject.name)
-    if (!paymentMode) {
-      return;
-    }
+function onSortChanged() {
+  sortDesc.value = sort.value.length ? sort.value[0].desc : undefined
+  page.value = 1
+  saleStore.getSales()
+}
 
-    paymentMode.count += 1
-    paymentMode.amount += Number(sale.price)
-    amountPerPayment.set(paymentModeObject.name, paymentMode)
-  })
-  return amountPerPayment
-})
+const needsInitialLoad = props.perItem
+  ? saleStore.perItemStats.length === 0 || saleStore.shouldRefreshSales
+  : sales.value.length === 0 || saleStore.shouldRefreshSales
 
-if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
-  saleStore.getSales() // We load the default setting
+if (needsInitialLoad) {
+  refresh() // We load the default setting
 }
 </script>
 
@@ -74,7 +76,7 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
         size="xs"
         icon="i-heroicons-arrow-path"
         :loading="isLoading"
-        @click="saleStore.getSales()"
+        @click="refresh"
       >
         Dernière mise à jour : {{ formatDateTimeReadable(lastRefreshDate.toString()) }}
       </UButton>
@@ -85,7 +87,7 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
         <UButton data-testid="date-range-picker-trigger" icon="i-heroicons-calendar-days-20-solid" :label="selectedRange ? formatDateRangeReadable(selectedRange) || 'Choisir une plage' : 'Choisir une plage'" />
 
         <template #content>
-          <GenericDateRangePicker :date-range="selectedRange" @range-updated="(range) => { saleStore.setSelectedRange(range); popoverOpen = false; saleStore.getSales();}" />
+          <GenericDateRangePicker :date-range="selectedRange" @range-updated="onRangeUpdated" />
         </template>
       </UPopover>
 
@@ -96,41 +98,41 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
       <GenericStatCard
         data-testid="stat-sale-count"
         title="Nombres de ventes"
-        :value="sales.length"
-        :loading="isLoading"/>
+        :value="totalCount"
+        :loading="isLoadingStats"/>
 
       <GenericStatCard
         data-testid="stat-sale-total"
         title="Total"
-        :value="formatMonetary(totalAmountSales.toFixed(2))"
-        :loading="isLoading"/>
+        :value="formatMonetary(totalAmount.toFixed(2))"
+        :loading="isLoadingStats"/>
     </div>
 
     <div class="sm:flex sm:gap-4 sm:justify-center sm:flex-wrap">
       <GenericStatCard
-        v-for="[name, value] in totalPerPaymentMode"
-        :key="name"
+        v-for="paymentMode in saleStats.filter(pm => pm.kind !== 'stock_removal')"
+        :key="paymentMode.uuid"
         class="basis-[calc(25%-1rem)]"
-        :title="name"
+        :title="paymentMode.name"
         :is-increasing="true"
-        :value="formatMonetary(value.amount.toFixed(2))"
+        :value="formatMonetary(paymentMode.amount.toFixed(2))"
         :top-right="{
-          value: value.count.toString(),
-          tooltip: value.count + ' ventes en ' + name,
-          icon: value.icon ? 'i-heroicons-' + value.icon : null
+          value: paymentMode.count.toString(),
+          tooltip: paymentMode.count + ' ventes en ' + paymentMode.name,
+          icon: paymentMode.icon ? 'i-heroicons-' + paymentMode.icon : null
         }"
-        :loading="isLoading"/>
+        :loading="isLoadingStats"/>
     </div>
 
     <template v-if="props.perItem">
-      <SalePerItemList :is-loading="isLoading" />
+      <SalePerItemList :is-loading="isLoadingStats" />
     </template>
     <template v-else>
       <UCard>
 
 
         <div class="flex flex-wrap items-center gap-4">
-          <div class="text-xl font-bold">Ventes</div>
+          <div class="text-xl font-bold">Ventes ({{ totalItems }})</div>
 
           <div class="flex-1"/>
 
@@ -141,8 +143,13 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
           </template>
         </div>
         <UTable
+          v-model:sorting="sort"
           class="w-full"
           :loading="isLoading"
+          :sorting-options="{
+            manualSorting: true,
+            enableMultiSort: false,
+          }"
           :columns="[
             {
               accessorKey: 'createdAt',
@@ -175,11 +182,8 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
               header: 'Détail'
             }
           ]"
-          :sort="[{
-            id: 'createdAt',
-            desc: true
-          }]"
-          :data="sales">
+          :data="sales"
+          @update:sorting="onSortChanged">
           <template #empty>
             <div class="flex flex-col items-center justify-center py-6 gap-3">
               <span class="italic text-sm">Aucun articles.</span>
@@ -228,6 +232,13 @@ if (sales.value.length == 0 || saleStore.shouldRefreshSales) {
           </template>
 
         </UTable>
+
+        <GenericTablePagination
+          v-model:page="page"
+          v-model:items-per-page="itemsPerPage"
+          :total-items="totalItems"
+          @paginate="onPaginate"
+        />
       </UCard>
     </template>
   </div>
