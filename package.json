@@ -28,7 +28,7 @@
     "@tiptap/extension-text-align": "^3.30.3",
     "@tiptap/extension-text-style": "^3.30.3",
     "@types/qs": "^6.15.1",
-    "@unhead/vue": "^3.3.1",
+    "@unhead/vue": "^3.4.0",
     "@vue/devtools-api": "^8.2.1",
     "chart.js": "^4.5.1",
     "clipboardy": "^5.3.2",
