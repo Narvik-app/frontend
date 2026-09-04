@@ -110,6 +110,7 @@ definePageMeta({
     }
 
     saleStore.shouldRefreshSales = true
+    saleStore.shouldRefreshPerItemStats = true
     navigateTo('/admin/sales/history')
   }
 

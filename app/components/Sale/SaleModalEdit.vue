@@ -107,6 +107,7 @@ async function updateSale() {
 
   // We trigger a refresh of the listing
   saleStore.shouldRefreshSales = true
+  saleStore.shouldRefreshPerItemStats = true
 
   emit('close', true)
 }

@@ -27,6 +27,7 @@ export const useSaleStore = defineStore('sale', () => {
   const lastRefreshDate: Ref<Date> = ref(new Date())
 
   const shouldRefreshSales = ref(false)
+  const shouldRefreshPerItemStats = ref(false)
 
   const sales: Ref<Sale[]> = ref([])
   const totalItems = ref(0)
@@ -163,7 +164,7 @@ export const useSaleStore = defineStore('sale', () => {
     if (generation !== requestGeneration) return
     isLoadingStats.value = false
     lastRefreshDate.value = new Date()
-    shouldRefreshSales.value = false
+    shouldRefreshPerItemStats.value = false
   }
 
   async function getSalesCsv() {
@@ -247,6 +248,7 @@ export const useSaleStore = defineStore('sale', () => {
     selectedRange,
     lastRefreshDate,
     shouldRefreshSales,
+    shouldRefreshPerItemStats,
 
     getSales,
     getSaleStats,
