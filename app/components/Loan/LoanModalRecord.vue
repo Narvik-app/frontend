@@ -7,6 +7,7 @@ import LoanQuery from '~/composables/api/query/clubDependent/plugin/loan/LoanQue
 import SearchMember from '~/components/Member/SearchMember.vue'
 import {useSellerSelect} from '~/composables/useSellerSelect'
 import {getMemberDisplayName} from '~/utils/string'
+import {hasLoanFee} from '~/utils/loan'
 
 const props = defineProps({
   loanItem: {
@@ -48,11 +49,7 @@ const endDate = ref<Date | null>(props.loan?.endDate ? new Date(props.loan.endDa
 
 // Billing — optional, only offered when opened from the sale page (props.billable), and only
 // when the loan item actually has a positive price to bill.
-const canBillLoan = computed(() => {
-  if (!props.billable || isEditing.value) return false
-  const price = parseFloat(props.defaultPrice ?? '')
-  return !isNaN(price) && price > 0
-})
+const canBillLoan = computed(() => props.billable && !isEditing.value && hasLoanFee(props.defaultPrice))
 const addToSale = ref<boolean>(canBillLoan.value)
 
 watch(borrowerType, () => {

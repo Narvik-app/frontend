@@ -22,7 +22,7 @@ import type {LoanItem} from "~/types/api/item/clubDependent/plugin/loan/loanItem
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {Permission} from "~/types/api/permissions";
 import LoanModalRecord from "~/components/Loan/LoanModalRecord.vue";
-import {buildLoanCartItem, groupLoanItemsByCategory} from "~/utils/loan";
+import {buildLoanCartItem, groupLoanItemsByCategory, hasLoanFee} from "~/utils/loan";
 import ModalTerminalPayment from "~/components/Sale/ModalTerminalPayment.vue";
 import type {TerminalPaymentPhase} from "~/components/Sale/ModalTerminalPayment.vue";
 import ModalTerminalSelect from "~/components/Sale/ModalTerminalSelect.vue";
@@ -124,6 +124,12 @@ definePageMeta({
     }
     const {retrieved} = await loanItemQuery.get(item.uuid!)
     if (retrieved) onLoanItemUpdated(retrieved)
+  }
+
+  /** Add (or re-add) the loan item's fee to the cart, e.g. if it was removed from the cart by mistake. */
+  function addLoanFeeToCart(item: LoanItem) {
+    if (!hasLoanFee(item.loanPrice)) return
+    cartStore.addToCart(buildLoanCartItem(item, item.loanPrice!))
   }
 
   async function returnLoanItem(item: LoanItem) {
@@ -566,41 +572,55 @@ definePageMeta({
               v-for="item in items"
               :key="item.uuid"
               data-testid="loan-item-row"
-              class="flex items-center gap-2 border rounded-lg p-2"
+              class="flex flex-col justify-between gap-2 border rounded-lg p-2"
             >
-              <div class="flex-1 min-w-0">
+              <div class="min-w-0">
                 <p data-testid="loan-item-name" class="text-sm font-medium truncate">{{ item.name }}</p>
                 <p v-if="item.description" class="text-xs text-muted">{{ item.description }}</p>
                 <p v-if="item.loanPrice" data-testid="loan-item-price" class="text-xs text-muted">{{ item.loanPrice }} €/prêt</p>
               </div>
-              <UBadge
-                v-if="item.isCurrentlyLoaned"
-                variant="soft"
-                size="xs"
-              >
-                Prêté
-              </UBadge>
 
-              <UButton
-                v-if="canLoan && !item.isCurrentlyLoaned"
-                data-testid="loan-item-lend"
-                size="xs"
-                color="primary"
-                icon="i-heroicons-archive-box-arrow-down"
-                @click="openLoanItemModal(item)"
-              >
-                Prêter
-              </UButton>
-              <UButton
-                v-else-if="canLoan"
-                size="xs"
-                color="success"
-                icon="i-heroicons-arrow-uturn-left"
-                :loading="returningLoanItemUuid === item.uuid"
-                @click="returnLoanItem(item)"
-              >
-                Retourner
-              </UButton>
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <UButton
+                    v-if="canLoan && hasLoanFee(item.loanPrice)"
+                    data-testid="loan-item-add-to-cart"
+                    size="xs"
+                    variant="soft"
+                    icon="i-heroicons-shopping-cart"
+                    @click="addLoanFeeToCart(item)"
+                  />
+
+                  <UBadge
+                    v-if="item.isCurrentlyLoaned"
+                    variant="soft"
+                    size="md"
+                  >
+                    Prêté
+                  </UBadge>
+                </div>
+
+                <UButton
+                  v-if="canLoan && !item.isCurrentlyLoaned"
+                  data-testid="loan-item-lend"
+                  size="xs"
+                  color="primary"
+                  icon="i-heroicons-archive-box-arrow-down"
+                  @click="openLoanItemModal(item)"
+                >
+                  Prêter
+                </UButton>
+                <UButton
+                  v-else-if="canLoan"
+                  size="xs"
+                  color="success"
+                  icon="i-heroicons-arrow-uturn-left"
+                  :loading="returningLoanItemUuid === item.uuid"
+                  @click="returnLoanItem(item)"
+                >
+                  Retourner
+                </UButton>
+              </div>
             </div>
           </div>
         </div>

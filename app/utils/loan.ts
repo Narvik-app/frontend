@@ -33,6 +33,12 @@ export function groupLoanItemsByCategory(items: LoanItem[], fallbackLabel = 'San
   return map
 }
 
+/** Whether a loan item has a positive price worth billing on the sale page. */
+export function hasLoanFee(price?: string | null): boolean {
+  const value = parseFloat(price ?? '')
+  return !isNaN(value) && value > 0
+}
+
 /** Category string used for loan fees in sale stats — keeps them grouped and out of the inventory categories. */
 export function loanSaleCategory(item: LoanItem): string {
   const category = typeof item.category === 'object' ? item.category?.name : undefined

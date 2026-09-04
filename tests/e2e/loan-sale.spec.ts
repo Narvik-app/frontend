@@ -6,6 +6,11 @@ import {waitForApiResponse} from './utils/api';
 test.use({ storageState: STORAGE_STATE.ADMIN });
 
 test.describe.serial('Billing a loan from the sale page', () => {
+  // Captured from the first test, then reused by the third to exercise the "re-add to cart" icon
+  // on an item that is already lent (see app/pages/admin/sales/new.vue#addLoanFeeToCart).
+  let lentItemName = '';
+  let lentItemPrice = '';
+
   test('recording a loan with billing on adds a cart line at the loan price, and the sale carries it', async ({ page }) => {
     await page.goto('/admin/sales/new');
 
@@ -18,6 +23,8 @@ test.describe.serial('Billing a loan from the sale page', () => {
     const loanItemName = (await loanItemRow.getByTestId('loan-item-name').innerText()).trim();
     const loanItemPriceText = (await loanItemRow.getByTestId('loan-item-price').innerText()).trim();
     const loanItemPrice = loanItemPriceText.replace(/\s*€\/prêt$/, ''); // e.g. "15.00"
+    lentItemName = loanItemName;
+    lentItemPrice = loanItemPrice;
 
     await lendButton.click();
 
@@ -100,5 +107,23 @@ test.describe.serial('Billing a loan from the sale page', () => {
 
     // The loan was recorded, but nothing was added to the cart
     await expect(page.getByTestId('cart-empty')).toBeVisible();
+  });
+
+  test('the cart icon on an already-loaned item re-adds its fee to the cart', async ({ page }) => {
+    await page.goto('/admin/sales/new');
+
+    // The item lent in the first test is still out (never returned) — its row now shows
+    // "Retourner" plus the small cart icon instead of "Prêter".
+    const loanItemRow = page.getByTestId('loan-item-row').filter({ hasText: lentItemName });
+    await expect(loanItemRow).toBeVisible({ timeout: 10000 });
+    await expect(loanItemRow.getByTestId('loan-item-lend')).toHaveCount(0);
+
+    await expect(page.getByTestId('cart-empty')).toBeVisible();
+
+    await loanItemRow.getByTestId('loan-item-add-to-cart').click();
+
+    const cartRow = page.getByTestId('cart-item-row').filter({ hasText: lentItemName });
+    await expect(cartRow).toBeVisible();
+    await expect(cartRow.getByTestId('cart-item-total-price')).toHaveText(`${lentItemPrice.replace('.', ',')} €`);
   });
 });
