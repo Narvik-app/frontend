@@ -59,7 +59,7 @@ function onSortChanged() {
 }
 
 const needsInitialLoad = props.perItem
-  ? saleStore.perItemStats.length === 0 || saleStore.shouldRefreshSales
+  ? saleStore.perItemStats.length === 0 || saleStore.shouldRefreshPerItemStats
   : sales.value.length === 0 || saleStore.shouldRefreshSales
 
 if (needsInitialLoad) {

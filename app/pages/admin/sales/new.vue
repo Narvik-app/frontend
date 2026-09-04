@@ -261,6 +261,7 @@ definePageMeta({
     toast.add({color: "success", title: "Vente enregistrée"})
     cartStore.emptyCart()
     saleStore.shouldRefreshSales = true
+    saleStore.shouldRefreshPerItemStats = true
     navigateTo('/admin/sales/' + convertUuidToUrlUuid(created.uuid))
   }
 
