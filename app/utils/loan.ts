@@ -1,4 +1,5 @@
 import type {LoanItem} from '~/types/api/item/clubDependent/plugin/loan/loanItem'
+import type {InventoryItem} from '~/types/api/item/clubDependent/plugin/sale/inventoryItem'
 
 export const LOAN_ITEM_STATUS_LABELS: Record<string, string> = {
   available: 'Disponible',
@@ -30,4 +31,26 @@ export function groupLoanItemsByCategory(items: LoanItem[], fallbackLabel = 'San
     map.set(key, arr)
   }
   return map
+}
+
+/** Whether a loan item has a positive price worth billing on the sale page. */
+export function hasLoanFee(price?: string | null): boolean {
+  const value = parseFloat(price ?? '')
+  return !isNaN(value) && value > 0
+}
+
+/** Category string used for loan fees in sale stats — keeps them grouped and out of the inventory categories. */
+export function loanSaleCategory(item: LoanItem): string {
+  const category = typeof item.category === 'object' ? item.category?.name : undefined
+  return category ? `Prêt — ${category}` : 'Prêt'
+}
+
+/** Build a cart-compatible pseudo InventoryItem for a loan fee (no @id → sent as a free-form sale line). */
+export function buildLoanCartItem(item: LoanItem, price: string): InventoryItem {
+  return {
+    uuid: `loan-${item.uuid}`, // deterministic → re-lending the same item bumps quantity instead of duplicating
+    name: item.name,
+    sellingPrice: price,
+    category: {name: loanSaleCategory(item)},
+  }
 }
