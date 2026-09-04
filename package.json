@@ -39,7 +39,7 @@
     "nuxt-api-party": "^3.4.2",
     "pinia": "^4.0.3",
     "pinia-plugin-persistedstate": "^4.7.1",
-    "qs": "^6.15.3",
+    "qs": "^6.16.0",
     "tailwindcss": "^4.3.3",
     "uuid-encoder": "^1.2.0",
     "v-calendar": "^3.1.2",
