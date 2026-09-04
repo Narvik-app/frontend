@@ -22,7 +22,7 @@ import type {LoanItem} from "~/types/api/item/clubDependent/plugin/loan/loanItem
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {Permission} from "~/types/api/permissions";
 import LoanModalRecord from "~/components/Loan/LoanModalRecord.vue";
-import {groupLoanItemsByCategory} from "~/utils/loan";
+import {buildLoanCartItem, groupLoanItemsByCategory} from "~/utils/loan";
 import ModalTerminalPayment from "~/components/Sale/ModalTerminalPayment.vue";
 import type {TerminalPaymentPhase} from "~/components/Sale/ModalTerminalPayment.vue";
 import ModalTerminalSelect from "~/components/Sale/ModalTerminalSelect.vue";
@@ -116,11 +116,14 @@ definePageMeta({
       toast.add({color: 'warning', title: 'Article déjà en prêt', description: 'Enregistrez le retour avant de créer un nouveau prêt.'})
       return
     }
-    const instance = overlay.create(LoanModalRecord).open({loanItem: item})
-    if (await instance.result) {
-      const {retrieved} = await loanItemQuery.get(item.uuid!)
-      if (retrieved) onLoanItemUpdated(retrieved)
+    const instance = overlay.create(LoanModalRecord).open({loanItem: item, billable: true, defaultPrice: item.loanPrice})
+    const result = await instance.result as true | {billing: {price: string}} | undefined
+    if (!result) return
+    if (typeof result === 'object' && result.billing) {
+      cartStore.addToCart(buildLoanCartItem(item, result.billing.price))
     }
+    const {retrieved} = await loanItemQuery.get(item.uuid!)
+    if (retrieved) onLoanItemUpdated(retrieved)
   }
 
   async function returnLoanItem(item: LoanItem) {
@@ -232,6 +235,7 @@ definePageMeta({
       } else {
         payload.itemName = item.item.name
         payload.itemPrice = item.item.sellingPrice
+        if (item.item.category?.name) payload.itemCategory = item.item.category.name
       }
       return payload
     })
@@ -561,12 +565,13 @@ definePageMeta({
             <div
               v-for="item in items"
               :key="item.uuid"
+              data-testid="loan-item-row"
               class="flex items-center gap-2 border rounded-lg p-2"
             >
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium truncate">{{ item.name }}</p>
+                <p data-testid="loan-item-name" class="text-sm font-medium truncate">{{ item.name }}</p>
                 <p v-if="item.description" class="text-xs text-muted">{{ item.description }}</p>
-                <p v-if="item.loanPrice" class="text-xs text-muted">{{ item.loanPrice }} €/prêt</p>
+                <p v-if="item.loanPrice" data-testid="loan-item-price" class="text-xs text-muted">{{ item.loanPrice }} €/prêt</p>
               </div>
               <UBadge
                 v-if="item.isCurrentlyLoaned"
@@ -578,6 +583,7 @@ definePageMeta({
 
               <UButton
                 v-if="canLoan && !item.isCurrentlyLoaned"
+                data-testid="loan-item-lend"
                 size="xs"
                 color="primary"
                 icon="i-heroicons-archive-box-arrow-down"
@@ -646,11 +652,11 @@ definePageMeta({
               <i data-testid="cart-empty">Aucun articles</i>
             </div>
             <div class="overflow-y-auto max-h-[25vh] mt-2">
-              <div v-for="cartItem in cart" :key="cartItem.item.uuid" class="flex items-center gap-2 mb-1">
+              <div v-for="cartItem in cart" :key="cartItem.item.uuid" data-testid="cart-item-row" class="flex items-center gap-2 mb-1">
                 <GenericStackedUpDown @changed="modifier => { cartStore.addToCart(cartItem.item, modifier) }" />
 
                 <div class="text-xs bg-neutral-200 dark:bg-neutral-600 p-1 rounded-md">{{ cartItem.quantity }}</div>
-                <div class="text-sm flex-1 leading-tight">{{ cartItem.item.name }}</div>
+                <div data-testid="cart-item-name" class="text-sm flex-1 leading-tight">{{ cartItem.item.name }}</div>
                 <UTooltip :text="'Prix unitaire : ' + formatMonetary(cartItem.item.sellingPrice)" :delay-duration="0">
                   <div data-testid="cart-item-total-price" class="text-xs bg-neutral-200 dark:bg-neutral-600 p-1 rounded-md">
                     <template v-if="cartItem.item.sellingPrice">

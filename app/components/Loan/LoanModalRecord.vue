@@ -21,6 +21,14 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  billable: {
+    type: Boolean,
+    default: false,
+  },
+  defaultPrice: {
+    type: String as PropType<string | null | undefined>,
+    default: undefined,
+  },
 })
 
 const emit = defineEmits(['updated', 'close'])
@@ -37,6 +45,15 @@ const borrowerName = ref<string>(props.loan?.borrowerName ?? '')
 const comment = ref<string>(props.loan?.comment ?? '')
 const startDate = ref<Date | null>(props.loan?.startDate ? new Date(props.loan.startDate) : null)
 const endDate = ref<Date | null>(props.loan?.endDate ? new Date(props.loan.endDate) : null)
+
+// Billing — optional, only offered when opened from the sale page (props.billable), and only
+// when the loan item actually has a positive price to bill.
+const canBillLoan = computed(() => {
+  if (!props.billable || isEditing.value) return false
+  const price = parseFloat(props.defaultPrice ?? '')
+  return !isNaN(price) && price > 0
+})
+const addToSale = ref<boolean>(canBillLoan.value)
 
 watch(borrowerType, () => {
   borrower.value = undefined
@@ -76,7 +93,8 @@ async function submit() {
   }
   toast.add({color: 'success', title: isEditing.value ? 'Prêt modifié' : 'Prêt enregistré'})
   emit('updated')
-  emit('close', true)
+  const price = canBillLoan.value && addToSale.value ? props.defaultPrice! : undefined
+  emit('close', price !== undefined ? {billing: {price}} : true)
 }
 </script>
 
@@ -117,12 +135,17 @@ async function submit() {
           />
         </div>
 
-        <div v-if="borrowerType === 'member'" class="border rounded-lg p-3">
-          <SearchMember compact @selected-member="(m: Member) => borrower = m" />
+        <div v-if="borrowerType === 'member'">
+          <SearchMember v-if="!borrower" compact @selected-member="(m: Member) => borrower = m" />
           <div v-if="borrower" class="mt-2 text-sm font-medium text-primary flex items-center gap-1">
-            <UIcon name="i-heroicons-check-circle" />
-            {{ getMemberDisplayName(borrower) }}
-            <UIcon name="i-heroicons-x-mark" class="cursor-pointer ml-1" @click="borrower = undefined" />
+            <UButton
+              block
+              variant="soft"
+              trailing-icon="i-heroicons-x-mark"
+              @click="borrower = undefined"
+            >
+              {{ getMemberDisplayName(borrower) }}
+            </UButton>
           </div>
         </div>
 
@@ -151,10 +174,18 @@ async function submit() {
       <UFormField label="Commentaire (optionnel)">
         <UTextarea v-model="comment" :rows="2" placeholder="Remarques…" />
       </UFormField>
+
+      <!-- Billing — only offered when recording a new loan from the sale page, for a priced item -->
+      <UFormField v-if="canBillLoan" class="border-t pt-2 flex items-center justify-between gap-2">
+        <template #label>
+          Ajouter à la vente ({{ defaultPrice }} €)
+        </template>
+        <USwitch v-model="addToSale" data-testid="loan-add-to-sale-switch" />
+      </UFormField>
     </div>
 
     <template #actions>
-      <UButton :loading="isLoading" @click="submit">{{ isEditing ? 'Enregistrer les modifications' : 'Enregistrer le prêt' }}</UButton>
+      <UButton data-testid="loan-modal-submit" :loading="isLoading" @click="submit">{{ isEditing ? 'Enregistrer les modifications' : 'Enregistrer le prêt' }}</UButton>
     </template>
   </ModalWithActions>
 </template>
