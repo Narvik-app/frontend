@@ -90,7 +90,7 @@ export const clubPlugins: ClubPluginInfo[] = [
   { key: 'presencesEnabled', label: 'Présences', description: 'Enregistrement des présences' },
   { key: 'salesEnabled', label: 'Ventes', description: 'Ventes et gestion des stocks' },
   { key: 'loansEnabled', label: 'Prêts', description: 'Prêt de matériel' },
-  { key: 'timeAndTravelEnabled', label: 'Temps & déplacements', description: 'Déclaration des temps et frais de déplacement des bénévoles' },
+  { key: 'timeAndTravelEnabled', label: 'Temps & kilomètres', description: 'Déclaration du temps et des kilomètres parcourus par les bénévoles' },
 ];
 
 interface _Club extends UuidItem, TimestampItem {

@@ -64,7 +64,8 @@ const selectedDeclaration = ref<TimeAndTravelDeclaration | undefined>()
 
 const columns = [
   {accessorKey: 'date', header: 'Date'},
-  {accessorKey: 'trajet', header: 'Trajet', meta: {class: {th: 'w-full'}}},
+  {accessorKey: 'description', header: 'Motif', meta: {class: {th: 'w-full'}}},
+  {accessorKey: 'trajet', header: 'Trajet'},
   {accessorKey: 'kilometers', header: 'Km'},
   {accessorKey: 'hours', header: 'Heures'},
   {accessorKey: 'vehicle', header: 'Véhicule'},
@@ -177,7 +178,7 @@ loadAttestations()
 
     <UCard>
       <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
-        <div class="text-xl font-bold">Déclarations de temps et déplacements</div>
+        <div class="text-xl font-bold">Déclarations de temps & kilomètres</div>
         <UButton v-if="canEdit" icon="i-heroicons-plus" @click="onCreate">
           Nouvelle déclaration
         </UButton>

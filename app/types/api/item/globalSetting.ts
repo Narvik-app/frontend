@@ -5,6 +5,7 @@ export enum GlobalSettingPublicEnum {
   LEGALS_CGU = 'LEGALS_CGU',
   LEGALS_CGV = 'LEGALS_CGV',
   LEGALS_PRIVACY_POLICY = 'LEGALS_PRIVACY_POLICY',
+  TIME_AND_TRAVEL_ELECTRIC_BONUS_RATE = 'TIME_AND_TRAVEL_ELECTRIC_BONUS_RATE',
 }
 
 export interface GlobalSetting extends Item {
