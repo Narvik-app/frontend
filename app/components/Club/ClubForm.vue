@@ -47,6 +47,7 @@ function getDefaultItem() {
     presencesEnabled: false,
     salesEnabled: false,
     loansEnabled: false,
+    timeAndTravelEnabled: false,
   }
   return item
 }
@@ -76,6 +77,7 @@ async function submitItem() {
     presencesEnabled: item.value.presencesEnabled,
     salesEnabled: item.value.salesEnabled,
     loansEnabled: item.value.loansEnabled,
+    timeAndTravelEnabled: item.value.timeAndTravelEnabled,
     isActivated: item.value.isActivated,
     address: item.value.address,
     zipCode: Number(item.value.zipCode) || null,

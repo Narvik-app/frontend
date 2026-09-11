@@ -7,5 +7,7 @@ export interface Activity extends UuidItem, ClubLinkedItem {
   name: string;
   visibility?: ClubRole|null
   isEnabled: boolean;
+  /** When true, the presence page prompts a time-and-travel declaration right after a presence is registered for this activity */
+  promptTimeAndTravelDeclaration?: boolean;
   memberPresences?: MemberPresence[];
 }
