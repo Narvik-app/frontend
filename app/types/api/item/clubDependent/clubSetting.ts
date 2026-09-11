@@ -12,6 +12,8 @@ interface _ClubSetting extends UuidItem, ClubLinkedItem {
   excludedActivitiesFromOpeningDays?: Activity[] | string[]
   seasonEnd?: string
   emailReplyTo?: string
+  /** Hourly SMIC rate used to value declared time in the time-and-travel plugin */
+  smicHourlyRate?: string | null
 }
 
 export interface ClubSetting extends _ClubSetting {
