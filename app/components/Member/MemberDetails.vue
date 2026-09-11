@@ -868,6 +868,10 @@ async function deleteMember() {
         <MemberPermissions :member="memberRef" @updated="loadItem" />
       </div>
 
+      <div v-if="memberRef && !props.self && selfStore.selectedProfile?.club.timeAndTravelEnabled" class="lg:col-span-9">
+        <TimeAndTravelMemberBoard :member="memberRef" :self="false" />
+      </div>
+
       <div class="lg:col-span-9">
         <GenericCard v-if="totalMemberPresences > 0" :title="`${totalMemberPresences} présences ces 12 derniers mois`">
           <div class="h-96 mt-2">

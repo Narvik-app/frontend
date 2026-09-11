@@ -62,6 +62,11 @@ const permissionPaths: { pattern: string; permission: Permission | Permission[] 
 
   // Member control types - delegable to supervisors
   { pattern: "^/admin/config/member-controls", permission: Permission.MemberControlTypesAccess },
+
+  // Time and travel declaration paths - need ACCESS to view pages, EXPORT for the export flow
+  { pattern: "^/admin/time-and-travel/vehicles", permission: Permission.TimeAndTravelAccess },
+  { pattern: "^/admin/time-and-travel/exports", permission: Permission.TimeAndTravelExport },
+  { pattern: "^/admin/time-and-travel$", permission: Permission.TimeAndTravelAccess },
 ]
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
