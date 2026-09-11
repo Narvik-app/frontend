@@ -157,7 +157,7 @@ const overlay = useOverlay()
 		  <div v-if="timeAndTravelButtonUrl">
             <UButton :to="timeAndTravelButtonUrl" icon="i-heroicons-clock" variant="ghost" color="neutral">
               <template v-if="isDesktopDisplay || isTabletDisplay">
-                Frais
+                Temps & kilomètres
               </template>
             </UButton>
           </div>

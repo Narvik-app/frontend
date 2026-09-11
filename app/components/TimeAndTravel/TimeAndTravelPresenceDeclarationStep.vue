@@ -8,6 +8,8 @@ import MemberTimeAndTravelDeclarationQuery from '~/composables/api/query/clubDep
 import MemberVehicleQuery from '~/composables/api/query/clubDependent/plugin/timeAndTravel/MemberVehicleQuery'
 import type {SelectApiItem} from '~/types/select'
 import type {FormError, FormErrorEvent} from '#ui/types'
+import {DECLARATION_DESCRIPTION_MAX_LENGTH, isValidHoursGranularity} from '~/utils/timeAndTravel'
+import {blockNonDecimalKey} from '~/utils/string'
 
 const props = defineProps({
   member: {
@@ -35,7 +37,8 @@ const isSubmitting = ref(false)
 const vehicles = ref<MemberVehicle[]>([])
 const hours = ref('1.00')
 const kilometers = ref(0)
-const description = ref(props.activities.map(a => a.name).join(', '))
+// Activity names joined together can exceed the description limit — truncated upfront so the initial value isn't silently rejected by the backend.
+const description = ref(props.activities.map(a => a.name).join(', ').slice(0, DECLARATION_DESCRIPTION_MAX_LENGTH))
 
 vehicleQuery.getAll().then(({items}) => {
   vehicles.value = items.filter(v => v.isEnabled)
@@ -54,6 +57,9 @@ const validate = (state: {hours: string, kilometers: number}): FormError[] => {
   const errors: FormError[] = []
   if (state.kilometers > 0 && !selectedVehicle.value) {
     errors.push({name: 'memberVehicle', message: 'Champ requis'})
+  }
+  if (Number(state.hours) > 0 && !isValidHoursGranularity(Number(state.hours))) {
+    errors.push({name: 'hours', message: 'Les heures doivent être un multiple de 0.5 (ex : 1, 1.5, 2)'})
   }
   return errors
 }
@@ -78,7 +84,7 @@ async function onSubmit() {
     kilometers: hasKilometers ? Number(kilometers.value) : null,
     // The backend maps this to a decimal-as-string column: the number input can coerce it to a JS number, always send a string.
     hours: Number(hours.value) > 0 ? String(hours.value) : null,
-    description: description.value || props.activities.map(a => a.name).join(', ') || 'Activité bénévole',
+    description: description.value || props.activities.map(a => a.name).join(', ').slice(0, DECLARATION_DESCRIPTION_MAX_LENGTH) || 'Activité bénévole',
     isRoundtrip: hasKilometers,
     memberVehicle: hasKilometers ? (selectedVehicle.value?.item?.['@id'] ?? null) : null,
     memberPresence: props.memberPresence?.['@id'],
@@ -99,22 +105,34 @@ async function onSubmit() {
 
 <template>
   <div>
-    <div class="text-2xl">Déclaration de frais pour <b>{{ member.fullName }}</b></div>
+    <div class="text-2xl">Déclaration de temps & kilomètres pour <b>{{ member.fullName }}</b></div>
     <p class="text-muted text-sm mt-2">
       L'activité sélectionnée permet de déclarer du temps et/ou des kilomètres. Vous pouvez passer cette étape si vous ne le souhaitez pas.
     </p>
 
     <UForm :state="{hours, kilometers}" :validate="validate" class="mt-4 flex flex-col gap-4" @submit="onSubmit" @error="onError">
       <UFormField label="Motif" name="description">
-        <UInput v-model="description" class="w-full" />
+        <UInput
+          v-model="description"
+          :maxlength="DECLARATION_DESCRIPTION_MAX_LENGTH"
+          class="w-full"
+          aria-describedby="description-character-count"
+          :ui="{trailing: 'pointer-events-none'}"
+        >
+          <template #trailing>
+            <div id="description-character-count" class="text-xs text-muted tabular-nums" aria-live="polite" role="status">
+              {{ description?.length ?? 0 }}/{{ DECLARATION_DESCRIPTION_MAX_LENGTH }}
+            </div>
+          </template>
+        </UInput>
       </UFormField>
 
       <UFormField label="Heures" name="hours">
-        <UInput v-model="hours" type="number" step="0.25" min="0" class="w-full" />
+        <UInput v-model="hours" type="number" step="0.5" min="0" class="w-full" @keydown="blockNonDecimalKey" />
       </UFormField>
 
       <UFormField label="Kilomètres" name="kilometers">
-        <UInput v-model.number="kilometers" type="number" min="0" class="w-full" />
+        <UInput v-model.number="kilometers" type="number" min="0" class="w-full" @keydown="blockNonDecimalKey" />
       </UFormField>
 
       <UFormField v-if="kilometers > 0" label="Véhicule" name="memberVehicle" required>

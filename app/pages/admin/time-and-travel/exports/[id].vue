@@ -32,6 +32,34 @@ const isDownloading = ref<string | undefined>()
 
 const isDraft = computed(() => item.value?.status === TimeAndTravelExportStatus.Draft)
 
+// The export has no name of its own — its period is its name.
+const exportTitle = computed(() => {
+  if (!item.value) return 'Export'
+  return `${formatDateReadable(item.value.startDate)} — ${formatDateReadable(item.value.endDate)}`
+})
+
+// Regeneration (triggered by locking here, or automatically by a declaration change elsewhere —
+// see documentation/FEATURE_MERCURE.md) runs in the background. There's no push notification yet,
+// so this page polls while the export reports itself as regenerating.
+let pollTimeout: ReturnType<typeof setTimeout> | undefined
+onUnmounted(() => { if (pollTimeout) clearTimeout(pollTimeout) })
+
+async function pollWhileRegenerating() {
+  if (!item.value?.isRegenerating) {
+    isProcessing.value = false
+    return
+  }
+  pollTimeout = setTimeout(async () => {
+    await loadItem()
+    if (item.value?.isRegenerating) {
+      pollWhileRegenerating()
+    } else {
+      isProcessing.value = false
+      await loadAttestations()
+    }
+  }, 2000)
+}
+
 async function loadItem() {
   isLoading.value = true
   const {retrieved, error} = await exportQuery.get(exportUuid)
@@ -67,13 +95,14 @@ async function lock() {
   if (!item.value) return
   isProcessing.value = true
   const {error} = await exportQuery.lock(item.value)
-  isProcessing.value = false
   if (error) {
+    isProcessing.value = false
     toast.add({color: 'error', title: 'Erreur', description: error.message})
     return
   }
-  toast.add({title: 'Export verrouillé'})
+  toast.add({title: 'Verrouillage en cours…'})
   await loadItem()
+  await pollWhileRegenerating()
 }
 
 async function unlock() {
@@ -103,7 +132,7 @@ async function deleteExport() {
 async function downloadRecap() {
   if (!item.value?.recapFile) return
   isDownloading.value = 'recap'
-  const {error} = await downloadFilePdf(item.value.recapFile, `recapitulatif-${item.value.label ?? item.value.uuid}.pdf`)
+  const {error} = await downloadFilePdf(item.value.recapFile, `recapitulatif-${item.value.startDate}-${item.value.endDate}.pdf`)
   isDownloading.value = undefined
   if (error) {
     toast.add({color: 'error', title: 'Téléchargement impossible', description: error.message})
@@ -128,7 +157,13 @@ function getMemberUuid(attestation: TimeAndTravelExportAttestation): string | un
   return typeof attestation.member === 'object' ? attestation.member?.uuid : undefined
 }
 
-loadItem().then(loadAttestations)
+loadItem().then(async () => {
+  await loadAttestations()
+  if (item.value?.isRegenerating) {
+    isProcessing.value = true
+    await pollWhileRegenerating()
+  }
+})
 </script>
 
 <template>
@@ -140,13 +175,15 @@ loadItem().then(loadAttestations)
     <UCard>
       <div class="flex flex-col md:flex-row justify-between gap-4">
         <div>
-          <div class="text-2xl font-bold">{{ item.label ?? 'Export' }}</div>
-          <div class="text-muted">{{ formatDateReadable(item.startDate) }} — {{ formatDateReadable(item.endDate) }}</div>
+          <div class="text-2xl font-bold">{{ exportTitle }}</div>
         </div>
         <div class="flex flex-col items-end gap-2">
           <UBadge :color="EXPORT_STATUS_COLORS[item.status]" variant="soft">{{ EXPORT_STATUS_LABELS[item.status] }}</UBadge>
+          <UBadge v-if="item.isRegenerating" color="neutral" variant="subtle" icon="i-heroicons-arrow-path">
+            Régénération en cours…
+          </UBadge>
           <div class="text-sm text-muted">{{ item.declarationCount }} déclarations · {{ item.memberCount }} membres</div>
-          <div class="text-lg font-semibold">{{ formatAmount(item.totalAmount) }}</div>
+          <div class="text-lg font-semibold">{{ item.totalKilometers ?? 0 }} km · {{ formatAmount(item.totalAmount) }}</div>
         </div>
       </div>
 
@@ -162,16 +199,19 @@ loadItem().then(loadAttestations)
         </UButton>
 
         <template v-if="isDraft && canExport">
-          <UButton icon="i-heroicons-arrow-path" variant="soft" :loading="isProcessing" @click="regenerate">
+          <UButton icon="i-heroicons-arrow-path" variant="soft" :disabled="item.isRegenerating" :loading="isProcessing" @click="regenerate">
             Régénérer
           </UButton>
           <UButton
             icon="i-heroicons-lock-closed"
-            color="error"
+            color="warning"
+            :disabled="item.isRegenerating"
             :loading="isProcessing"
             @click="overlayDeleteConfirmation.open({
               alertTitle: 'Le verrouillage est définitif : les déclarations ne pourront plus être modifiées.',
-              alertColor: 'error',
+              alertColor: 'warning',
+              confirmLabel: 'Verrouiller',
+              confirmColor: 'warning',
               async onDelete() {
                 await lock()
                 overlayDeleteConfirmation.close(true)

@@ -5,7 +5,7 @@ import {Permission} from '~/types/api/permissions'
 
 useHead({
   titleTemplate: (titleChunk) => {
-    return titleChunk ? `${titleChunk} - Temps & déplacements - Narvik` : 'Temps & déplacements - Narvik'
+    return titleChunk ? `${titleChunk} - Temps & kilomètres - Narvik` : 'Temps & kilomètres - Narvik'
   }
 })
 
