@@ -20,7 +20,6 @@ const CONTENT_TYPE_FORM_DATA = "multipart/form-data"
 async function useApi<T>(path: string, options: UseApiDataOptions<T> = {}, requireLogin: boolean = true, timeout: number = 30000): Promise<T | undefined> {
   let overloadedOptions: UseApiDataOptions<T> = {
     mode: "cors",
-    cache: false,
     timeout: timeout,
 
     headers: {
@@ -172,7 +171,7 @@ export async function useFetchItem<T>(path: string, useCache: boolean = false, r
 
   try {
     const data = await useApi<T>(path, {
-      cache: useCache,
+      payloadCache: useCache,
     }, requireLogin);
 
     retrieved = data as T;
