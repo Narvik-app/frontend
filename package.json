@@ -48,8 +48,8 @@
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.17.0",
-    "@playwright/test": "^1.62.1",
-    "eslint": "^10.9.1",
+    "@playwright/test": "^1.63.0",
+    "eslint": "^10.10.0",
     "typescript": "^6.0.3"
   },
   "packageManager": "pnpm@11.16.0"
