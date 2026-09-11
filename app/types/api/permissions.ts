@@ -197,7 +197,7 @@ export const permissionSections: PermissionSection[] = [
     ],
   },
   {
-    label: 'Temps & déplacements',
+    label: 'Temps & kilomètres',
     plugin: 'timeAndTravelEnabled',
     features: [
       {

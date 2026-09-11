@@ -46,9 +46,9 @@ const isLoading = ref(true)
 const modalOpen = ref(false)
 
 const columns = [
-  {accessorKey: 'label', header: 'Nom', meta: {class: {th: 'w-full'}}},
-  {accessorKey: 'period', header: 'Période'},
+  {accessorKey: 'period', header: 'Période', meta: {class: {th: 'w-full'}}},
   {accessorKey: 'declarationCount', header: 'Déclarations'},
+  {accessorKey: 'totalKilometers', header: 'Km'},
   {accessorKey: 'totalAmount', header: 'Montant'},
   {accessorKey: 'status', header: 'Statut'},
   {accessorKey: 'actions', header: ''},
@@ -98,7 +98,6 @@ loadExports()
       <template #empty>
         <div class="py-6 text-center italic text-sm">Aucun export.</div>
       </template>
-      <template #label-cell="{ row }">{{ row.original.label ?? '-' }}</template>
       <template #period-cell="{ row }">{{ formatDateReadable(row.original.startDate) }} — {{ formatDateReadable(row.original.endDate) }}</template>
       <template #totalAmount-cell="{ row }">{{ formatAmount(row.original.totalAmount) }}</template>
       <template #status-cell="{ row }">

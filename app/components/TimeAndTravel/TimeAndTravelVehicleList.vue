@@ -44,6 +44,7 @@ const columns = props.member
       {accessorKey: 'vehicle', header: 'Véhicule', meta: {class: {th: 'w-full'}}},
       {accessorKey: 'licensePlate', header: 'Immatriculation'},
       {accessorKey: 'engineType', header: 'Motorisation'},
+      {accessorKey: 'currentYear', header: 'Cette année'},
       {accessorKey: 'isEnabled', header: 'Actif'},
       {accessorKey: 'actions', header: ''},
     ]
@@ -52,6 +53,7 @@ const columns = props.member
       {accessorKey: 'vehicle', header: 'Véhicule', meta: {class: {th: 'w-full'}}},
       {accessorKey: 'licensePlate', header: 'Immatriculation'},
       {accessorKey: 'engineType', header: 'Motorisation'},
+      {accessorKey: 'currentYear', header: 'Cette année'},
       {accessorKey: 'isEnabled', header: 'Actif'},
       {accessorKey: 'actions', header: ''},
     ]
@@ -130,6 +132,12 @@ loadVehicles()
       <template #member-cell="{ row }">{{ getMemberName(row.original) }}</template>
       <template #vehicle-cell="{ row }">{{ row.original.brand }} {{ row.original.model }}</template>
       <template #engineType-cell="{ row }">{{ VEHICLE_ENGINE_TYPE_LABELS[row.original.engineType!] ?? row.original.engineType }}</template>
+      <template #currentYear-cell="{ row }">
+        <span v-if="row.original.currentYearKilometers" class="text-sm">
+          {{ row.original.currentYearKilometers }} km · {{ row.original.currentYearEstimatedAmount }} €
+        </span>
+        <span v-else class="text-sm text-muted">-</span>
+      </template>
       <template #isEnabled-cell="{ row }">
         <USwitch :model-value="row.original.isEnabled" disabled />
       </template>

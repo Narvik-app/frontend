@@ -21,9 +21,9 @@ export const EXPORT_STATUS_COLORS: Record<TimeAndTravelExportStatus, 'warning' |
 
 interface _TimeAndTravelExport extends UuidItem, ClubLinkedItem, TimestampItem {
   status?: TimeAndTravelExportStatus
+  isRegenerating?: boolean
   startDate?: string
   endDate?: string
-  label?: string | null
   smicHourlyRate?: string | null
   generatedBy?: Member | string | null
   lockedAt?: string | null
@@ -33,6 +33,7 @@ interface _TimeAndTravelExport extends UuidItem, ClubLinkedItem, TimestampItem {
   recapFile?: File | null
   declarationCount?: number
   memberCount?: number
+  totalKilometers?: number
   totalAmount?: number
 }
 
@@ -45,7 +46,6 @@ export interface TimeAndTravelExport extends _TimeAndTravelExport {
 export interface WriteTimeAndTravelExport {
   startDate: string
   endDate: string
-  label?: string | null
 }
 
 export interface TimeAndTravelExportAttestation extends UuidItem, ClubLinkedItem, TimestampItem {

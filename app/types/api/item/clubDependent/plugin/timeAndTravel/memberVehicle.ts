@@ -3,6 +3,16 @@ import type {ClubLinkedItem} from "~/types/api/clubLinkedItem";
 import type {TimestampItem} from "~/types/api/timestampItem";
 import type {Member} from "~/types/api/item/clubDependent/member";
 import type {SelectMenuItem} from "#ui/types";
+import {VehicleCategory, VEHICLE_CATEGORY_LABELS} from "~/types/api/item/clubDependent/plugin/timeAndTravel/mileageRate";
+
+export {VehicleCategory, VEHICLE_CATEGORY_LABELS}
+
+export function getSelectMenuVehicleCategory(): SelectMenuItem[] {
+  return Object.values(VehicleCategory).map((value) => ({
+    label: VEHICLE_CATEGORY_LABELS[value],
+    value,
+  }))
+}
 
 export enum VehicleEngineType {
   Petrol = 'petrol',
@@ -31,9 +41,13 @@ interface _MemberVehicle extends UuidItem, ClubLinkedItem, TimestampItem {
   model?: string | null
   licensePlate?: string
   engineType?: VehicleEngineType
+  category?: VehicleCategory
   fiscalPower?: number
-  fiscalCoefficient?: string
   isEnabled?: boolean
+  // Read-only preview, hydrated server-side — see MemberVehicleSubscriber on the backend.
+  currentYearKilometers?: number | null
+  currentYearEstimatedAmount?: string | null
+  currentYearCalculationDescription?: string | null
 }
 
 export interface MemberVehicle extends _MemberVehicle {
