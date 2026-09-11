@@ -8,6 +8,7 @@ import type {MemberPresence} from "~/types/api/item/clubDependent/plugin/presenc
 import MemberPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/MemberPresenceQuery";
 import {formatDateInput} from "~/utils/date";
 import {ClubRole, getAvailableClubRole, hasClubSupervisorRole, isClubAdmin} from "~/types/api/item/club";
+import {useSelfUserStore} from "~/stores/useSelfUser";
 
 const props = defineProps({
   member: {
@@ -24,8 +25,16 @@ const props = defineProps({
     type: Boolean,
     required: false,
     default: false
+  },
+  /** Set to false to skip the post-registration time-and-travel declaration prompt (e.g. a badger/kiosk session) */
+  promptDeclaration: {
+    type: Boolean,
+    required: false,
+    default: true
   }
 });
+
+const selfStore = useSelfUserStore()
 
 const emit = defineEmits([
   'registered',
@@ -77,6 +86,24 @@ const activitiesSupervisor = computed(() => {
 })
 const activitiesAdmin = computed(() => {
   return activities.value.filter((actvt) => actvt.isEnabled && actvt.visibility === ClubRole.Admin)
+})
+
+// Two-stage flow: after the presence is registered, prompt a time-and-travel
+// declaration when a selected activity calls for it. Only on create (never
+// when editing an existing presence) and never for a badger/kiosk session.
+const stage: Ref<'presence' | 'declaration'> = ref('presence')
+const createdPresence: Ref<MemberPresence | undefined> = ref(undefined)
+
+const declarableSelectedActivities = computed(() => {
+  return activities.value.filter((actvt) => actvt.promptTimeAndTravelDeclaration && actvt["@id"] && state.activities[actvt["@id"]])
+})
+
+const shouldPromptDeclaration = computed(() => {
+  return props.promptDeclaration
+    && !props.memberPresence
+    && !selfStore.isBadger()
+    && selfStore.selectedProfile?.club.timeAndTravelEnabled
+    && declarableSelectedActivities.value.length > 0
 })
 
 
@@ -139,7 +166,17 @@ async function onSubmit(event: FormSubmitEvent<MemberPresenceFormState>) {
     title: "Présence enregistrée"
   });
 
+  if (shouldPromptDeclaration.value && item) {
+    createdPresence.value = item
+    stage.value = 'declaration'
+    return
+  }
+
   emit('registered', item)
+}
+
+function onDeclarationDone() {
+  emit('registered', createdPresence.value)
 }
 
 </script>
@@ -158,6 +195,16 @@ async function onSubmit(event: FormSubmitEvent<MemberPresenceFormState>) {
       </div>
 
       <USkeleton class="mt-4 h-6 w-full" />
+    </div>
+
+    <div v-else-if="stage === 'declaration'">
+      <TimeAndTravelPresenceDeclarationStep
+        :member="state.member"
+        :member-presence="createdPresence"
+        :activities="declarableSelectedActivities"
+        @done="onDeclarationDone"
+        @skipped="onDeclarationDone"
+      />
     </div>
 
     <div v-else>

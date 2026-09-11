@@ -109,6 +109,8 @@ async function createItem() {
     isActivated: true,
     presencesEnabled: true,
     salesEnabled: true,
+    loansEnabled: false,
+    timeAndTravelEnabled: false,
   }
   selectedItem.value = item
   isSideVisible.value = true

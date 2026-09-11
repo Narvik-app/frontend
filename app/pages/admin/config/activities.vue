@@ -6,6 +6,7 @@ import ActivityModalDelete from "~/components/Activity/ActivityModalDelete.vue";
 import ActivityModalMigrate from "~/components/Activity/ActivityModalMigrate.vue";
 import {getAvailableClubRoles} from "~/types/api/item/club";
 import type {SelectApiItem} from "~/types/select";
+import {useSelfUserStore} from "~/stores/useSelfUser";
 
 definePageMeta({
   layout: "admin"
@@ -17,6 +18,7 @@ useHead({
 
 const toast = useToast()
 const overlay = useOverlay()
+const selfStore = useSelfUserStore()
 
 const isLoading = ref(true)
 const activities: Ref<Activity[]> = ref([])
@@ -91,7 +93,8 @@ const validate = (state: any): FormError[] => {
 function createActivity() {
   selectedActivity.value = {
     isEnabled: true,
-    name: ''
+    name: '',
+    promptTimeAndTravelDeclaration: false,
   }
 }
 
@@ -101,7 +104,8 @@ async function updateActivity(activity: Activity) {
   const payload: Activity = {
     name: activity.name,
     isEnabled: activity.isEnabled,
-    visibility: activity.visibility
+    visibility: activity.visibility,
+    promptTimeAndTravelDeclaration: activity.promptTimeAndTravelDeclaration,
   }
 
   // We verify if it's a creation or an update
@@ -244,6 +248,15 @@ getActivities()
                   v-model="selectedActivity.visibility as string"
                   :items="availableRolesSelect"
                   :placeholder="`Par défaut - Membre`" />
+              </UFormField>
+
+              <UFormField
+                v-if="selfStore.selectedProfile?.club.timeAndTravelEnabled"
+                label="Déclaration de frais"
+                name="promptTimeAndTravelDeclaration"
+                description="Propose la déclaration de temps/km juste après l'enregistrement d'une présence pour cette activité."
+              >
+                <USwitch v-model="selectedActivity.promptTimeAndTravelDeclaration"/>
               </UFormField>
             </div>
 
