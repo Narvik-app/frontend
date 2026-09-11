@@ -10,9 +10,18 @@ import {formatDateInput} from '~/utils/date'
 export {VEHICLE_ENGINE_TYPE_LABELS, getSelectMenuVehicleEngineType} from '~/types/api/item/clubDependent/plugin/timeAndTravel/memberVehicle'
 export {EXPORT_STATUS_LABELS, EXPORT_STATUS_COLORS} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelExport'
 
+/** Mirrors TimeAndTravelDeclaration::LOCATION_MAX_LENGTH / DESCRIPTION_MAX_LENGTH on the backend — kept short so a trajet still fits on one line in the exports. */
+export const DECLARATION_LOCATION_MAX_LENGTH = 30
+export const DECLARATION_DESCRIPTION_MAX_LENGTH = 50
+
 /** A declaration can be edited/deleted by its owner or an authorized supervisor/admin only while it's not locked. */
 export function declarationIsEditable(declaration: TimeAndTravelDeclaration): boolean {
   return !declaration.isLocked
+}
+
+/** Mirrors TimeAndTravelDeclaration::validateHoursGranularity on the backend — half-hour steps only, to avoid ambiguous entries like "1.3" (meant as 1h30, actually 1.3h). */
+export function isValidHoursGranularity(hours: number): boolean {
+  return Math.abs(hours * 2 - Math.round(hours * 2)) < 0.001
 }
 
 export function vehicleDisplayName(vehicle?: MemberVehicle | string | null): string {
@@ -25,10 +34,14 @@ export function formatAmount(value?: number | string | null): string {
   return formatMonetary(value)
 }
 
-/** Trajet display for the declarations tables — blank for an hours-only declaration (no distance), ↔ for a round trip. */
+/**
+ * Trajet display for the declarations tables — blank for an hours-only declaration (no distance), ↔ for a round trip.
+ * The text-presentation variation selector (U+FE0E) forces the plain Unicode glyph instead of a colorful emoji
+ * rendering, which some browsers/fonts otherwise substitute for U+2194.
+ */
 export function formatTrajet(declaration: TimeAndTravelDeclaration): string {
   if (!declaration.departureLocation && !declaration.arrivalLocation) return '-'
-  const arrow = declaration.isRoundtrip ? '↔' : '→'
+  const arrow = declaration.isRoundtrip ? '↔︎' : '→︎'
   return `${declaration.departureLocation ?? ''} ${arrow} ${declaration.arrivalLocation ?? ''}`
 }
 

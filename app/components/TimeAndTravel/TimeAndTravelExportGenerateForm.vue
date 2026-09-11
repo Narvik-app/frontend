@@ -2,24 +2,23 @@
 import TimeAndTravelExportQuery from '~/composables/api/query/clubDependent/plugin/timeAndTravel/TimeAndTravelExportQuery'
 import type {TimeAndTravelExport} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelExport'
 import type {FormError, FormErrorEvent} from '#ui/types'
-import {formatDateInput} from '~/utils/date'
+import {formatDateInput, formatDateRangeReadable} from '~/utils/date'
+import type {DateRange} from '~/types/date'
 
 const emit = defineEmits(['updated', 'canceled'])
 
 const toast = useToast()
 const exportQuery = new TimeAndTravelExportQuery()
 
-const label = ref('')
-const startDate = ref<Date | null>(null)
-const endDate = ref<Date | null>(null)
+const selectedRange = ref<DateRange | undefined>(undefined)
+const dateRangePopoverOpen = ref(false)
 const isCreating = ref(false)
 
-const state = computed(() => ({label: label.value, startDate: startDate.value, endDate: endDate.value}))
+const state = computed(() => ({selectedRange: selectedRange.value}))
 
 const validate = (): FormError[] => {
   const errors: FormError[] = []
-  if (!startDate.value) errors.push({name: 'startDate', message: 'Champ requis'})
-  if (!endDate.value) errors.push({name: 'endDate', message: 'Champ requis'})
+  if (!selectedRange.value) errors.push({name: 'selectedRange', message: 'Champ requis'})
   return errors
 }
 
@@ -30,13 +29,12 @@ async function onError(event: FormErrorEvent) {
 }
 
 async function onSubmit() {
-  if (!startDate.value || !endDate.value) return
+  if (!selectedRange.value) return
   isCreating.value = true
 
   const payload = {
-    startDate: formatDateInput(startDate.value.toString()),
-    endDate: formatDateInput(endDate.value.toString()),
-    label: label.value || undefined,
+    startDate: formatDateInput(selectedRange.value.start.toString()),
+    endDate: formatDateInput(selectedRange.value.end.toString()),
   }
 
   const {created, error} = await exportQuery.post(payload)
@@ -54,16 +52,23 @@ async function onSubmit() {
 
 <template>
   <UForm class="flex gap-2 flex-col" :state="state" :validate="validate" @submit="onSubmit" @error="onError">
-    <UFormField label="Nom (optionnel)" name="label">
-      <UInput v-model="label" class="w-full" placeholder="Ex : Saison 2025/2026" />
-    </UFormField>
-
-    <UFormField label="Date de début" name="startDate" required>
-      <GenericDatePickerField v-model="startDate" placeholder="Choisir une date" />
-    </UFormField>
-
-    <UFormField label="Date de fin" name="endDate" required>
-      <GenericDatePickerField v-model="endDate" placeholder="Choisir une date" />
+    <UFormField label="Période" name="selectedRange" required>
+      <UPopover v-model:open="dateRangePopoverOpen">
+        <UButton
+          icon="i-heroicons-calendar-days-20-solid"
+          color="neutral"
+          variant="outline"
+          block
+          :label="selectedRange ? formatDateRangeReadable(selectedRange) || 'Choisir une plage' : 'Choisir une plage'"
+        />
+        <template #content>
+          <GenericDateRangePicker
+            :date-range="selectedRange"
+            :season-selectors="false"
+            @range-updated="(range) => { dateRangePopoverOpen = false; selectedRange = range as DateRange }"
+          />
+        </template>
+      </UPopover>
     </UFormField>
 
     <UButton :loading="isCreating" block type="submit">

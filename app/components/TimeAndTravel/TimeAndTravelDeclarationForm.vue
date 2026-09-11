@@ -8,6 +8,8 @@ import MemberVehicleQuery from '~/composables/api/query/clubDependent/plugin/tim
 import type {FormError, FormErrorEvent} from '#ui/types'
 import type {SelectApiItem} from '~/types/select'
 import {formatDateInput} from '~/utils/date'
+import {DECLARATION_LOCATION_MAX_LENGTH, DECLARATION_DESCRIPTION_MAX_LENGTH, isValidHoursGranularity} from '~/utils/timeAndTravel'
+import {blockNonDecimalKey} from '~/utils/string'
 
 const props = defineProps({
   item: {
@@ -87,6 +89,10 @@ const validate = (state: TimeAndTravelDeclaration): FormError[] => {
   if (!stateHasKilometers && !hasHours) {
     errors.push({name: 'kilometers', message: 'Au moins un des deux champs (km ou heures) est requis'})
     errors.push({name: 'hours', message: 'Au moins un des deux champs (km ou heures) est requis'})
+  }
+
+  if (hasHours && !isValidHoursGranularity(Number(state.hours))) {
+    errors.push({name: 'hours', message: 'Les heures doivent être un multiple de 0.5 (ex : 1, 1.5, 2)'})
   }
 
   if (stateHasKilometers) {
@@ -171,11 +177,23 @@ async function onSubmit() {
     </UFormField>
 
     <UFormField label="Motif" name="description" required>
-      <UInput v-model="item.description" class="w-full" />
+      <UInput
+        v-model="item.description"
+        :maxlength="DECLARATION_DESCRIPTION_MAX_LENGTH"
+        class="w-full"
+        aria-describedby="description-character-count"
+        :ui="{trailing: 'pointer-events-none'}"
+      >
+        <template #trailing>
+          <div id="description-character-count" class="text-xs text-muted tabular-nums" aria-live="polite" role="status">
+            {{ item.description?.length ?? 0 }}/{{ DECLARATION_DESCRIPTION_MAX_LENGTH }}
+          </div>
+        </template>
+      </UInput>
     </UFormField>
 
     <UFormField label="Heures" name="hours">
-      <UInput v-model="item.hours" type="number" step="0.25" min="0" class="w-full" />
+      <UInput v-model="item.hours" type="number" step="0.5" min="0" class="w-full" @keydown="blockNonDecimalKey" />
     </UFormField>
 
     <UFormField label="Kilomètres" name="kilometers">
@@ -187,7 +205,7 @@ async function onSubmit() {
           :aria-label="item.isRoundtrip ? 'Aller-retour (cliquer pour repasser en aller simple)' : 'Aller simple (cliquer pour déclarer un aller-retour)'"
           @click="item.isRoundtrip = !item.isRoundtrip"
         />
-        <UInput v-model.number="item.kilometers" type="number" min="0" class="flex-1" />
+        <UInput v-model.number="item.kilometers" type="number" min="0" class="flex-1" @keydown="blockNonDecimalKey" />
         <UButton v-if="item.isRoundtrip" color="primary" variant="soft" disabled>
           {{ totalKilometers }} km
         </UButton>
@@ -196,11 +214,35 @@ async function onSubmit() {
 
     <template v-if="hasKilometers">
       <UFormField label="Lieu de départ" name="departureLocation" required>
-        <UInput v-model="item.departureLocation" class="w-full" />
+        <UInput
+          v-model="item.departureLocation"
+          :maxlength="DECLARATION_LOCATION_MAX_LENGTH"
+          class="w-full"
+          aria-describedby="departure-location-character-count"
+          :ui="{trailing: 'pointer-events-none'}"
+        >
+          <template #trailing>
+            <div id="departure-location-character-count" class="text-xs text-muted tabular-nums" aria-live="polite" role="status">
+              {{ item.departureLocation?.length ?? 0 }}/{{ DECLARATION_LOCATION_MAX_LENGTH }}
+            </div>
+          </template>
+        </UInput>
       </UFormField>
 
       <UFormField label="Lieu d'arrivée" name="arrivalLocation" required>
-        <UInput v-model="item.arrivalLocation" class="w-full" />
+        <UInput
+          v-model="item.arrivalLocation"
+          :maxlength="DECLARATION_LOCATION_MAX_LENGTH"
+          class="w-full"
+          aria-describedby="arrival-location-character-count"
+          :ui="{trailing: 'pointer-events-none'}"
+        >
+          <template #trailing>
+            <div id="arrival-location-character-count" class="text-xs text-muted tabular-nums" aria-live="polite" role="status">
+              {{ item.arrivalLocation?.length ?? 0 }}/{{ DECLARATION_LOCATION_MAX_LENGTH }}
+            </div>
+          </template>
+        </UInput>
       </UFormField>
 
       <UFormField label="Véhicule" name="memberVehicle" required>
