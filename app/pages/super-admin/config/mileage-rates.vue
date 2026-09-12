@@ -84,7 +84,7 @@ function tierLabel(row: MileageRate): string {
   return row.tierMaxKm ? `Jusqu'à ${row.tierMaxKm} km` : 'Au-delà'
 }
 
-function rowClicked(row: TableRow<MileageRate>) {
+function rowClicked(_event: Event, row: TableRow<MileageRate>) {
   selectedItem.value = {...row.original}
   isSideVisible.value = true
 }
