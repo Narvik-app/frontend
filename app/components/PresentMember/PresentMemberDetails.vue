@@ -11,6 +11,9 @@ import {useSelfUserStore} from "~/stores/useSelfUser";
 import MemberPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/MemberPresenceQuery";
 import {convertUuidToUrlUuid} from "~/utils/resource";
 import {memberControlColor} from "~/utils/memberControl";
+import {Permission} from "~/types/api/permissions";
+import MemberTimeAndTravelDeclarationQuery from "~/composables/api/query/clubDependent/plugin/timeAndTravel/MemberTimeAndTravelDeclarationQuery";
+import type {TimeAndTravelDeclaration} from "~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelDeclaration";
 
 function visibleControls(member: Member) {
   return (member.controls ?? [])
@@ -21,6 +24,7 @@ function visibleControls(member: Member) {
 const selfStore = useSelfUserStore()
 const isSupervisor = selfStore.hasSupervisorRole()
 const isBadger = selfStore.isBadger()
+const canDeclare = computed(() => selfStore.can(Permission.TimeAndTravelEdit) && !!selfStore.selectedProfile?.club.timeAndTravelEnabled)
 
 const props = defineProps({
   item: {
@@ -58,6 +62,22 @@ const totalMemberPresences = computed(() => memberPresences.value.length)
 const chartData: Ref<ChartDoughnutData|undefined> = ref(undefined)
 
 const updateMemberPresenceModalOpen = ref(false);
+const declarationModalOpen = ref(false);
+const existingDeclaration: Ref<TimeAndTravelDeclaration | undefined> = ref(undefined)
+
+function loadExistingDeclaration() {
+  if (!member.value || !memberPresence.value.uuid) return
+  new MemberTimeAndTravelDeclarationQuery(member.value)
+    .getAll(new URLSearchParams({'memberPresence.uuid': memberPresence.value.uuid}))
+    .then(({items}) => {
+      existingDeclaration.value = items[0]
+    })
+}
+
+function onDeclarationUpdated(declaration: TimeAndTravelDeclaration) {
+  declarationModalOpen.value = false
+  existingDeclaration.value = declaration
+}
 
 // Load the member presence datas
 if (memberPresence.value && memberPresence.value.member?.uuid) {
@@ -75,6 +95,10 @@ if (memberPresence.value && memberPresence.value.member?.uuid) {
             memberProfileImage.value = profileImage.retrieved
           }
         })
+      }
+
+      if (canDeclare.value) {
+        loadExistingDeclaration()
       }
     }
   })
@@ -167,6 +191,13 @@ async function deletePresence() {
               variant="soft"
               label="Éditer la présence"
               @click="updateMemberPresenceModalOpen = true"
+            />
+            <UButton v-if="member && canDeclare"
+              icon="i-heroicons-clock"
+              size="xs"
+              variant="soft"
+              :label="existingDeclaration ? 'Modifier la déclaration' : 'Déclarer temps & kilomètres'"
+              @click="declarationModalOpen = true"
             />
             <UTooltip v-if="isSupervisor" text="Supprimer la présence">
               <UPopover v-model:open="popoverOpen">
@@ -339,6 +370,20 @@ async function deletePresence() {
             @canceled="updateMemberPresenceModalOpen = false"
           />
         </div>
+      </template>
+    </UModal>
+
+    <UModal v-if="member" v-model:open="declarationModalOpen">
+      <template #content>
+        <UCard>
+          <TimeAndTravelDeclarationForm
+            :member="member"
+            :item="existingDeclaration"
+            :member-presence="memberPresence"
+            @updated="onDeclarationUpdated"
+            @canceled="declarationModalOpen = false"
+          />
+        </UCard>
       </template>
     </UModal>
   </div>

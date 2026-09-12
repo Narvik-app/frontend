@@ -256,7 +256,7 @@ onUnmounted(() => {
             <SearchMember :query="searchQuery" @selected-member="memberSelectedFromSearch" />
           </template>
           <template v-else>
-            <RegisterMemberPresence :member="selectedMember" @registered="presenceRegistered" @canceled="searchMemberModalOpen = false;" />
+            <RegisterMemberPresence :member="selectedMember" prompt-based-on-member-role @registered="presenceRegistered" @canceled="searchMemberModalOpen = false;" />
           </template>
         </div>
       </template>

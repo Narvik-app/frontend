@@ -9,6 +9,7 @@ import MemberPresenceQuery from "~/composables/api/query/clubDependent/plugin/pr
 import {formatDateInput} from "~/utils/date";
 import {ClubRole, getAvailableClubRole, hasClubSupervisorRole, isClubAdmin} from "~/types/api/item/club";
 import {useSelfUserStore} from "~/stores/useSelfUser";
+import {Permission} from "~/types/api/permissions";
 
 const props = defineProps({
   member: {
@@ -31,6 +32,18 @@ const props = defineProps({
     type: Boolean,
     required: false,
     default: true
+  },
+  /**
+   * The kiosk/today-list page is often used under a shared badger session, so there's no
+   * meaningful "acting user" to check permissions on — instead it prompts based on whether the
+   * MEMBER BEING REGISTERED is themselves a supervisor/admin (e.g. badging themselves in).
+   * Everywhere else (an admin deliberately adding a presence for someone from their member page),
+   * it stays based on the acting user's own TIME_TRAVEL_EDIT permission.
+   */
+  promptBasedOnMemberRole: {
+    type: Boolean,
+    required: false,
+    default: false
   }
 });
 
@@ -90,7 +103,8 @@ const activitiesAdmin = computed(() => {
 
 // Two-stage flow: after the presence is registered, prompt a time-and-travel
 // declaration when a selected activity calls for it. Only on create (never
-// when editing an existing presence) and never for a badger/kiosk session.
+// when editing an existing presence), and only for whoever is allowed to
+// declare — see promptBasedOnMemberRole above for the two ways that's checked.
 const stage: Ref<'presence' | 'declaration'> = ref('presence')
 const createdPresence: Ref<MemberPresence | undefined> = ref(undefined)
 
@@ -99,11 +113,15 @@ const declarableSelectedActivities = computed(() => {
 })
 
 const shouldPromptDeclaration = computed(() => {
-  return props.promptDeclaration
-    && !props.memberPresence
-    && !selfStore.isBadger()
-    && selfStore.selectedProfile?.club.timeAndTravelEnabled
-    && declarableSelectedActivities.value.length > 0
+  if (!props.promptDeclaration || props.memberPresence) return false
+  if (!selfStore.selectedProfile?.club.timeAndTravelEnabled) return false
+  if (declarableSelectedActivities.value.length === 0) return false
+
+  if (props.promptBasedOnMemberRole) {
+    return hasClubSupervisorRole(state.member?.role)
+  }
+
+  return !selfStore.isBadger() && selfStore.can(Permission.TimeAndTravelEdit)
 })
 
 
