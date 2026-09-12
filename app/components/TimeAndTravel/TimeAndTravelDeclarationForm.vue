@@ -3,6 +3,7 @@ import type {PropType, Ref} from 'vue'
 import type {Member} from '~/types/api/item/clubDependent/member'
 import type {TimeAndTravelDeclaration} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelDeclaration'
 import type {MemberVehicle} from '~/types/api/item/clubDependent/plugin/timeAndTravel/memberVehicle'
+import type {MemberPresence} from '~/types/api/item/clubDependent/plugin/presence/memberPresence'
 import MemberTimeAndTravelDeclarationQuery from '~/composables/api/query/clubDependent/plugin/timeAndTravel/MemberTimeAndTravelDeclarationQuery'
 import MemberVehicleQuery from '~/composables/api/query/clubDependent/plugin/timeAndTravel/MemberVehicleQuery'
 import type {FormError, FormErrorEvent} from '#ui/types'
@@ -20,6 +21,12 @@ const props = defineProps({
   member: {
     type: Object as PropType<Member>,
     required: true,
+  },
+  /** Only used on create, to link the declaration back to the presence it was prompted from. */
+  memberPresence: {
+    type: Object as PropType<MemberPresence>,
+    required: false,
+    default: undefined,
   },
 })
 
@@ -62,6 +69,19 @@ const selectedVehicle = ref<SelectApiItem<MemberVehicle> | undefined>(
     ? {label: `${initialVehicle.brand} ${initialVehicle.model ?? ''}`, value: initialVehicle.uuid!, item: initialVehicle}
     : undefined
 )
+
+// Live preview of the official mileage scale's estimate for the selected vehicle, based on its
+// cumulative kilometers so far this year — see MemberVehicleSubscriber on the backend.
+const selectedVehiclePreview = computed(() => {
+  const vehicle = selectedVehicle.value?.item
+  if (!vehicle?.currentYearKilometers || !vehicle?.currentYearCalculationDescription || !vehicle?.currentYearEstimatedAmount) {
+    return undefined
+  }
+  return {
+    description: vehicle.currentYearCalculationDescription,
+    amount: vehicle.currentYearEstimatedAmount,
+  }
+})
 
 function getDefaultDeclaration(): TimeAndTravelDeclaration {
   return {
@@ -123,6 +143,7 @@ async function onSubmit() {
     memberVehicle: string | null
     member?: string
     date?: string
+    memberPresence?: string
   } = {
     // Only relevant (and required, see validate() above / enforced by the backend) once a distance is declared.
     // Sent as an explicit null (not omitted) so editing to clear one still works under merge-patch semantics.
@@ -142,6 +163,9 @@ async function onSubmit() {
     payload.member = props.member['@id']
     if (selectedDate.value) {
       payload.date = formatDateInput(selectedDate.value.toString()) ?? undefined
+    }
+    if (props.memberPresence) {
+      payload.memberPresence = props.memberPresence['@id']
     }
   }
 
@@ -248,6 +272,14 @@ async function onSubmit() {
       <UFormField label="Véhicule" name="memberVehicle" required>
         <USelectMenu v-model="selectedVehicle" :items="vehicleOptions" class="w-full" placeholder="Choisir un véhicule" />
       </UFormField>
+
+      <UAlert
+        v-if="selectedVehiclePreview"
+        color="neutral"
+        variant="subtle"
+        title="Estimation de l'indemnité kilométrique pour ce véhicule cette année"
+        :description="`${selectedVehiclePreview.description} = ${selectedVehiclePreview.amount} €`"
+      />
     </template>
 
     <UButton :loading="isUpdating" block type="submit">
