@@ -226,6 +226,8 @@ loadItem().then(async () => {
           Déverrouiller
         </UButton>
 
+        <div class="flex-1"></div>
+
         <UButton
           v-if="isDraft && canExport"
           icon="i-heroicons-trash"
