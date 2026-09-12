@@ -44,10 +44,6 @@ interface _MemberVehicle extends UuidItem, ClubLinkedItem, TimestampItem {
   category?: VehicleCategory
   fiscalPower?: number
   isEnabled?: boolean
-  // Read-only preview, hydrated server-side — see MemberVehicleSubscriber on the backend.
-  currentYearKilometers?: number | null
-  currentYearEstimatedAmount?: string | null
-  currentYearCalculationDescription?: string | null
 }
 
 export interface MemberVehicle extends _MemberVehicle {
