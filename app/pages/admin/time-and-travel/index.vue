@@ -3,7 +3,7 @@ import TimeAndTravelDeclarationQuery from '~/composables/api/query/clubDependent
 import type {TimeAndTravelDeclaration} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelDeclaration'
 import type {TimeAndTravelSummaryRow} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelSummary'
 import type {Member} from '~/types/api/item/clubDependent/member'
-import {appendDateRangeParams, formatAmount, formatTrajet, vehicleDisplayName} from '~/utils/timeAndTravel'
+import {appendDateRangeParams, declarationIsEditable, formatAmount, formatTrajet, vehicleDisplayName} from '~/utils/timeAndTravel'
 import {formatDateRangeReadable, formatDateReadable} from '~/utils/date'
 import {convertUuidToUrlUuid} from '~/utils/resource'
 import {createBrowserCsvDownload} from '~/utils/browser'
@@ -12,6 +12,7 @@ import type {TablePaginateInterface} from '~/types/table'
 import {useSelfUserStore} from '~/stores/useSelfUser'
 import {useTimeAndTravelStore} from '~/stores/useTimeAndTravelStore'
 import {Permission} from '~/types/api/permissions'
+import ModalDeleteConfirmation from '~/components/Modal/ModalDeleteConfirmation.vue'
 
 definePageMeta({layout: 'time-and-travel'})
 useHead({title: 'Déclarations'})
@@ -19,11 +20,26 @@ useHead({title: 'Déclarations'})
 const selfStore = useSelfUserStore()
 const canEdit = computed(() => selfStore.can(Permission.TimeAndTravelEdit))
 
+const toast = useToast()
+const overlay = useOverlay()
+const overlayDeleteConfirmation = overlay.create(ModalDeleteConfirmation)
+
 const declarationQuery = new TimeAndTravelDeclarationQuery()
 const declarationModalOpen = ref(false)
 const newDeclarationMember = ref<Member | undefined>()
+const selectedDeclaration = ref<TimeAndTravelDeclaration | undefined>()
+const selectedDeclarationMember = ref<Member | undefined>()
 
 function onCreate() {
+  newDeclarationMember.value = undefined
+  selectedDeclaration.value = undefined
+  selectedDeclarationMember.value = undefined
+  declarationModalOpen.value = true
+}
+
+function onEdit(declaration: TimeAndTravelDeclaration) {
+  selectedDeclaration.value = {...declaration}
+  selectedDeclarationMember.value = typeof declaration.member === 'object' ? declaration.member : undefined
   newDeclarationMember.value = undefined
   declarationModalOpen.value = true
 }
@@ -31,6 +47,18 @@ function onCreate() {
 function onDeclarationCreated() {
   declarationModalOpen.value = false
   newDeclarationMember.value = undefined
+  selectedDeclaration.value = undefined
+  selectedDeclarationMember.value = undefined
+  refresh()
+}
+
+async function onDelete(declaration: TimeAndTravelDeclaration) {
+  const {error} = await declarationQuery.delete(declaration)
+  if (error) {
+    toast.add({color: 'error', title: 'Suppression impossible', description: error.message})
+    return
+  }
+  toast.add({title: 'Déclaration supprimée'})
   refresh()
 }
 
@@ -58,6 +86,7 @@ const columns = [
   {accessorKey: 'vehicle', header: 'Véhicule'},
   {accessorKey: 'totalAmount', header: 'Montant'},
   {accessorKey: 'status', header: 'Statut'},
+  {accessorKey: 'actions', header: ''},
 ]
 
 function buildFilterParams(): URLSearchParams {
@@ -175,6 +204,24 @@ loadTotals()
           <UBadge v-if="row.original.isLocked" color="success" variant="soft" size="xs">Verrouillée</UBadge>
           <UBadge v-else color="neutral" variant="soft" size="xs">Déclarée</UBadge>
         </template>
+        <template #actions-cell="{ row }">
+          <div v-if="canEdit && declarationIsEditable(row.original)" class="flex gap-2 justify-end">
+            <UButton icon="i-heroicons-pencil" color="neutral" variant="ghost" @click="onEdit(row.original)" />
+            <UButton
+              icon="i-heroicons-trash"
+              color="error"
+              variant="ghost"
+              @click="overlayDeleteConfirmation.open({
+                alertTitle: 'La suppression de la déclaration sera définitive.',
+                alertColor: 'error',
+                async onDelete() {
+                  await onDelete(row.original)
+                  overlayDeleteConfirmation.close(true)
+                }
+              })"
+            />
+          </div>
+        </template>
       </UTable>
 
       <GenericTablePagination
@@ -190,10 +237,11 @@ loadTotals()
     <template #content>
       <UCard>
         <div class="flex flex-col gap-4">
-          <GenericMemberPicker v-model="newDeclarationMember" label="Membre" />
+          <GenericMemberPicker v-if="!selectedDeclaration" v-model="newDeclarationMember" label="Membre" />
           <TimeAndTravelDeclarationForm
-            v-if="newDeclarationMember"
-            :member="newDeclarationMember"
+            v-if="selectedDeclaration ? selectedDeclarationMember : newDeclarationMember"
+            :item="selectedDeclaration"
+            :member="(selectedDeclaration ? selectedDeclarationMember : newDeclarationMember)!"
             @updated="onDeclarationCreated"
             @canceled="declarationModalOpen = false"
           />
