@@ -3,7 +3,6 @@ import type {PropType, Ref} from 'vue'
 import type {Member} from '~/types/api/item/clubDependent/member'
 import type {TimeAndTravelDeclaration} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelDeclaration'
 import type {MemberVehicle} from '~/types/api/item/clubDependent/plugin/timeAndTravel/memberVehicle'
-import type {MemberPresence} from '~/types/api/item/clubDependent/plugin/presence/memberPresence'
 import MemberTimeAndTravelDeclarationQuery from '~/composables/api/query/clubDependent/plugin/timeAndTravel/MemberTimeAndTravelDeclarationQuery'
 import MemberVehicleQuery from '~/composables/api/query/clubDependent/plugin/timeAndTravel/MemberVehicleQuery'
 import type {FormError, FormErrorEvent} from '#ui/types'
@@ -22,11 +21,11 @@ const props = defineProps({
     type: Object as PropType<Member>,
     required: true,
   },
-  /** Only used on create, to link the declaration back to the presence it was prompted from. */
-  memberPresence: {
-    type: Object as PropType<MemberPresence>,
+  /** Only used on create, to prefill the "Motif" field (e.g. with the presence's activity names). */
+  initialDescription: {
+    type: String,
     required: false,
-    default: undefined,
+    default: '',
   },
 })
 
@@ -73,7 +72,7 @@ const selectedVehicle = ref<SelectApiItem<MemberVehicle> | undefined>(
 function getDefaultDeclaration(): TimeAndTravelDeclaration {
   return {
     date: formatDateInput(new Date().toString()) ?? '',
-    description: '',
+    description: props.initialDescription,
     isRoundtrip: true,
   }
 }
@@ -130,7 +129,6 @@ async function onSubmit() {
     memberVehicle: string | null
     member?: string
     date?: string
-    memberPresence?: string
   } = {
     // Only relevant (and required, see validate() above / enforced by the backend) once a distance is declared.
     // Sent as an explicit null (not omitted) so editing to clear one still works under merge-patch semantics.
@@ -150,9 +148,6 @@ async function onSubmit() {
     payload.member = props.member['@id']
     if (selectedDate.value) {
       payload.date = formatDateInput(selectedDate.value.toString()) ?? undefined
-    }
-    if (props.memberPresence) {
-      payload.memberPresence = props.memberPresence['@id']
     }
   }
 
