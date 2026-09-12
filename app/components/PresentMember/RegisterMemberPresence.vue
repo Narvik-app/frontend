@@ -10,6 +10,7 @@ import {formatDateInput} from "~/utils/date";
 import {ClubRole, getAvailableClubRole, hasClubSupervisorRole, isClubAdmin} from "~/types/api/item/club";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {Permission} from "~/types/api/permissions";
+import {DECLARATION_DESCRIPTION_MAX_LENGTH} from "~/utils/timeAndTravel";
 
 const props = defineProps({
   member: {
@@ -51,7 +52,9 @@ const selfStore = useSelfUserStore()
 
 const emit = defineEmits([
   'registered',
-  'canceled'
+  'canceled',
+  /** Emitted whenever the internal stage changes, so a wrapping modal can disable ESC/backdrop dismissal while the declaration step is shown. */
+  'stage-change'
 ])
 
 const toast = useToast()
@@ -108,8 +111,15 @@ const activitiesAdmin = computed(() => {
 const stage: Ref<'presence' | 'declaration'> = ref('presence')
 const createdPresence: Ref<MemberPresence | undefined> = ref(undefined)
 
+watch(stage, (value) => emit('stage-change', value))
+
 const declarableSelectedActivities = computed(() => {
   return activities.value.filter((actvt) => actvt.promptTimeAndTravelDeclaration && actvt["@id"] && state.activities[actvt["@id"]])
+})
+
+// Activity names joined together can exceed the description limit — truncated upfront so the initial value isn't silently rejected by the backend.
+const declarationInitialDescription = computed(() => {
+  return declarableSelectedActivities.value.map((actvt) => actvt.name).join(', ').slice(0, DECLARATION_DESCRIPTION_MAX_LENGTH)
 })
 
 const shouldPromptDeclaration = computed(() => {
@@ -216,12 +226,17 @@ function onDeclarationDone() {
     </div>
 
     <div v-else-if="stage === 'declaration'">
-      <TimeAndTravelPresenceDeclarationStep
+      <div class="text-2xl">Déclaration de temps &amp; kilomètres pour <b>{{ state.member.fullName }}</b></div>
+      <p class="text-muted text-sm mt-2">
+        L'activité sélectionnée permet de déclarer du temps et/ou des kilomètres. Vous pouvez annuler cette étape si vous ne le souhaitez pas.
+      </p>
+
+      <TimeAndTravelDeclarationForm
+        class="mt-4"
         :member="state.member"
-        :member-presence="createdPresence"
-        :activities="declarableSelectedActivities"
-        @done="onDeclarationDone"
-        @skipped="onDeclarationDone"
+        :initial-description="declarationInitialDescription"
+        @updated="onDeclarationDone"
+        @canceled="onDeclarationDone"
       />
     </div>
 

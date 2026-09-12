@@ -3,7 +3,6 @@ import type {ClubLinkedItem} from "~/types/api/clubLinkedItem";
 import type {TimestampItem} from "~/types/api/timestampItem";
 import type {Member} from "~/types/api/item/clubDependent/member";
 import type {MemberVehicle} from "~/types/api/item/clubDependent/plugin/timeAndTravel/memberVehicle";
-import type {MemberPresence} from "~/types/api/item/clubDependent/plugin/presence/memberPresence";
 import type {TimeAndTravelExport} from "~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelExport";
 
 interface _TimeAndTravelDeclaration extends UuidItem, ClubLinkedItem, TimestampItem {
@@ -19,8 +18,6 @@ interface _TimeAndTravelDeclaration extends UuidItem, ClubLinkedItem, TimestampI
   /** Only relevant when kilometers is declared */
   isRoundtrip?: boolean
   memberVehicle?: MemberVehicle | string | null
-  /** Set only by the presence-page follow-up flow */
-  memberPresence?: MemberPresence | string | null
   /** Read-only, set only once attached to an export */
   export?: TimeAndTravelExport | string | null
 

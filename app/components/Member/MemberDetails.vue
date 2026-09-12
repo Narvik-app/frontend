@@ -76,6 +76,11 @@ function openProfileImageModal() {
 }
 
 const addMemberPresenceModal = ref(false)
+/** Blocks ESC/backdrop dismissal of addMemberPresenceModal while the post-registration declare step is shown. */
+const registeringDeclaration = ref(false)
+watch(addMemberPresenceModal, (open) => {
+  if (!open) registeringDeclaration.value = false
+})
 const selectedPresence: Ref<MemberPresence | undefined> = ref(undefined)
 const memberPresenceModal: Ref<boolean> = ref(false);
 
@@ -1015,14 +1020,15 @@ async function deleteMember() {
         </template>
       </UModal>
 
-      <UModal v-model:open="addMemberPresenceModal">
+      <UModal v-model:open="addMemberPresenceModal" :dismissible="!registeringDeclaration">
         <template #content>
           <div>
             <RegisterMemberPresence
               :member="memberRef"
               :date-editable="true"
               @canceled="addMemberPresenceModal = false"
-              @registered="addMemberPresenceModal = false; getMemberPresences()"
+              @registered="addMemberPresenceModal = false; registeringDeclaration = false; getMemberPresences()"
+              @stage-change="registeringDeclaration = $event === 'declaration'"
             />
           </div>
         </template>
