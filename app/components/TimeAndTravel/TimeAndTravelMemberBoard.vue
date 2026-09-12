@@ -144,6 +144,12 @@ async function onDelete(declaration: TimeAndTravelDeclaration) {
   loadSummary()
 }
 
+function attestationPeriodLabel(attestation: TimeAndTravelExportAttestation): string {
+  const attestationExport = attestation.export
+  if (!attestationExport || typeof attestationExport === 'string') return ''
+  return `${formatDateReadable(attestationExport.startDate)} — ${formatDateReadable(attestationExport.endDate)}`
+}
+
 async function onDownloadAttestation(attestation: TimeAndTravelExportAttestation) {
   isDownloading.value = attestation.uuid
   const {error} = await downloadFilePdf(attestation.file, `attestation-${props.member.fullName}.pdf`)
@@ -231,7 +237,9 @@ loadAttestations()
       <div class="text-xl font-bold mb-4">Attestations</div>
       <div class="flex flex-col gap-2">
         <div v-for="attestation in attestations" :key="attestation.uuid" class="flex justify-between items-center">
-          <div>{{ formatAmount(attestation.totalAmount) }} — {{ attestation.totalKilometers }} km — {{ attestation.totalHours }} h</div>
+          <div>
+            <span class="font-medium">{{ attestationPeriodLabel(attestation) }}</span>
+          </div>
           <UButton
             icon="i-heroicons-arrow-down-tray"
             variant="soft"
