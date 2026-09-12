@@ -33,12 +33,12 @@ const managementSection: { label: string; icon: string; to: string }[] = []
 
 if (canAccess) {
   managementSection.push({
-    label: 'Toutes les déclarations',
+    label: 'Déclarations',
     icon: 'i-heroicons-clock',
     to: '/admin/time-and-travel'
   })
   managementSection.push({
-    label: 'Véhicules du club',
+    label: 'Véhicules',
     icon: 'i-heroicons-truck',
     to: '/admin/time-and-travel/vehicles'
   })
