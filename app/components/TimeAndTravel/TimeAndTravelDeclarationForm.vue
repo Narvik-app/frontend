@@ -70,19 +70,6 @@ const selectedVehicle = ref<SelectApiItem<MemberVehicle> | undefined>(
     : undefined
 )
 
-// Live preview of the official mileage scale's estimate for the selected vehicle, based on its
-// cumulative kilometers so far this year — see MemberVehicleSubscriber on the backend.
-const selectedVehiclePreview = computed(() => {
-  const vehicle = selectedVehicle.value?.item
-  if (!vehicle?.currentYearKilometers || !vehicle?.currentYearCalculationDescription || !vehicle?.currentYearEstimatedAmount) {
-    return undefined
-  }
-  return {
-    description: vehicle.currentYearCalculationDescription,
-    amount: vehicle.currentYearEstimatedAmount,
-  }
-})
-
 function getDefaultDeclaration(): TimeAndTravelDeclaration {
   return {
     date: formatDateInput(new Date().toString()) ?? '',
@@ -272,14 +259,6 @@ async function onSubmit() {
       <UFormField label="Véhicule" name="memberVehicle" required>
         <USelectMenu v-model="selectedVehicle" :items="vehicleOptions" class="w-full" placeholder="Choisir un véhicule" />
       </UFormField>
-
-      <UAlert
-        v-if="selectedVehiclePreview"
-        color="neutral"
-        variant="subtle"
-        title="Estimation de l'indemnité kilométrique pour ce véhicule cette année"
-        :description="`${selectedVehiclePreview.description} = ${selectedVehiclePreview.amount} €`"
-      />
     </template>
 
     <UButton :loading="isUpdating" block type="submit">

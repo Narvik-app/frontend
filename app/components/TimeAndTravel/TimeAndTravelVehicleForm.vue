@@ -172,14 +172,6 @@ async function updateItem() {
       <NuxtLink :to="BAREME_OFFICIAL_SOURCE_URL" target="_blank" class="text-xs underline mt-1">Barème officiel</NuxtLink>
     </div>
 
-    <UAlert
-      v-if="item.currentYearKilometers"
-      color="neutral"
-      variant="subtle"
-      title="Calcul appliqué cette année pour ce véhicule"
-      :description="`${item.currentYearCalculationDescription} = ${item.currentYearEstimatedAmount} €`"
-    />
-
     <UButton :loading="isUpdating" block type="submit">
       Enregistrer
     </UButton>
