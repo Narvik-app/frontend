@@ -30,6 +30,15 @@ const props = defineProps({
   const selectedPresence: Ref<MemberPresence | undefined> = ref(undefined)
   const modalOpen: Ref<boolean> = ref(false);
 
+  // Dismissing the modal any other way than the internal @close (backdrop click, Escape) still
+  // closes it via v-model, but wouldn't otherwise clear the selection — leaving PresentMemberDetails
+  // mounted with its stale state (e.g. a just-linked declaration not yet reflected) on next reopen.
+  watch(modalOpen, (open) => {
+    if (!open) {
+      selectedPresence.value = undefined
+    }
+  })
+
   const isDownloadingCsv = ref(false)
 
   const page = ref(1);
@@ -205,6 +214,7 @@ const props = defineProps({
         <div>
           <PresentMemberDetails
             v-if="selectedPresence"
+            :key="selectedPresence.uuid"
             :view-only="props.listOnly"
             :item="selectedPresence"
             @updated="presenceUpdated"
