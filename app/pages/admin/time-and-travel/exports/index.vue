@@ -2,8 +2,8 @@
 import TimeAndTravelExportQuery from '~/composables/api/query/clubDependent/plugin/timeAndTravel/TimeAndTravelExportQuery'
 import type {TimeAndTravelExport} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelExport'
 import {EXPORT_STATUS_COLORS, EXPORT_STATUS_LABELS} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelExport'
-import {formatAmount} from '~/utils/timeAndTravel'
 import {formatDateReadable} from '~/utils/date'
+import {formatMonetary} from '~/utils/string'
 import {convertUuidToUrlUuid, displayApiError} from '~/utils/resource'
 import {useSelfUserStore} from '~/stores/useSelfUser'
 import ClubSettingQuery from '~/composables/api/query/clubDependent/ClubSettingQuery'
@@ -99,7 +99,7 @@ loadExports()
         <div class="py-6 text-center italic text-sm">Aucun export.</div>
       </template>
       <template #period-cell="{ row }">{{ formatDateReadable(row.original.startDate) }} — {{ formatDateReadable(row.original.endDate) }}</template>
-      <template #totalAmount-cell="{ row }">{{ formatAmount(row.original.totalAmount) }}</template>
+      <template #totalAmount-cell="{ row }">{{ formatMonetary(row.original.totalAmount) }}</template>
       <template #status-cell="{ row }">
         <UBadge :color="EXPORT_STATUS_COLORS[row.original.status]" variant="soft" size="xs">
           {{ EXPORT_STATUS_LABELS[row.original.status] }}
