@@ -109,7 +109,7 @@ loadVehicles()
     <div class="flex justify-between items-center mb-4">
       <div class="text-xl font-bold">Véhicules</div>
       <div v-if="canEdit" class="flex gap-2">
-        <UButton icon="i-heroicons-plus" @click="selfMember && member ? onCreateForSelf() : onCreateForAnyMember()">
+        <UButton data-testid="vehicle-create" icon="i-heroicons-plus" @click="selfMember && member ? onCreateForSelf() : onCreateForAnyMember()">
           Ajouter un véhicule
         </UButton>
       </div>
@@ -127,8 +127,9 @@ loadVehicles()
       </template>
       <template #actions-cell="{ row }">
         <div v-if="canEdit" class="flex gap-2 justify-end">
-          <UButton icon="i-heroicons-pencil" color="neutral" variant="ghost" @click="onEdit(row.original)" />
+          <UButton data-testid="vehicle-edit" icon="i-heroicons-pencil" color="neutral" variant="ghost" @click="onEdit(row.original)" />
           <UButton
+            data-testid="vehicle-delete"
             icon="i-heroicons-trash"
             color="error"
             variant="ghost"
