@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type {PropType} from "vue";
+import type {TabsItem} from "#ui/types";
 import type {Member} from "~/types/api/item/clubDependent/member";
 import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
 import type {ExposedFile} from "~/types/api/item/exposedFile";
@@ -12,7 +13,7 @@ import RegisterMemberPresence from "~/components/PresentMember/RegisterMemberPre
 import ActivityQuery from "~/composables/api/query/clubDependent/plugin/presence/ActivityQuery";
 import type {Activity} from "~/types/api/item/clubDependent/plugin/presence/activity";
 import type {MemberSeason, MemberSeasonWrite} from "~/types/api/item/clubDependent/memberSeason";
-import {ClubRole, getAvailableClubRoles} from "~/types/api/item/club";
+import {ClubRole, getAvailableClubRoles, hasClubSupervisorRole} from "~/types/api/item/club";
 import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
 import MemberSeasonQuery from "~/composables/api/query/clubDependent/MemberSeasonQuery";
 import MemberSeasonSelectModal from "~/components/MemberSeason/MemberSeasonSelectModal.vue";
@@ -366,6 +367,29 @@ const controlTypes: Ref<import('~/types/api/item/clubDependent/memberControlType
 memberControlTypeQuery.getAll(new URLSearchParams({'order[weight]': 'ASC'})).then(({items}) => { controlTypes.value = items })
 
 const displayedControlTypes = computed(() => controlTypes.value.filter(t => t.displayOnPresenceCard || isSupervisor))
+
+// Only members with a supervisor-or-higher role file time & travel declarations — showing the
+// (empty) recap for every other member would just be clutter.
+const showDeclarationsTab = computed(() => !!memberRef.value && !props.self && hasClubSupervisorRole(memberRef.value?.role) && selfStore.selectedProfile?.club.timeAndTravelEnabled)
+const showPermissionsTab = computed(() => memberRef.value?.role === ClubRole.Supervisor)
+
+// Presences first (and default) — the tab members/admins look at most often. Declarations and
+// permissions are added conditionally, permissions always last since it's the least common case.
+const memberTabs = computed<TabsItem[]>(() => {
+  const tabs: TabsItem[] = [
+    {slot: 'presence' as const, label: 'Présences', icon: 'i-heroicons-chart-pie'},
+  ]
+
+  if (showDeclarationsTab.value) {
+    tabs.push({slot: 'declarations' as const, label: 'Temps & kilomètres', icon: 'i-heroicons-clock'})
+  }
+
+  if (showPermissionsTab.value) {
+    tabs.push({slot: 'permissions' as const, label: 'Permissions', icon: 'i-heroicons-key'})
+  }
+
+  return tabs
+})
 
 function controlForType(typeUuid?: string): MemberControl | undefined {
   return memberRef.value?.controls?.find(c => c.type?.uuid === typeUuid)
@@ -734,7 +758,7 @@ async function deleteMember() {
                   </span>
                 </div>
 
-                <div class="flex-1"></div>
+                <div class="flex-1"/>
 
                 <div
                   v-for="type in displayedControlTypes"
@@ -869,141 +893,145 @@ async function deleteMember() {
         </UCard>
       </div>
 
-      <div v-if="memberRef?.role === ClubRole.Supervisor" class="lg:col-span-9">
-        <MemberPermissions :member="memberRef" @updated="loadItem" />
-      </div>
-
-      <div v-if="memberRef && !props.self && selfStore.selectedProfile?.club.timeAndTravelEnabled" class="lg:col-span-9">
-        <TimeAndTravelMemberBoard :member="memberRef" :self="false" />
-      </div>
-
       <div class="lg:col-span-9">
-        <GenericCard v-if="totalMemberPresences > 0" :title="`${totalMemberPresences} présences ces 12 derniers mois`">
-          <div class="h-96 mt-2">
-            <ChartDoughnut :data="chartData"/>
-          </div>
-        </GenericCard>
-        <GenericCard v-else>
-          <i class="text-lg">Aucune présences ces 12 derniers mois</i>
-        </GenericCard>
-      </div>
-
-      <div class="lg:col-span-9">
-        <UCard>
-          <div class="flex flex-col">
-            <div v-if="isSupervisor" class="flex flex-col-reverse lg:flex-row gap-4">
-              <USelectMenu
-                v-model="selectedActivities"
-                class="w-44"
-                :items="activitiesSelect"
-                multiple
-              >
-                <template #default>
-                  <span v-if="selectedActivities.length" class="truncate">
-                    {{ selectedActivities.map(fa => fa.label).join(', ') }}
-                  </span>
-                  <span v-else>Activités</span>
-                </template>
-              </USelectMenu>
-
-              <div class="flex-1"/>
-              <UButton @click="addMemberPresenceModal = true" >
-                Ajouter une activité
-              </UButton>
-
-              <UButton icon="i-heroicons-arrow-down-tray" color="success" :loading="isDownloadingCsv" @click="downloadCsv()">
-                CSV
-              </UButton>
-            </div>
-
-            <UTable
-              v-model:sorting="sort"
-              :loading="isLoadingMemberPresencesPaginated"
-              :columns="[
-              {
-                accessorKey: 'date',
-                header: 'Date',
-              },
-              {
-                accessorKey: 'activities',
-                header: 'Activités',
-                meta: {
-                  class: {
-                    th: 'w-full',
-                  }
-                }
-              },
-              {
-                accessorKey: 'actions',
-                header: ''
-              }
-            ]"
-              :sorting-options="{
-                manualSorting: true,
-                enableMultiSort: false,
-              }"
-              :data="memberPresencesPaginated"
-              @update:sorting="getMemberPresencesPaginated()"
-            >
-
-              <template #empty>
-                <div class="flex flex-col items-center justify-center py-6 gap-3">
-                  <span class="italic text-sm">Aucune présence enregistrée</span>
+        <UTabs :items="memberTabs" class="w-full">
+          <template #presence>
+            <div class="flex flex-col gap-4">
+              <GenericCard v-if="totalMemberPresences > 0" :title="`${totalMemberPresences} présences ces 12 derniers mois`">
+                <div class="h-96 mt-2">
+                  <ChartDoughnut :data="chartData"/>
                 </div>
-              </template>
+              </GenericCard>
+              <GenericCard v-else>
+                <i class="text-lg">Aucune présences ces 12 derniers mois</i>
+              </GenericCard>
 
-              <template #date-header="{ column }">
-                <GenericTableSortButton :column="column" />
-              </template>
-              <template #date-cell="{ row }">
-                {{ formatDate(row.original.date) }} à {{ formatTimeReadable(row.original.createdAt) }}
-              </template>
+              <UCard>
+                <div class="flex flex-col">
+                  <div v-if="isSupervisor" class="flex flex-col-reverse lg:flex-row gap-4">
+                    <USelectMenu
+                      v-model="selectedActivities"
+                      class="w-44"
+                      :items="activitiesSelect"
+                      multiple
+                    >
+                      <template #default>
+                        <span v-if="selectedActivities.length" class="truncate">
+                          {{ selectedActivities.map(fa => fa.label).join(', ') }}
+                        </span>
+                        <span v-else>Activités</span>
+                      </template>
+                    </USelectMenu>
 
-              <template #activities-cell="{ row }">
-                <div v-if="row.original.activities.length == 0">
-                  <i>Aucune activités déclarées</i>
-                </div>
+                    <div class="flex-1"/>
+                    <UButton @click="addMemberPresenceModal = true" >
+                      Ajouter une activité
+                    </UButton>
 
-                <div class="flex flex-1 flex-wrap gap-4">
-                  <UButton
-                    v-for="activity in row.original.activities.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))"
-                    :key="activity.uuid"
-                    variant="soft">
-                    {{ activity.name }}
-                  </UButton>
-                </div>
-              </template>
+                    <UButton icon="i-heroicons-arrow-down-tray" color="success" :loading="isDownloadingCsv" @click="downloadCsv()">
+                      CSV
+                    </UButton>
+                  </div>
 
-              <template #actions-cell="{ row }" >
-                <div v-if="isSupervisor" class="flex gap-4">
-                  <UButton label="Modifier" @click="selectedPresence = row.original; memberPresenceModal = true;" />
-
-                  <UButton
-                    color="error"
-                    label="Supprimer"
-                    @click="overlayDeleteConfirmation.open({
-                    title: `Présence du ${formatDateReadable(row.original.date)}`,
-                    alertTitle: 'La suppression de la présence sera définitive.',
-                    alertColor: 'error',
-                    async onDelete() {
-                      await deleteRow(row.original)
-                      overlayDeleteConfirmation.close(true)
+                  <UTable
+                    v-model:sorting="sort"
+                    :loading="isLoadingMemberPresencesPaginated"
+                    :columns="[
+                    {
+                      accessorKey: 'date',
+                      header: 'Date',
+                    },
+                    {
+                      accessorKey: 'activities',
+                      header: 'Activités',
+                      meta: {
+                        class: {
+                          th: 'w-full',
+                        }
+                      }
+                    },
+                    {
+                      accessorKey: 'actions',
+                      header: ''
                     }
-                  })"
+                  ]"
+                    :sorting-options="{
+                      manualSorting: true,
+                      enableMultiSort: false,
+                    }"
+                    :data="memberPresencesPaginated"
+                    @update:sorting="getMemberPresencesPaginated()"
+                  >
+
+                    <template #empty>
+                      <div class="flex flex-col items-center justify-center py-6 gap-3">
+                        <span class="italic text-sm">Aucune présence enregistrée</span>
+                      </div>
+                    </template>
+
+                    <template #date-header="{ column }">
+                      <GenericTableSortButton :column="column" />
+                    </template>
+                    <template #date-cell="{ row }">
+                      {{ formatDate(row.original.date) }} à {{ formatTimeReadable(row.original.createdAt) }}
+                    </template>
+
+                    <template #activities-cell="{ row }">
+                      <div v-if="row.original.activities.length == 0">
+                        <i>Aucune activités déclarées</i>
+                      </div>
+
+                      <div class="flex flex-1 flex-wrap gap-4">
+                        <UButton
+                          v-for="activity in row.original.activities.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))"
+                          :key="activity.uuid"
+                          variant="soft">
+                          {{ activity.name }}
+                        </UButton>
+                      </div>
+                    </template>
+
+                    <template #actions-cell="{ row }" >
+                      <div v-if="isSupervisor" class="flex gap-4">
+                        <UButton label="Modifier" @click="selectedPresence = row.original; memberPresenceModal = true;" />
+
+                        <UButton
+                          color="error"
+                          label="Supprimer"
+                          @click="overlayDeleteConfirmation.open({
+                          title: `Présence du ${formatDateReadable(row.original.date)}`,
+                          alertTitle: 'La suppression de la présence sera définitive.',
+                          alertColor: 'error',
+                          async onDelete() {
+                            await deleteRow(row.original)
+                            overlayDeleteConfirmation.close(true)
+                          }
+                        })"
+                        />
+                      </div>
+                    </template>
+
+                  </UTable>
+
+                  <GenericTablePagination
+                    v-model:page="page"
+                    v-model:items-per-page="itemsPerPage"
+                    :total-items="totalMemberPresencesPaginated"
+                    @paginate="(object: TablePaginateInterface) => { getMemberPresencesPaginated() }"
                   />
                 </div>
-              </template>
+              </UCard>
+            </div>
+          </template>
 
-            </UTable>
+          <template v-if="showDeclarationsTab" #declarations>
+            <TimeAndTravelMemberBoard :member="memberRef!" :self="false" />
+          </template>
 
-            <GenericTablePagination
-              v-model:page="page"
-              v-model:items-per-page="itemsPerPage"
-              :total-items="totalMemberPresencesPaginated"
-              @paginate="(object: TablePaginateInterface) => { getMemberPresencesPaginated() }"
-            />
-          </div>
-        </UCard>
+          <template v-if="showPermissionsTab" #permissions>
+            <MemberPermissions :member="memberRef!" @updated="loadItem" />
+          </template>
+        </UTabs>
       </div>
 
       <UModal
