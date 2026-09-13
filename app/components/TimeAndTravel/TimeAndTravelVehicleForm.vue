@@ -8,7 +8,7 @@ import MileageRateQuery from '~/composables/api/query/clubDependent/plugin/timeA
 import type {MileageRate} from '~/types/api/item/clubDependent/plugin/timeAndTravel/mileageRate'
 import GlobalSettingQuery from '~/composables/api/query/GlobalSettingQuery'
 import {GlobalSettingPublicEnum} from '~/types/api/item/globalSetting'
-import type {FormError, FormErrorEvent} from '#ui/types'
+import type {FormError} from '#ui/types'
 import {BAREME_OFFICIAL_SOURCE_URL} from '~/utils/baremeKilometrique'
 
 const props = defineProps({
@@ -90,11 +90,7 @@ const validate = (state: MemberVehicle): FormError[] => {
   return errors
 }
 
-async function onError(event: FormErrorEvent) {
-  const element = document.getElementById(event.errors[0].id)
-  element?.focus()
-  element?.scrollIntoView({behavior: 'smooth', block: 'center'})
-}
+const onError = useFormScrollToFirstError()
 
 async function updateItem() {
   isUpdating.value = true
