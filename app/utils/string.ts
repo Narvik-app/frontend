@@ -1,9 +1,10 @@
-export function formatMonetary(value?: string|number): string {
-  if (typeof value !== 'number' && value !== undefined) {
+export function formatMonetary(value?: string|number|null): string {
+  if (value === undefined || value === null) return 'Non défini'
+  if (typeof value !== 'number') {
     value = Number(value)
   }
 
-  return value !== undefined ? value.toLocaleString('fr-FR', { style: "currency", currency: 'EUR' }) : 'Non défini'
+  return value.toLocaleString('fr-FR', { style: "currency", currency: 'EUR' })
 }
 
 export function getMemberDisplayName(member: {fullName?: string; firstname?: string; lastname?: string}): string {

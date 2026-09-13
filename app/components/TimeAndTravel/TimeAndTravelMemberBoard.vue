@@ -9,9 +9,10 @@ import MemberTimeAndTravelAttestationQuery from '~/composables/api/query/clubDep
 import {useSelfUserStore} from '~/stores/useSelfUser'
 import {useTimeAndTravelStore} from '~/stores/useTimeAndTravelStore'
 import {Permission} from '~/types/api/permissions'
-import {appendDateRangeParams, declarationIsEditable, downloadFilePdf, formatAmount, formatTrajet, vehicleDisplayName} from '~/utils/timeAndTravel'
+import {appendDateRangeParams, declarationIsEditable, downloadFilePdf, formatTrajet, vehicleDisplayName} from '~/utils/timeAndTravel'
 import ModalDeleteConfirmation from '~/components/Modal/ModalDeleteConfirmation.vue'
 import {displayApiError} from '~/utils/resource'
+import {formatMonetary} from '~/utils/string'
 import {formatDateRangeReadable, formatDateReadable} from '~/utils/date'
 import type {TablePaginateInterface} from '~/types/table'
 import {usePaginationValues} from '~/composables/api/list'
@@ -136,7 +137,7 @@ function onUpdated() {
 async function onDelete(declaration: TimeAndTravelDeclaration) {
   const {error} = await declarationQuery.value.delete(declaration)
   if (error) {
-    toast.add({color: 'error', title: 'Suppression impossible', description: error.message})
+    displayApiError(error, 'Suppression impossible')
     return
   }
   toast.add({title: 'Déclaration supprimée'})
@@ -179,7 +180,7 @@ loadAttestations()
       <GenericStatCard title="Déclarations" :value="summary?.declarationCount ?? 0" />
       <GenericStatCard title="Kilomètres" :value="summary?.totalKilometers ?? 0" />
       <GenericStatCard title="Heures" :value="summary?.totalHours ?? 0" />
-      <GenericStatCard title="Montant valorisé" :value="formatAmount(summary?.totalAmount ?? 0)" />
+      <GenericStatCard title="Montant valorisé" :value="formatMonetary(summary?.totalAmount ?? 0)" />
     </div>
 
     <UCard>
@@ -198,7 +199,7 @@ loadAttestations()
         <template #trajet-cell="{ row }">{{ formatTrajet(row.original) }}</template>
         <template #kilometers-cell="{ row }">{{ row.original.kilometers }}</template>
         <template #vehicle-cell="{ row }">{{ vehicleDisplayName(row.original.memberVehicle) }}</template>
-        <template #totalAmount-cell="{ row }">{{ formatAmount(row.original.totalAmount) }}</template>
+        <template #totalAmount-cell="{ row }">{{ formatMonetary(row.original.totalAmount) }}</template>
         <template #status-cell="{ row }">
           <UBadge v-if="row.original.isLocked" color="success" variant="soft" size="xs">Verrouillée</UBadge>
           <UBadge v-else color="neutral" variant="soft" size="xs">Déclarée</UBadge>

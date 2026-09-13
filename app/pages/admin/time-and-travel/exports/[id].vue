@@ -3,7 +3,8 @@ import TimeAndTravelExportQuery from '~/composables/api/query/clubDependent/plug
 import type {TimeAndTravelExport, TimeAndTravelExportAttestation} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelExport'
 import {EXPORT_STATUS_COLORS, EXPORT_STATUS_LABELS, TimeAndTravelExportStatus} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelExport'
 import {decodeUrlUuid, convertUuidToUrlUuid, displayApiError} from '~/utils/resource'
-import {formatAmount, downloadFilePdf} from '~/utils/timeAndTravel'
+import {downloadFilePdf} from '~/utils/timeAndTravel'
+import {formatMonetary} from '~/utils/string'
 import {formatDateReadable} from '~/utils/date'
 import {useSelfUserStore} from '~/stores/useSelfUser'
 import {Permission} from '~/types/api/permissions'
@@ -122,7 +123,7 @@ async function deleteExport() {
   if (!item.value) return
   const {error} = await exportQuery.delete(item.value)
   if (error) {
-    toast.add({color: 'error', title: 'Suppression impossible', description: error.message})
+    displayApiError(error, 'Suppression impossible')
     return
   }
   toast.add({title: 'Export supprimé'})
@@ -183,7 +184,7 @@ loadItem().then(async () => {
             Régénération en cours…
           </UBadge>
           <div class="text-sm text-muted">{{ item.declarationCount }} déclarations · {{ item.memberCount }} membres</div>
-          <div class="text-lg font-semibold">{{ item.totalKilometers ?? 0 }} km · {{ formatAmount(item.totalAmount) }}</div>
+          <div class="text-lg font-semibold">{{ item.totalKilometers ?? 0 }} km · {{ formatMonetary(item.totalAmount) }}</div>
         </div>
       </div>
 
@@ -267,7 +268,7 @@ loadItem().then(async () => {
             {{ getMemberName(row.original) }}
           </ULink>
         </template>
-        <template #totalAmount-cell="{ row }">{{ formatAmount(row.original.totalAmount) }}</template>
+        <template #totalAmount-cell="{ row }">{{ formatMonetary(row.original.totalAmount) }}</template>
         <template #actions-cell="{ row }">
           <UButton
             icon="i-heroicons-arrow-down-tray"
