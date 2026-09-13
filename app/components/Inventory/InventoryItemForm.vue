@@ -4,7 +4,7 @@ import type {InventoryItem} from "~/types/api/item/clubDependent/plugin/sale/inv
 import InventoryItemQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryItemQuery";
 import type {InventoryCategory} from "~/types/api/item/clubDependent/plugin/sale/inventoryCategory";
 import InventoryCategoryQuery from "~/composables/api/query/clubDependent/plugin/sale/InventoryCategoryQuery";
-import type {FormError, FormErrorEvent} from "#ui/types";
+import type {FormError} from "#ui/types";
 import type {SelectApiItem} from "~/types/select";
 
 const props = defineProps({
@@ -76,11 +76,7 @@ const validate = (state: InventoryItem): FormError[] => {
   return errors
 }
 
-async function onError(event: FormErrorEvent) {
-  const element = document.getElementById(event.errors[0].id)
-  element?.focus()
-  element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-}
+const onError = useFormScrollToFirstError()
 
 // Camera detection setup
 

@@ -39,9 +39,9 @@ const exportTitle = computed(() => {
   return `${formatDateReadable(item.value.startDate)} — ${formatDateReadable(item.value.endDate)}`
 })
 
-// Regeneration (triggered by locking here, or automatically by a declaration change elsewhere —
-// see documentation/FEATURE_MERCURE.md) runs in the background. There's no push notification yet,
-// so this page polls while the export reports itself as regenerating.
+// Regeneration (triggered by the button here, by locking, or automatically by a declaration
+// change elsewhere — see documentation/FEATURE_MERCURE.md) runs in the background. There's no
+// push notification yet, so this page polls while the export reports itself as regenerating.
 let pollTimeout: ReturnType<typeof setTimeout> | undefined
 onUnmounted(() => { if (pollTimeout) clearTimeout(pollTimeout) })
 
@@ -82,14 +82,14 @@ async function regenerate() {
   if (!item.value) return
   isProcessing.value = true
   const {error} = await exportQuery.regenerate(item.value)
-  isProcessing.value = false
   if (error) {
+    isProcessing.value = false
     toast.add({color: 'error', title: 'Erreur', description: error.message})
     return
   }
-  toast.add({title: 'Export régénéré'})
+  toast.add({title: 'Régénération en cours…'})
   await loadItem()
-  await loadAttestations()
+  await pollWhileRegenerating()
 }
 
 async function lock() {

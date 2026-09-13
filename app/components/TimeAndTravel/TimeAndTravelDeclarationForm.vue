@@ -5,7 +5,7 @@ import type {TimeAndTravelDeclaration} from '~/types/api/item/clubDependent/plug
 import type {MemberVehicle} from '~/types/api/item/clubDependent/plugin/timeAndTravel/memberVehicle'
 import MemberTimeAndTravelDeclarationQuery from '~/composables/api/query/clubDependent/plugin/timeAndTravel/MemberTimeAndTravelDeclarationQuery'
 import MemberVehicleQuery from '~/composables/api/query/clubDependent/plugin/timeAndTravel/MemberVehicleQuery'
-import type {FormError, FormErrorEvent} from '#ui/types'
+import type {FormError} from '#ui/types'
 import type {SelectApiItem} from '~/types/select'
 import {formatDateInput} from '~/utils/date'
 import {DECLARATION_LOCATION_MAX_LENGTH, DECLARATION_DESCRIPTION_MAX_LENGTH, isValidHoursGranularity} from '~/utils/timeAndTravel'
@@ -110,11 +110,7 @@ const validate = (state: TimeAndTravelDeclaration): FormError[] => {
   return errors
 }
 
-async function onError(event: FormErrorEvent) {
-  const element = document.getElementById(event.errors[0].id)
-  element?.focus()
-  element?.scrollIntoView({behavior: 'smooth', block: 'center'})
-}
+const onError = useFormScrollToFirstError()
 
 async function onSubmit() {
   isUpdating.value = true

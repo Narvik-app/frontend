@@ -5,7 +5,7 @@ import type {LoanCategory} from '~/types/api/item/clubDependent/plugin/loan/loan
 import LoanItemQuery from '~/composables/api/query/clubDependent/plugin/loan/LoanItemQuery'
 import LoanCategoryQuery from '~/composables/api/query/clubDependent/plugin/loan/LoanCategoryQuery'
 import FileQuery from '~/composables/api/query/FileQuery'
-import type {FormError, FormErrorEvent} from '#ui/types'
+import type {FormError} from '#ui/types'
 import type {SelectApiItem} from '~/types/select'
 import {getFileFormDataFromUInputChangeEvent, displayFileErrorToast, loadImageBase64} from '~/utils/file'
 
@@ -92,11 +92,7 @@ const validate = (state: LoanItem): FormError[] => {
   return errors
 }
 
-async function onError(event: FormErrorEvent) {
-  const element = document.getElementById(event.errors[0].id)
-  element?.focus()
-  element?.scrollIntoView({behavior: 'smooth', block: 'center'})
-}
+const onError = useFormScrollToFirstError()
 
 async function updateItem() {
   isUpdating.value = true
