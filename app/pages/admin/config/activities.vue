@@ -254,7 +254,7 @@ getActivities()
                 v-if="selfStore.selectedProfile?.club.timeAndTravelEnabled"
                 label="Déclaration de temps & kilomètres"
                 name="promptTimeAndTravelDeclaration"
-                description="Propose la déclaration de temps/km juste après l'enregistrement d'une présence pour cette activité."
+                description="Affiche le formulaire de déclaration après l'enregistrement de la présence."
               >
                 <USwitch v-model="selectedActivity.promptTimeAndTravelDeclaration"/>
               </UFormField>
