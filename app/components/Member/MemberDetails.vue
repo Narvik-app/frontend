@@ -13,7 +13,8 @@ import RegisterMemberPresence from "~/components/PresentMember/RegisterMemberPre
 import ActivityQuery from "~/composables/api/query/clubDependent/plugin/presence/ActivityQuery";
 import type {Activity} from "~/types/api/item/clubDependent/plugin/presence/activity";
 import type {MemberSeason, MemberSeasonWrite} from "~/types/api/item/clubDependent/memberSeason";
-import {ClubRole, getAvailableClubRoles, hasClubSupervisorRole} from "~/types/api/item/club";
+import type {ClubRole} from "~/types/api/item/club";
+import {getAvailableClubRoles, hasClubSupervisorRole, hasAssignablePermissions} from "~/types/api/item/club";
 import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
 import MemberSeasonQuery from "~/composables/api/query/clubDependent/MemberSeasonQuery";
 import MemberSeasonSelectModal from "~/components/MemberSeason/MemberSeasonSelectModal.vue";
@@ -369,9 +370,12 @@ memberControlTypeQuery.getAll(new URLSearchParams({'order[weight]': 'ASC'})).the
 const displayedControlTypes = computed(() => controlTypes.value.filter(t => t.displayOnPresenceCard || isSupervisor))
 
 // Only members with a supervisor-or-higher role file time & travel declarations — showing the
-// (empty) recap for every other member would just be clutter.
-const showDeclarationsTab = computed(() => !!memberRef.value && !props.self && hasClubSupervisorRole(memberRef.value?.role) && selfStore.selectedProfile?.club.timeAndTravelEnabled)
-const showPermissionsTab = computed(() => memberRef.value?.role === ClubRole.Supervisor)
+// (empty) recap for every other member would just be clutter. The viewer also needs at least
+// read access to the plugin — `can()` already grants this to admins and to anyone holding the
+// edit permission, so this single check covers all of them.
+const canViewDeclarations = selfStore.can(Permission.TimeAndTravelAccess)
+const showDeclarationsTab = computed(() => !!memberRef.value && !props.self && canViewDeclarations && hasClubSupervisorRole(memberRef.value?.role) && selfStore.selectedProfile?.club.timeAndTravelEnabled)
+const showPermissionsTab = computed(() => hasAssignablePermissions(memberRef.value?.role))
 
 // Presences first (and default) — the tab members/admins look at most often. Declarations and
 // permissions are added conditionally, permissions always last since it's the least common case.
@@ -894,7 +898,7 @@ async function deleteMember() {
       </div>
 
       <div class="lg:col-span-9">
-        <UTabs :items="memberTabs" class="w-full">
+        <UTabs :items="memberTabs" :unmount-on-hide="false" class="w-full">
           <template #presence>
             <div class="flex flex-col gap-4">
               <GenericCard v-if="totalMemberPresences > 0" :title="`${totalMemberPresences} présences ces 12 derniers mois`">
@@ -1024,11 +1028,11 @@ async function deleteMember() {
             </div>
           </template>
 
-          <template v-if="showDeclarationsTab" #declarations>
+          <template #declarations>
             <TimeAndTravelMemberBoard :member="memberRef!" :self="false" />
           </template>
 
-          <template v-if="showPermissionsTab" #permissions>
+          <template #permissions>
             <MemberPermissions :member="memberRef!" @updated="loadItem" />
           </template>
         </UTabs>
