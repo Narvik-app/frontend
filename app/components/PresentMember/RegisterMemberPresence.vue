@@ -227,9 +227,6 @@ function onDeclarationDone() {
 
     <div v-else-if="stage === 'declaration'">
       <div class="text-2xl">Déclaration de temps &amp; kilomètres pour <b>{{ state.member.fullName }}</b></div>
-      <p class="text-muted text-sm mt-2">
-        L'activité sélectionnée permet de déclarer du temps et/ou des kilomètres. Vous pouvez annuler cette étape si vous ne le souhaitez pas.
-      </p>
 
       <TimeAndTravelDeclarationForm
         class="mt-4"

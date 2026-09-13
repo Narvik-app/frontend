@@ -101,6 +101,10 @@ const validate = (state: TimeAndTravelDeclaration): FormError[] => {
     errors.push({name: 'hours', message: 'Les heures doivent être un multiple de 0.5 (ex : 1, 1.5, 2)'})
   }
 
+  if (hasHours && Number(state.hours) > 24) {
+    errors.push({name: 'hours', message: 'Maximum 24 heures par déclaration'})
+  }
+
   if (stateHasKilometers) {
     if (!state.departureLocation) errors.push({name: 'departureLocation', message: 'Champ requis'})
     if (!state.arrivalLocation) errors.push({name: 'arrivalLocation', message: 'Champ requis'})
@@ -196,7 +200,7 @@ async function onSubmit() {
     </UFormField>
 
     <UFormField label="Heures" name="hours">
-      <UInput v-model="item.hours" data-testid="declaration-hours" type="number" step="0.5" min="0" class="w-full" @keydown="blockNonDecimalKey" />
+      <UInput v-model="item.hours" data-testid="declaration-hours" type="number" step="0.5" min="0" max="24" class="w-full" @keydown="blockNonDecimalKey" />
     </UFormField>
 
     <UFormField label="Kilomètres" name="kilometers">
