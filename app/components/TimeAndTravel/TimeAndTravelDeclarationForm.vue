@@ -181,6 +181,7 @@ async function onSubmit() {
     <UFormField label="Motif" name="description" required>
       <UInput
         v-model="item.description"
+        data-testid="declaration-description"
         :maxlength="DECLARATION_DESCRIPTION_MAX_LENGTH"
         class="w-full"
         aria-describedby="description-character-count"
@@ -195,19 +196,20 @@ async function onSubmit() {
     </UFormField>
 
     <UFormField label="Heures" name="hours">
-      <UInput v-model="item.hours" type="number" step="0.5" min="0" class="w-full" @keydown="blockNonDecimalKey" />
+      <UInput v-model="item.hours" data-testid="declaration-hours" type="number" step="0.5" min="0" class="w-full" @keydown="blockNonDecimalKey" />
     </UFormField>
 
     <UFormField label="Kilomètres" name="kilometers">
       <UFieldGroup class="w-full">
         <UButton
+          data-testid="declaration-roundtrip-toggle"
           :icon="item.isRoundtrip ? 'i-heroicons-arrows-right-left' : 'i-heroicons-arrow-long-right'"
           color="primary"
           variant="soft"
           :aria-label="item.isRoundtrip ? 'Aller-retour (cliquer pour repasser en aller simple)' : 'Aller simple (cliquer pour déclarer un aller-retour)'"
           @click="item.isRoundtrip = !item.isRoundtrip"
         />
-        <UInput v-model.number="item.kilometers" type="number" min="0" class="flex-1" @keydown="blockNonDecimalKey" />
+        <UInput v-model.number="item.kilometers" data-testid="declaration-kilometers" type="number" min="0" class="flex-1" @keydown="blockNonDecimalKey" />
         <UButton v-if="item.isRoundtrip" color="primary" variant="soft" disabled>
           {{ totalKilometers }} km
         </UButton>
@@ -218,6 +220,7 @@ async function onSubmit() {
       <UFormField label="Lieu de départ" name="departureLocation" required>
         <UInput
           v-model="item.departureLocation"
+          data-testid="declaration-departure"
           :maxlength="DECLARATION_LOCATION_MAX_LENGTH"
           class="w-full"
           aria-describedby="departure-location-character-count"
@@ -234,6 +237,7 @@ async function onSubmit() {
       <UFormField label="Lieu d'arrivée" name="arrivalLocation" required>
         <UInput
           v-model="item.arrivalLocation"
+          data-testid="declaration-arrival"
           :maxlength="DECLARATION_LOCATION_MAX_LENGTH"
           class="w-full"
           aria-describedby="arrival-location-character-count"
@@ -248,14 +252,14 @@ async function onSubmit() {
       </UFormField>
 
       <UFormField label="Véhicule" name="memberVehicle" required>
-        <USelectMenu v-model="selectedVehicle" :items="vehicleOptions" class="w-full" placeholder="Choisir un véhicule" />
+        <USelectMenu v-model="selectedVehicle" data-testid="declaration-vehicle" :items="vehicleOptions" class="w-full" placeholder="Choisir un véhicule" />
       </UFormField>
     </template>
 
-    <UButton :loading="isUpdating" block type="submit">
+    <UButton data-testid="declaration-submit" :loading="isUpdating" block type="submit">
       Enregistrer
     </UButton>
-    <UButton class="mt-2" color="error" variant="ghost" block @click="emit('canceled')">
+    <UButton data-testid="declaration-cancel" class="mt-2" color="error" variant="ghost" block @click="emit('canceled')">
       Annuler
     </UButton>
   </UForm>
