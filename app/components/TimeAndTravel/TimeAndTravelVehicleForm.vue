@@ -132,7 +132,7 @@ async function updateItem() {
     </UFormField>
 
     <UFormField label="Marque" name="brand" required>
-      <UInput v-model="item.brand" class="w-full" />
+      <UInput v-model="item.brand" data-testid="vehicle-brand" class="w-full" />
     </UFormField>
 
     <UFormField label="Modèle" name="model">
@@ -140,7 +140,7 @@ async function updateItem() {
     </UFormField>
 
     <UFormField label="Immatriculation" name="licensePlate" required>
-      <UInput v-model="item.licensePlate" class="w-full" />
+      <UInput v-model="item.licensePlate" data-testid="vehicle-license-plate" class="w-full" />
     </UFormField>
 
     <UFormField label="Motorisation" name="engineType">
@@ -152,7 +152,7 @@ async function updateItem() {
     </UFormField>
 
     <UFormField label="Puissance fiscale (CV)" name="fiscalPower" required>
-      <UInput v-model.number="item.fiscalPower" type="number" min="1" class="w-full" />
+      <UInput v-model.number="item.fiscalPower" data-testid="vehicle-fiscal-power" type="number" min="1" class="w-full" />
     </UFormField>
 
     <p v-if="item.engineType === 'electric' && electricBonusPercent !== undefined" class="text-xs text-muted">
@@ -168,7 +168,7 @@ async function updateItem() {
       <NuxtLink :to="BAREME_OFFICIAL_SOURCE_URL" target="_blank" class="text-xs underline mt-1">Barème officiel</NuxtLink>
     </div>
 
-    <UButton :loading="isUpdating" block type="submit">
+    <UButton data-testid="vehicle-submit" :loading="isUpdating" block type="submit">
       Enregistrer
     </UButton>
   </UForm>

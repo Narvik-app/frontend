@@ -169,10 +169,10 @@ defineExpose({refresh})
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <GenericStatCard title="Déclarations" :value="summary.declarationCount" />
-      <GenericStatCard title="Kilomètres" :value="summary.totalKilometers" />
-      <GenericStatCard title="Heures" :value="summary.totalHours" />
-      <GenericStatCard title="Montant valorisé" :value="formatMonetary(summary.totalAmount)" />
+      <GenericStatCard data-testid="stat-declaration-count" title="Déclarations" :value="summary.declarationCount" />
+      <GenericStatCard data-testid="stat-declaration-kilometers" title="Kilomètres" :value="summary.totalKilometers" />
+      <GenericStatCard data-testid="stat-declaration-hours" title="Heures" :value="summary.totalHours" />
+      <GenericStatCard data-testid="stat-declaration-amount" title="Montant valorisé" :value="formatMonetary(summary.totalAmount)" />
     </div>
 
     <UCard>
@@ -184,7 +184,7 @@ defineExpose({refresh})
           </UButton>
         </template>
         <div v-else class="text-xl font-bold">Déclarations de temps & kilomètres</div>
-        <UButton v-if="canEdit" icon="i-heroicons-plus" @click="emit('create')">
+        <UButton v-if="canEdit" data-testid="declaration-create" icon="i-heroicons-plus" @click="emit('create')">
           Nouvelle déclaration
         </UButton>
       </div>
@@ -209,8 +209,9 @@ defineExpose({refresh})
         </template>
         <template #actions-cell="{ row }">
           <div v-if="canEdit && declarationIsEditable(row.original)" class="flex gap-2 justify-end">
-            <UButton icon="i-heroicons-pencil" color="neutral" variant="ghost" @click="emit('edit', row.original)" />
+            <UButton data-testid="declaration-edit" icon="i-heroicons-pencil" color="neutral" variant="ghost" @click="emit('edit', row.original)" />
             <UButton
+              data-testid="declaration-delete"
               icon="i-heroicons-trash"
               color="error"
               variant="ghost"
