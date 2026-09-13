@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type {PropType, Ref} from "vue";
-import type {FormError, FormErrorEvent} from "#ui/types";
+import type {FormError} from "#ui/types";
 import type {Member} from "~/types/api/item/clubDependent/member";
 import {type User, UserRole} from "~/types/api/item/user";
 import UserQuery from "~/composables/api/query/UserQuery";
@@ -49,11 +49,7 @@ const validate = (state: Member): FormError[] => {
   return errors
 }
 
-async function onError(event: FormErrorEvent) {
-  const element = document.getElementById(event.errors[0].id)
-  element?.focus()
-  element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-}
+const onError = useFormScrollToFirstError()
 
 // Api Query
 
