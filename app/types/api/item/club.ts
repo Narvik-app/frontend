@@ -75,6 +75,10 @@ export function hasClubSupervisorRole(role: ClubRole|undefined): boolean {
   if (!role) return false
   return role === ClubRole.Supervisor || isClubAdmin(role)
 }
+/** Admins already hold every permission, so only a plain supervisor has assignable permissions to manage. */
+export function hasAssignablePermissions(role: ClubRole|undefined): boolean {
+  return role === ClubRole.Supervisor
+}
 
 // Club plugin types that can be enabled/disabled per club
 export type ClubPlugin = 'presencesEnabled' | 'salesEnabled' | 'loansEnabled' | 'timeAndTravelEnabled';
