@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import TimeAndTravelExportQuery from '~/composables/api/query/clubDependent/plugin/timeAndTravel/TimeAndTravelExportQuery'
 import type {TimeAndTravelExport} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelExport'
-import type {FormError, FormErrorEvent} from '#ui/types'
+import type {FormError} from '#ui/types'
 import {formatDateInput, formatDateRangeReadable} from '~/utils/date'
 import type {DateRange} from '~/types/date'
 
@@ -22,11 +22,7 @@ const validate = (): FormError[] => {
   return errors
 }
 
-async function onError(event: FormErrorEvent) {
-  const element = document.getElementById(event.errors[0].id)
-  element?.focus()
-  element?.scrollIntoView({behavior: 'smooth', block: 'center'})
-}
+const onError = useFormScrollToFirstError()
 
 async function onSubmit() {
   if (!selectedRange.value) return
