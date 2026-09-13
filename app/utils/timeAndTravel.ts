@@ -1,6 +1,5 @@
 import type {TimeAndTravelDeclaration} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelDeclaration'
 import type {MemberVehicle} from '~/types/api/item/clubDependent/plugin/timeAndTravel/memberVehicle'
-import {formatMonetary} from '~/utils/string'
 import {createBrowserPdfDownload} from '~/utils/browser'
 import FileQuery from '~/composables/api/query/FileQuery'
 import type {File} from '~/types/api/item/file'
@@ -27,11 +26,6 @@ export function isValidHoursGranularity(hours: number): boolean {
 export function vehicleDisplayName(vehicle?: MemberVehicle | string | null): string {
   if (!vehicle || typeof vehicle === 'string') return ''
   return [vehicle.brand, vehicle.model].filter(Boolean).join(' ') + (vehicle.licensePlate ? ` — ${vehicle.licensePlate}` : '')
-}
-
-export function formatAmount(value?: number | string | null): string {
-  if (value === undefined || value === null) return formatMonetary(undefined)
-  return formatMonetary(value)
 }
 
 /**

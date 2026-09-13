@@ -32,7 +32,7 @@ const globalSettingQuery = new GlobalSettingQuery()
 
 const item: Ref<MemberVehicle> = props.item ? ref({...props.item}) : ref(getDefaultVehicle())
 const isUpdating = ref(false)
-const electricBonusPercent = ref(20)
+const electricBonusPercent = ref<number>()
 const mileageRates = ref<MileageRate[]>([])
 
 globalSettingQuery.get(GlobalSettingPublicEnum.TIME_AND_TRAVEL_ELECTRIC_BONUS_RATE).then(({retrieved}) => {
@@ -159,7 +159,7 @@ async function updateItem() {
       <UInput v-model.number="item.fiscalPower" type="number" min="1" class="w-full" />
     </UFormField>
 
-    <p v-if="item.engineType === 'electric'" class="text-xs text-muted">
+    <p v-if="item.engineType === 'electric' && electricBonusPercent !== undefined" class="text-xs text-muted">
       En cas d'utilisation d'un véhicule électrique, le montant de l'indemnité kilométrique est majoré de {{ electricBonusPercent }} %.
     </p>
 
