@@ -39,22 +39,14 @@ const showMemberPicker = ref(false)
 const selectedVehicle = ref<MemberVehicle | undefined>()
 const selectedVehicleMember = ref<Member | undefined>()
 
-const columns = props.member
-  ? [
-      {accessorKey: 'vehicle', header: 'Véhicule', meta: {class: {th: 'w-full'}}},
-      {accessorKey: 'licensePlate', header: 'Immatriculation'},
-      {accessorKey: 'engineType', header: 'Motorisation'},
-      {accessorKey: 'isEnabled', header: 'Actif'},
-      {accessorKey: 'actions', header: ''},
-    ]
-  : [
-      {accessorKey: 'member', header: 'Membre'},
-      {accessorKey: 'vehicle', header: 'Véhicule', meta: {class: {th: 'w-full'}}},
-      {accessorKey: 'licensePlate', header: 'Immatriculation'},
-      {accessorKey: 'engineType', header: 'Motorisation'},
-      {accessorKey: 'isEnabled', header: 'Actif'},
-      {accessorKey: 'actions', header: ''},
-    ]
+const baseColumns = [
+  {accessorKey: 'vehicle', header: 'Véhicule', meta: {class: {th: 'w-full'}}},
+  {accessorKey: 'licensePlate', header: 'Immatriculation'},
+  {accessorKey: 'engineType', header: 'Motorisation'},
+  {accessorKey: 'isEnabled', header: 'Actif'},
+  {accessorKey: 'actions', header: ''},
+]
+const columns = props.member ? baseColumns : [{accessorKey: 'member', header: 'Membre'}, ...baseColumns]
 
 async function loadVehicles() {
   isLoading.value = true
@@ -102,7 +94,7 @@ function onUpdated() {
 async function onDelete(vehicle: MemberVehicle) {
   const {error} = await vehicleQuery.value.delete(vehicle)
   if (error) {
-    toast.add({color: 'error', title: 'Suppression impossible', description: error.message})
+    displayApiError(error, 'Suppression impossible')
     return
   }
   toast.add({title: 'Véhicule supprimé'})
