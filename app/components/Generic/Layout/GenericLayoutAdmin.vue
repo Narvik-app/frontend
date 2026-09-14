@@ -103,7 +103,7 @@ v-if="groupedLinks.title !== undefined"
             </template>
 
           </div>
-          <div class="xl:basis-full">
+          <div class="xl:basis-full min-w-0">
             <slot />
           </div>
         </div>
