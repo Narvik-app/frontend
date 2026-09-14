@@ -51,8 +51,19 @@ const selectedDate = ref<Date | null>(item.value.date ? new Date(item.value.date
 const isUpdating = ref(false)
 const vehicles = ref<MemberVehicle[]>([])
 
+const initialVehicle = props.item?.memberVehicle && typeof props.item.memberVehicle === 'object' ? props.item.memberVehicle : undefined
+const selectedVehicle = ref<SelectApiItem<MemberVehicle> | undefined>(
+  initialVehicle
+    ? {label: `${initialVehicle.brand} ${initialVehicle.model ?? ''}`, value: initialVehicle.uuid!, item: initialVehicle}
+    : undefined
+)
+
 vehicleQuery.getAll().then(({items}) => {
   vehicles.value = items.filter(v => v.isEnabled)
+  // Most members only have one vehicle, so default to the first one rather than making them pick.
+  if (!selectedVehicle.value && vehicleOptions.value.length > 0) {
+    selectedVehicle.value = vehicleOptions.value[0]
+  }
 })
 
 const vehicleOptions = computed<SelectApiItem<MemberVehicle>[]>(() => {
@@ -62,12 +73,6 @@ const vehicleOptions = computed<SelectApiItem<MemberVehicle>[]>(() => {
     item: v,
   }))
 })
-const initialVehicle = props.item?.memberVehicle && typeof props.item.memberVehicle === 'object' ? props.item.memberVehicle : undefined
-const selectedVehicle = ref<SelectApiItem<MemberVehicle> | undefined>(
-  initialVehicle
-    ? {label: `${initialVehicle.brand} ${initialVehicle.model ?? ''}`, value: initialVehicle.uuid!, item: initialVehicle}
-    : undefined
-)
 
 function getDefaultDeclaration(): TimeAndTravelDeclaration {
   return {
@@ -190,6 +195,7 @@ async function onSubmit() {
         class="w-full"
         aria-describedby="description-character-count"
         :ui="{trailing: 'pointer-events-none'}"
+        autofocus
       >
         <template #trailing>
           <div id="description-character-count" class="text-xs text-muted tabular-nums" aria-live="polite" role="status">
