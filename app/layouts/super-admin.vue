@@ -25,6 +25,11 @@ useHead({
       label: 'Documents légaux',
       icon: 'i-heroicons-scale',
       to: '/super-admin/config/legals'
+    },
+    {
+      label: 'Barème kilométrique',
+      icon: 'i-heroicons-truck',
+      to: '/super-admin/config/mileage-rates'
     }
   ]
 

@@ -3,7 +3,7 @@ import type {PropType} from "vue";
 import type {Member} from "~/types/api/item/clubDependent/member";
 import type {PermissionTemplate} from "~/types/api/item/clubDependent/permissionTemplate";
 import {useSelfUserStore} from "~/stores/useSelfUser";
-import {ClubRole} from "~/types/api/item/club";
+import {hasAssignablePermissions} from "~/types/api/item/club";
 import PermissionTemplateQuery from "~/composables/api/query/clubDependent/PermissionTemplateQuery";
 import MemberQuery from "~/composables/api/query/clubDependent/MemberQuery";
 
@@ -21,10 +21,7 @@ const emit = defineEmits<{
 const selfStore = useSelfUserStore();
 const isAdmin = selfStore.isAdmin();
 
-// Only show for supervisors (admins don't need permissions as they have all)
-const isSupervisor = computed(() => {
-  return props.member.role === ClubRole.Supervisor;
-});
+const isSupervisor = computed(() => hasAssignablePermissions(props.member.role));
 
 // Template management
 const templates = ref<PermissionTemplate[]>([]);
