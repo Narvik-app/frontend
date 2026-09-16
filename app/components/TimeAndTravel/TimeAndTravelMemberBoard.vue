@@ -6,8 +6,8 @@ import type {TimeAndTravelExportAttestation} from '~/types/api/item/clubDependen
 import MemberTimeAndTravelAttestationQuery from '~/composables/api/query/clubDependent/plugin/timeAndTravel/MemberTimeAndTravelAttestationQuery'
 import {useSelfUserStore} from '~/stores/useSelfUser'
 import {Permission} from '~/types/api/permissions'
-import {downloadFilePdf} from '~/utils/timeAndTravel'
 import {formatDateReadable} from '~/utils/date'
+import {useFileDownloadLinks} from '~/composables/useFileDownloadLinks'
 import TimeAndTravelDeclarationsTable from '~/components/TimeAndTravel/TimeAndTravelDeclarationsTable.vue'
 
 const props = defineProps({
@@ -27,15 +27,13 @@ const props = defineProps({
   },
 })
 
-const toast = useToast()
-
 const selfStore = useSelfUserStore()
 const canEditOthers = selfStore.can(Permission.TimeAndTravelEdit)
 const canEdit = computed(() => props.self || canEditOthers)
 
 const attestationQuery = computed(() => new MemberTimeAndTravelAttestationQuery(props.member))
 const attestations = ref<TimeAndTravelExportAttestation[]>([])
-const isDownloading = ref<string | undefined>()
+const {hrefs: attestationHrefs, errors: attestationErrors, resolve: resolveAttestationHref} = useFileDownloadLinks()
 
 const declarationsTable = ref<InstanceType<typeof TimeAndTravelDeclarationsTable>>()
 const declarationModalOpen = ref(false)
@@ -44,6 +42,7 @@ const selectedDeclaration = ref<TimeAndTravelDeclaration | undefined>()
 async function loadAttestations() {
   const {items} = await attestationQuery.value.getAll()
   attestations.value = items
+  items.forEach(attestation => resolveAttestationHref(attestation.uuid, attestation.file))
 }
 
 function onCreate() {
@@ -68,15 +67,6 @@ function attestationPeriodLabel(attestation: TimeAndTravelExportAttestation): st
   return `${formatDateReadable(attestationExport.startDate)} — ${formatDateReadable(attestationExport.endDate)}`
 }
 
-async function onDownloadAttestation(attestation: TimeAndTravelExportAttestation) {
-  isDownloading.value = attestation.uuid
-  const {error} = await downloadFilePdf(attestation.file, `attestation-${props.member.fullName}.pdf`)
-  isDownloading.value = undefined
-  if (error) {
-    toast.add({color: 'error', title: 'Téléchargement impossible', description: error.message})
-  }
-}
-
 loadAttestations()
 </script>
 
@@ -96,10 +86,13 @@ loadAttestations()
           <UButton
             icon="i-heroicons-arrow-down-tray"
             variant="soft"
-            :loading="isDownloading === attestation.uuid"
-            @click="onDownloadAttestation(attestation)"
+            :color="attestationErrors[attestation.uuid] ? 'error' : 'primary'"
+            :disabled="!!attestationErrors[attestation.uuid]"
+            :loading="!attestationHrefs[attestation.uuid] && !attestationErrors[attestation.uuid]"
+            :to="attestationHrefs[attestation.uuid]"
+            :download="`attestation-${member.fullName}.pdf`"
           >
-            Télécharger
+            {{ attestationErrors[attestation.uuid] ? 'Indisponible' : 'Télécharger' }}
           </UButton>
         </div>
       </div>
