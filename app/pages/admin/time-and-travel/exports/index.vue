@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import TimeAndTravelExportQuery from '~/composables/api/query/clubDependent/plugin/timeAndTravel/TimeAndTravelExportQuery'
 import type {TimeAndTravelExport} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelExport'
-import {EXPORT_STATUS_COLORS, EXPORT_STATUS_LABELS} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelExport'
-import {formatDateReadable} from '~/utils/date'
+import {EXPORT_STATUS_COLORS, EXPORT_STATUS_LABELS, TimeAndTravelExportStatus} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelExport'
+import {formatDateInput, formatDateReadable} from '~/utils/date'
 import {formatMonetary} from '~/utils/string'
 import {convertUuidToUrlUuid, displayApiError} from '~/utils/resource'
 import {useSelfUserStore} from '~/stores/useSelfUser'
 import ClubSettingQuery from '~/composables/api/query/clubDependent/ClubSettingQuery'
 import type {WriteClubSetting} from '~/types/api/item/clubDependent/clubSetting'
+import {downloadFile} from '~/utils/timeAndTravel'
 
 definePageMeta({layout: 'time-and-travel'})
 useHead({title: 'Exports'})
@@ -44,6 +45,7 @@ const exportQuery = new TimeAndTravelExportQuery()
 const exports = ref<TimeAndTravelExport[]>([])
 const isLoading = ref(true)
 const modalOpen = ref(false)
+const isDownloadingZip = ref<string | undefined>()
 
 const columns = [
   {accessorKey: 'period', header: 'Période', meta: {class: {th: 'w-full'}}},
@@ -64,6 +66,16 @@ async function loadExports() {
 function onUpdated() {
   modalOpen.value = false
   loadExports()
+}
+
+async function downloadZip(item: TimeAndTravelExport) {
+  if (!item.zipFile) return
+  isDownloadingZip.value = item.uuid
+  const {error} = await downloadFile(item.zipFile, `export-${formatDateInput(item.startDate)}-${formatDateInput(item.endDate)}.zip`, 'application/zip')
+  isDownloadingZip.value = undefined
+  if (error) {
+    toast.add({color: 'error', title: 'Téléchargement impossible', description: error.message})
+  }
 }
 
 loadExports()
@@ -106,9 +118,20 @@ loadExports()
         </UBadge>
       </template>
       <template #actions-cell="{ row }">
-        <UButton :to="`/admin/time-and-travel/exports/${convertUuidToUrlUuid(row.original.uuid)}`">
-          Détail
-        </UButton>
+        <div class="flex gap-2 justify-end">
+          <UButton
+            v-if="row.original.status === TimeAndTravelExportStatus.Locked && row.original.zipFile"
+            icon="i-heroicons-arrow-down-tray"
+            variant="soft"
+            :loading="isDownloadingZip === row.original.uuid"
+            @click="downloadZip(row.original)"
+          >
+            ZIP
+          </UButton>
+          <UButton :to="`/admin/time-and-travel/exports/${convertUuidToUrlUuid(row.original.uuid)}`">
+            Détail
+          </UButton>
+        </div>
       </template>
     </UTable>
   </UCard>
