@@ -114,15 +114,18 @@ const overlay = useOverlay()
 
 <template>
   <header
-    class="bg-(--ui-bg) sticky top-0 z-50 h-16 print:hidden shadow-sm">
-    <nav class="container mx-auto p-4 flex justify-between h-full overflow-y-auto">
-      <div class="flex gap-4 flex-shrink-0">
+    class="bg-(--ui-bg) z-50 h-16 print:hidden shadow-sm fixed inset-x-0 bottom-0 lg:sticky lg:top-0 lg:bottom-auto">
+    <nav class="container mx-auto px-4 h-full flex items-center gap-3">
+      <div class="flex-shrink-0">
         <NuxtLink to="/" class="flex align-middle">
           <UTooltip text="Accueil">
             <NuxtImg v-if="selectedProfile?.club?.settings?.logoBase64" :src="selectedProfile.club.settings.logoBase64" class="w-7 object-contain"/>
             <NuxtImg v-else :src="siteLogo" class="w-7 object-contain"/>
           </UTooltip>
         </NuxtLink>
+      </div>
+      <div class="flex-1 min-w-0 overflow-x-auto lg:overflow-visible">
+        <div class="flex items-center gap-2 w-max lg:w-auto">
         <UButton class="-mx-3 hidden lg:block" to="/" variant="ghost" color="neutral">Accueil</UButton>
         <div v-if="isSupervisor && salesButtonUrl">
           <UButton :to="salesButtonUrl" icon="i-heroicons-shopping-cart" variant="ghost" color="neutral">
@@ -145,8 +148,6 @@ const overlay = useOverlay()
             </template>
           </UButton>
         </div>
-      </div>
-      <div class="flex gap-4">
         <div v-if="isSupervisor">
           <UButton to="/admin" icon="i-heroicons-key" variant="ghost" color="neutral">
             <template v-if="isDesktopDisplay || isTabletDisplay">
@@ -155,8 +156,15 @@ const overlay = useOverlay()
           </UButton>
         </div>
         <div v-if="selfStore.isImpersonating">
-          <UButton color="warning" @click="selfStore.stopImpersonation()">Arrêter impersonification</UButton>
+          <UButton color="warning" icon="i-heroicons-no-symbol" @click="selfStore.stopImpersonation()">
+            <template v-if="isDesktopDisplay || isTabletDisplay">
+              Arrêter impersonification
+            </template>
+          </UButton>
         </div>
+        </div>
+      </div>
+      <div class="flex-shrink-0">
         <UDropdownMenu :items="rightMenu">
           <UButton
             data-testid="user-menu"
