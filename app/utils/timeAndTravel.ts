@@ -1,6 +1,6 @@
 import type {TimeAndTravelDeclaration} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelDeclaration'
 import type {MemberVehicle} from '~/types/api/item/clubDependent/plugin/timeAndTravel/memberVehicle'
-import {base64ToBlob} from '~/utils/browser'
+import {base64ToBlob, createBrowserFileDownload} from '~/utils/browser'
 import FileQuery from '~/composables/api/query/FileQuery'
 import type {File} from '~/types/api/item/file'
 import type {DateRange, DateRangeFilter} from '~/types/date'
@@ -61,11 +61,11 @@ export function appendDateRangeParams(urlParams: URLSearchParams, range?: DateRa
  * Fetches a File's content through the private files endpoint and turns it into a blob: object
  * URL, so callers can bind it as a real <a href> (download links need an actual href up front to
  * support the browser's native middle-click/ctrl-click/"open in new tab" behavior — a click handler
- * firing an async fetch can't). Shared by the export page (recap) and the member board
+ * firing an async fetch can't). Shared by the export page (recap, zip) and the member board
  * (attestations) so there is one implementation. The returned URL must be revoked (URL.revokeObjectURL)
  * once no longer needed.
  */
-export async function getFilePdfObjectUrl(file: File | null | undefined): Promise<{ url?: string, error?: Error }> {
+export async function getFileObjectUrl(file: File | null | undefined, mimeType = 'application/pdf'): Promise<{ url?: string, error?: Error }> {
   if (!file?.privateUrl) {
     return {error: new Error('Fichier introuvable')}
   }
@@ -76,5 +76,26 @@ export async function getFilePdfObjectUrl(file: File | null | undefined): Promis
     return {error: error ?? new Error('Fichier introuvable')}
   }
 
-  return {url: URL.createObjectURL(base64ToBlob(retrieved.base64, 'application/pdf'))}
+  return {url: URL.createObjectURL(base64ToBlob(retrieved.base64, mimeType))}
+}
+
+/**
+ * Fetches a File's content and triggers an immediate browser download — for a one-off download
+ * button (e.g. in a list of many rows) where eagerly resolving every row's file into a persistent
+ * link via getFileObjectUrl/useFileDownloadLinks would be wasteful. Mirrors the CSV export buttons
+ * elsewhere in the app.
+ */
+export async function downloadFile(file: File | null | undefined, filename: string, mimeType = 'application/pdf'): Promise<{ error?: Error }> {
+  if (!file?.privateUrl) {
+    return {error: new Error('Fichier introuvable')}
+  }
+
+  const fileQuery = new FileQuery()
+  const {retrieved, error} = await fileQuery.getFromUrl(file.privateUrl)
+  if (error || !retrieved) {
+    return {error: error ?? new Error('Fichier introuvable')}
+  }
+
+  createBrowserFileDownload(filename, retrieved.base64, mimeType)
+  return {}
 }
