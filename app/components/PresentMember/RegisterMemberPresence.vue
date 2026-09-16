@@ -8,6 +8,9 @@ import type {MemberPresence} from "~/types/api/item/clubDependent/plugin/presenc
 import MemberPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/MemberPresenceQuery";
 import {formatDateInput} from "~/utils/date";
 import {ClubRole, getAvailableClubRole, hasClubSupervisorRole, isClubAdmin} from "~/types/api/item/club";
+import {useSelfUserStore} from "~/stores/useSelfUser";
+import {Permission} from "~/types/api/permissions";
+import {DECLARATION_DESCRIPTION_MAX_LENGTH} from "~/utils/timeAndTravel";
 
 const props = defineProps({
   member: {
@@ -24,12 +27,34 @@ const props = defineProps({
     type: Boolean,
     required: false,
     default: false
+  },
+  /** Set to false to skip the post-registration time-and-travel declaration prompt (e.g. a badger/kiosk session) */
+  promptDeclaration: {
+    type: Boolean,
+    required: false,
+    default: true
+  },
+  /**
+   * The kiosk/today-list page is often used under a shared badger session, so there's no
+   * meaningful "acting user" to check permissions on — instead it prompts based on whether the
+   * MEMBER BEING REGISTERED is themselves a supervisor/admin (e.g. badging themselves in).
+   * Everywhere else (an admin deliberately adding a presence for someone from their member page),
+   * it stays based on the acting user's own TIME_TRAVEL_EDIT permission.
+   */
+  promptBasedOnMemberRole: {
+    type: Boolean,
+    required: false,
+    default: false
   }
 });
 
+const selfStore = useSelfUserStore()
+
 const emit = defineEmits([
   'registered',
-  'canceled'
+  'canceled',
+  /** Emitted whenever the internal stage changes, so a wrapping modal can disable ESC/backdrop dismissal while the declaration step is shown. */
+  'stage-change'
 ])
 
 const toast = useToast()
@@ -77,6 +102,36 @@ const activitiesSupervisor = computed(() => {
 })
 const activitiesAdmin = computed(() => {
   return activities.value.filter((actvt) => actvt.isEnabled && actvt.visibility === ClubRole.Admin)
+})
+
+// Two-stage flow: after the presence is registered, prompt a time-and-travel
+// declaration when a selected activity calls for it. Only on create (never
+// when editing an existing presence), and only for whoever is allowed to
+// declare — see promptBasedOnMemberRole above for the two ways that's checked.
+const stage: Ref<'presence' | 'declaration'> = ref('presence')
+const createdPresence: Ref<MemberPresence | undefined> = ref(undefined)
+
+watch(stage, (value) => emit('stage-change', value))
+
+const declarableSelectedActivities = computed(() => {
+  return activities.value.filter((actvt) => actvt.promptTimeAndTravelDeclaration && actvt["@id"] && state.activities[actvt["@id"]])
+})
+
+// Activity names joined together can exceed the description limit — truncated upfront so the initial value isn't silently rejected by the backend.
+const declarationInitialDescription = computed(() => {
+  return declarableSelectedActivities.value.map((actvt) => actvt.name).join(', ').slice(0, DECLARATION_DESCRIPTION_MAX_LENGTH)
+})
+
+const shouldPromptDeclaration = computed(() => {
+  if (!props.promptDeclaration || props.memberPresence) return false
+  if (!selfStore.selectedProfile?.club.timeAndTravelEnabled) return false
+  if (declarableSelectedActivities.value.length === 0) return false
+
+  if (props.promptBasedOnMemberRole) {
+    return hasClubSupervisorRole(state.member?.role)
+  }
+
+  return !selfStore.isBadger() && selfStore.can(Permission.TimeAndTravelEdit)
 })
 
 
@@ -139,7 +194,17 @@ async function onSubmit(event: FormSubmitEvent<MemberPresenceFormState>) {
     title: "Présence enregistrée"
   });
 
+  if (shouldPromptDeclaration.value && item) {
+    createdPresence.value = item
+    stage.value = 'declaration'
+    return
+  }
+
   emit('registered', item)
+}
+
+function onDeclarationDone() {
+  emit('registered', createdPresence.value)
 }
 
 </script>
@@ -158,6 +223,18 @@ async function onSubmit(event: FormSubmitEvent<MemberPresenceFormState>) {
       </div>
 
       <USkeleton class="mt-4 h-6 w-full" />
+    </div>
+
+    <div v-else-if="stage === 'declaration'">
+      <div class="text-2xl">Déclaration de temps &amp; kilomètres pour <b>{{ state.member.fullName }}</b></div>
+
+      <TimeAndTravelDeclarationForm
+        class="mt-4"
+        :member="state.member"
+        :initial-description="declarationInitialDescription"
+        @updated="onDeclarationDone"
+        @canceled="onDeclarationDone"
+      />
     </div>
 
     <div v-else>

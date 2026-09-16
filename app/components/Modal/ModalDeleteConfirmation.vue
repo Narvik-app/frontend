@@ -23,6 +23,14 @@ const props = defineProps(
       type: String,
       default: undefined
     },
+    confirmLabel: {
+      type: String,
+      default: 'Supprimer'
+    },
+    confirmColor: {
+      type: String,
+      default: 'error'
+    },
   }
 )
 
@@ -55,10 +63,10 @@ const emit = defineEmits<{ delete: [boolean], close: [boolean] }>()
     <template #actions>
       <UButton
         :loading="isDeleting"
-        color="error"
+        :color="confirmColor"
         @click="isDeleting = true; emit('delete', true)"
       >
-        Supprimer
+        {{ confirmLabel }}
       </UButton>
     </template>
   </ModalWithActions>

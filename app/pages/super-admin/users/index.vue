@@ -89,7 +89,7 @@ async function getItemsPaginated() {
   isLoading.value = false
 }
 
-function rowClicked(row: TableRow<User>) {
+function rowClicked(_event: Event, row: TableRow<User>) {
   selectedItem.value = {...row.original} // We make a shallow clone
   isSideVisible.value = true
 }

@@ -42,9 +42,20 @@ const addExternalPresenceModal = ref(false);
 const historyModal = ref(false);
 
 const searchQuery = ref('')
+/** Blocks ESC/backdrop dismissal of searchMemberModalOpen while the post-registration declare step is shown — see RegisterMemberPresence's stage-change emit. */
+const registeringDeclaration = ref(false)
 
 const selectedMemberPresence: Ref<MemberPresence | null> = ref(null)
 const selectedMember: Ref<Member | null> = ref(null)
+
+// Dismissing the modal any other way than the internal @close (backdrop click, Escape) still
+// closes it via v-model, but wouldn't otherwise clear the selection — leaving PresentMemberDetails
+// mounted with its stale state (e.g. a just-linked declaration not yet reflected) on next reopen.
+watch(memberPresenceModalOpen, (open) => {
+  if (!open) {
+    selectedMemberPresence.value = null
+  }
+})
 
 refreshNight()
 function refreshNight() {
@@ -94,6 +105,7 @@ watch(searchMemberModalOpen, (value, _oldValue) => {
   if (!value) {
     selectedMember.value = null;
     searchQuery.value = '';
+    registeringDeclaration.value = false;
   }
 })
 
@@ -240,6 +252,7 @@ onUnmounted(() => {
         <div>
           <PresentMemberDetails
             v-if="selectedMemberPresence"
+            :key="selectedMemberPresence.uuid"
             :item="selectedMemberPresence"
             @updated="memberPresenceUpdated"
             @close="memberPresenceModalOpen = false; selectedMemberPresence = null"
@@ -249,14 +262,21 @@ onUnmounted(() => {
     </UModal>
 
     <UModal
-        v-model:open="searchMemberModalOpen">
+        v-model:open="searchMemberModalOpen"
+        :dismissible="!registeringDeclaration">
       <template #content>
         <div>
           <template v-if="!selectedMember">
             <SearchMember :query="searchQuery" @selected-member="memberSelectedFromSearch" />
           </template>
           <template v-else>
-            <RegisterMemberPresence :member="selectedMember" @registered="presenceRegistered" @canceled="searchMemberModalOpen = false;" />
+            <RegisterMemberPresence
+              :member="selectedMember"
+              prompt-based-on-member-role
+              @registered="presenceRegistered"
+              @canceled="searchMemberModalOpen = false;"
+              @stage-change="registeringDeclaration = $event === 'declaration'"
+            />
           </template>
         </div>
       </template>
