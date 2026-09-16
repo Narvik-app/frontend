@@ -1,6 +1,6 @@
 import type {TimeAndTravelDeclaration} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelDeclaration'
 import type {MemberVehicle} from '~/types/api/item/clubDependent/plugin/timeAndTravel/memberVehicle'
-import {createBrowserPdfDownload} from '~/utils/browser'
+import {base64ToBlob} from '~/utils/browser'
 import FileQuery from '~/composables/api/query/FileQuery'
 import type {File} from '~/types/api/item/file'
 import type {DateRange, DateRangeFilter} from '~/types/date'
@@ -58,11 +58,14 @@ export function appendDateRangeParams(urlParams: URLSearchParams, range?: DateRa
 }
 
 /**
- * Fetches a File's content through the public files endpoint and triggers a
- * browser download of the PDF. Shared by the export page (recap) and the
- * member board (attestations) so there is one implementation.
+ * Fetches a File's content through the private files endpoint and turns it into a blob: object
+ * URL, so callers can bind it as a real <a href> (download links need an actual href up front to
+ * support the browser's native middle-click/ctrl-click/"open in new tab" behavior — a click handler
+ * firing an async fetch can't). Shared by the export page (recap) and the member board
+ * (attestations) so there is one implementation. The returned URL must be revoked (URL.revokeObjectURL)
+ * once no longer needed.
  */
-export async function downloadFilePdf(file: File | null | undefined, filename: string): Promise<{ error?: Error }> {
+export async function getFilePdfObjectUrl(file: File | null | undefined): Promise<{ url?: string, error?: Error }> {
   if (!file?.privateUrl) {
     return {error: new Error('Fichier introuvable')}
   }
@@ -73,6 +76,5 @@ export async function downloadFilePdf(file: File | null | undefined, filename: s
     return {error: error ?? new Error('Fichier introuvable')}
   }
 
-  createBrowserPdfDownload(filename, retrieved.base64)
-  return {}
+  return {url: URL.createObjectURL(base64ToBlob(retrieved.base64, 'application/pdf'))}
 }
