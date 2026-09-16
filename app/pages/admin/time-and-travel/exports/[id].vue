@@ -4,7 +4,7 @@ import type {TimeAndTravelExport, TimeAndTravelExportAttestation} from '~/types/
 import {EXPORT_STATUS_COLORS, EXPORT_STATUS_LABELS, TimeAndTravelExportStatus} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelExport'
 import {decodeUrlUuid, convertUuidToUrlUuid, displayApiError} from '~/utils/resource'
 import {formatMonetary} from '~/utils/string'
-import {formatDateReadable} from '~/utils/date'
+import {formatDateInput, formatDateReadable} from '~/utils/date'
 import {useSelfUserStore} from '~/stores/useSelfUser'
 import {Permission} from '~/types/api/permissions'
 import {useFileDownloadLinks} from '~/composables/useFileDownloadLinks'
@@ -35,7 +35,11 @@ const {hrefs: fileHrefs, errors: fileErrors, resolve: resolveFileHref} = useFile
 // recap/attestation (a new File) naturally resolves a fresh link instead of reusing a stale one.
 const recapHref = computed(() => item.value?.recapFile?.uuid ? fileHrefs.value[item.value.recapFile.uuid] : undefined)
 const recapError = computed(() => item.value?.recapFile?.uuid ? fileErrors.value[item.value.recapFile.uuid] : undefined)
-const recapFilename = computed(() => `recapitulatif-${item.value?.startDate}-${item.value?.endDate}.pdf`)
+const recapFilename = computed(() => `recapitulatif-${formatDateInput(item.value?.startDate)}-${formatDateInput(item.value?.endDate)}.pdf`)
+
+const zipHref = computed(() => item.value?.zipFile?.uuid ? fileHrefs.value[item.value.zipFile.uuid] : undefined)
+const zipError = computed(() => item.value?.zipFile?.uuid ? fileErrors.value[item.value.zipFile.uuid] : undefined)
+const zipFilename = computed(() => `export-${formatDateInput(item.value?.startDate)}-${formatDateInput(item.value?.endDate)}.zip`)
 
 const isDraft = computed(() => item.value?.status === TimeAndTravelExportStatus.Draft)
 
@@ -76,6 +80,9 @@ async function loadItem() {
     item.value = retrieved
     if (item.value?.recapFile) {
       resolveFileHref(item.value.recapFile.uuid, item.value.recapFile)
+    }
+    if (item.value?.zipFile) {
+      resolveFileHref(item.value.zipFile.uuid, item.value.zipFile, 'application/zip')
     }
   }
   isLoading.value = false
@@ -198,10 +205,27 @@ loadItem().then(async () => {
           {{ recapError ? 'Récapitulatif indisponible' : 'Récapitulatif (PDF)' }}
         </UButton>
 
+        <UButton
+          v-if="item.zipFile"
+          icon="i-heroicons-arrow-down-tray"
+          variant="soft"
+          :color="zipError ? 'error' : 'primary'"
+          :disabled="!!zipError"
+          :loading="!zipHref && !zipError"
+          :to="zipHref"
+          :download="zipFilename"
+        >
+          {{ zipError ? 'Archive indisponible' : 'Tout télécharger (ZIP)' }}
+        </UButton>
+
+
         <template v-if="isDraft && canExport">
           <UButton icon="i-heroicons-arrow-path" variant="soft" :disabled="item.isRegenerating" :loading="isProcessing" @click="regenerate">
             Régénérer
           </UButton>
+
+          <div class="flex-1"></div>
+
           <UButton
             icon="i-heroicons-lock-closed"
             color="warning"
@@ -222,11 +246,13 @@ loadItem().then(async () => {
           </UButton>
         </template>
 
-        <UButton v-if="!isDraft && isAdmin" icon="i-heroicons-lock-open" color="warning" :loading="isProcessing" @click="unlock">
-          Déverrouiller
-        </UButton>
+        <template  v-if="!isDraft && isAdmin">
+          <div class="flex-1"></div>
 
-        <div class="flex-1"></div>
+          <UButton icon="i-heroicons-lock-open" color="warning" :loading="isProcessing" @click="unlock">
+            Déverrouiller
+          </UButton>
+        </template>
 
         <UButton
           v-if="isDraft && canExport"

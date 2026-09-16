@@ -31,6 +31,7 @@ interface _TimeAndTravelExport extends UuidItem, ClubLinkedItem, TimestampItem {
   unlockedAt?: string | null
   unlockedBy?: Member | string | null
   recapFile?: File | null
+  zipFile?: File | null
   declarationCount?: number
   memberCount?: number
   totalKilometers?: number
