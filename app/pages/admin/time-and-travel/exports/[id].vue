@@ -3,11 +3,11 @@ import TimeAndTravelExportQuery from '~/composables/api/query/clubDependent/plug
 import type {TimeAndTravelExport, TimeAndTravelExportAttestation} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelExport'
 import {EXPORT_STATUS_COLORS, EXPORT_STATUS_LABELS, TimeAndTravelExportStatus} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelExport'
 import {decodeUrlUuid, convertUuidToUrlUuid, displayApiError} from '~/utils/resource'
-import {downloadFilePdf} from '~/utils/timeAndTravel'
 import {formatMonetary} from '~/utils/string'
-import {formatDateReadable} from '~/utils/date'
+import {formatDateInput, formatDateReadable} from '~/utils/date'
 import {useSelfUserStore} from '~/stores/useSelfUser'
 import {Permission} from '~/types/api/permissions'
+import {useFileDownloadLinks} from '~/composables/useFileDownloadLinks'
 import ModalDeleteConfirmation from '~/components/Modal/ModalDeleteConfirmation.vue'
 
 definePageMeta({layout: 'time-and-travel'})
@@ -29,7 +29,17 @@ const item = ref<TimeAndTravelExport | undefined>()
 const attestations = ref<TimeAndTravelExportAttestation[]>([])
 const isLoading = ref(true)
 const isProcessing = ref(false)
-const isDownloading = ref<string | undefined>()
+
+const {hrefs: fileHrefs, errors: fileErrors, resolve: resolveFileHref} = useFileDownloadLinks()
+// Keyed by the File's own uuid rather than the owning export/attestation, so a regenerated
+// recap/attestation (a new File) naturally resolves a fresh link instead of reusing a stale one.
+const recapHref = computed(() => item.value?.recapFile?.uuid ? fileHrefs.value[item.value.recapFile.uuid] : undefined)
+const recapError = computed(() => item.value?.recapFile?.uuid ? fileErrors.value[item.value.recapFile.uuid] : undefined)
+const recapFilename = computed(() => `recapitulatif-${formatDateInput(item.value?.startDate)}-${formatDateInput(item.value?.endDate)}.pdf`)
+
+const zipHref = computed(() => item.value?.zipFile?.uuid ? fileHrefs.value[item.value.zipFile.uuid] : undefined)
+const zipError = computed(() => item.value?.zipFile?.uuid ? fileErrors.value[item.value.zipFile.uuid] : undefined)
+const zipFilename = computed(() => `export-${formatDateInput(item.value?.startDate)}-${formatDateInput(item.value?.endDate)}.zip`)
 
 const isDraft = computed(() => item.value?.status === TimeAndTravelExportStatus.Draft)
 
@@ -68,6 +78,12 @@ async function loadItem() {
     displayApiError(error)
   } else {
     item.value = retrieved
+    if (item.value?.recapFile) {
+      resolveFileHref(item.value.recapFile.uuid, item.value.recapFile)
+    }
+    if (item.value?.zipFile) {
+      resolveFileHref(item.value.zipFile.uuid, item.value.zipFile, 'application/zip')
+    }
   }
   isLoading.value = false
 }
@@ -76,6 +92,9 @@ async function loadAttestations() {
   if (!item.value) return
   const {items} = await exportQuery.getAttestations(item.value)
   attestations.value = items
+  items.forEach(attestation => {
+    if (attestation.file) resolveFileHref(attestation.file.uuid, attestation.file)
+  })
 }
 
 async function regenerate() {
@@ -130,24 +149,8 @@ async function deleteExport() {
   await navigateTo('/admin/time-and-travel/exports')
 }
 
-async function downloadRecap() {
-  if (!item.value?.recapFile) return
-  isDownloading.value = 'recap'
-  const {error} = await downloadFilePdf(item.value.recapFile, `recapitulatif-${item.value.startDate}-${item.value.endDate}.pdf`)
-  isDownloading.value = undefined
-  if (error) {
-    toast.add({color: 'error', title: 'Téléchargement impossible', description: error.message})
-  }
-}
-
-async function downloadAttestation(attestation: TimeAndTravelExportAttestation) {
-  isDownloading.value = attestation.uuid
-  const memberName = typeof attestation.member === 'object' ? attestation.member?.fullName : attestation.uuid
-  const {error} = await downloadFilePdf(attestation.file, `attestation-${memberName}.pdf`)
-  isDownloading.value = undefined
-  if (error) {
-    toast.add({color: 'error', title: 'Téléchargement impossible', description: error.message})
-  }
+function attestationFilename(attestation: TimeAndTravelExportAttestation): string {
+  return `attestation-${getMemberName(attestation)}.pdf`
 }
 
 function getMemberName(attestation: TimeAndTravelExportAttestation): string {
@@ -193,16 +196,36 @@ loadItem().then(async () => {
           v-if="item.recapFile"
           icon="i-heroicons-arrow-down-tray"
           variant="soft"
-          :loading="isDownloading === 'recap'"
-          @click="downloadRecap"
+          :color="recapError ? 'error' : 'primary'"
+          :disabled="!!recapError"
+          :loading="!recapHref && !recapError"
+          :to="recapHref"
+          :download="recapFilename"
         >
-          Récapitulatif (PDF)
+          {{ recapError ? 'Récapitulatif indisponible' : 'Récapitulatif (PDF)' }}
         </UButton>
+
+        <UButton
+          v-if="item.zipFile"
+          icon="i-heroicons-arrow-down-tray"
+          variant="soft"
+          :color="zipError ? 'error' : 'primary'"
+          :disabled="!!zipError"
+          :loading="!zipHref && !zipError"
+          :to="zipHref"
+          :download="zipFilename"
+        >
+          {{ zipError ? 'Archive indisponible' : 'Tout télécharger (ZIP)' }}
+        </UButton>
+
 
         <template v-if="isDraft && canExport">
           <UButton icon="i-heroicons-arrow-path" variant="soft" :disabled="item.isRegenerating" :loading="isProcessing" @click="regenerate">
             Régénérer
           </UButton>
+
+          <div class="flex-1"></div>
+
           <UButton
             icon="i-heroicons-lock-closed"
             color="warning"
@@ -223,11 +246,13 @@ loadItem().then(async () => {
           </UButton>
         </template>
 
-        <UButton v-if="!isDraft && isAdmin" icon="i-heroicons-lock-open" color="warning" :loading="isProcessing" @click="unlock">
-          Déverrouiller
-        </UButton>
+        <template  v-if="!isDraft && isAdmin">
+          <div class="flex-1"></div>
 
-        <div class="flex-1"></div>
+          <UButton icon="i-heroicons-lock-open" color="warning" :loading="isProcessing" @click="unlock">
+            Déverrouiller
+          </UButton>
+        </template>
 
         <UButton
           v-if="isDraft && canExport"
@@ -273,8 +298,11 @@ loadItem().then(async () => {
           <UButton
             icon="i-heroicons-arrow-down-tray"
             variant="ghost"
-            :loading="isDownloading === row.original.uuid"
-            @click="downloadAttestation(row.original)"
+            :color="row.original.file && fileErrors[row.original.file.uuid] ? 'error' : 'primary'"
+            :disabled="!!(row.original.file && fileErrors[row.original.file.uuid])"
+            :loading="!(row.original.file && (fileHrefs[row.original.file.uuid] || fileErrors[row.original.file.uuid]))"
+            :to="row.original.file ? fileHrefs[row.original.file.uuid] : undefined"
+            :download="attestationFilename(row.original)"
           >
             Attestation
           </UButton>
