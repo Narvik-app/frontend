@@ -48,6 +48,12 @@ export enum Permission {
   // Member control permissions
   MemberControlTypesAccess = 'MEMBER_CONTROL_TYPES_ACCESS',
   MemberControlTypesEdit = 'MEMBER_CONTROL_TYPES_EDIT',
+
+  // Time and travel declaration permissions
+  TimeAndTravelAccess = 'TIME_TRAVEL_ACCESS',
+  TimeAndTravelEdit = 'TIME_TRAVEL_EDIT',
+  TimeAndTravelExport = 'TIME_TRAVEL_EXPORT',
+  TimeAndTravelUnlock = 'TIME_TRAVEL_UNLOCK',
 }
 
 // Feature definition with Access and Edit permissions
@@ -187,6 +193,27 @@ export const permissionSections: PermissionSection[] = [
         name: 'Contrôles & suivis',
         accessPermission: Permission.MemberControlTypesAccess,
         editPermission: Permission.MemberControlTypesEdit,
+      },
+    ],
+  },
+  {
+    label: 'Temps & kilomètres',
+    plugin: 'timeAndTravelEnabled',
+    features: [
+      {
+        name: 'Déclarations & véhicules',
+        accessPermission: Permission.TimeAndTravelAccess,
+        editPermission: Permission.TimeAndTravelEdit,
+      },
+      {
+        name: 'Export comptable',
+        accessPermission: Permission.TimeAndTravelExport,
+        editOnly: true,
+      },
+      {
+        name: 'Déverrouillage',
+        accessPermission: Permission.TimeAndTravelUnlock,
+        editOnly: true,
       },
     ],
   },

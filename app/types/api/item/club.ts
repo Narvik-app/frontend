@@ -75,9 +75,13 @@ export function hasClubSupervisorRole(role: ClubRole|undefined): boolean {
   if (!role) return false
   return role === ClubRole.Supervisor || isClubAdmin(role)
 }
+/** Admins already hold every permission, so only a plain supervisor has assignable permissions to manage. */
+export function hasAssignablePermissions(role: ClubRole|undefined): boolean {
+  return role === ClubRole.Supervisor
+}
 
 // Club plugin types that can be enabled/disabled per club
-export type ClubPlugin = 'presencesEnabled' | 'salesEnabled' | 'loansEnabled';
+export type ClubPlugin = 'presencesEnabled' | 'salesEnabled' | 'loansEnabled' | 'timeAndTravelEnabled';
 
 // Plugin metadata for UI display
 export interface ClubPluginInfo {
@@ -90,6 +94,7 @@ export const clubPlugins: ClubPluginInfo[] = [
   { key: 'presencesEnabled', label: 'Présences', description: 'Enregistrement des présences' },
   { key: 'salesEnabled', label: 'Ventes', description: 'Ventes et gestion des stocks' },
   { key: 'loansEnabled', label: 'Prêts', description: 'Prêt de matériel' },
+  { key: 'timeAndTravelEnabled', label: 'Temps & kilomètres', description: 'Déclaration du temps et des kilomètres parcourus par les bénévoles' },
 ];
 
 interface _Club extends UuidItem, TimestampItem {
@@ -98,6 +103,7 @@ interface _Club extends UuidItem, TimestampItem {
   presencesEnabled?: boolean
   salesEnabled?: boolean
   loansEnabled?: boolean
+  timeAndTravelEnabled?: boolean
   badgerToken?: string
   comment?: string
   settings?: ClubSetting
@@ -122,6 +128,7 @@ export interface Club extends _Club {
   presencesEnabled: boolean
   salesEnabled: boolean
   loansEnabled: boolean
+  timeAndTravelEnabled: boolean
 
   settings: ClubSetting
 }
@@ -132,6 +139,7 @@ export interface WriteClub extends _Club {
   presencesEnabled: boolean
   salesEnabled: boolean
   loansEnabled: boolean
+  timeAndTravelEnabled: boolean
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
