@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import {useAppConfigStore} from "~/stores/useAppConfig";
-import {isDesktop, isTablet} from "~/utils/browser";
+import {isDesktop, isMobile, isTablet} from "~/utils/browser";
 import ModalSelectProfile from "~/components/Modal/ModalSelectProfile.vue";
 import type {DropdownMenuItem} from "#ui/components/DropdownMenu";
 import {Permission} from "~/types/api/permissions";
@@ -61,6 +61,7 @@ const overlay = useOverlay()
 
   const isDesktopDisplay = isDesktop()
   const isTabletDisplay = isTablet()
+  const isMobileDisplay = isMobile()
 
   const siteLogo: Ref<string> = appConfigStore.getLogo()
 
@@ -114,39 +115,43 @@ const overlay = useOverlay()
 
 <template>
   <header
-    class="bg-(--ui-bg) sticky top-0 z-50 h-16 print:hidden shadow-sm">
-    <nav class="container mx-auto p-4 flex justify-between h-full overflow-y-auto">
-      <div class="flex gap-4 flex-shrink-0">
+    class="bg-(--ui-bg) z-50 h-16 print:hidden shadow-sm fixed inset-x-0 bottom-0 lg:sticky lg:top-0 lg:bottom-auto">
+    <nav class="container mx-auto px-4 h-full flex items-center gap-3">
+      <div class="flex-shrink-0">
         <NuxtLink to="/" class="flex align-middle">
           <UTooltip text="Accueil">
             <NuxtImg v-if="selectedProfile?.club?.settings?.logoBase64" :src="selectedProfile.club.settings.logoBase64" class="w-7 object-contain"/>
             <NuxtImg v-else :src="siteLogo" class="w-7 object-contain"/>
           </UTooltip>
         </NuxtLink>
-        <UButton class="-mx-3 hidden lg:block" to="/" variant="ghost" color="neutral">Accueil</UButton>
-        <div v-if="isSupervisor && salesButtonUrl">
-          <UButton :to="salesButtonUrl" icon="i-heroicons-shopping-cart" variant="ghost" color="neutral">
-            <template v-if="isDesktopDisplay || isTabletDisplay">
-              Vente
-            </template>
-          </UButton>
-        </div>
-        <div v-if="isSupervisor && loansButtonUrl">
-          <UButton :to="loansButtonUrl" icon="i-heroicons-archive-box" variant="ghost" color="neutral">
-            <template v-if="isDesktopDisplay || isTabletDisplay">
-              Prêt
-            </template>
-          </UButton>
-        </div>
-        <div v-if="canAccessEmail">
-          <UButton to="/admin/email" icon="i-heroicons-envelope" variant="ghost" color="neutral">
-            <template v-if="isDesktopDisplay || isTabletDisplay">
-              Email
-            </template>
-          </UButton>
+      </div>
+      <div class="flex-1 min-w-0 overflow-x-auto">
+        <div class="flex items-center gap-2" :class="isMobileDisplay ? 'justify-center-safe min-w-full' : ''">
+          <UButton class="-mx-3 hidden lg:block" to="/" variant="ghost" color="neutral">Accueil</UButton>
+          <div v-if="isSupervisor && salesButtonUrl">
+            <UButton :to="salesButtonUrl" icon="i-heroicons-shopping-cart" variant="ghost" color="neutral">
+              <template v-if="isDesktopDisplay || isTabletDisplay">
+                Vente
+              </template>
+            </UButton>
+          </div>
+          <div v-if="isSupervisor && loansButtonUrl">
+            <UButton :to="loansButtonUrl" icon="i-heroicons-archive-box" variant="ghost" color="neutral">
+              <template v-if="isDesktopDisplay || isTabletDisplay">
+                Prêt
+              </template>
+            </UButton>
+          </div>
+          <div v-if="canAccessEmail">
+            <UButton to="/admin/email" icon="i-heroicons-envelope" variant="ghost" color="neutral">
+              <template v-if="isDesktopDisplay || isTabletDisplay">
+                Email
+              </template>
+            </UButton>
+          </div>
         </div>
       </div>
-      <div class="flex gap-4">
+      <div class="flex-shrink-0 flex items-center gap-2">
         <div v-if="isSupervisor">
           <UButton to="/admin" icon="i-heroicons-key" variant="ghost" color="neutral">
             <template v-if="isDesktopDisplay || isTabletDisplay">
@@ -155,8 +160,14 @@ const overlay = useOverlay()
           </UButton>
         </div>
         <div v-if="selfStore.isImpersonating">
-          <UButton color="warning" @click="selfStore.stopImpersonation()">Arrêter impersonification</UButton>
+          <UButton color="warning" icon="i-heroicons-no-symbol" @click="selfStore.stopImpersonation()">
+            <template v-if="isDesktopDisplay || isTabletDisplay">
+              Arrêter impersonification
+            </template>
+          </UButton>
         </div>
+      </div>
+      <div class="flex-shrink-0">
         <UDropdownMenu :items="rightMenu">
           <UButton
             data-testid="user-menu"
