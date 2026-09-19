@@ -116,8 +116,10 @@ const overlay = useOverlay()
 <template>
   <header
     class="bg-(--ui-bg) z-50 h-16 print:hidden shadow-sm fixed inset-x-0 bottom-0 lg:sticky lg:top-0 lg:bottom-auto">
-    <nav class="container mx-auto px-4 h-full flex items-center gap-3">
-      <div class="flex-shrink-0">
+    <nav
+      class="container mx-auto px-4 h-full items-center gap-3"
+      :class="isMobileDisplay ? 'grid grid-cols-[1fr_minmax(0,max-content)_1fr]' : 'flex'">
+      <div class="flex-shrink-0 justify-self-start">
         <NuxtLink to="/" class="flex align-middle">
           <UTooltip text="Accueil">
             <NuxtImg v-if="selectedProfile?.club?.settings?.logoBase64" :src="selectedProfile.club.settings.logoBase64" class="w-7 object-contain"/>
@@ -126,7 +128,7 @@ const overlay = useOverlay()
         </NuxtLink>
       </div>
       <div class="flex-1 min-w-0 overflow-x-auto">
-        <div class="flex items-center gap-2" :class="isMobileDisplay ? 'justify-center-safe min-w-full' : ''">
+        <div class="flex items-center gap-2">
           <UButton class="-mx-3 hidden lg:block" to="/" variant="ghost" color="neutral">Accueil</UButton>
           <div v-if="isSupervisor && salesButtonUrl">
             <UButton :to="salesButtonUrl" icon="i-heroicons-shopping-cart" variant="ghost" color="neutral">
@@ -151,7 +153,7 @@ const overlay = useOverlay()
           </div>
         </div>
       </div>
-      <div class="flex-shrink-0 flex items-center gap-2">
+      <div class="flex-shrink-0 justify-self-end flex items-center gap-2">
         <div v-if="isSupervisor">
           <UButton to="/admin" icon="i-heroicons-key" variant="ghost" color="neutral">
             <template v-if="isDesktopDisplay || isTabletDisplay">
@@ -166,8 +168,6 @@ const overlay = useOverlay()
             </template>
           </UButton>
         </div>
-      </div>
-      <div class="flex-shrink-0">
         <UDropdownMenu :items="rightMenu">
           <UButton
             data-testid="user-menu"
