@@ -6,7 +6,7 @@ import {
   GLOBAL_SETTINGS_SMTP_STRING_MAPPING,
   type SmtpConfig
 } from "~/types/api/smtp";
-import type {FormError, FormErrorEvent} from "#ui/types";
+import type {FormError} from "#ui/types";
 
 definePageMeta({
   layout: "super-admin"
@@ -82,11 +82,7 @@ const validate = (state: { host?: string; port?: string; sender?: string }): For
   return errors
 }
 
-async function onError(event: FormErrorEvent) {
-  const element = document.getElementById(event.errors[0].id)
-  element?.focus()
-  element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-}
+const onError = useFormScrollToFirstError()
 
 async function updateSmtpSetting() {
   isLoading.value = true

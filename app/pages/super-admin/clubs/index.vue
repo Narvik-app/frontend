@@ -98,7 +98,7 @@ async function getItemsPaginated() {
   isLoading.value = false
 }
 
-function rowClicked(row: TableRow<Club>) {
+function rowClicked(_event: Event, row: TableRow<Club>) {
   selectedItem.value = {...row.original} // We make a shallow clone
   isSideVisible.value = true
 }
@@ -109,6 +109,8 @@ async function createItem() {
     isActivated: true,
     presencesEnabled: true,
     salesEnabled: true,
+    loansEnabled: false,
+    timeAndTravelEnabled: false,
   }
   selectedItem.value = item
   isSideVisible.value = true
