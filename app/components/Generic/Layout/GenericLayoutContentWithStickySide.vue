@@ -22,7 +22,7 @@ const props = defineProps(
 const isDesktopDisplay = isDesktop()
 const isTabletDisplay = isTablet()
 
-const asideMobileClasses = ref(['overflow-y-auto', 'flex flex-col gap-4 fixed bottom-0 left-0 right-0 rounded-t-lg backdrop-blur-2xl z-10'])
+const asideMobileClasses = ref(['overflow-y-auto', 'flex flex-col gap-4 fixed bottom-16 left-0 right-0 rounded-t-lg backdrop-blur-2xl z-10'])
 const asideDesktopClasses = 'print:hidden lg:sticky lg:top-19 lg:h-fit lg:max-h-[calc(100vh-6rem)] -mt-1'
 const asideButtonMargin = ref('')
 

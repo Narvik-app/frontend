@@ -169,7 +169,7 @@ onUnmounted(() => {
 
 <template>
   <div class="-mt-4 -mb-2">
-    <div class="flex flex-col sm:flex-row gap-4 pt-4 pb-2 mb-4 sm:sticky sm:top-16 z-40 backdrop-blur-sm">
+    <div class="flex flex-col sm:flex-row gap-4 pt-4 pb-2 mb-4 sm:sticky sm:top-0 lg:top-16 z-40 backdrop-blur-sm">
       <UButton
         icon="i-heroicons-calendar-days"
         variant="ghost"

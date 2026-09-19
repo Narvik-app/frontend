@@ -13,7 +13,7 @@ const handleError = () => clearError({ redirect: '/' })
 
 <template>
 
-  <div class="flex flex-col">
+  <div class="flex flex-col pb-20 lg:pb-0">
     <HeaderNavbar/>
     <main class="min-h-full flex-1 flex justify-center items-center">
         <UContainer class="mx-auto p-4">
