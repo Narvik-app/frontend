@@ -122,7 +122,8 @@ export const useSaleStore = defineStore('sale', () => {
     lastRefreshDate.value = new Date()
   }
 
-  async function getSaleStats(generation: number = ++requestGeneration) {
+  async function getSaleStats(generation?: number) {
+    const gen = generation ?? ++requestGeneration
     isLoadingStats.value = true
 
     const urlParams = buildMetricDateParams()
@@ -132,7 +133,7 @@ export const useSaleStore = defineStore('sale', () => {
     // On a transient fetch failure, or if a newer request has since started (e.g. rapidly
     // switching date ranges), keep the last known-good stats instead of overwriting them
     // with 0 or with a result that no longer matches the currently selected range.
-    if (generation !== requestGeneration) return
+    if (gen !== requestGeneration) return
 
     if (!error) {
       saleStats.value = retrieved?.values ?? []

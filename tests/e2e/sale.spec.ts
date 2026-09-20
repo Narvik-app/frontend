@@ -1,6 +1,7 @@
 import {expect, test} from '@playwright/test';
 import {STORAGE_STATE} from './utils/auth';
 import {waitForApiResponse, getProxyRequestPath} from './utils/api';
+import {selectPresetRange} from './utils/sale';
 
 // Use admin authenticated state — regular users don't have sale access
 test.use({ storageState: STORAGE_STATE.ADMIN });
@@ -89,15 +90,8 @@ test.describe.serial('Sale flow', () => {
     await expect(saleCountStat).not.toHaveText('');
     const todayCount = parseInt(await saleCountStat.innerText());
 
-    // Open the date range popover (button shows current date like "20 février 2026")
-    const datePickerButton = page.getByTestId('date-range-picker-trigger');
-    await datePickerButton.click();
-
     // Select "6 derniers mois" preset
-    const [statsResponse] = await Promise.all([
-      waitForApiResponse(page, path => path.includes('sales-stats')),
-      page.getByRole('button', { name: '6 derniers mois' }).click(),
-    ]);
+    const statsResponse = await selectPresetRange(page, '6 derniers mois');
 
     // The displayed count must match the backend's response exactly, not just
     // "look plausible" - and a 6-month range is necessarily a superset of today.
