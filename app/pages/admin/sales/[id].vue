@@ -7,7 +7,6 @@ import {useSelfUserStore} from "~/stores/useSelfUser";
 import dayjs from "dayjs";
 import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
 import SaleModalEdit from "~/components/Sale/SaleModalEdit.vue";
-import {useSaleStore} from "~/stores/useSaleStore";
 import {convertUuidToUrlUuid, decodeUrlUuid} from "~/utils/resource";
 import {Permission} from "~/types/api/permissions";
 
@@ -19,7 +18,6 @@ definePageMeta({
     title: "Détail vente"
   })
 
-  const saleStore = useSaleStore()
   const selfStore = useSelfUserStore()
   const isAdmin = selfStore.isAdmin()
   const canEditSales = selfStore.can(Permission.SaleHistoryEdit)
@@ -109,8 +107,6 @@ definePageMeta({
       return
     }
 
-    saleStore.shouldRefreshSales = true
-    saleStore.shouldRefreshPerItemStats = true
     navigateTo('/admin/sales/history')
   }
 

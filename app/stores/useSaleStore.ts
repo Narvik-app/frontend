@@ -26,9 +26,6 @@ export const useSaleStore = defineStore('sale', () => {
   const selectedRange: Ref<DateRange | DateRangeFilter | undefined> = ref({start: new Date(), end: new Date()})
   const lastRefreshDate: Ref<Date> = ref(new Date())
 
-  const shouldRefreshSales = ref(false)
-  const shouldRefreshPerItemStats = ref(false)
-
   const sales: Ref<Sale[]> = ref([])
   const totalItems = ref(0)
   const page = ref(1)
@@ -122,11 +119,11 @@ export const useSaleStore = defineStore('sale', () => {
 
     if (generation !== requestGeneration) return
     isLoading.value = false
-    shouldRefreshSales.value = false
     lastRefreshDate.value = new Date()
   }
 
-  async function getSaleStats(generation: number = ++requestGeneration) {
+  async function getSaleStats(generation?: number) {
+    const gen = generation ?? ++requestGeneration
     isLoadingStats.value = true
 
     const urlParams = buildMetricDateParams()
@@ -136,7 +133,9 @@ export const useSaleStore = defineStore('sale', () => {
     // On a transient fetch failure, or if a newer request has since started (e.g. rapidly
     // switching date ranges), keep the last known-good stats instead of overwriting them
     // with 0 or with a result that no longer matches the currently selected range.
-    if (!error && generation === requestGeneration) {
+    if (gen !== requestGeneration) return
+
+    if (!error) {
       saleStats.value = retrieved?.values ?? []
       totalCount.value = retrieved?.value ?? 0
       totalAmount.value = retrieved?.childMetrics?.find(m => m.name === 'total-amount')?.value ?? 0
@@ -164,7 +163,6 @@ export const useSaleStore = defineStore('sale', () => {
     if (generation !== requestGeneration) return
     isLoadingStats.value = false
     lastRefreshDate.value = new Date()
-    shouldRefreshPerItemStats.value = false
   }
 
   async function getSalesCsv() {
@@ -247,8 +245,6 @@ export const useSaleStore = defineStore('sale', () => {
     isDownloadingCsv,
     selectedRange,
     lastRefreshDate,
-    shouldRefreshSales,
-    shouldRefreshPerItemStats,
 
     getSales,
     getSaleStats,
