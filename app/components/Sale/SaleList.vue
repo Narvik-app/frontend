@@ -32,8 +32,6 @@ const sort = ref(sortDesc.value === undefined ? [] : [{id: 'createdAt', desc: so
 const isStockRemoval = (sale: { paymentMode?: SalePaymentMode | string | null }) =>
   typeof sale.paymentMode === 'object' && sale.paymentMode?.kind === 'stock_removal'
 
-// Forces a fetch even if the cache already matches the current filters - used by the
-// "Dernière mise à jour" button so it always hits the network.
 function refresh() {
   if (props.perItem) {
     saleStore.getSalePerItemStats()
@@ -57,14 +55,13 @@ function onSortChanged() {
   page.value = 1
 }
 
-// Single load path: whenever the filters relevant to this view (range, and for the sales
-// list also page/itemsPerPage/sort) change, ensureLoaded() refetches only if the cached
-// data no longer matches them. This also covers the initial load and the case where the
-// other tab (history vs per-article) changed the range while this one was unmounted.
+// Single load path: refetches on mount and whenever the filters relevant to this view
+// (range, and for the sales list also page/itemsPerPage/sort) change while mounted. This
+// always refetches - on purpose, not a cache - so that whichever tab (history or
+// per-article) you land on always matches the filters it's currently showing, even if the
+// other tab changed them while this one was unmounted.
 const activeKey = computed(() => props.perItem ? saleStore.perItemFilterKey : saleStore.salesFilterKey)
-watch(activeKey, () => {
-  saleStore.ensureLoaded(props.perItem)
-}, { immediate: true })
+watch(activeKey, refresh, { immediate: true })
 </script>
 
 <template>

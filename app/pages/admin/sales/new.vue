@@ -270,7 +270,6 @@ definePageMeta({
 
     toast.add({color: "success", title: "Vente enregistrée"})
     cartStore.emptyCart()
-    saleStore.invalidateSaleData()
     navigateTo('/admin/sales/' + convertUuidToUrlUuid(created.uuid))
   }
 

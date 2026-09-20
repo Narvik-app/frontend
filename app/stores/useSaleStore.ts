@@ -47,15 +47,12 @@ export const useSaleStore = defineStore('sale', () => {
   // response arrives after a newer one (e.g. rapidly switching date ranges) is discarded
   // instead of overwriting the more recent, already-displayed result.
   let requestGeneration = 0
-  // Set to the generation that currently owns isLoading/isLoadingStats, cleared once that
-  // generation's fetch settles. Lets a cache-hit ensure*() know it's safe to clear a
-  // loading flag without racing a fetch that's still in flight for a newer generation.
-  let pendingGeneration: number | null = null
 
-  // A string key derived from the filters that produced the currently loaded `sales`/
-  // `perItemStats`. Comparing it against the *current* filters (below) tells us whether the
-  // cached data actually matches what's on screen, instead of relying on dirty flags that
-  // are easy to forget to set on every mutation site.
+  // A string key derived from the filters currently in effect. SaleList.vue watches this
+  // (with `immediate: true`) to trigger a fetch - on mount, and whenever the filters change
+  // while mounted. This is what the fetch is *for*, not a cache: switching between the
+  // history and per-article tabs always remounts SaleList.vue and always refetches, on
+  // purpose, so the two tabs can never disagree about what's currently selected.
   function serializeRange(range: DateRange | DateRangeFilter | undefined): string {
     if (!range) return 'none'
     if (typeof (range as DateRangeFilter).value === 'string') {
@@ -69,9 +66,6 @@ export const useSaleStore = defineStore('sale', () => {
   // The sales list also depends on pagination/sorting; the per-item stats endpoint doesn't.
   const salesFilterKey = computed(() => [rangeKey.value, page.value, itemsPerPage.value, sortDesc.value ?? 'unsorted'].join('|'))
   const perItemFilterKey = computed(() => rangeKey.value)
-
-  const salesLoadedKey: Ref<string | null> = ref(null)
-  const perItemLoadedKey: Ref<string | null> = ref(null)
 
   function buildListDateParams(): URLSearchParams {
     const urlParams = new URLSearchParams()
@@ -121,8 +115,6 @@ export const useSaleStore = defineStore('sale', () => {
 
   async function getSales() {
     const generation = ++requestGeneration
-    pendingGeneration = generation
-    const key = salesFilterKey.value
     isLoading.value = true
 
     const urlParams = buildListDateParams()
@@ -132,13 +124,11 @@ export const useSaleStore = defineStore('sale', () => {
       urlParams.set('order[createdAt]', sortDesc.value ? 'desc' : 'asc')
     }
 
-    let ok = true
     await Promise.all([
       saleQuery.getAll(urlParams).then(({ items, totalItems: total, error }) => {
         // On a transient fetch failure, or if a newer request has since started, keep
         // the last known-good list/count instead of flashing to empty/0 or a stale value.
-        if (error) { ok = false; return }
-        if (generation !== requestGeneration) return
+        if (error || generation !== requestGeneration) return
         sales.value = items
         totalItems.value = total ?? 0
       }),
@@ -147,11 +137,7 @@ export const useSaleStore = defineStore('sale', () => {
     ])
 
     if (generation !== requestGeneration) return
-    pendingGeneration = null
     isLoading.value = false
-    // Never cache a failed load as "loaded for this key" - the next ensureSalesLoaded()
-    // call must retry instead of silently keeping stale data on screen.
-    salesLoadedKey.value = ok ? key : null
     lastRefreshDate.value = new Date()
   }
 
@@ -178,18 +164,14 @@ export const useSaleStore = defineStore('sale', () => {
 
   async function getSalePerItemStats() {
     const generation = ++requestGeneration
-    pendingGeneration = generation
-    const key = perItemFilterKey.value
     isLoadingStats.value = true
 
     const urlParams = buildMetricDateParams()
     const queryString = urlParams.toString()
 
-    let ok = true
     await Promise.all([
       salePerItemStatsQuery.get('sales-per-item-stats' + (queryString ? '?' + queryString : '')).then(({ retrieved, error }) => {
-        if (error) { ok = false; return }
-        if (generation !== requestGeneration) return
+        if (error || generation !== requestGeneration) return
         perItemStats.value = retrieved?.values ?? []
       }),
       getSaleStats(generation),
@@ -197,51 +179,8 @@ export const useSaleStore = defineStore('sale', () => {
     ])
 
     if (generation !== requestGeneration) return
-    pendingGeneration = null
     isLoadingStats.value = false
-    perItemLoadedKey.value = ok ? key : null
     lastRefreshDate.value = new Date()
-  }
-
-  // Only clears loading flags when nothing is in flight, so it can never stomp on a
-  // fetch that owns them for a newer generation.
-  function settleIdleLoading() {
-    if (pendingGeneration !== null) return
-    isLoading.value = false
-    isLoadingStats.value = false
-  }
-
-  function ensureSalesLoaded() {
-    if (salesLoadedKey.value === salesFilterKey.value) {
-      settleIdleLoading()
-      return Promise.resolve()
-    }
-    return getSales()
-  }
-
-  function ensurePerItemStatsLoaded() {
-    if (perItemLoadedKey.value === perItemFilterKey.value) {
-      settleIdleLoading()
-      return Promise.resolve()
-    }
-    return getSalePerItemStats()
-  }
-
-  function ensureLoaded(perItem: boolean) {
-    return perItem ? ensurePerItemStatsLoaded() : ensureSalesLoaded()
-  }
-
-  function invalidateSales() {
-    salesLoadedKey.value = null
-  }
-
-  function invalidatePerItemStats() {
-    perItemLoadedKey.value = null
-  }
-
-  function invalidateSaleData() {
-    invalidateSales()
-    invalidatePerItemStats()
   }
 
   async function getSalesCsv() {
@@ -327,8 +266,6 @@ export const useSaleStore = defineStore('sale', () => {
 
     salesFilterKey,
     perItemFilterKey,
-    salesLoadedKey,
-    perItemLoadedKey,
 
     getSales,
     getSaleStats,
@@ -337,12 +274,6 @@ export const useSaleStore = defineStore('sale', () => {
     getSellers,
     getPaymentModes,
     setSelectedRange,
-    ensureSalesLoaded,
-    ensurePerItemStatsLoaded,
-    ensureLoaded,
-    invalidateSales,
-    invalidatePerItemStats,
-    invalidateSaleData,
   }
 }, {
   persist: {

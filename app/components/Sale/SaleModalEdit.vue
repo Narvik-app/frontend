@@ -105,9 +105,6 @@ async function updateSale() {
     title: "Vente modifiée"
   });
 
-  // We trigger a refresh of the listing
-  saleStore.invalidateSaleData()
-
   emit('close', true)
 }
 
