@@ -60,8 +60,8 @@ function onSortChanged() {
 // always refetches - on purpose, not a cache - so that whichever tab (history or
 // per-article) you land on always matches the filters it's currently showing, even if the
 // other tab changed them while this one was unmounted.
-const activeKey = computed(() => props.perItem ? saleStore.perItemFilterKey : saleStore.salesFilterKey)
-watch(activeKey, refresh, { immediate: true })
+const filters = props.perItem ? [selectedRange] : [selectedRange, page, itemsPerPage, sortDesc]
+watch(filters, refresh, { immediate: true })
 </script>
 
 <template>

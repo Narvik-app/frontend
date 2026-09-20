@@ -48,25 +48,6 @@ export const useSaleStore = defineStore('sale', () => {
   // instead of overwriting the more recent, already-displayed result.
   let requestGeneration = 0
 
-  // A string key derived from the filters currently in effect. SaleList.vue watches this
-  // (with `immediate: true`) to trigger a fetch - on mount, and whenever the filters change
-  // while mounted. This is what the fetch is *for*, not a cache: switching between the
-  // history and per-article tabs always remounts SaleList.vue and always refetches, on
-  // purpose, so the two tabs can never disagree about what's currently selected.
-  function serializeRange(range: DateRange | DateRangeFilter | undefined): string {
-    if (!range) return 'none'
-    if (typeof (range as DateRangeFilter).value === 'string') {
-      return `filter:${(range as DateRangeFilter).value}`
-    }
-    const r = range as DateRange
-    return `range:${formatDateInput(r.start?.toString()) ?? '-'}:${formatDateInput(r.end?.toString()) ?? '-'}`
-  }
-
-  const rangeKey = computed(() => serializeRange(selectedRange.value))
-  // The sales list also depends on pagination/sorting; the per-item stats endpoint doesn't.
-  const salesFilterKey = computed(() => [rangeKey.value, page.value, itemsPerPage.value, sortDesc.value ?? 'unsorted'].join('|'))
-  const perItemFilterKey = computed(() => rangeKey.value)
-
   function buildListDateParams(): URLSearchParams {
     const urlParams = new URLSearchParams()
 
@@ -263,9 +244,6 @@ export const useSaleStore = defineStore('sale', () => {
     isDownloadingCsv,
     selectedRange,
     lastRefreshDate,
-
-    salesFilterKey,
-    perItemFilterKey,
 
     getSales,
     getSaleStats,
