@@ -129,7 +129,7 @@ const overlay = useOverlay()
       </div>
       <div class="flex-1 min-w-0 overflow-x-auto">
         <div class="flex items-center gap-2">
-          <UButton class="-mx-3 hidden lg:block" to="/" variant="ghost" color="neutral">Accueil</UButton>
+          <UButton class="hidden lg:block" to="/" variant="ghost" color="neutral">Accueil</UButton>
           <div v-if="isSupervisor && salesButtonUrl">
             <UButton :to="salesButtonUrl" icon="i-heroicons-shopping-cart" variant="ghost" color="neutral">
               <template v-if="isDesktopDisplay || isTabletDisplay">
