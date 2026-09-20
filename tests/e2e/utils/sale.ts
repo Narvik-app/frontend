@@ -50,8 +50,7 @@ export async function peekFirstItemName(page: Page): Promise<string> {
   const itemRow = page.getByTestId('inventory-item-row').first();
   await expect(itemRow).toBeVisible();
 
-  // The item's name is the first line of the row (no dedicated data-testid on it).
-  return (await itemRow.locator('div').first().innerText()).trim();
+  return (await itemRow.getByTestId('item-name').innerText()).trim();
 }
 
 async function goToSalesNew(page: Page): Promise<void> {
@@ -130,7 +129,10 @@ export async function readStatCounts(page: Page): Promise<{ saleCount: number; s
  * card at all (e.g. it hasn't been sold in the selected window).
  */
 export async function readPerItemCount(page: Page, itemName: string): Promise<number> {
-  const card = page.locator(`[data-testid="per-item-card"][data-item-name="${itemName}"]`);
+  // Filtered by visible text rather than embedding the (arbitrary, user-entered) item name
+  // into a CSS attribute selector, which breaks on quotes/newlines - see the data-item-name
+  // attribute for cross-checking in the DOM, but locate the card by content instead.
+  const card = page.getByTestId('per-item-card').filter({ has: page.getByText(itemName, { exact: true }) });
 
   if (await card.count() === 0) return 0;
 

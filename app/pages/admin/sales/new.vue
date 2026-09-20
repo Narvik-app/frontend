@@ -532,7 +532,7 @@ definePageMeta({
               data-testid="inventory-item-row"
             >
               <div class="flex-1 flex flex-col">
-                <div class="print:text-xs flex-1">{{ item.name }}</div>
+                <div data-testid="item-name" class="print:text-xs flex-1">{{ item.name }}</div>
                 <div v-if="item.sellingQuantity && item.sellingQuantity != 1" class="text-xs font-bold">Vendu par {{ item.sellingQuantity }}</div>
                 <div v-if="item.description" class="text-xs print:hidden">{{ item.description }}</div>
               </div>
