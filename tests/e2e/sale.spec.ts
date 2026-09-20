@@ -94,10 +94,15 @@ test.describe.serial('Sale flow', () => {
     await datePickerButton.click();
 
     // Select "6 derniers mois" preset
-    await page.getByRole('button', { name: '6 derniers mois' }).click();
+    const [statsResponse] = await Promise.all([
+      waitForApiResponse(page, path => path.includes('sales-stats')),
+      page.getByRole('button', { name: '6 derniers mois' }).click(),
+    ]);
 
-    // The 6-month range should show at least as many sales as today
+    // The displayed count must match the backend's response exactly, not just
+    // "look plausible" - and a 6-month range is necessarily a superset of today.
     const sixMonthCount = parseInt(await saleCountStat.innerText());
+    expect(sixMonthCount).toBe((await statsResponse.json()).value);
     expect(sixMonthCount).toBeGreaterThanOrEqual(todayCount);
   });
 
@@ -205,10 +210,15 @@ test.describe.serial('Sale flow', () => {
     const today = new Date();
     const todayDay = today.getDate().toString();
     const todayButton = page.locator('.vc-day:not(.is-not-in-month) .vc-day-content').getByText(todayDay, { exact: true }).first();
-    await todayButton.click();
+    const [statsResponse] = await Promise.all([
+      waitForApiResponse(page, path => path.includes('sales-stats')),
+      todayButton.click(),
+    ]);
 
-    // A month range should show at least as many sales as today
+    // The displayed count must match the backend's response exactly, and a month-long
+    // range is necessarily a superset of today.
     const monthRangeCount = parseInt(await saleCountStat.innerText());
+    expect(monthRangeCount).toBe((await statsResponse.json()).value);
     expect(monthRangeCount).toBeGreaterThanOrEqual(todayCount);
   });
 });

@@ -68,12 +68,13 @@ function generateList() {
       }
     }
 
-    const mappedPaymentMode = itemMapping.counts.get(stat.paymentModeName)
-    if (mappedPaymentMode) {
-      mappedPaymentMode.count += stat.count
-      mappedPaymentMode.amount += stat.amount
-      itemMapping.counts.set(stat.paymentModeName, mappedPaymentMode)
-    }
+    // The payment mode might not be in `paymentModes` yet (e.g. still loading, or a mode no
+    // longer returned by the collection while past sales still reference it) - insert it
+    // rather than silently dropping the row and under-counting the item.
+    const mappedPaymentMode = itemMapping.counts.get(stat.paymentModeName) ?? { count: 0, amount: 0 }
+    mappedPaymentMode.count += stat.count
+    mappedPaymentMode.amount += stat.amount
+    itemMapping.counts.set(stat.paymentModeName, mappedPaymentMode)
 
     categoryMapping.items.set(stat.itemName, itemMapping)
     categories.value.set(purchasedCategory, categoryMapping)
@@ -97,11 +98,16 @@ function generateList() {
     </UCard>
   </template>
   <template v-else>
-    <UCard v-for="(categoryMap, cIndex) in mapping" :key="cIndex">
+    <UCard v-for="(categoryMap, cIndex) in mapping" :key="cIndex" data-testid="per-item-category" :data-category-name="categoryMap.name">
     <div>
       <div class="text-xl font-bold mb-4">{{ categoryMap.name == '000' ? 'Sans catégorie' : categoryMap.name }}</div>
       <div class="gap-2 grid grid-flow-row grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        <UCard v-for="(itemMap, iIndex) in Array.from(categoryMap.items.values()).sort((a, b) => { return a.itemName.toLowerCase() > b.itemName.toLowerCase() ? 1 : -1 })" :key="iIndex">
+        <UCard
+            v-for="(itemMap, iIndex) in Array.from(categoryMap.items.values()).sort((a, b) => { return a.itemName.toLowerCase() > b.itemName.toLowerCase() ? 1 : -1 })"
+            :key="iIndex"
+            data-testid="per-item-card"
+            :data-item-name="itemMap.itemName"
+        >
           <div class="flex flex-col gap-2">
             <div class="text-lg font-bold text-center">{{ itemMap.itemName }}</div>
 
@@ -109,12 +115,16 @@ function generateList() {
               <div
                   v-for="[name, pmMap] in itemMap.counts"
                   :key="name"
+                  data-testid="per-item-payment-mode-row"
+                  :data-payment-mode="name"
+                  :data-count="pmMap.count"
+                  :data-amount="pmMap.amount"
                   :class="'grid grid-flow-row grid-cols-3 ' + (pmMap.count < 1 ? 'opacity-20' : '')"
               >
                 <div>
                   {{ name }}
                 </div>
-                <div class="text-center">
+                <div class="text-center" data-testid="per-item-payment-mode-count">
                   {{ pmMap.count }}
                 </div>
                 <div>

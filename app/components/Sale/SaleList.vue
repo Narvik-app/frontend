@@ -32,6 +32,8 @@ const sort = ref(sortDesc.value === undefined ? [] : [{id: 'createdAt', desc: so
 const isStockRemoval = (sale: { paymentMode?: SalePaymentMode | string | null }) =>
   typeof sale.paymentMode === 'object' && sale.paymentMode?.kind === 'stock_removal'
 
+// Forces a fetch even if the cache already matches the current filters - used by the
+// "Dernière mise à jour" button so it always hits the network.
 function refresh() {
   if (props.perItem) {
     saleStore.getSalePerItemStats()
@@ -43,28 +45,26 @@ function refresh() {
 function onRangeUpdated(range: Parameters<typeof saleStore.setSelectedRange>[0]) {
   saleStore.setSelectedRange(range)
   popoverOpen.value = false
-  refresh()
 }
 
 function onPaginate(pagination: TablePaginateInterface) {
   page.value = pagination.page
   itemsPerPage.value = pagination.itemsPerPage
-  saleStore.getSales()
 }
 
 function onSortChanged() {
   sortDesc.value = sort.value.length ? sort.value[0].desc : undefined
   page.value = 1
-  saleStore.getSales()
 }
 
-const needsInitialLoad = props.perItem
-  ? saleStore.perItemStats.length === 0 || saleStore.shouldRefreshPerItemStats
-  : sales.value.length === 0 || saleStore.shouldRefreshSales
-
-if (needsInitialLoad) {
-  refresh() // We load the default setting
-}
+// Single load path: whenever the filters relevant to this view (range, and for the sales
+// list also page/itemsPerPage/sort) change, ensureLoaded() refetches only if the cached
+// data no longer matches them. This also covers the initial load and the case where the
+// other tab (history vs per-article) changed the range while this one was unmounted.
+const activeKey = computed(() => props.perItem ? saleStore.perItemFilterKey : saleStore.salesFilterKey)
+watch(activeKey, () => {
+  saleStore.ensureLoaded(props.perItem)
+}, { immediate: true })
 </script>
 
 <template>

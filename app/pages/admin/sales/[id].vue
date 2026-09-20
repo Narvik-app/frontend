@@ -109,8 +109,7 @@ definePageMeta({
       return
     }
 
-    saleStore.shouldRefreshSales = true
-    saleStore.shouldRefreshPerItemStats = true
+    saleStore.invalidateSaleData()
     navigateTo('/admin/sales/history')
   }
 
