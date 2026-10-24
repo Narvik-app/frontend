@@ -196,6 +196,9 @@ loadItem().then(async () => {
           <UBadge v-if="item.isRegenerating" color="neutral" variant="subtle" icon="i-heroicons-arrow-path">
             Régénération en cours…
           </UBadge>
+          <UBadge v-if="item.regenerationFailed && !item.isRegenerating" color="error" variant="subtle" icon="i-heroicons-exclamation-triangle">
+            Échec de la génération
+          </UBadge>
           <div class="text-sm text-muted">{{ item.declarationCount }} déclarations · {{ item.memberCount }} membres</div>
           <div class="text-lg font-semibold">{{ item.totalKilometers ?? 0 }} km · {{ formatMonetary(item.totalAmount) }}</div>
         </div>
