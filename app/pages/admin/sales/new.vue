@@ -116,12 +116,8 @@ definePageMeta({
       toast.add({color: 'warning', title: 'Article déjà en prêt', description: 'Enregistrez le retour avant de créer un nouveau prêt.'})
       return
     }
-    const instance = overlay.create(LoanModalRecord).open({loanItem: item, billable: true, defaultPrice: item.loanPrice})
-    const result = await instance.result as true | {billing: {price: string}} | undefined
-    if (!result) return
-    if (typeof result === 'object' && result.billing) {
-      cartStore.addToCart(buildLoanCartItem(item, result.billing.price))
-    }
+    const instance = overlay.create(LoanModalRecord).open({loanItem: item})
+    if (!await instance.result) return
     const {retrieved} = await loanItemQuery.get(item.uuid!)
     if (retrieved) onLoanItemUpdated(retrieved)
   }

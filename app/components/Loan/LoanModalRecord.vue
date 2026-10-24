@@ -7,7 +7,8 @@ import LoanQuery from '~/composables/api/query/clubDependent/plugin/loan/LoanQue
 import SearchMember from '~/components/Member/SearchMember.vue'
 import {useSellerSelect} from '~/composables/useSellerSelect'
 import {getMemberDisplayName} from '~/utils/string'
-import {hasLoanFee} from '~/utils/loan'
+import {buildLoanCartItem, hasLoanFee} from '~/utils/loan'
+import {useCartStore} from '~/stores/useCartStore'
 
 const props = defineProps({
   loanItem: {
@@ -22,20 +23,13 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  billable: {
-    type: Boolean,
-    default: false,
-  },
-  defaultPrice: {
-    type: String as PropType<string | null | undefined>,
-    default: undefined,
-  },
 })
 
 const emit = defineEmits(['updated', 'close'])
 
 const toast = useToast()
 const loanQuery = new LoanQuery()
+const cartStore = useCartStore()
 
 const isEditing = computed(() => !!props.loan)
 
@@ -47,9 +41,9 @@ const comment = ref<string>(props.loan?.comment ?? '')
 const startDate = ref<Date | null>(props.loan?.startDate ? new Date(props.loan.startDate) : null)
 const endDate = ref<Date | null>(props.loan?.endDate ? new Date(props.loan.endDate) : null)
 
-// Billing — optional, only offered when opened from the sale page (props.billable), and only
-// when the loan item actually has a positive price to bill.
-const canBillLoan = computed(() => props.billable && !isEditing.value && hasLoanFee(props.defaultPrice))
+// Billing — optional, only offered when recording a new loan, and only when
+// the loan item actually has a positive price to bill.
+const canBillLoan = computed(() => !isEditing.value && hasLoanFee(props.loanItem.loanPrice))
 const addToSale = ref<boolean>(canBillLoan.value)
 
 watch(borrowerType, () => {
@@ -90,8 +84,11 @@ async function submit() {
   }
   toast.add({color: 'success', title: isEditing.value ? 'Prêt modifié' : 'Prêt enregistré'})
   emit('updated')
-  const price = canBillLoan.value && addToSale.value ? props.defaultPrice! : undefined
-  emit('close', price !== undefined ? {billing: {price}} : true)
+  if (canBillLoan.value && addToSale.value) {
+    cartStore.addToCart(buildLoanCartItem(props.loanItem, props.loanItem.loanPrice!))
+    toast.add({color: 'success', title: 'Ajouté au panier', description: props.loanItem.name})
+  }
+  emit('close', true)
 }
 </script>
 
@@ -157,14 +154,11 @@ async function submit() {
       <UFormField label="Prêté par">
         <UInputMenu
           v-model="sellerSelected"
+          class="w-full"
           :items="sellersSelect"
           :filter-fields="['item.lastname', 'item.firstname']"
-        >
-          <template #default>
-            <span v-if="sellerSelected">{{ sellerSelected.label }}</span>
-            <span v-else class="text-muted italic">Sélectionner un responsable</span>
-          </template>
-        </UInputMenu>
+          placeholder="Sélectionner un responsable"
+        />
       </UFormField>
 
       <!-- Comment -->
@@ -172,10 +166,10 @@ async function submit() {
         <UTextarea v-model="comment" :rows="2" placeholder="Remarques…" />
       </UFormField>
 
-      <!-- Billing — only offered when recording a new loan from the sale page, for a priced item -->
+      <!-- Billing — only offered when recording a new loan for a priced item -->
       <UFormField v-if="canBillLoan" class="border-t pt-2 flex items-center justify-between gap-2">
         <template #label>
-          Ajouter à la vente ({{ defaultPrice }} €)
+          Ajouter à la vente ({{ loanItem.loanPrice }} €)
         </template>
         <USwitch v-model="addToSale" data-testid="loan-add-to-sale-switch" />
       </UFormField>
