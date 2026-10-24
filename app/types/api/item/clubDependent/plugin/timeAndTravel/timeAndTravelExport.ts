@@ -22,6 +22,7 @@ export const EXPORT_STATUS_COLORS: Record<TimeAndTravelExportStatus, 'warning' |
 interface _TimeAndTravelExport extends UuidItem, ClubLinkedItem, TimestampItem {
   status?: TimeAndTravelExportStatus
   isRegenerating?: boolean
+  regenerationFailed?: boolean
   startDate?: string
   endDate?: string
   smicHourlyRate?: string | null

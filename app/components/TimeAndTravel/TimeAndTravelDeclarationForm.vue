@@ -8,7 +8,7 @@ import MemberVehicleQuery from '~/composables/api/query/clubDependent/plugin/tim
 import type {FormError} from '#ui/types'
 import type {SelectApiItem} from '~/types/select'
 import {formatDateInput} from '~/utils/date'
-import {DECLARATION_LOCATION_MAX_LENGTH, DECLARATION_DESCRIPTION_MAX_LENGTH, isValidHoursGranularity} from '~/utils/timeAndTravel'
+import {DECLARATION_LOCATION_MAX_LENGTH, DECLARATION_DESCRIPTION_MAX_LENGTH, DEFAULT_ARRIVAL_LOCATION, DEFAULT_DEPARTURE_LOCATION, isValidHoursGranularity} from '~/utils/timeAndTravel'
 import {blockNonDecimalKey} from '~/utils/string'
 
 const props = defineProps({
@@ -79,6 +79,8 @@ function getDefaultDeclaration(): TimeAndTravelDeclaration {
     date: formatDateInput(new Date().toString()) ?? '',
     description: props.initialDescription,
     isRoundtrip: true,
+    departureLocation: DEFAULT_DEPARTURE_LOCATION,
+    arrivalLocation: DEFAULT_ARRIVAL_LOCATION,
   }
 }
 
