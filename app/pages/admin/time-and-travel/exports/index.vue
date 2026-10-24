@@ -138,6 +138,9 @@ loadExports()
         <UBadge v-if="row.original.isRegenerating" class="ml-1" color="neutral" variant="subtle" size="xs" icon="i-heroicons-arrow-path">
           Génération en cours…
         </UBadge>
+        <UBadge v-if="row.original.regenerationFailed && !row.original.isRegenerating" class="ml-1" color="error" variant="subtle" size="xs" icon="i-heroicons-exclamation-triangle">
+          Échec de la génération
+        </UBadge>
       </template>
       <template #actions-cell="{ row }">
         <div class="flex gap-2 justify-end">
