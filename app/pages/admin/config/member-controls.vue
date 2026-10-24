@@ -81,6 +81,7 @@ function createType() {
     warningDays: 335,
     alertDays: 365,
     displayOnPresenceCard: true,
+    alertIfMissing: false,
   }
 }
 
@@ -116,6 +117,7 @@ async function updateType(type: MemberControlType) {
     warningDays: type.warningDays || null,
     alertDays: type.alertDays || null,
     displayOnPresenceCard: type.displayOnPresenceCard,
+    alertIfMissing: type.alertIfMissing,
   }
 
   let error
@@ -298,6 +300,14 @@ getTypes()
                   <UInput v-model="selectedType.alertDays" type="number"/>
                 </UFormField>
               </template>
+
+              <UFormField
+                label="Alerter si non renseigné"
+                name="alertIfMissing"
+                description="Affiche une alerte pour tous les membres qui n'ont pas de date pour ce contrôle."
+              >
+                <USwitch v-model="selectedType.alertIfMissing"/>
+              </UFormField>
 
               <UFormField label="Afficher sur la page de présence" name="displayOnPresenceCard">
                 <USwitch v-model="selectedType.displayOnPresenceCard"/>
