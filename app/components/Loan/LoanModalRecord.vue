@@ -154,14 +154,11 @@ async function submit() {
       <UFormField label="Prêté par">
         <UInputMenu
           v-model="sellerSelected"
+          class="w-full"
           :items="sellersSelect"
           :filter-fields="['item.lastname', 'item.firstname']"
-        >
-          <template #default>
-            <span v-if="sellerSelected">{{ sellerSelected.label }}</span>
-            <span v-else class="text-muted italic">Sélectionner un responsable</span>
-          </template>
-        </UInputMenu>
+          placeholder="Sélectionner un responsable"
+        />
       </UFormField>
 
       <!-- Comment -->
