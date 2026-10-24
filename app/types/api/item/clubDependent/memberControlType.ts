@@ -9,6 +9,7 @@ interface _MemberControlType extends UuidItem, ClubLinkedItem {
   warningDays?: number | null;
   alertDays?: number | null;
   displayOnPresenceCard?: boolean;
+  alertIfMissing?: boolean;
   weight?: number;
 }
 
