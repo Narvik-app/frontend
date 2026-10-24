@@ -52,23 +52,39 @@ const exportTitle = computed(() => {
 // Regeneration (triggered by the button here, by locking, or automatically by a declaration
 // change elsewhere — see documentation/FEATURE_MERCURE.md) runs in the background. There's no
 // push notification yet, so this page polls while the export reports itself as regenerating.
+// The page is left untouched (spinner only) until the job is over, then updated in one go.
 let pollTimeout: ReturnType<typeof setTimeout> | undefined
 onUnmounted(() => { if (pollTimeout) clearTimeout(pollTimeout) })
 
-async function pollWhileRegenerating() {
+function pollWhileRegenerating() {
+  if (pollTimeout) clearTimeout(pollTimeout)
   if (!item.value?.isRegenerating) {
     isProcessing.value = false
     return
   }
   pollTimeout = setTimeout(async () => {
-    await loadItem()
-    if (item.value?.isRegenerating) {
+    const {retrieved, error} = await exportQuery.get(exportUuid)
+    if (error) {
+      displayApiError(error)
+      isProcessing.value = false
+    } else if (retrieved?.isRegenerating) {
       pollWhileRegenerating()
     } else {
-      isProcessing.value = false
+      applyItem(retrieved)
       await loadAttestations()
+      isProcessing.value = false
     }
   }, 2000)
+}
+
+function applyItem(retrieved: TimeAndTravelExport | undefined) {
+  item.value = retrieved
+  if (retrieved?.recapFile) {
+    resolveFileHref(retrieved.recapFile.uuid, retrieved.recapFile)
+  }
+  if (retrieved?.zipFile) {
+    resolveFileHref(retrieved.zipFile.uuid, retrieved.zipFile, 'application/zip')
+  }
 }
 
 async function loadItem() {
@@ -77,13 +93,7 @@ async function loadItem() {
   if (error) {
     displayApiError(error)
   } else {
-    item.value = retrieved
-    if (item.value?.recapFile) {
-      resolveFileHref(item.value.recapFile.uuid, item.value.recapFile)
-    }
-    if (item.value?.zipFile) {
-      resolveFileHref(item.value.zipFile.uuid, item.value.zipFile, 'application/zip')
-    }
+    applyItem(retrieved)
   }
   isLoading.value = false
 }
@@ -107,8 +117,8 @@ async function regenerate() {
     return
   }
   toast.add({title: 'Régénération en cours…'})
-  await loadItem()
-  await pollWhileRegenerating()
+  item.value.isRegenerating = true
+  pollWhileRegenerating()
 }
 
 async function lock() {
@@ -121,8 +131,8 @@ async function lock() {
     return
   }
   toast.add({title: 'Verrouillage en cours…'})
-  await loadItem()
-  await pollWhileRegenerating()
+  item.value.isRegenerating = true
+  pollWhileRegenerating()
 }
 
 async function unlock() {
@@ -165,7 +175,7 @@ loadItem().then(async () => {
   await loadAttestations()
   if (item.value?.isRegenerating) {
     isProcessing.value = true
-    await pollWhileRegenerating()
+    pollWhileRegenerating()
   }
 })
 </script>

@@ -56,11 +56,30 @@ const columns = [
   {accessorKey: 'actions', header: ''},
 ]
 
-async function loadExports() {
-  isLoading.value = true
+// Generation runs in the background (see the detail page): keep refreshing the list, without the
+// loading skeleton, until no export reports itself as regenerating anymore.
+let pollTimeout: ReturnType<typeof setTimeout> | undefined
+onUnmounted(() => { if (pollTimeout) clearTimeout(pollTimeout) })
+
+function pollWhileRegenerating() {
+  if (pollTimeout) clearTimeout(pollTimeout)
+  if (!exports.value.some(item => item.isRegenerating)) return
+  pollTimeout = setTimeout(async () => {
+    await refreshExports()
+    pollWhileRegenerating()
+  }, 2000)
+}
+
+async function refreshExports() {
   const {items} = await exportQuery.getAll(new URLSearchParams({'order[startDate]': 'desc'}))
   exports.value = items
+}
+
+async function loadExports() {
+  isLoading.value = true
+  await refreshExports()
   isLoading.value = false
+  pollWhileRegenerating()
 }
 
 function onUpdated() {
@@ -115,6 +134,9 @@ loadExports()
       <template #status-cell="{ row }">
         <UBadge :color="EXPORT_STATUS_COLORS[row.original.status]" variant="soft" size="xs">
           {{ EXPORT_STATUS_LABELS[row.original.status] }}
+        </UBadge>
+        <UBadge v-if="row.original.isRegenerating" class="ml-1" color="neutral" variant="subtle" size="xs" icon="i-heroicons-arrow-path">
+          Génération en cours…
         </UBadge>
       </template>
       <template #actions-cell="{ row }">
