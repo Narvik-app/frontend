@@ -2,7 +2,7 @@ import type {UuidItem} from "~/types/api/uuidItem";
 import type {Member} from "~/types/api/item/clubDependent/member";
 import type {MemberControlType} from "~/types/api/item/clubDependent/memberControlType";
 
-export type MemberControlStatus = 'valid' | 'warning' | 'expired';
+export type MemberControlStatus = 'valid' | 'warning' | 'expired' | 'missing';
 
 interface _MemberControl extends UuidItem {
   member?: Member | string;
