@@ -11,6 +11,10 @@ export {EXPORT_STATUS_LABELS, EXPORT_STATUS_COLORS} from '~/types/api/item/clubD
 
 /** Mirrors TimeAndTravelDeclaration::LOCATION_MAX_LENGTH / DESCRIPTION_MAX_LENGTH on the backend — kept short so a trajet still fits on one line in the exports. */
 export const DECLARATION_LOCATION_MAX_LENGTH = 30
+
+// Pre-filled when kilometers are declared on a new declaration: by far the most common trip.
+export const DEFAULT_DEPARTURE_LOCATION = 'Domicile'
+export const DEFAULT_ARRIVAL_LOCATION = 'Association'
 export const DECLARATION_DESCRIPTION_MAX_LENGTH = 50
 
 /** A declaration can be edited/deleted by its owner or an authorized supervisor/admin only while it's not locked. */
