@@ -5,7 +5,7 @@ import type {TimeAndTravelDeclaration} from '~/types/api/item/clubDependent/plug
 import type {TimeAndTravelSummaryRow} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelSummary'
 import MemberTimeAndTravelDeclarationQuery from '~/composables/api/query/clubDependent/plugin/timeAndTravel/MemberTimeAndTravelDeclarationQuery'
 import TimeAndTravelDeclarationQuery from '~/composables/api/query/clubDependent/plugin/timeAndTravel/TimeAndTravelDeclarationQuery'
-import {appendDateRangeParams, declarationIsEditable, formatTrajet, vehicleDisplayName} from '~/utils/timeAndTravel'
+import {appendDateRangeParams, formatTrajet, vehicleDisplayName} from '~/utils/timeAndTravel'
 import {formatMonetary} from '~/utils/string'
 import {formatDateRangeReadable, formatDateReadable} from '~/utils/date'
 import {convertUuidToUrlUuid, displayApiError} from '~/utils/resource'
@@ -208,7 +208,7 @@ defineExpose({refresh})
           <UBadge v-else color="neutral" variant="soft" size="xs">Déclarée</UBadge>
         </template>
         <template #actions-cell="{ row }">
-          <div v-if="canEdit && declarationIsEditable(row.original)" class="flex gap-2 justify-end">
+          <div v-if="canEdit && !row.original.isLocked" class="flex gap-2 justify-end">
             <UButton data-testid="declaration-edit" icon="i-heroicons-pencil" color="neutral" variant="ghost" @click="emit('edit', row.original)" />
             <UButton
               data-testid="declaration-delete"
