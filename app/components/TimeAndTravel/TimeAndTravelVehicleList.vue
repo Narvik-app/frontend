@@ -2,7 +2,7 @@
 import type {PropType} from 'vue'
 import type {Member} from '~/types/api/item/clubDependent/member'
 import type {MemberVehicle} from '~/types/api/item/clubDependent/plugin/timeAndTravel/memberVehicle'
-import {VEHICLE_ENGINE_TYPE_LABELS} from '~/utils/timeAndTravel'
+import {VEHICLE_ENGINE_TYPE_LABELS} from '~/types/api/item/clubDependent/plugin/timeAndTravel/memberVehicle'
 import MemberVehicleQuery from '~/composables/api/query/clubDependent/plugin/timeAndTravel/MemberVehicleQuery'
 import ModalDeleteConfirmation from '~/components/Modal/ModalDeleteConfirmation.vue'
 import {displayApiError} from '~/utils/resource'

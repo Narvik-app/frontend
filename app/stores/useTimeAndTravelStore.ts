@@ -12,12 +12,7 @@ import type {DateRange} from "~/types/date";
 export const useTimeAndTravelStore = defineStore('timeAndTravel', () => {
   const selectedRange: Ref<DateRange | DateRangeFilter | undefined> = ref(DateRangeFilter.curent())
 
-  function setSelectedRange(range: DateRange | DateRangeFilter | undefined) {
-    selectedRange.value = range
-  }
-
   return {
     selectedRange,
-    setSelectedRange,
   }
 })
