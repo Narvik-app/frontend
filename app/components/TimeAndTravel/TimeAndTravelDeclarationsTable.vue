@@ -5,9 +5,9 @@ import type {TimeAndTravelDeclaration} from '~/types/api/item/clubDependent/plug
 import type {TimeAndTravelSummaryRow} from '~/types/api/item/clubDependent/plugin/timeAndTravel/timeAndTravelSummary'
 import MemberTimeAndTravelDeclarationQuery from '~/composables/api/query/clubDependent/plugin/timeAndTravel/MemberTimeAndTravelDeclarationQuery'
 import TimeAndTravelDeclarationQuery from '~/composables/api/query/clubDependent/plugin/timeAndTravel/TimeAndTravelDeclarationQuery'
-import {appendDateRangeParams, formatTrajet, vehicleDisplayName} from '~/utils/timeAndTravel'
+import {formatTrajet, memberFullName, memberOf, vehicleDisplayName} from '~/utils/timeAndTravel'
 import {formatMonetary} from '~/utils/string'
-import {formatDateRangeReadable, formatDateReadable} from '~/utils/date'
+import {appendDateRangeParams, formatDateRangeReadable, formatDateReadable} from '~/utils/date'
 import {convertUuidToUrlUuid, displayApiError} from '~/utils/resource'
 import {createBrowserCsvDownload} from '~/utils/browser'
 import {usePaginationValues} from '~/composables/api/list'
@@ -125,14 +125,6 @@ function refresh() {
 
 watch([searchQuery, selectedRange], refresh)
 
-function getMemberName(declaration: TimeAndTravelDeclaration): string {
-  return typeof declaration.member === 'object' ? declaration.member?.fullName ?? '-' : '-'
-}
-
-function getMemberUuid(declaration: TimeAndTravelDeclaration): string | undefined {
-  return typeof declaration.member === 'object' ? declaration.member?.uuid : undefined
-}
-
 async function downloadCsv() {
   isDownloadingCsv.value = true
   const {data, error} = await declarationQuery.value.getAllCsv(buildFilterParams())
@@ -195,8 +187,8 @@ defineExpose({refresh})
         </template>
         <template #date-cell="{ row }">{{ formatDateReadable(row.original.date) }}</template>
         <template #member-cell="{ row }">
-          <ULink :to="`/admin/members/${convertUuidToUrlUuid(getMemberUuid(row.original))}`">
-            {{ getMemberName(row.original) }}
+          <ULink :to="`/admin/members/${convertUuidToUrlUuid(memberOf(row.original)?.uuid)}`">
+            {{ memberFullName(row.original) }}
           </ULink>
         </template>
         <template #trajet-cell="{ row }">{{ formatTrajet(row.original) }}</template>

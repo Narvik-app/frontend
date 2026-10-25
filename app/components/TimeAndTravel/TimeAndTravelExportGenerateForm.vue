@@ -37,7 +37,7 @@ async function onSubmit() {
   isCreating.value = false
 
   if (error) {
-    toast.add({title: 'Une erreur est survenue', description: error.message, color: 'error'})
+    displayApiError(error)
     return
   }
 

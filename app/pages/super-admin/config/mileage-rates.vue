@@ -67,7 +67,7 @@ async function saveElectricBonus() {
   )
   isSavingBonus.value = false
   if (error) {
-    toast.add({color: 'error', title: 'Erreur', description: error.message})
+    displayApiError(error)
     return
   }
   toast.add({title: 'Majoration électrique enregistrée'})
@@ -131,7 +131,7 @@ async function updateItem(item: MileageRate) {
   isSideVisible.value = false
 
   if (apiError) {
-    toast.add({color: 'error', title: !item.id ? 'La création a échoué' : 'La modification a échoué', description: apiError.message})
+    displayApiError(apiError, !item.id ? 'La création a échoué' : 'La modification a échoué')
     return
   }
 
@@ -146,7 +146,7 @@ async function deleteItem() {
   isLoading.value = false
 
   if (error) {
-    toast.add({color: 'error', title: 'La suppression a échoué', description: error.message})
+    displayApiError(error, 'La suppression a échoué')
     return
   }
 

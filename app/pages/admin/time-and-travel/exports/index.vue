@@ -58,16 +58,14 @@ const columns = [
 
 // Generation runs in the background (see the detail page): keep refreshing the list, without the
 // loading skeleton, until no export reports itself as regenerating anymore.
-let pollTimeout: ReturnType<typeof setTimeout> | undefined
-onUnmounted(() => { if (pollTimeout) clearTimeout(pollTimeout) })
+const schedulePoll = useDelayedPoll()
 
 function pollWhileRegenerating() {
-  if (pollTimeout) clearTimeout(pollTimeout)
   if (!exports.value.some(item => item.generationStatus === 'generating')) return
-  pollTimeout = setTimeout(async () => {
+  schedulePoll(async () => {
     await refreshExports()
     pollWhileRegenerating()
-  }, 2000)
+  })
 }
 
 async function refreshExports() {
@@ -93,7 +91,7 @@ async function downloadZip(item: TimeAndTravelExport) {
   const {error} = await downloadFile(item.zipFile, `export-${formatDateInput(item.startDate)}-${formatDateInput(item.endDate)}.zip`, 'application/zip')
   isDownloadingZip.value = undefined
   if (error) {
-    toast.add({color: 'error', title: 'Téléchargement impossible', description: error.message})
+    displayApiError(error, 'Téléchargement impossible')
   }
 }
 

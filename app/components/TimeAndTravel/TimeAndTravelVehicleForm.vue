@@ -25,7 +25,6 @@ const props = defineProps({
 
 const emit = defineEmits(['updated'])
 
-const toast = useToast()
 const memberVehicleQuery = new MemberVehicleQuery()
 const mileageRateQuery = new MileageRateQuery()
 const globalSettingQuery = new GlobalSettingQuery()
@@ -101,23 +100,16 @@ async function updateItem() {
     member: props.member['@id'],
   }
 
-  let errorMessage: string | undefined
-  let savedItem: MemberVehicle | undefined
-
-  if (isCreate) {
-    const {created, error} = await memberVehicleQuery.post(payload)
-    if (created) savedItem = created
-    if (error) errorMessage = error.message
-  } else {
-    const {updated, error} = await memberVehicleQuery.patch(item.value, payload)
-    if (updated) savedItem = updated
-    if (error) errorMessage = error.message
-  }
+  const result = isCreate
+    ? await memberVehicleQuery.post(payload)
+    : await memberVehicleQuery.patch(item.value, payload)
+  const {error} = result
+  const savedItem = 'created' in result ? result.created : result.updated
 
   isUpdating.value = false
 
-  if (errorMessage) {
-    toast.add({title: 'Une erreur est survenue', description: errorMessage, color: 'error'})
+  if (error) {
+    displayApiError(error)
     return
   }
 

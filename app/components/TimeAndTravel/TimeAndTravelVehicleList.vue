@@ -59,10 +59,6 @@ async function loadVehicles() {
   isLoading.value = false
 }
 
-function getMemberName(vehicle: MemberVehicle): string {
-  return typeof vehicle.member === 'object' ? vehicle.member?.fullName ?? '-' : '-'
-}
-
 function onCreateForSelf() {
   selectedVehicle.value = undefined
   selectedVehicleMember.value = selfMember.value
@@ -119,7 +115,7 @@ loadVehicles()
       <template #empty>
         <div class="py-6 text-center italic text-sm">Aucun véhicule enregistré.</div>
       </template>
-      <template #member-cell="{ row }">{{ getMemberName(row.original) }}</template>
+      <template #member-cell="{ row }">{{ memberFullName(row.original) }}</template>
       <template #vehicle-cell="{ row }">{{ row.original.brand }} {{ row.original.model }}</template>
       <template #engineType-cell="{ row }">{{ VEHICLE_ENGINE_TYPE_LABELS[row.original.engineType!] ?? row.original.engineType }}</template>
       <template #isEnabled-cell="{ row }">
