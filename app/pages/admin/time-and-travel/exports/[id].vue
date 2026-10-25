@@ -53,16 +53,14 @@ const exportTitle = computed(() => {
 // change elsewhere — see documentation/FEATURE_MERCURE.md) runs in the background. There's no
 // push notification yet, so this page polls while the export reports itself as regenerating.
 // The page is left untouched (spinner only) until the job is over, then updated in one go.
-let pollTimeout: ReturnType<typeof setTimeout> | undefined
-onUnmounted(() => { if (pollTimeout) clearTimeout(pollTimeout) })
+const schedulePoll = useDelayedPoll()
 
 function pollWhileRegenerating() {
-  if (pollTimeout) clearTimeout(pollTimeout)
   if (item.value?.generationStatus !== 'generating') {
     isProcessing.value = false
     return
   }
-  pollTimeout = setTimeout(async () => {
+  schedulePoll(async () => {
     const {retrieved, error} = await exportQuery.get(exportUuid)
     if (error) {
       displayApiError(error)
@@ -74,7 +72,7 @@ function pollWhileRegenerating() {
       await loadAttestations()
       isProcessing.value = false
     }
-  }, 2000)
+  })
 }
 
 function applyItem(retrieved: TimeAndTravelExport | undefined) {
@@ -113,7 +111,7 @@ async function regenerate() {
   const {error} = await exportQuery.regenerate(item.value)
   if (error) {
     isProcessing.value = false
-    toast.add({color: 'error', title: 'Erreur', description: error.message})
+    displayApiError(error)
     return
   }
   toast.add({title: 'Régénération en cours…'})
@@ -127,7 +125,7 @@ async function lock() {
   const {error} = await exportQuery.lock(item.value)
   if (error) {
     isProcessing.value = false
-    toast.add({color: 'error', title: 'Erreur', description: error.message})
+    displayApiError(error)
     return
   }
   toast.add({title: 'Verrouillage en cours…'})
@@ -141,7 +139,7 @@ async function unlock() {
   const {error} = await exportQuery.unlock(item.value)
   isProcessing.value = false
   if (error) {
-    toast.add({color: 'error', title: 'Erreur', description: error.message})
+    displayApiError(error)
     return
   }
   toast.add({title: 'Export déverrouillé'})
@@ -160,15 +158,7 @@ async function deleteExport() {
 }
 
 function attestationFilename(attestation: TimeAndTravelExportAttestation): string {
-  return `attestation-${getMemberName(attestation)}.pdf`
-}
-
-function getMemberName(attestation: TimeAndTravelExportAttestation): string {
-  return typeof attestation.member === 'object' ? attestation.member?.fullName ?? '-' : '-'
-}
-
-function getMemberUuid(attestation: TimeAndTravelExportAttestation): string | undefined {
-  return typeof attestation.member === 'object' ? attestation.member?.uuid : undefined
+  return `attestation-${memberFullName(attestation)}.pdf`
 }
 
 loadItem().then(async () => {
@@ -302,8 +292,8 @@ loadItem().then(async () => {
           <div class="py-6 text-center italic text-sm">Aucune attestation.</div>
         </template>
         <template #member-cell="{ row }">
-          <ULink :to="`/admin/members/${convertUuidToUrlUuid(getMemberUuid(row.original))}`">
-            {{ getMemberName(row.original) }}
+          <ULink :to="`/admin/members/${convertUuidToUrlUuid(memberOf(row.original)?.uuid)}`">
+            {{ memberFullName(row.original) }}
           </ULink>
         </template>
         <template #totalAmount-cell="{ row }">{{ formatMonetary(row.original.totalAmount) }}</template>

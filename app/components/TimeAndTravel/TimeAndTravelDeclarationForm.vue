@@ -158,23 +158,16 @@ async function onSubmit() {
     }
   }
 
-  let errorMessage: string | undefined
-  let savedItem: TimeAndTravelDeclaration | undefined
-
-  if (!props.item) {
-    const {created, error} = await declarationQuery.post(payload)
-    if (created) savedItem = created
-    if (error) errorMessage = error.message
-  } else {
-    const {updated, error} = await declarationQuery.patch(props.item, payload)
-    if (updated) savedItem = updated
-    if (error) errorMessage = error.message
-  }
+  const result = props.item
+    ? await declarationQuery.patch(props.item, payload)
+    : await declarationQuery.post(payload)
+  const {error} = result
+  const savedItem = 'created' in result ? result.created : result.updated
 
   isUpdating.value = false
 
-  if (errorMessage) {
-    toast.add({title: 'Une erreur est survenue', description: errorMessage, color: 'error'})
+  if (error) {
+    displayApiError(error)
     return
   }
 

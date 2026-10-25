@@ -60,3 +60,21 @@ export function formatDateInput(value?: string): string | null {
 
   return dayjs(value).format("YYYY-MM-DD");
 }
+
+/** Appends date[after]/date[before] (or the current-season/previous-season filter) to a URLSearchParams, matching PresentMemberList's convention. */
+export function appendDateRangeParams(urlParams: URLSearchParams, range?: DateRange | DateRangeFilter): void {
+  if (!range) return
+
+  if ('value' in range && typeof range.value === 'string') {
+    urlParams.append(`${range.value}[date]`, 'true')
+    return
+  }
+
+  const dateRange = range as DateRange
+  const formattedStartDate = formatDateInput(dateRange.start.toString())
+  const formattedEndDate = formatDateInput(dateRange.end.toString())
+  if (formattedStartDate) {
+    urlParams.append('date[after]', formattedStartDate)
+    urlParams.append('date[before]', formattedEndDate ?? formattedStartDate)
+  }
+}
