@@ -2,7 +2,7 @@
 import type {PropType} from 'vue'
 import type {Member} from '~/types/api/item/clubDependent/member'
 import type {MemberVehicle} from '~/types/api/item/clubDependent/plugin/timeAndTravel/memberVehicle'
-import {VEHICLE_ENGINE_TYPE_LABELS} from '~/utils/timeAndTravel'
+import {VEHICLE_ENGINE_TYPE_LABELS} from '~/types/api/item/clubDependent/plugin/timeAndTravel/memberVehicle'
 import MemberVehicleQuery from '~/composables/api/query/clubDependent/plugin/timeAndTravel/MemberVehicleQuery'
 import ModalDeleteConfirmation from '~/components/Modal/ModalDeleteConfirmation.vue'
 import {displayApiError} from '~/utils/resource'
@@ -57,10 +57,6 @@ async function loadVehicles() {
     vehicles.value = items
   }
   isLoading.value = false
-}
-
-function getMemberName(vehicle: MemberVehicle): string {
-  return typeof vehicle.member === 'object' ? vehicle.member?.fullName ?? '-' : '-'
 }
 
 function onCreateForSelf() {
@@ -119,7 +115,7 @@ loadVehicles()
       <template #empty>
         <div class="py-6 text-center italic text-sm">Aucun véhicule enregistré.</div>
       </template>
-      <template #member-cell="{ row }">{{ getMemberName(row.original) }}</template>
+      <template #member-cell="{ row }">{{ memberFullName(row.original) }}</template>
       <template #vehicle-cell="{ row }">{{ row.original.brand }} {{ row.original.model }}</template>
       <template #engineType-cell="{ row }">{{ VEHICLE_ENGINE_TYPE_LABELS[row.original.engineType!] ?? row.original.engineType }}</template>
       <template #isEnabled-cell="{ row }">

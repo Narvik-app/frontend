@@ -56,11 +56,28 @@ const columns = [
   {accessorKey: 'actions', header: ''},
 ]
 
-async function loadExports() {
-  isLoading.value = true
+// Generation runs in the background (see the detail page): keep refreshing the list, without the
+// loading skeleton, until no export reports itself as regenerating anymore.
+const schedulePoll = useDelayedPoll()
+
+function pollWhileRegenerating() {
+  if (!exports.value.some(item => item.generationStatus === 'generating')) return
+  schedulePoll(async () => {
+    await refreshExports()
+    pollWhileRegenerating()
+  })
+}
+
+async function refreshExports() {
   const {items} = await exportQuery.getAll(new URLSearchParams({'order[startDate]': 'desc'}))
   exports.value = items
+}
+
+async function loadExports() {
+  isLoading.value = true
+  await refreshExports()
   isLoading.value = false
+  pollWhileRegenerating()
 }
 
 function onUpdated() {
@@ -74,7 +91,7 @@ async function downloadZip(item: TimeAndTravelExport) {
   const {error} = await downloadFile(item.zipFile, `export-${formatDateInput(item.startDate)}-${formatDateInput(item.endDate)}.zip`, 'application/zip')
   isDownloadingZip.value = undefined
   if (error) {
-    toast.add({color: 'error', title: 'Téléchargement impossible', description: error.message})
+    displayApiError(error, 'Téléchargement impossible')
   }
 }
 
@@ -115,6 +132,12 @@ loadExports()
       <template #status-cell="{ row }">
         <UBadge :color="EXPORT_STATUS_COLORS[row.original.status]" variant="soft" size="xs">
           {{ EXPORT_STATUS_LABELS[row.original.status] }}
+        </UBadge>
+        <UBadge v-if="row.original.generationStatus === 'generating'" class="ml-1" color="neutral" variant="subtle" size="xs" icon="i-heroicons-arrow-path">
+          Génération en cours…
+        </UBadge>
+        <UBadge v-if="row.original.generationStatus === 'failed'" class="ml-1" color="error" variant="subtle" size="xs" icon="i-heroicons-exclamation-triangle">
+          Échec de la génération
         </UBadge>
       </template>
       <template #actions-cell="{ row }">

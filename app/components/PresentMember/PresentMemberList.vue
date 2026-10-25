@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {usePresenceStore} from "~/stores/usePresenceStore";
-import {formatDateInput} from "~/utils/date";
+import {appendDateRangeParams} from "~/utils/date";
 import type {MemberPresence} from "~/types/api/item/clubDependent/plugin/presence/memberPresence";
 import MemberPresenceQuery from "~/composables/api/query/clubDependent/plugin/presence/MemberPresenceQuery";
 import {useSelfUserStore} from "~/stores/useSelfUser";
@@ -73,23 +73,7 @@ const props = defineProps({
       })
     }
 
-    if (selectedRange.value) {
-      if (typeof selectedRange.value.value === 'string') {
-        urlParams.append(`${selectedRange.value.value}[date]`, 'true');
-      } else {
-        const formattedStartDate = formatDateInput(selectedRange.value.start.toString())
-        const formattedEndDate = formatDateInput(selectedRange.value.end.toString())
-        if (formattedStartDate) {
-          urlParams.append(`date[after]`, formattedStartDate);
-
-          if (formattedEndDate) {
-            urlParams.append(`date[before]`, formattedEndDate);
-          } else {
-            urlParams.append(`date[before]`, formattedStartDate);
-          }
-        }
-      }
-    }
+    appendDateRangeParams(urlParams, selectedRange.value)
 
     if (searchQuery.value) {
       urlParams.append(`multiple[member.firstname, member.lastname, member.licence]`, searchQuery.value);
@@ -140,23 +124,7 @@ const props = defineProps({
 
     urlParams.append(`order[${sort.value.column}]`, sort.value.direction);
 
-    if (selectedRange.value) {
-      if (typeof selectedRange.value.value === 'string') {
-        urlParams.append(`${selectedRange.value.value}[date]`, 'true');
-      } else {
-        const formattedStartDate = formatDateInput(selectedRange.value.start.toString())
-        const formattedEndDate = formatDateInput(selectedRange.value.end.toString())
-        if (formattedStartDate) {
-          urlParams.append(`date[after]`, formattedStartDate);
-
-          if (formattedEndDate) {
-            urlParams.append(`date[before]`, formattedEndDate);
-          } else {
-            urlParams.append(`date[before]`, formattedStartDate);
-          }
-        }
-      }
-    } else {
+    if (!selectedRange.value) {
       isDownloadingCsv.value = false
       toast.add({
         color: "error",
@@ -165,6 +133,8 @@ const props = defineProps({
       })
       return;
     }
+
+    appendDateRangeParams(urlParams, selectedRange.value)
 
     if (searchQuery.value) {
       urlParams.append(`multiple[member.firstname, member.lastname, member.licence]`, searchQuery.value);

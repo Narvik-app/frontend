@@ -5,6 +5,7 @@ import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.
 import MileageRateQuery from "~/composables/api/query/clubDependent/plugin/timeAndTravel/MileageRateQuery";
 import GlobalSettingQuery from "~/composables/api/query/GlobalSettingQuery";
 import {GlobalSettingPublicEnum} from "~/types/api/item/globalSetting";
+import {BAREME_OFFICIAL_SOURCE_URL} from "~/utils/baremeKilometrique";
 import type {MileageRate} from "~/types/api/item/clubDependent/plugin/timeAndTravel/mileageRate";
 import {VEHICLE_CATEGORY_LABELS, VehicleCategory} from "~/types/api/item/clubDependent/plugin/timeAndTravel/mileageRate";
 
@@ -66,7 +67,7 @@ async function saveElectricBonus() {
   )
   isSavingBonus.value = false
   if (error) {
-    toast.add({color: 'error', title: 'Erreur', description: error.message})
+    displayApiError(error)
     return
   }
   toast.add({title: 'Majoration électrique enregistrée'})
@@ -130,7 +131,7 @@ async function updateItem(item: MileageRate) {
   isSideVisible.value = false
 
   if (apiError) {
-    toast.add({color: 'error', title: !item.id ? 'La création a échoué' : 'La modification a échoué', description: apiError.message})
+    displayApiError(apiError, !item.id ? 'La création a échoué' : 'La modification a échoué')
     return
   }
 
@@ -145,7 +146,7 @@ async function deleteItem() {
   isLoading.value = false
 
   if (error) {
-    toast.add({color: 'error', title: 'La suppression a échoué', description: error.message})
+    displayApiError(error, 'La suppression a échoué')
     return
   }
 
@@ -183,7 +184,7 @@ const validate = (state: MileageRate): FormError[] => {
           <div class="flex gap-4">
             <div class="flex-1">
               <div class="text-lg font-bold">Barème kilométrique officiel</div>
-              <NuxtLink to="https://www.service-public.gouv.fr/particuliers/vosdroits/F1132" target="_blank" class="text-xs underline">
+              <NuxtLink :to="BAREME_OFFICIAL_SOURCE_URL" target="_blank" class="text-xs underline">
                 Source : service-public.gouv.fr/F1132
               </NuxtLink>
             </div>

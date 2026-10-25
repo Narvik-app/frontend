@@ -52,23 +52,37 @@ const exportTitle = computed(() => {
 // Regeneration (triggered by the button here, by locking, or automatically by a declaration
 // change elsewhere — see documentation/FEATURE_MERCURE.md) runs in the background. There's no
 // push notification yet, so this page polls while the export reports itself as regenerating.
-let pollTimeout: ReturnType<typeof setTimeout> | undefined
-onUnmounted(() => { if (pollTimeout) clearTimeout(pollTimeout) })
+// The page is left untouched (spinner only) until the job is over, then updated in one go.
+const schedulePoll = useDelayedPoll()
 
-async function pollWhileRegenerating() {
-  if (!item.value?.isRegenerating) {
+function pollWhileRegenerating() {
+  if (item.value?.generationStatus !== 'generating') {
     isProcessing.value = false
     return
   }
-  pollTimeout = setTimeout(async () => {
-    await loadItem()
-    if (item.value?.isRegenerating) {
+  schedulePoll(async () => {
+    const {retrieved, error} = await exportQuery.get(exportUuid)
+    if (error) {
+      displayApiError(error)
+      isProcessing.value = false
+    } else if (retrieved?.generationStatus === 'generating') {
       pollWhileRegenerating()
     } else {
-      isProcessing.value = false
+      applyItem(retrieved)
       await loadAttestations()
+      isProcessing.value = false
     }
-  }, 2000)
+  })
+}
+
+function applyItem(retrieved: TimeAndTravelExport | undefined) {
+  item.value = retrieved
+  if (retrieved?.recapFile) {
+    resolveFileHref(retrieved.recapFile.uuid, retrieved.recapFile)
+  }
+  if (retrieved?.zipFile) {
+    resolveFileHref(retrieved.zipFile.uuid, retrieved.zipFile, 'application/zip')
+  }
 }
 
 async function loadItem() {
@@ -77,13 +91,7 @@ async function loadItem() {
   if (error) {
     displayApiError(error)
   } else {
-    item.value = retrieved
-    if (item.value?.recapFile) {
-      resolveFileHref(item.value.recapFile.uuid, item.value.recapFile)
-    }
-    if (item.value?.zipFile) {
-      resolveFileHref(item.value.zipFile.uuid, item.value.zipFile, 'application/zip')
-    }
+    applyItem(retrieved)
   }
   isLoading.value = false
 }
@@ -103,12 +111,12 @@ async function regenerate() {
   const {error} = await exportQuery.regenerate(item.value)
   if (error) {
     isProcessing.value = false
-    toast.add({color: 'error', title: 'Erreur', description: error.message})
+    displayApiError(error)
     return
   }
   toast.add({title: 'Régénération en cours…'})
-  await loadItem()
-  await pollWhileRegenerating()
+  item.value.generationStatus = 'generating'
+  pollWhileRegenerating()
 }
 
 async function lock() {
@@ -117,12 +125,12 @@ async function lock() {
   const {error} = await exportQuery.lock(item.value)
   if (error) {
     isProcessing.value = false
-    toast.add({color: 'error', title: 'Erreur', description: error.message})
+    displayApiError(error)
     return
   }
   toast.add({title: 'Verrouillage en cours…'})
-  await loadItem()
-  await pollWhileRegenerating()
+  item.value.generationStatus = 'generating'
+  pollWhileRegenerating()
 }
 
 async function unlock() {
@@ -131,7 +139,7 @@ async function unlock() {
   const {error} = await exportQuery.unlock(item.value)
   isProcessing.value = false
   if (error) {
-    toast.add({color: 'error', title: 'Erreur', description: error.message})
+    displayApiError(error)
     return
   }
   toast.add({title: 'Export déverrouillé'})
@@ -150,22 +158,14 @@ async function deleteExport() {
 }
 
 function attestationFilename(attestation: TimeAndTravelExportAttestation): string {
-  return `attestation-${getMemberName(attestation)}.pdf`
-}
-
-function getMemberName(attestation: TimeAndTravelExportAttestation): string {
-  return typeof attestation.member === 'object' ? attestation.member?.fullName ?? '-' : '-'
-}
-
-function getMemberUuid(attestation: TimeAndTravelExportAttestation): string | undefined {
-  return typeof attestation.member === 'object' ? attestation.member?.uuid : undefined
+  return `attestation-${memberFullName(attestation)}.pdf`
 }
 
 loadItem().then(async () => {
   await loadAttestations()
-  if (item.value?.isRegenerating) {
+  if (item.value?.generationStatus === 'generating') {
     isProcessing.value = true
-    await pollWhileRegenerating()
+    pollWhileRegenerating()
   }
 })
 </script>
@@ -183,8 +183,11 @@ loadItem().then(async () => {
         </div>
         <div class="flex flex-col items-end gap-2">
           <UBadge :color="EXPORT_STATUS_COLORS[item.status]" variant="soft">{{ EXPORT_STATUS_LABELS[item.status] }}</UBadge>
-          <UBadge v-if="item.isRegenerating" color="neutral" variant="subtle" icon="i-heroicons-arrow-path">
+          <UBadge v-if="item.generationStatus === 'generating'" color="neutral" variant="subtle" icon="i-heroicons-arrow-path">
             Régénération en cours…
+          </UBadge>
+          <UBadge v-if="item.generationStatus === 'failed'" color="error" variant="subtle" icon="i-heroicons-exclamation-triangle">
+            Échec de la génération
           </UBadge>
           <div class="text-sm text-muted">{{ item.declarationCount }} déclarations · {{ item.memberCount }} membres</div>
           <div class="text-lg font-semibold">{{ item.totalKilometers ?? 0 }} km · {{ formatMonetary(item.totalAmount) }}</div>
@@ -220,7 +223,7 @@ loadItem().then(async () => {
 
 
         <template v-if="isDraft && canExport">
-          <UButton icon="i-heroicons-arrow-path" variant="soft" :disabled="item.isRegenerating" :loading="isProcessing" @click="regenerate">
+          <UButton icon="i-heroicons-arrow-path" variant="soft" :disabled="item.generationStatus === 'generating'" :loading="isProcessing" @click="regenerate">
             Régénérer
           </UButton>
 
@@ -229,7 +232,7 @@ loadItem().then(async () => {
           <UButton
             icon="i-heroicons-lock-closed"
             color="warning"
-            :disabled="item.isRegenerating"
+            :disabled="item.generationStatus === 'generating'"
             :loading="isProcessing"
             @click="overlayDeleteConfirmation.open({
               alertTitle: 'Le verrouillage est définitif : les déclarations ne pourront plus être modifiées.',
@@ -289,8 +292,8 @@ loadItem().then(async () => {
           <div class="py-6 text-center italic text-sm">Aucune attestation.</div>
         </template>
         <template #member-cell="{ row }">
-          <ULink :to="`/admin/members/${convertUuidToUrlUuid(getMemberUuid(row.original))}`">
-            {{ getMemberName(row.original) }}
+          <ULink :to="`/admin/members/${convertUuidToUrlUuid(memberOf(row.original)?.uuid)}`">
+            {{ memberFullName(row.original) }}
           </ULink>
         </template>
         <template #totalAmount-cell="{ row }">{{ formatMonetary(row.original.totalAmount) }}</template>
