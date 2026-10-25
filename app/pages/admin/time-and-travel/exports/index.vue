@@ -63,7 +63,7 @@ onUnmounted(() => { if (pollTimeout) clearTimeout(pollTimeout) })
 
 function pollWhileRegenerating() {
   if (pollTimeout) clearTimeout(pollTimeout)
-  if (!exports.value.some(item => item.isRegenerating)) return
+  if (!exports.value.some(item => item.generationStatus === 'generating')) return
   pollTimeout = setTimeout(async () => {
     await refreshExports()
     pollWhileRegenerating()
@@ -135,10 +135,10 @@ loadExports()
         <UBadge :color="EXPORT_STATUS_COLORS[row.original.status]" variant="soft" size="xs">
           {{ EXPORT_STATUS_LABELS[row.original.status] }}
         </UBadge>
-        <UBadge v-if="row.original.isRegenerating" class="ml-1" color="neutral" variant="subtle" size="xs" icon="i-heroicons-arrow-path">
+        <UBadge v-if="row.original.generationStatus === 'generating'" class="ml-1" color="neutral" variant="subtle" size="xs" icon="i-heroicons-arrow-path">
           Génération en cours…
         </UBadge>
-        <UBadge v-if="row.original.regenerationFailed && !row.original.isRegenerating" class="ml-1" color="error" variant="subtle" size="xs" icon="i-heroicons-exclamation-triangle">
+        <UBadge v-if="row.original.generationStatus === 'failed'" class="ml-1" color="error" variant="subtle" size="xs" icon="i-heroicons-exclamation-triangle">
           Échec de la génération
         </UBadge>
       </template>

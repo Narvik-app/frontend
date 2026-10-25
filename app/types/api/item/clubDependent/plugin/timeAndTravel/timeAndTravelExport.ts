@@ -9,6 +9,8 @@ export enum TimeAndTravelExportStatus {
   Locked = 'locked',
 }
 
+export type TimeAndTravelExportGenerationStatus = 'idle' | 'generating' | 'failed'
+
 export const EXPORT_STATUS_LABELS: Record<TimeAndTravelExportStatus, string> = {
   [TimeAndTravelExportStatus.Draft]: 'Brouillon',
   [TimeAndTravelExportStatus.Locked]: 'Verrouillé',
@@ -21,8 +23,7 @@ export const EXPORT_STATUS_COLORS: Record<TimeAndTravelExportStatus, 'warning' |
 
 interface _TimeAndTravelExport extends UuidItem, ClubLinkedItem, TimestampItem {
   status?: TimeAndTravelExportStatus
-  isRegenerating?: boolean
-  regenerationFailed?: boolean
+  generationStatus?: TimeAndTravelExportGenerationStatus
   startDate?: string
   endDate?: string
   smicHourlyRate?: string | null
