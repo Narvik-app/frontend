@@ -58,7 +58,7 @@ onUnmounted(() => { if (pollTimeout) clearTimeout(pollTimeout) })
 
 function pollWhileRegenerating() {
   if (pollTimeout) clearTimeout(pollTimeout)
-  if (!item.value?.isRegenerating) {
+  if (item.value?.generationStatus !== 'generating') {
     isProcessing.value = false
     return
   }
@@ -67,7 +67,7 @@ function pollWhileRegenerating() {
     if (error) {
       displayApiError(error)
       isProcessing.value = false
-    } else if (retrieved?.isRegenerating) {
+    } else if (retrieved?.generationStatus === 'generating') {
       pollWhileRegenerating()
     } else {
       applyItem(retrieved)
@@ -117,7 +117,7 @@ async function regenerate() {
     return
   }
   toast.add({title: 'Régénération en cours…'})
-  item.value.isRegenerating = true
+  item.value.generationStatus = 'generating'
   pollWhileRegenerating()
 }
 
@@ -131,7 +131,7 @@ async function lock() {
     return
   }
   toast.add({title: 'Verrouillage en cours…'})
-  item.value.isRegenerating = true
+  item.value.generationStatus = 'generating'
   pollWhileRegenerating()
 }
 
@@ -173,7 +173,7 @@ function getMemberUuid(attestation: TimeAndTravelExportAttestation): string | un
 
 loadItem().then(async () => {
   await loadAttestations()
-  if (item.value?.isRegenerating) {
+  if (item.value?.generationStatus === 'generating') {
     isProcessing.value = true
     pollWhileRegenerating()
   }
@@ -193,10 +193,10 @@ loadItem().then(async () => {
         </div>
         <div class="flex flex-col items-end gap-2">
           <UBadge :color="EXPORT_STATUS_COLORS[item.status]" variant="soft">{{ EXPORT_STATUS_LABELS[item.status] }}</UBadge>
-          <UBadge v-if="item.isRegenerating" color="neutral" variant="subtle" icon="i-heroicons-arrow-path">
+          <UBadge v-if="item.generationStatus === 'generating'" color="neutral" variant="subtle" icon="i-heroicons-arrow-path">
             Régénération en cours…
           </UBadge>
-          <UBadge v-if="item.regenerationFailed && !item.isRegenerating" color="error" variant="subtle" icon="i-heroicons-exclamation-triangle">
+          <UBadge v-if="item.generationStatus === 'failed'" color="error" variant="subtle" icon="i-heroicons-exclamation-triangle">
             Échec de la génération
           </UBadge>
           <div class="text-sm text-muted">{{ item.declarationCount }} déclarations · {{ item.memberCount }} membres</div>
@@ -233,7 +233,7 @@ loadItem().then(async () => {
 
 
         <template v-if="isDraft && canExport">
-          <UButton icon="i-heroicons-arrow-path" variant="soft" :disabled="item.isRegenerating" :loading="isProcessing" @click="regenerate">
+          <UButton icon="i-heroicons-arrow-path" variant="soft" :disabled="item.generationStatus === 'generating'" :loading="isProcessing" @click="regenerate">
             Régénérer
           </UButton>
 
@@ -242,7 +242,7 @@ loadItem().then(async () => {
           <UButton
             icon="i-heroicons-lock-closed"
             color="warning"
-            :disabled="item.isRegenerating"
+            :disabled="item.generationStatus === 'generating'"
             :loading="isProcessing"
             @click="overlayDeleteConfirmation.open({
               alertTitle: 'Le verrouillage est définitif : les déclarations ne pourront plus être modifiées.',
