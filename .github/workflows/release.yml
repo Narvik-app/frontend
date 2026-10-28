@@ -9,70 +9,14 @@ on:
     types: [published]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  update-version:
-    runs-on: ubuntu-latest
-    # Only run on a release or pre-release
-    if: github.event_name == 'release'
-    steps:
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ vars.FROOZEIFY_APP_CLIENT_ID }}
-          private-key: ${{ secrets.FROOZEIFY_APP_PRIVATE_KEY }}
-
-      - name: Get GitHub App bot user id
-        id: bot-user
-        run: echo "id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-
-      - name: Update package.json
-        uses: froozeify/gh-version-updater@v1.0.6
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: "ci: Bump version to ${{ github.ref_name }}"
-          branch: main
-          file_pattern: package.json
-          commit_user_name: ${{ steps.app-token.outputs.app-slug }}[bot]
-          commit_user_email: ${{ steps.bot-user.outputs.id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com
-          commit_author: ${{ steps.app-token.outputs.app-slug }}[bot] <${{ steps.bot-user.outputs.id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com>
-
-      - name: Upload package.json for build job
-        uses: actions/upload-artifact@v7
-        with:
-          name: package-json
-          path: package.json
-
   build-and-push:
     runs-on: ubuntu-latest
-    needs: update-version
-    if: success() || needs.update-version.result == 'skipped'
-    # This job depends on the update-version job.
-    # On a push to main, update-version is skipped, but this job will still run.
-    # On a release, this job waits for update-version to succeed.
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-
-      - name: Download package.json
-        if: github.event_name == 'release'
-        uses: actions/download-artifact@v8
-        with:
-          name: package-json
-          path: .
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4.6.0

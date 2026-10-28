@@ -1,0 +1,100 @@
+name: Prepare release
+
+# Bumps the version on main, then creates a draft release targeting that commit.
+# Publish the draft from the GitHub UI: the tag is created at that moment, already
+# containing the bump, so the release can be immutable.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 1.2.3 or 1.2.3-rc.1, no "v" prefix)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: prepare-release
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ inputs.version }}
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.FROOZEIFY_APP_CLIENT_ID }}
+          private-key: ${{ secrets.FROOZEIFY_APP_PRIVATE_KEY }}
+
+      # Uses the app token: drafts are only visible with write access
+      - name: Validate version
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::'$VERSION' is not a valid version (expected MAJOR.MINOR.PATCH[-prerelease])."
+            exit 1
+          fi
+          existing=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases" \
+            --jq '[.[] | select(.tag_name == env.VERSION) | if .draft then "draft" else "published" end] | join(", ")')
+          if [[ -n "$existing" ]]; then
+            echo "::error::A release '$VERSION' already exists ($existing). Delete it first to prepare it again."
+            exit 1
+          fi
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$VERSION" > /dev/null 2>&1; then
+            echo "::error::A tag '$VERSION' already exists."
+            exit 1
+          fi
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Update package.json
+        id: bump
+        uses: froozeify/gh-version-updater@v1.0.6
+        with:
+          version: ${{ inputs.version }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Resolve release commit
+        id: target
+        run: |
+          git fetch --quiet origin main
+          for file in ${{ steps.bump.outputs.files-updated }}; do
+            if ! git show "origin/main:$file" | grep -q "\"$VERSION\""; then
+              echo "::error::origin/main $file does not contain version $VERSION."
+              exit 1
+            fi
+          done
+          echo "sha=$(git rev-parse origin/main)" >> "$GITHUB_OUTPUT"
+
+      - name: Create draft release
+        run: |
+          url=$(gh release create "$VERSION" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "${{ steps.target.outputs.sha }}" \
+            --draft \
+            --generate-notes \
+            ${{ inputs.prerelease && '--prerelease' || '' }})
+          {
+            echo "## Draft release $VERSION"
+            echo ""
+            echo "Target commit: \`${{ steps.target.outputs.sha }}\`"
+            echo ""
+            echo "Review and publish it: $url"
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
