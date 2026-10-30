@@ -23,8 +23,11 @@ narvik-back fixtures ──► Narvik (dev server) ──► Playwright ──�
    SCREENSHOT_ONLY=tt-,loan- pnpm screenshots   # only the ids starting with these prefixes
    ```
 3. The result is in `tests/screenshots/out/` (git ignored):
-   - `out/docs/<path>.webp` → copy at the root of `docs/` in the **documentation** repo
-   - `out/about/<path>.webp` → copy in `public/pics/` in the **narvik-about** repo
+   - `out/docs/…` → copy at the root of `docs/` in the **documentation** repo
+   - `out/about/…` → copy in `public/pics/` in the **narvik-about** repo
+
+Generated images are always written in a **`generated/` subfolder** next to the manual ones, so it is obvious which image is synced
+and which one is manual (see [Where the images go](#where-the-images-go)).
 
 In CI the same thing is done by the [Generate screenshots workflow](#ci), which also opens the pull requests.
 
@@ -39,6 +42,18 @@ In CI the same thing is done by the [Generate screenshots workflow](#ci), which 
 The Playwright project is `screenshots` in `playwright.config.ts`: Chromium only, viewport 1680x1000 at 2x, `fr-FR` locale,
 `Europe/Paris` timezone, reduced motion. It depends on the `setup` project (login states of `tests/e2e`).
 
+## Where the images go
+
+A target `path` in the manifest is written with a `generated` folder inserted by `convert.ts`:
+
+| Target | Manifest `path` | Written to |
+|---|---|---|
+| `docs` | `` `${DOCS_LOAN}/loans-list` `` | `docs/frontend/docs/pret/images/generated/loans-list.webp` |
+| `about` | `loan` | `public/pics/generated/loan.webp` |
+
+Everything in a `generated/` folder is overwritten by the next run (don't edit it by hand), everything next to it is manual.
+The doc pages reference `./images/generated/<name>.webp` and the about components `/pics/generated/<name>.webp`.
+
 ## Add or change an image
 
 Add an entry in `manifest.ts`:
@@ -51,8 +66,8 @@ Add an entry in `manifest.ts`:
   prepare: async (page) => { … },    // optional: open a modal, fill a form, navigate…
   locator: dialog,                   // optional: crop on an element (modal, card…)
   targets: [
-    {repo: 'docs', path: `${DOCS_LOAN}/loans-list`},   // docs/frontend/docs/pret/images/loans-list.webp
-    {repo: 'about', path: 'loan'},                      // narvik-about/public/pics/loan.webp
+    {repo: 'docs', path: `${DOCS_LOAN}/loans-list`},   // docs/frontend/docs/pret/images/generated/loans-list.webp
+    {repo: 'about', path: 'loan'},                      // narvik-about/public/pics/generated/loan.webp
   ],
 }
 ```
@@ -73,7 +88,7 @@ Conventions:
 
 - File names are **English, kebab-case** (`loans-list`, `sale-list-2`, `my-declarations`), always `.webp`.
   The doc folders (`pret`, `temps-kilometres`…) keep their French names since they are part of the page URLs.
-- After adding an image, reference it in the doc page (`![…](./images/name.webp)`) and in `FeatureList.vue` for the about site.
+- After adding an image, reference it in the doc page (`![…](./images/generated/name.webp)`) and in `FeatureList.vue` for the about site.
 - Check the permissions of the role: for instance supervisors don't have the loan permissions by default, use `ADMIN`.
 
 ## Fixtures
@@ -111,6 +126,6 @@ Review the PRs: the images show what the dev fixtures render, a visual regressio
 ## What can't be generated
 
 - Screenshots of external tools (iTAC, Cerbère, Eden, FFTir…) in `docs/frontend/docs/import/images/import-donnees/`
-- Images with hand-drawn annotations (`pos/images/sale-list-3.png`, `sale-list-4.png`)
+- Hand-drawn annotations (red arrows): the images are generated without them, the doc text explains what to look at
 - `membres/images/creation.png` (member creation form)
-- About images not in the manifest yet (`FeatureList.vue` references them from `public/pics/`)
+- About images not in the manifest yet (the ones still directly in `public/pics/`, outside `generated/`)

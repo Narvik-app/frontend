@@ -24,7 +24,7 @@ export type ScreenshotDefinition = {
    * Defaults to 'content' for images only used in the documentation, 'page' for the about website (and full page captures).
    */
   crop?: 'content' | 'page';
-  /** Keep only the top N css pixels of the captured element (long pages) */
+  /** Keep only the top N css pixels of the captured element (long pages or lists) */
   clipHeight?: number;
   targets: ScreenshotTarget[];
 };
@@ -229,6 +229,24 @@ export const screenshots: ScreenshotDefinition[] = [
       await selectSeller(page);
     },
     targets: [{repo: 'docs', path: `${DOCS_POS}/sale-list-2`}],
+  },
+  {
+    // The cart with its quantity arrows
+    id: 'pos-vente-liste-3',
+    role: 'ADMIN',
+    url: '/admin/sales/new',
+    prepare: page => addToCart(page, 2),
+    locator: page => cardWith(page, page.getByTestId('cart-total-price')),
+    targets: [{repo: 'docs', path: `${DOCS_POS}/sale-list-3`}],
+  },
+  {
+    // The search bar with the "custom item" button, top of the list
+    id: 'pos-vente-liste-4',
+    role: 'ADMIN',
+    url: '/admin/sales/new',
+    locator: page => cardWith(page, page.getByPlaceholder('Rechercher...')),
+    clipHeight: 260,
+    targets: [{repo: 'docs', path: `${DOCS_POS}/sale-list-4`}],
   },
   {
     id: 'pos-vente-liste-5',

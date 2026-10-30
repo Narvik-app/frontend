@@ -47,20 +47,23 @@ for (const definition of screenshots) {
 
       fs.mkdirSync(PNG_DIR, {recursive: true});
       const file = path.join(PNG_DIR, `${definition.id}.png`);
-      if (definition.locator) {
-        await definition.locator(page).screenshot({path: file, animations: 'disabled'});
-      } else if (crop === 'content') {
+      const target = definition.locator
+        ? definition.locator(page)
+        : crop === 'content' ? page.locator('main div.min-w-0').first() : undefined;
+
+      if (crop === 'content') {
         // The sticky header would overlap the element while it is scrolled into view
         await page.addStyleTag({content: 'header { display: none !important; }'});
-        const content = page.locator('main div.min-w-0').first();
-        const box = await content.boundingBox();
-        if (definition.clipHeight && box) {
-          await page.screenshot({path: file, animations: 'disabled', fullPage: true, clip: {...box, height: Math.min(box.height, definition.clipHeight)}});
-        } else {
-          await content.screenshot({path: file, animations: 'disabled'});
-        }
-      } else {
+      }
+
+      if (!target) {
         await page.screenshot({path: file, animations: 'disabled', fullPage: definition.fullPage ?? false});
+      } else if (definition.clipHeight) {
+        const box = await target.boundingBox();
+        if (!box) throw new Error(`Nothing to capture for ${definition.id}`);
+        await page.screenshot({path: file, animations: 'disabled', fullPage: true, clip: {...box, height: Math.min(box.height, definition.clipHeight)}});
+      } else {
+        await target.screenshot({path: file, animations: 'disabled'});
       }
     });
   });

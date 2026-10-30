@@ -18,7 +18,11 @@ for (const definition of screenshots) {
   if (!fs.existsSync(source)) continue; // Not captured (SCREENSHOT_ONLY or failure)
 
   for (const target of definition.targets) {
-    const destination = path.join(out, target.repo, `${target.path}.webp`);
+    // Generated images live in a `generated` subfolder, next to the manual ones
+    const generatedPath = target.repo === 'docs'
+      ? path.join(path.dirname(target.path), 'generated', path.basename(target.path))
+      : path.join('generated', target.path);
+    const destination = path.join(out, target.repo, `${generatedPath}.webp`);
     fs.mkdirSync(path.dirname(destination), {recursive: true});
     await sharp(source).webp({quality: WEBP_QUALITY, smartSubsample: true}).toFile(destination);
     count++;
