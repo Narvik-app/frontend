@@ -43,10 +43,16 @@ for (const definition of screenshots) {
         await waitForSettled(page);
       }
 
+      const crop = definition.crop ?? (definition.fullPage || definition.targets.some(t => t.repo === 'about') ? 'page' : 'content');
+
       fs.mkdirSync(PNG_DIR, {recursive: true});
       const file = path.join(PNG_DIR, `${definition.id}.png`);
       if (definition.locator) {
         await definition.locator(page).screenshot({path: file, animations: 'disabled'});
+      } else if (crop === 'content') {
+        // The sticky header would overlap the element while it is scrolled into view
+        await page.addStyleTag({content: 'header { display: none !important; }'});
+        await page.locator('main div.min-w-0').first().screenshot({path: file, animations: 'disabled'});
       } else {
         await page.screenshot({path: file, animations: 'disabled', fullPage: definition.fullPage ?? false});
       }

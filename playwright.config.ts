@@ -77,7 +77,7 @@ export default defineConfig({
       testMatch: /.*\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
-        viewport: { width: 1440, height: 900 },
+        viewport: { width: 1680, height: 1000 },
         deviceScaleFactor: 2,
         locale: 'fr-FR',
         timezoneId: 'Europe/Paris',

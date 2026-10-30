@@ -19,6 +19,11 @@ export type ScreenshotDefinition = {
   locator?: (page: Page) => Locator;
   /** Capture the whole scrollable page instead of the viewport */
   fullPage?: boolean;
+  /**
+   * 'content' only captures the main content (no header, menu nor footer), 'page' the whole viewport.
+   * Defaults to 'content' for images only used in the documentation, 'page' for the about website (and full page captures).
+   */
+  crop?: 'content' | 'page';
   targets: ScreenshotTarget[];
 };
 
