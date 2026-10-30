@@ -154,5 +154,4 @@ A tiny UI change (a label, an icon) stays under the threshold and is picked up t
 ## What can't be generated
 
 - Screenshots of external tools (iTAC, Cerbère, Eden, FFTir…) in `docs/frontend/docs/import/images/import-donnees/`
-- `membres/images/creation.png` (member creation form)
 - About images not in the manifest yet (the ones still directly in `public/pics/`, outside `generated/`)

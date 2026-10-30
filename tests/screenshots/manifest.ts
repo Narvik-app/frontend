@@ -338,6 +338,16 @@ export const screenshots: ScreenshotDefinition[] = [
     targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/list`}],
   },
   {
+    id: 'members-creation',
+    role: 'ADMIN',
+    url: '/admin/members',
+    prepare: async (page) => {
+      await openCustomItemModal(page);
+    },
+    locator: dialog,
+    targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/creation`}],
+  },
+  {
     id: 'members-details',
     role: 'ADMIN',
     url: '/admin/members',
