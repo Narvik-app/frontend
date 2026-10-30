@@ -1,21 +1,42 @@
-name: Prepare release
+name: Prepare & Release
 
-# Bumps the version on main, then creates a draft release targeting that commit.
-# Publish the draft from the GitHub UI: the tag is created at that moment, already
-# containing the bump, so the release can be immutable.
+# Bumps the version on main, then creates a release targeting that commit.
+# As a draft (default), publish it from the GitHub UI: the tag is created at that moment,
+# already containing the bump, so the release can be immutable.
+
+# The version is computed from the latest stable tag: the highest checked level wins
+# and the lower parts are reset (e.g. 1.4.2 + major + minor -> 2.0.0).
+
+run-name: "Prepare & Release (${{ inputs.major && 'major' || inputs.minor && 'minor' || 'bugfix' }}${{ inputs.suffix && format(' -{0}', inputs.suffix) || '' }})"
 
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to release (e.g. 1.2.3 or 1.2.3-rc.1, no "v" prefix)'
-        required: true
-        type: string
-      prerelease:
-        description: 'Mark as pre-release'
+      major:
+        description: 'Major release (X.0.0)'
         required: false
         type: boolean
         default: false
+      minor:
+        description: 'Minor release (x.Y.0)'
+        required: false
+        type: boolean
+        default: false
+      bugfix:
+        description: 'Bugfix release (x.y.Z)'
+        required: false
+        type: boolean
+        default: true
+      suffix:
+        description: 'Optional suffix, makes it a pre-release (e.g. rc.1 -> 1.2.0-rc.1)'
+        required: false
+        type: string
+        default: ''
+      draft:
+        description: 'Create the release as a draft'
+        required: false
+        type: boolean
+        default: true
 
 concurrency:
   group: prepare-release
@@ -26,8 +47,6 @@ permissions:
 jobs:
   prepare-release:
     runs-on: ubuntu-latest
-    env:
-      VERSION: ${{ inputs.version }}
     steps:
       - name: Generate GitHub App token
         id: app-token
@@ -37,12 +56,35 @@ jobs:
           private-key: ${{ secrets.FROOZEIFY_APP_PRIVATE_KEY }}
 
       # Uses the app token: drafts are only visible with write access
-      - name: Validate version
+      - name: Compute version
+        id: version
         run: |
-          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-            echo "::error::'$VERSION' is not a valid version (expected MAJOR.MINOR.PATCH[-prerelease])."
+          suffix="${VERSION_SUFFIX#-}"
+          if [[ -n "$suffix" && ! "$suffix" =~ ^[0-9A-Za-z.-]+$ ]]; then
+            echo "::error::Invalid suffix '$VERSION_SUFFIX' (allowed: letters, digits, '.' and '-')."
             exit 1
           fi
+
+          # Pre-release tags (with a suffix) are never used as the base
+          latest=$(gh api --paginate "repos/$GITHUB_REPOSITORY/git/matching-refs/tags" --jq '.[].ref | ltrimstr("refs/tags/")' \
+            | { grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' || true; } | sed 's/^v//' | sort -V | tail -n 1)
+          IFS=. read -r major minor patch <<< "${latest:-0.0.0}"
+
+          if [[ "$BUMP_MAJOR" == "true" ]]; then
+            VERSION="$((major + 1)).0.0"
+          elif [[ "$BUMP_MINOR" == "true" ]]; then
+            VERSION="$major.$((minor + 1)).0"
+          elif [[ "$BUMP_BUGFIX" == "true" ]]; then
+            VERSION="$major.$minor.$((patch + 1))"
+          else
+            echo "::error::Check at least one of major, minor or bugfix."
+            exit 1
+          fi
+          if [[ -n "$suffix" ]]; then
+            VERSION="$VERSION-$suffix"
+          fi
+          echo "Latest stable tag: ${latest:-none} -> $VERSION"
+
           existing=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases" \
             --jq '[.[] | select(.tag_name == env.VERSION) | if .draft then "draft" else "published" end] | join(", ")')
           if [[ -n "$existing" ]]; then
@@ -53,8 +95,15 @@ jobs:
             echo "::error::A tag '$VERSION' already exists."
             exit 1
           fi
+
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          BUMP_MAJOR: ${{ inputs.major }}
+          BUMP_MINOR: ${{ inputs.minor }}
+          BUMP_BUGFIX: ${{ inputs.bugfix }}
+          VERSION_SUFFIX: ${{ inputs.suffix }}
 
       - name: Checkout
         uses: actions/checkout@v7
@@ -66,7 +115,7 @@ jobs:
         id: bump
         uses: froozeify/gh-version-updater@v1.0.6
         with:
-          version: ${{ inputs.version }}
+          version: ${{ steps.version.outputs.version }}
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Resolve release commit
@@ -81,20 +130,35 @@ jobs:
           done
           echo "sha=$(git rev-parse origin/main)" >> "$GITHUB_OUTPUT"
 
-      - name: Create draft release
+      - name: Create release
         run: |
+          flags=()
+          if [[ "$DRAFT" == "true" ]]; then
+            flags+=(--draft)
+          fi
+          if [[ "$VERSION" == *-* ]]; then
+            flags+=(--prerelease)
+          fi
           url=$(gh release create "$VERSION" \
             --repo "$GITHUB_REPOSITORY" \
             --target "${{ steps.target.outputs.sha }}" \
-            --draft \
             --generate-notes \
-            ${{ inputs.prerelease && '--prerelease' || '' }})
+            "${flags[@]}")
           {
-            echo "## Draft release $VERSION"
+            if [[ "$DRAFT" == "true" ]]; then
+              echo "## Draft release $VERSION"
+            else
+              echo "## Release $VERSION published"
+            fi
             echo ""
             echo "Target commit: \`${{ steps.target.outputs.sha }}\`"
             echo ""
-            echo "Review and publish it: $url"
+            if [[ "$DRAFT" == "true" ]]; then
+              echo "Review and publish it: $url"
+            else
+              echo "$url"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          DRAFT: ${{ inputs.draft }}
