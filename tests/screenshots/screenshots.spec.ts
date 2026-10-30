@@ -24,6 +24,31 @@ async function waitForSettled(page: Page) {
   await page.evaluate(() => document.fonts.ready);
 }
 
+/**
+ * Chart.js animates the drawing on render and on every resize: wait until the canvases are drawn
+ * (not blank, the data can arrive after the first render) and stop changing for a while.
+ */
+async function waitForCharts(page: Page) {
+  const canvases = page.locator('canvas');
+  if (await canvases.count() === 0) return;
+
+  let previous = '';
+  let stableCount = 0;
+  await expect.poll(async () => {
+    const current = await canvases.evaluateAll(elements => elements.map((element) => {
+      const canvas = element as HTMLCanvasElement;
+      const blank = document.createElement('canvas');
+      blank.width = canvas.width;
+      blank.height = canvas.height;
+      return canvas.toDataURL() === blank.toDataURL() ? 'blank' : canvas.toDataURL();
+    }).join('|'));
+
+    stableCount = current === previous && !current.split('|').includes('blank') ? stableCount + 1 : 0;
+    previous = current;
+    return stableCount >= 3;
+  }, {intervals: [700], timeout: 30_000, message: 'Charts are still moving'}).toBe(true);
+}
+
 test.describe.configure({mode: 'parallel'});
 
 for (const definition of screenshots) {
@@ -43,6 +68,14 @@ for (const definition of screenshots) {
         await waitForSettled(page);
       }
 
+      if (definition.fullPage) {
+        // A full page capture resizes the viewport, which makes the charts redraw (and animate): do it first
+        const height = await page.evaluate(() => document.documentElement.scrollHeight);
+        await page.setViewportSize({width: page.viewportSize()?.width ?? 1680, height});
+        await waitForSettled(page);
+      }
+      await waitForCharts(page);
+
       const crop = definition.crop ?? (definition.fullPage || definition.targets.some(t => t.repo === 'about') ? 'page' : 'content');
 
       fs.mkdirSync(PNG_DIR, {recursive: true});
@@ -57,7 +90,9 @@ for (const definition of screenshots) {
       }
 
       if (!target) {
-        await page.screenshot({path: file, animations: 'disabled', fullPage: definition.fullPage ?? false});
+        // With a full page capture the viewport has already been resized to the page height above:
+        // letting Playwright resize it again would redraw (and animate) the charts during the capture
+        await page.screenshot({path: file, animations: 'disabled', fullPage: false});
       } else if (definition.clipHeight) {
         const box = await target.boundingBox();
         if (!box) throw new Error(`Nothing to capture for ${definition.id}`);

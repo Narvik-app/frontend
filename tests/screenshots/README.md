@@ -108,6 +108,8 @@ The logins and fixed UUIDs are also used by the e2e tests: don't change them.
 
 `screenshots.spec.ts` already waits for the network, fonts, skeletons and spinners (twice, as download links only start loading after the render),
 hides the Nuxt devtools badge and the sticky header (content crops), and disables animations.
+Charts (Chart.js) animate on render and on every resize: the test waits until all the canvases are drawn and unchanged for 2 seconds, and a `fullPage` capture resizes the
+viewport to the page height *before* waiting, then takes a plain viewport screenshot (letting Playwright resize it during the capture redraws the charts mid-animation).
 If an image is still captured half-loaded, wait for a specific element in `prepare`.
 Random data must stay out of the images: seed it in the fixtures instead.
 
