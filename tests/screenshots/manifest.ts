@@ -1,5 +1,5 @@
 import {expect, type Locator, type Page} from '@playwright/test';
-import {STORAGE_STATE} from '../e2e/utils/auth';
+import type {STORAGE_STATE} from '../e2e/utils/auth';
 
 export type ScreenshotTarget = {
   /** Repository receiving the image */

@@ -227,7 +227,7 @@ loadItem().then(async () => {
             Régénérer
           </UButton>
 
-          <div class="flex-1"></div>
+          <div class="flex-1"/>
 
           <UButton
             icon="i-heroicons-lock-closed"
@@ -250,7 +250,7 @@ loadItem().then(async () => {
         </template>
 
         <template  v-if="!isDraft && isAdmin">
-          <div class="flex-1"></div>
+          <div class="flex-1"/>
 
           <UButton icon="i-heroicons-lock-open" color="warning" :loading="isProcessing" @click="unlock">
             Déverrouiller
