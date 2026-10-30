@@ -24,8 +24,38 @@ export type ScreenshotDefinition = {
 
 const DOCS_TT = 'frontend/docs/temps-kilometres/images';
 const DOCS_LOAN = 'frontend/docs/pret/images';
+const DOCS_POS = 'frontend/docs/pos/images';
+const DOCS_MEMBERS = 'frontend/docs/membres/images';
+const DOCS_ACTIVITIES = 'frontend/docs/activites/images';
+const DOCS_START = 'frontend/premiers-pas/images';
 
 const dialog = (page: Page) => page.getByRole('dialog');
+
+/** The (last, so the innermost) card containing the given locator */
+const cardWith = (page: Page, inner: Locator) => page.locator('.rounded-lg', {has: inner}).last();
+
+const addToCart = async (page: Page, times = 1) => {
+  for (let i = 0; i < times; i++) {
+    await page.getByTestId('add-to-cart').first().click();
+  }
+};
+
+const selectSeller = async (page: Page) => {
+  const input = page.getByTestId('seller-input-wrapper').locator('input');
+  await input.click();
+  await input.fill('Adminclub1');
+  await page.getByRole('option').first().click();
+};
+
+const openCustomItemModal = async (page: Page) => {
+  await page.locator('button:has([class*="heroicons"][class*="plus"])').first().click();
+  await dialog(page).waitFor();
+};
+
+const fillCustomItem = async (page: Page) => {
+  await dialog(page).getByLabel('Nom').fill('Test');
+  await dialog(page).getByLabel('Prix de vente').fill('12');
+};
 
 /** The export list is sorted by period, newest first: the first one is the draft */
 async function openFirstExport(page: Page) {
@@ -141,6 +171,182 @@ export const screenshots: ScreenshotDefinition[] = [
     targets: [{repo: 'docs', path: `${DOCS_TT}/verrouillage-export`}],
   },
 
+
+  // Point de vente
+  {
+    id: 'pos-categories',
+    role: 'ADMIN',
+    url: '/admin/inventories/categories',
+    targets: [{repo: 'docs', path: `${DOCS_POS}/categories`}],
+  },
+  {
+    id: 'pos-inventaire',
+    role: 'ADMIN',
+    url: '/admin/inventories',
+    targets: [{repo: 'docs', path: `${DOCS_POS}/inventaire`}, {repo: 'about', path: 'inventory'}],
+  },
+  {
+    id: 'pos-detail-article',
+    role: 'ADMIN',
+    url: '/admin/inventories',
+    prepare: async (page) => {
+      // Categories can be collapsed by default
+      const row = page.locator('div.cursor-pointer').first();
+      if (!await row.isVisible()) {
+        await page.getByTestId('inventory-category-header').first().click();
+      }
+      await row.click();
+      await page.getByRole('link', {name: 'Voir en détail'}).click();
+      await page.waitForURL(/\/inventories\/items\/.+/);
+    },
+    targets: [{repo: 'docs', path: `${DOCS_POS}/detail-article`}],
+  },
+  {
+    id: 'pos-vente-liste-1',
+    role: 'ADMIN',
+    url: '/admin/sales/new',
+    targets: [{repo: 'docs', path: `${DOCS_POS}/vente-liste-1`}, {repo: 'about', path: 'sale-list'}],
+  },
+  {
+    id: 'pos-vente-liste-2',
+    role: 'ADMIN',
+    url: '/admin/sales/new',
+    prepare: async (page) => {
+      await addToCart(page, 2);
+      await selectSeller(page);
+    },
+    targets: [{repo: 'docs', path: `${DOCS_POS}/vente-liste-2`}],
+  },
+  {
+    id: 'pos-vente-liste-5',
+    role: 'ADMIN',
+    url: '/admin/sales/new',
+    prepare: async (page) => {
+      await openCustomItemModal(page);
+      await fillCustomItem(page);
+    },
+    locator: dialog,
+    targets: [{repo: 'docs', path: `${DOCS_POS}/vente-liste-5`}],
+  },
+  {
+    id: 'pos-vente-liste-6',
+    role: 'ADMIN',
+    url: '/admin/sales/new',
+    prepare: async (page) => {
+      await addToCart(page, 2);
+      await openCustomItemModal(page);
+      await fillCustomItem(page);
+      await dialog(page).getByRole('button', {name: 'Ajouter au panier'}).click();
+      await dialog(page).waitFor({state: 'hidden'});
+    },
+    locator: page => cardWith(page, page.getByTestId('cart-total-price')),
+    targets: [{repo: 'docs', path: `${DOCS_POS}/vente-liste-6`}],
+  },
+  {
+    id: 'pos-vente-liste-7',
+    role: 'ADMIN',
+    url: '/admin/sales/new',
+    prepare: async (page) => {
+      await addToCart(page, 2);
+      await selectSeller(page);
+      await page.locator('[data-testid^="payment-mode-"]').nth(2).click();
+    },
+    locator: page => page.locator('div', {has: page.getByTestId('cart-total-price')}).filter({has: page.getByTestId('finalize-sale')}).last(),
+    targets: [{repo: 'docs', path: `${DOCS_POS}/vente-liste-7`}],
+  },
+  {
+    id: 'pos-vente-impression',
+    role: 'ADMIN',
+    url: '/admin/sales/new',
+    prepare: page => page.emulateMedia({media: 'print'}),
+    fullPage: true,
+    targets: [{repo: 'docs', path: `${DOCS_POS}/vente-impression`}, {repo: 'about', path: 'sale-print'}],
+  },
+  {
+    id: 'pos-historique',
+    role: 'ADMIN',
+    url: '/admin/sales/history',
+    targets: [{repo: 'about', path: 'sale-history'}],
+  },
+  {
+    id: 'pos-vente-detail-1',
+    role: 'ADMIN',
+    url: '/admin/sales/history',
+    prepare: async (page) => {
+      await page.locator('tbody a[href*="/admin/sales/"]').first().click();
+      await page.waitForURL(/\/admin\/sales\/[^/]+$/);
+    },
+    targets: [{repo: 'docs', path: `${DOCS_POS}/vente-detail-1`}],
+  },
+  {
+    id: 'pos-vente-detail-2',
+    role: 'ADMIN',
+    url: '/admin/sales/history',
+    prepare: async (page) => {
+      await page.locator('tbody a[href*="/admin/sales/"]').first().click();
+      await page.waitForURL(/\/admin\/sales\/[^/]+$/);
+      await page.getByRole('button', {name: 'Modifier'}).click();
+      await dialog(page).waitFor();
+    },
+    targets: [{repo: 'docs', path: `${DOCS_POS}/vente-detail-2`}],
+  },
+
+  // Membres, présences, configuration
+  {
+    id: 'members-liste',
+    role: 'ADMIN',
+    url: '/admin/members',
+    targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/liste`}],
+  },
+  {
+    id: 'members-details',
+    role: 'ADMIN',
+    url: '/admin/members',
+    prepare: async (page) => {
+      await page.getByRole('link', {name: 'Détail'}).first().click();
+      await page.waitForURL(/\/admin\/members\/.+/);
+    },
+    fullPage: true,
+    targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/details`}, {repo: 'about', path: 'member-profile'}],
+  },
+  {
+    id: 'presences-liste',
+    role: 'ADMIN',
+    url: '/admin/presences',
+    targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/presences`}, {repo: 'about', path: 'presences'}],
+  },
+  {
+    id: 'config-badgeuse',
+    role: 'ADMIN',
+    url: '/admin/config/presences',
+    targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/badgeuse`}],
+  },
+  {
+    id: 'config-activites',
+    role: 'ADMIN',
+    url: '/admin/config/activities',
+    targets: [{repo: 'docs', path: `${DOCS_ACTIVITIES}/liste`}],
+  },
+  {
+    id: 'config-globale',
+    role: 'ADMIN',
+    url: '/admin/config',
+    targets: [{repo: 'docs', path: `${DOCS_START}/config-globale`}],
+  },
+  {
+    id: 'config-permissions',
+    role: 'ADMIN',
+    url: '/admin/config/permissions',
+    targets: [{repo: 'about', path: 'permissions-management'}],
+  },
+  {
+    id: 'stats-club',
+    role: 'ADMIN',
+    url: '/admin/statistics',
+    fullPage: true,
+    targets: [{repo: 'about', path: 'club-stats'}],
+  },
+
   // Prêts
   {
     id: 'loan-liste-prets',
@@ -163,5 +369,34 @@ export const screenshots: ScreenshotDefinition[] = [
     url: '/admin/statistics/loans',
     fullPage: true,
     targets: [{repo: 'docs', path: `${DOCS_LOAN}/statistiques`}],
+  },
+  {
+    id: 'loan-detail-article',
+    role: 'ADMIN',
+    url: '/admin/loans',
+    prepare: async (page) => {
+      await page.getByText('Barbecue', {exact: true}).click();
+      await page.waitForURL(/\/loans\/items\/.+/);
+    },
+    fullPage: true,
+    targets: [{repo: 'docs', path: `${DOCS_LOAN}/detail-article`}],
+  },
+  {
+    id: 'loan-formulaire-pret',
+    role: 'ADMIN',
+    url: '/admin/loans',
+    prepare: async (page) => {
+      await page.getByRole('button', {name: 'Prêter'}).first().click();
+      await dialog(page).waitFor();
+    },
+    locator: dialog,
+    targets: [{repo: 'docs', path: `${DOCS_LOAN}/formulaire-pret`}],
+  },
+  {
+    id: 'loan-pret-point-de-vente',
+    role: 'ADMIN',
+    url: '/admin/sales/new',
+    locator: page => cardWith(page, page.getByText('Matériel en prêt')),
+    targets: [{repo: 'docs', path: `${DOCS_LOAN}/pret-point-de-vente`}],
   },
 ];
