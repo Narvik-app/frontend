@@ -313,7 +313,9 @@ export const screenshots: ScreenshotDefinition[] = [
       await page.locator('tbody a[href*="/admin/sales/"]').first().click();
       await page.waitForURL(/\/admin\/sales\/[^/]+$/);
     },
-    targets: [{repo: 'docs', path: `${DOCS_POS}/sale-detail-1`}],
+    // Same crop for both targets (about images keep the whole layout by default)
+    crop: 'content',
+    targets: [{repo: 'docs', path: `${DOCS_POS}/sale-detail-1`}, {repo: 'about', path: 'sale-history'}],
   },
   {
     id: 'pos-vente-detail-2',
