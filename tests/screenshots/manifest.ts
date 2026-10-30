@@ -266,7 +266,13 @@ export const screenshots: ScreenshotDefinition[] = [
     id: 'pos-historique',
     role: 'ADMIN',
     url: '/admin/sales/history',
-    targets: [{repo: 'about', path: 'sale-history'}],
+    targets: [{repo: 'about', path: 'sale-history-sales'}],
+  },
+  {
+    id: 'pos-par-articles',
+    role: 'ADMIN',
+    url: '/admin/sales',
+    targets: [{repo: 'about', path: 'sale-history-articles'}],
   },
   {
     id: 'pos-vente-detail-1',
@@ -314,6 +320,23 @@ export const screenshots: ScreenshotDefinition[] = [
     role: 'ADMIN',
     url: '/admin/presences',
     targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/presences`}, {repo: 'about', path: 'presences'}],
+  },
+  {
+    id: 'config-controles',
+    role: 'ADMIN',
+    url: '/admin/config/member-controls',
+    targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/liste-controles`}, {repo: 'about', path: 'member-controls-list'}],
+  },
+  {
+    id: 'members-controles',
+    role: 'ADMIN',
+    url: '/admin/members',
+    prepare: async (page) => {
+      await page.getByRole('link', {name: 'Détail'}).first().click();
+      await page.waitForURL(/\/admin\/members\/.+/);
+      await page.getByText('Contrôle annuel').first().waitFor();
+    },
+    targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/fiche-membre-controles`}, {repo: 'about', path: 'member-controls'}],
   },
   {
     id: 'config-badgeuse',
