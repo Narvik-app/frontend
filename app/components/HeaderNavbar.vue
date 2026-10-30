@@ -59,6 +59,16 @@ const overlay = useOverlay()
     return null
   })
 
+  // Time and travel button: available to every member (not just supervisors), always
+  // pointing to their own personal declarations - the admin board/vehicles/exports
+  // stay reachable from the Administration menu for those with the permission.
+  const timeAndTravelButtonUrl = computed<string | null>(() => {
+    if (!selfStore.selectedProfile?.club.timeAndTravelEnabled) return null
+    if (!selfStore.member) return null
+
+    return '/time-and-travel'
+  })
+
   const isDesktopDisplay = isDesktop()
   const isTabletDisplay = isTablet()
   const isMobileDisplay = isMobile()
@@ -141,6 +151,13 @@ const overlay = useOverlay()
             <UButton :to="loansButtonUrl" icon="i-heroicons-archive-box" variant="ghost" color="neutral">
               <template v-if="isDesktopDisplay || isTabletDisplay">
                 Prêt
+              </template>
+            </UButton>
+          </div>
+		  <div v-if="timeAndTravelButtonUrl">
+            <UButton :to="timeAndTravelButtonUrl" icon="i-heroicons-clock" variant="ghost" color="neutral">
+              <template v-if="isDesktopDisplay || isTabletDisplay">
+                Temps & kilomètres
               </template>
             </UButton>
           </div>

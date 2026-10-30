@@ -13,6 +13,7 @@
     "lint:fix": "eslint --fix .",
     "test:e2e": "playwright test --project=chromium",
     "test:e2e:ui": "playwright test --ui --project=chromium",
+    "screenshots": "rm -rf tests/screenshots/out && playwright test --project=screenshots && tsx tests/screenshots/convert.ts",
     "test:e2e:ci": "playwright test --reporter=github,html"
   },
   "dependencies": {
@@ -50,6 +51,8 @@
     "@nuxt/eslint": "^1.17.0",
     "@playwright/test": "^1.64.1",
     "eslint": "^10.13.0",
+    "sharp": "^0.35.5",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3"
   },
   "packageManager": "pnpm@12.16.1"

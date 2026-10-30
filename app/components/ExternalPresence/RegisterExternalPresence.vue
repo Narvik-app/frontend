@@ -41,6 +41,11 @@ const isSubmitting: Ref<boolean> = ref(false)
 const activities: Ref<Activity[]> = ref([])
 
 const registerMemberPresenceModal = ref(false)
+/** Blocks ESC/backdrop dismissal of registerMemberPresenceModal while the post-registration declare step is shown. */
+const registeringDeclaration = ref(false)
+watch(registerMemberPresenceModal, (open) => {
+  if (!open) registeringDeclaration.value = false
+})
 const matchedMember: Ref<Member|null> = ref(null)
 
 const state = reactive({
@@ -230,10 +235,16 @@ v-if="activity['@id']"
   </UCard>
 
   <UModal
-      v-model:open="registerMemberPresenceModal">
+      v-model:open="registerMemberPresenceModal"
+      :dismissible="!registeringDeclaration">
     <template #content>
       <div>
-        <RegisterMemberPresence :member="matchedMember" @registered="presenceRegistered" @canceled="presenceCanceled" />
+        <RegisterMemberPresence
+          :member="matchedMember"
+          @registered="presenceRegistered"
+          @canceled="presenceCanceled"
+          @stage-change="registeringDeclaration = $event === 'declaration'"
+        />
       </div>
     </template>
   </UModal>

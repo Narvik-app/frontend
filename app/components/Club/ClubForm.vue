@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type {PropType, Ref} from "vue";
-import type {FormError, FormErrorEvent} from "#ui/types";
+import type {FormError} from "#ui/types";
 import ClubQuery from "~/composables/api/query/ClubQuery";
 import type {SelfWriteClub, WriteClub} from "~/types/api/item/club";
 import {clubPlugins} from "~/types/api/item/club";
@@ -47,6 +47,7 @@ function getDefaultItem() {
     presencesEnabled: false,
     salesEnabled: false,
     loansEnabled: false,
+    timeAndTravelEnabled: false,
   }
   return item
 }
@@ -57,11 +58,7 @@ const validate = (state: WriteClub): FormError[] => {
   if (!state.name) errors.push({ name: 'name', message: 'Champ requis' })
   return errors
 }
-async function onError(event: FormErrorEvent) {
-  const element = document.getElementById(event.errors[0].id)
-  element?.focus()
-  element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-}
+const onError = useFormScrollToFirstError()
 
 // Api Query
 
@@ -76,6 +73,7 @@ async function submitItem() {
     presencesEnabled: item.value.presencesEnabled,
     salesEnabled: item.value.salesEnabled,
     loansEnabled: item.value.loansEnabled,
+    timeAndTravelEnabled: item.value.timeAndTravelEnabled,
     isActivated: item.value.isActivated,
     address: item.value.address,
     zipCode: Number(item.value.zipCode) || null,

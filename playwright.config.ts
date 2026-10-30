@@ -71,6 +71,25 @@ export default defineConfig({
     },
 
     {
+      // Generates the documentation / about website images, see tests/screenshots/README.md
+      name: 'screenshots',
+      testDir: './tests/screenshots',
+      testMatch: /.*\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1680, height: 1000 },
+        deviceScaleFactor: 2,
+        locale: 'fr-FR',
+        timezoneId: 'Europe/Paris',
+        reducedMotion: 'reduce',
+        video: 'off',
+        trace: 'off',
+        screenshot: 'off',
+      },
+      dependencies: ['setup'],
+    },
+
+    {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
       dependencies: ['setup'],

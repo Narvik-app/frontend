@@ -42,9 +42,13 @@ export function createBrowserCsvDownload(filename: string, data: BlobPart) {
   createBrowserDownload(filename, blob)
 }
 
-export function createBrowserPdfDownload(filename: string, base64: string) {
-  const blob = base64ToBlob(base64, 'application/pdf')
+export function createBrowserFileDownload(filename: string, base64: string, mimeType: string) {
+  const blob = base64ToBlob(base64, mimeType)
   createBrowserDownload(filename, blob)
+}
+
+export function createBrowserPdfDownload(filename: string, base64: string) {
+  createBrowserFileDownload(filename, base64, 'application/pdf')
 }
 
 /**
