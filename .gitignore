@@ -33,3 +33,4 @@ localhost.pem
 /blob-report/
 /playwright/.cache/
 tests/e2e/.auth/
+tests/screenshots/out
