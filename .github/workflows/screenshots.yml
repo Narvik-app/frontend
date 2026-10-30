@@ -1,0 +1,264 @@
+name: Generate screenshots
+
+# Regenerates the images of the documentation and of the about website from the dev fixtures
+# (see tests/screenshots/README.md) and opens a PR in each repository when something changed.
+on:
+  workflow_dispatch:
+    inputs:
+      backend_ref:
+        description: Backend branch or tag to run the screenshots against
+        default: main
+        required: true
+      docs_base:
+        description: Base branch of the PR on the documentation repository
+        default: main
+        required: true
+      about_base:
+        description: Base branch of the PR on the about website repository
+        default: main
+        required: true
+      threshold:
+        description: Images with less than this percentage of different pixels are considered unchanged (dates, clocks...) and are not updated
+        default: '2'
+        required: true
+      force:
+        description: Update every image, even the unchanged ones
+        type: boolean
+        default: false
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+env:
+  BACKEND_REPOSITORY: ${{ vars.BACKEND_REPOSITORY || 'Narvik-app/backend' }}
+  BACKEND_REF: ${{ inputs.backend_ref || github.event.release.target_commitish || 'main' }}
+
+jobs:
+  generate:
+    name: Generate images
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      changed: ${{ steps.changes.outputs.changed }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Checkout Backend
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ env.BACKEND_REPOSITORY }}
+          ref: ${{ env.BACKEND_REF }}
+          path: backend
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build Backend (Cached)
+        working-directory: backend
+        run: |
+          docker buildx build \
+            --target frankenphp_dev \
+            --cache-from type=gha,scope=refs/heads/main \
+            --tag narvik-php:latest \
+            --load \
+            .
+
+      - name: Generate JWT Keys
+        working-directory: backend
+        run: |
+          mkdir -p config/jwt
+          openssl genrsa -passout pass:changeme -out config/jwt/private.pem -aes256 4096
+          openssl rsa -in config/jwt/private.pem -passin pass:changeme -pubout -out config/jwt/public.pem
+
+      - name: Start Backend (Dev Mode)
+        working-directory: backend
+        run: |
+          cat > compose.e2e.override.yaml << 'EOF'
+          services:
+            php:
+              ports:
+                - "80:80"
+              environment:
+                APP_SECRET: ChangeMeTheSecretForE2E
+                APP_ENV: dev
+                SERVER_NAME: :80
+                CORS_ALLOW_ORIGIN: "^https?://localhost(:[0-9]+)?$"
+                TRUSTED_HOSTS: ^localhost|php$$
+                OAUTH_PASSPHRASE: changeme
+                ENCRYPTION_KEY: Cf6W9EQOk9ft8VQ04By2VCW55dQVJ4VWEfwTPqHIcL8=
+                MERCURE_JWT_SECRET: '!ChangeThisMercureHubJWTSecretKey!'
+                MERCURE_PUBLISHER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
+                MERCURE_SUBSCRIBER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
+          EOF
+          docker compose -f compose.yaml -f .github/compose.ci.yaml -f compose.e2e.override.yaml up -d --wait --no-build
+
+      # Loaded right before the capture: the fixtures dates are relative to the load time
+      - name: Setup database and fixtures
+        working-directory: backend
+        run: docker compose exec -T php composer reload-fixture
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '26'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Generate SSL Certificates
+        run: openssl req -x509 -newkey rsa:4096 -keyout localhost-key.pem -out localhost.pem -days 365 -nodes -subj '/CN=localhost'
+
+      - name: Setup Environment
+        run: cp .env.ci .env
+
+      - name: Verify Backend Accessibility
+        run: timeout 30s bash -c "until curl -s http://127.0.0.1:80 > /dev/null; do sleep 1; done"
+
+      - name: Generate screenshots
+        run: pnpm screenshots
+
+      # Dates, clocks and other small data changes alter most images at every run: only keep the ones that really changed
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.FROOZEIFY_APP_CLIENT_ID }}
+          private-key: ${{ secrets.FROOZEIFY_APP_PRIVATE_KEY }}
+          owner: Narvik-app
+          repositories: |
+            documentation
+            about
+
+      - name: Checkout current documentation images
+        uses: actions/checkout@v7
+        with:
+          repository: Narvik-app/documentation
+          ref: ${{ inputs.docs_base || 'main' }}
+          path: target/documentation
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Checkout current about website images
+        uses: actions/checkout@v7
+        with:
+          repository: Narvik-app/about
+          ref: ${{ inputs.about_base || 'main' }}
+          path: target/about
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Keep only the changed images
+        if: ${{ !inputs.force }}
+        run: |
+          echo '### Screenshots' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          pnpm exec tsx tests/screenshots/filter-unchanged.ts --docs target/documentation --about target/about --threshold "${{ inputs.threshold || '2' }}" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Count images to publish
+        id: changes
+        run: |
+          count=$(find tests/screenshots/out -name '*.webp' | wc -l)
+          echo "$count image(s) to publish"
+          echo "changed=$([ "$count" -gt 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload images
+        if: steps.changes.outputs.changed == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: screenshots
+          path: tests/screenshots/out/
+          retention-days: 14
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Stop services
+        if: always()
+        working-directory: backend
+        run: docker compose -f compose.yaml -f .github/compose.ci.yaml -f compose.e2e.override.yaml down -v
+
+  publish:
+    name: Open PR (${{ matrix.target.name }})
+    needs: generate
+    if: needs.generate.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          # `out` is the folder of tests/screenshots/out to copy at the root of `dest`
+          - name: documentation
+            repository: documentation
+            out: docs
+            dest: docs
+            base: ${{ inputs.docs_base || 'main' }}
+          - name: about
+            repository: about
+            out: about
+            dest: public/pics
+            base: ${{ inputs.about_base || 'main' }}
+
+    steps:
+      # The default token can't open PRs on other repositories
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.FROOZEIFY_APP_CLIENT_ID }}
+          private-key: ${{ secrets.FROOZEIFY_APP_PRIVATE_KEY }}
+          owner: Narvik-app
+          repositories: ${{ matrix.target.repository }}
+
+      - name: Checkout ${{ matrix.target.name }}
+        uses: actions/checkout@v7
+        with:
+          repository: Narvik-app/${{ matrix.target.repository }}
+          ref: ${{ matrix.target.base }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Download images
+        uses: actions/download-artifact@v8
+        with:
+          name: screenshots
+          path: screenshots
+
+      - name: Copy images
+        run: |
+          # Nothing to copy when none of the images of this repository changed
+          if [ -d "screenshots/${{ matrix.target.out }}" ]; then
+            mkdir -p "${{ matrix.target.dest }}"
+            cp -r "screenshots/${{ matrix.target.out }}/." "${{ matrix.target.dest }}/"
+          fi
+
+      - name: Open pull request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          base: ${{ matrix.target.base }}
+          branch: ci/screenshots
+          add-paths: ${{ matrix.target.dest }}
+          commit-message: 'chore: Update screenshots'
+          title: 'chore: Update screenshots'
+          body: |
+            Images regenerated from the dev fixtures by the `Generate screenshots` workflow of the frontend repository.
+
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          delete-branch: true
