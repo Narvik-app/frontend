@@ -52,7 +52,13 @@ for (const definition of screenshots) {
       } else if (crop === 'content') {
         // The sticky header would overlap the element while it is scrolled into view
         await page.addStyleTag({content: 'header { display: none !important; }'});
-        await page.locator('main div.min-w-0').first().screenshot({path: file, animations: 'disabled'});
+        const content = page.locator('main div.min-w-0').first();
+        const box = await content.boundingBox();
+        if (definition.clipHeight && box) {
+          await page.screenshot({path: file, animations: 'disabled', fullPage: true, clip: {...box, height: Math.min(box.height, definition.clipHeight)}});
+        } else {
+          await content.screenshot({path: file, animations: 'disabled'});
+        }
       } else {
         await page.screenshot({path: file, animations: 'disabled', fullPage: definition.fullPage ?? false});
       }

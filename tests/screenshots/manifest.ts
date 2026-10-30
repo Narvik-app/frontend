@@ -24,6 +24,8 @@ export type ScreenshotDefinition = {
    * Defaults to 'content' for images only used in the documentation, 'page' for the about website (and full page captures).
    */
   crop?: 'content' | 'page';
+  /** Keep only the top N css pixels of the captured element (long pages) */
+  clipHeight?: number;
   targets: ScreenshotTarget[];
 };
 
@@ -35,6 +37,12 @@ const DOCS_ACTIVITIES = 'frontend/docs/activites/images';
 const DOCS_START = 'frontend/premiers-pas/images';
 
 const dialog = (page: Page) => page.getByRole('dialog');
+
+/** Click the presence of the demo admin in the "today" list of the presence page */
+async function openAdminPresence(page: Page) {
+  await page.getByRole('cell', {name: /ADMINCLUB1/}).first().click();
+  await dialog(page).waitFor();
+}
 
 /** The (last, so the innermost) card containing the given locator */
 const cardWith = (page: Page, inner: Locator) => page.locator('.rounded-lg', {has: inner}).last();
@@ -323,8 +331,72 @@ export const screenshots: ScreenshotDefinition[] = [
   {
     id: 'presences-liste',
     role: 'ADMIN',
-    url: '/admin/presences',
+    url: '/',
     targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/presences`}, {repo: 'about', path: 'presences'}],
+  },
+  {
+    id: 'presences-history',
+    role: 'ADMIN',
+    url: '/admin/presences',
+    targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/presences-history`}],
+  },
+  {
+    id: 'presences-controles',
+    role: 'ADMIN',
+    url: '/',
+    locator: page => cardWith(page, page.getByText('Membres enregistrés aujourd\'hui')),
+    targets: [{repo: 'about', path: 'member-controls-presence'}],
+  },
+  {
+    id: 'presences-details',
+    role: 'ADMIN',
+    url: '/',
+    prepare: openAdminPresence,
+    targets: [{repo: 'about', path: 'presences-details'}],
+  },
+  {
+    id: 'presences-details-card',
+    role: 'ADMIN',
+    url: '/',
+    prepare: openAdminPresence,
+    locator: dialog,
+    targets: [{repo: 'about', path: 'member-controls-presence-detail'}],
+  },
+  {
+    id: 'members-edit',
+    role: 'ADMIN',
+    url: '/admin/members',
+    prepare: async (page) => {
+      await page.getByRole('link', {name: 'Détail'}).first().click();
+      await page.waitForURL(/\/admin\/members\/.+/);
+      await page.getByRole('button', {name: 'Modifier', exact: true}).click();
+      await dialog(page).waitFor();
+    },
+    locator: dialog,
+    targets: [{repo: 'about', path: 'member-edit'}],
+  },
+  {
+    id: 'members-profile',
+    role: 'ADMIN',
+    url: '/admin/members',
+    prepare: async (page) => {
+      await page.getByRole('link', {name: 'Détail'}).first().click();
+      await page.waitForURL(/\/admin\/members\/.+/);
+    },
+    crop: 'content',
+    clipHeight: 880,
+    targets: [{repo: 'about', path: 'user-profile'}],
+  },
+  {
+    id: 'members-profile-presences',
+    role: 'ADMIN',
+    url: '/admin/members',
+    prepare: async (page) => {
+      await page.getByRole('link', {name: 'Détail'}).first().click();
+      await page.waitForURL(/\/admin\/members\/.+/);
+    },
+    locator: page => page.getByRole('tabpanel').first(),
+    targets: [{repo: 'about', path: 'user-profile-2'}],
   },
   {
     id: 'config-controles',
