@@ -495,6 +495,72 @@ export const screenshots: ScreenshotDefinition[] = [
     targets: [{repo: 'about', path: 'club-stats'}],
   },
 
+  // About website only: whole layout (menu included) of the pages shown on the homepage
+  {
+    id: 'about-tt-declarations',
+    role: 'ADMIN',
+    url: '/admin/time-and-travel',
+    targets: [{repo: 'about', path: 'time-travel-declarations'}],
+  },
+  {
+    id: 'about-tt-declaration-form',
+    role: 'ADMIN',
+    url: '/time-and-travel',
+    prepare: async (page) => {
+      await page.getByTestId('declaration-create').click();
+      await dialog(page).waitFor();
+      await page.getByTestId('declaration-description').fill('Installation du matériel');
+      await page.getByTestId('declaration-hours').fill('3');
+    },
+    locator: dialog,
+    targets: [{repo: 'about', path: 'time-travel-declaration-form'}],
+  },
+  {
+    id: 'about-tt-exports',
+    role: 'ADMIN',
+    url: '/admin/time-and-travel/exports',
+    targets: [{repo: 'about', path: 'time-travel-exports'}],
+  },
+  {
+    id: 'about-tt-export-detail',
+    role: 'ADMIN',
+    url: '/admin/time-and-travel/exports',
+    prepare: openFirstExport,
+    targets: [{repo: 'about', path: 'time-travel-export-detail'}],
+  },
+  {
+    id: 'about-permission-template',
+    role: 'ADMIN',
+    url: '/admin/config/permissions',
+    prepare: async (page) => {
+      await page.locator('tbody tr').first().click();
+      await dialog(page).waitFor();
+    },
+    locator: dialog,
+    targets: [{repo: 'about', path: 'permission-template'}],
+  },
+  {
+    id: 'about-member-permissions',
+    role: 'ADMIN',
+    url: '/admin/members',
+    prepare: async (page) => {
+      await page.getByPlaceholder(/Rechercher/).first().fill('Duval');
+      await expect(page.getByRole('link', {name: 'Détail'})).toHaveCount(1);
+      await page.getByRole('link', {name: 'Détail'}).click();
+      await page.waitForURL(/\/admin\/members\/.+/);
+      await page.getByRole('tab', {name: 'Permissions'}).click();
+    },
+    locator: page => page.getByRole('tabpanel').first(),
+    targets: [{repo: 'about', path: 'member-permissions'}],
+  },
+  {
+    id: 'about-home',
+    role: 'ADMIN',
+    url: '/admin',
+    fullPage: true,
+    targets: [{repo: 'about', path: 'club-stats-home'}],
+  },
+
   // Prêts
   {
     id: 'loan-liste-prets',
