@@ -80,7 +80,7 @@ export const screenshots: ScreenshotDefinition[] = [
     id: 'tt-mes-declarations',
     role: 'SUPERVISOR',
     url: '/time-and-travel',
-    targets: [{repo: 'docs', path: `${DOCS_TT}/mes-declarations`}],
+    targets: [{repo: 'docs', path: `${DOCS_TT}/my-declarations`}],
   },
   {
     id: 'tt-formulaire-declaration',
@@ -93,13 +93,13 @@ export const screenshots: ScreenshotDefinition[] = [
       await page.getByTestId('declaration-hours').fill('2');
     },
     locator: dialog,
-    targets: [{repo: 'docs', path: `${DOCS_TT}/formulaire-declaration`}],
+    targets: [{repo: 'docs', path: `${DOCS_TT}/declaration-form`}],
   },
   {
     id: 'tt-mes-vehicules',
     role: 'SUPERVISOR',
     url: '/time-and-travel/vehicles',
-    targets: [{repo: 'docs', path: `${DOCS_TT}/mes-vehicules`}],
+    targets: [{repo: 'docs', path: `${DOCS_TT}/my-vehicles`}],
   },
   {
     id: 'tt-formulaire-vehicule',
@@ -110,7 +110,7 @@ export const screenshots: ScreenshotDefinition[] = [
       await dialog(page).waitFor();
     },
     locator: dialog,
-    targets: [{repo: 'docs', path: `${DOCS_TT}/formulaire-vehicule`}],
+    targets: [{repo: 'docs', path: `${DOCS_TT}/vehicle-form`}],
   },
   {
     id: 'tt-admin-declarations',
@@ -128,14 +128,14 @@ export const screenshots: ScreenshotDefinition[] = [
     id: 'tt-liste-exports',
     role: 'ADMIN',
     url: '/admin/time-and-travel/exports',
-    targets: [{repo: 'docs', path: `${DOCS_TT}/liste-exports`}],
+    targets: [{repo: 'docs', path: `${DOCS_TT}/exports-list`}],
   },
   {
     id: 'tt-taux-horaire-smic',
     role: 'ADMIN',
     url: '/admin/time-and-travel/exports',
     locator: page => page.locator('form', {hasText: 'Taux horaire SMIC'}),
-    targets: [{repo: 'docs', path: `${DOCS_TT}/taux-horaire-smic`}],
+    targets: [{repo: 'docs', path: `${DOCS_TT}/smic-hourly-rate`}],
   },
   {
     id: 'tt-nouvel-export',
@@ -146,7 +146,7 @@ export const screenshots: ScreenshotDefinition[] = [
       await dialog(page).waitFor();
     },
     locator: dialog,
-    targets: [{repo: 'docs', path: `${DOCS_TT}/nouvel-export`}],
+    targets: [{repo: 'docs', path: `${DOCS_TT}/new-export`}],
   },
 
   {
@@ -161,7 +161,7 @@ export const screenshots: ScreenshotDefinition[] = [
     role: 'ADMIN',
     url: '/admin/time-and-travel/exports',
     prepare: openFirstExport,
-    targets: [{repo: 'docs', path: `${DOCS_TT}/detail-export`}],
+    targets: [{repo: 'docs', path: `${DOCS_TT}/export-detail`}],
   },
   {
     id: 'tt-verrouillage-export',
@@ -173,7 +173,7 @@ export const screenshots: ScreenshotDefinition[] = [
       await dialog(page).waitFor();
     },
     locator: dialog,
-    targets: [{repo: 'docs', path: `${DOCS_TT}/verrouillage-export`}],
+    targets: [{repo: 'docs', path: `${DOCS_TT}/export-lock`}],
   },
 
 
@@ -188,7 +188,7 @@ export const screenshots: ScreenshotDefinition[] = [
     id: 'pos-inventaire',
     role: 'ADMIN',
     url: '/admin/inventories',
-    targets: [{repo: 'docs', path: `${DOCS_POS}/inventaire`}, {repo: 'about', path: 'inventory'}],
+    targets: [{repo: 'docs', path: `${DOCS_POS}/inventory`}, {repo: 'about', path: 'inventory'}],
   },
   {
     id: 'pos-detail-article',
@@ -204,13 +204,13 @@ export const screenshots: ScreenshotDefinition[] = [
       await page.getByRole('link', {name: 'Voir en détail'}).click();
       await page.waitForURL(/\/inventories\/items\/.+/);
     },
-    targets: [{repo: 'docs', path: `${DOCS_POS}/detail-article`}],
+    targets: [{repo: 'docs', path: `${DOCS_POS}/item-detail`}],
   },
   {
     id: 'pos-vente-liste-1',
     role: 'ADMIN',
     url: '/admin/sales/new',
-    targets: [{repo: 'docs', path: `${DOCS_POS}/vente-liste-1`}, {repo: 'about', path: 'sale-list'}],
+    targets: [{repo: 'docs', path: `${DOCS_POS}/sale-list-1`}, {repo: 'about', path: 'sale-list'}],
   },
   {
     id: 'pos-vente-liste-2',
@@ -220,7 +220,7 @@ export const screenshots: ScreenshotDefinition[] = [
       await addToCart(page, 2);
       await selectSeller(page);
     },
-    targets: [{repo: 'docs', path: `${DOCS_POS}/vente-liste-2`}],
+    targets: [{repo: 'docs', path: `${DOCS_POS}/sale-list-2`}],
   },
   {
     id: 'pos-vente-liste-5',
@@ -231,7 +231,7 @@ export const screenshots: ScreenshotDefinition[] = [
       await fillCustomItem(page);
     },
     locator: dialog,
-    targets: [{repo: 'docs', path: `${DOCS_POS}/vente-liste-5`}],
+    targets: [{repo: 'docs', path: `${DOCS_POS}/sale-list-5`}],
   },
   {
     id: 'pos-vente-liste-6',
@@ -245,7 +245,7 @@ export const screenshots: ScreenshotDefinition[] = [
       await dialog(page).waitFor({state: 'hidden'});
     },
     locator: page => cardWith(page, page.getByTestId('cart-total-price')),
-    targets: [{repo: 'docs', path: `${DOCS_POS}/vente-liste-6`}],
+    targets: [{repo: 'docs', path: `${DOCS_POS}/sale-list-6`}],
   },
   {
     id: 'pos-vente-liste-7',
@@ -257,7 +257,7 @@ export const screenshots: ScreenshotDefinition[] = [
       await page.locator('[data-testid^="payment-mode-"]').nth(2).click();
     },
     locator: page => page.locator('div', {has: page.getByTestId('cart-total-price')}).filter({has: page.getByTestId('finalize-sale')}).last(),
-    targets: [{repo: 'docs', path: `${DOCS_POS}/vente-liste-7`}],
+    targets: [{repo: 'docs', path: `${DOCS_POS}/sale-list-7`}],
   },
   {
     id: 'pos-vente-impression',
@@ -265,7 +265,7 @@ export const screenshots: ScreenshotDefinition[] = [
     url: '/admin/sales/new',
     prepare: page => page.emulateMedia({media: 'print'}),
     fullPage: true,
-    targets: [{repo: 'docs', path: `${DOCS_POS}/vente-impression`}, {repo: 'about', path: 'sale-print'}],
+    targets: [{repo: 'docs', path: `${DOCS_POS}/sale-print`}, {repo: 'about', path: 'sale-print'}],
   },
   {
     id: 'pos-historique',
@@ -287,7 +287,7 @@ export const screenshots: ScreenshotDefinition[] = [
       await page.locator('tbody a[href*="/admin/sales/"]').first().click();
       await page.waitForURL(/\/admin\/sales\/[^/]+$/);
     },
-    targets: [{repo: 'docs', path: `${DOCS_POS}/vente-detail-1`}],
+    targets: [{repo: 'docs', path: `${DOCS_POS}/sale-detail-1`}],
   },
   {
     id: 'pos-vente-detail-2',
@@ -299,7 +299,7 @@ export const screenshots: ScreenshotDefinition[] = [
       await page.getByRole('button', {name: 'Modifier'}).click();
       await dialog(page).waitFor();
     },
-    targets: [{repo: 'docs', path: `${DOCS_POS}/vente-detail-2`}],
+    targets: [{repo: 'docs', path: `${DOCS_POS}/sale-detail-2`}],
   },
 
   // Membres, présences, configuration
@@ -307,7 +307,7 @@ export const screenshots: ScreenshotDefinition[] = [
     id: 'members-liste',
     role: 'ADMIN',
     url: '/admin/members',
-    targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/liste`}],
+    targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/list`}],
   },
   {
     id: 'members-details',
@@ -330,7 +330,7 @@ export const screenshots: ScreenshotDefinition[] = [
     id: 'config-controles',
     role: 'ADMIN',
     url: '/admin/config/member-controls',
-    targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/liste-controles`}, {repo: 'about', path: 'member-controls-list'}],
+    targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/controls-list`}, {repo: 'about', path: 'member-controls-list'}],
   },
   {
     id: 'members-controles',
@@ -341,25 +341,25 @@ export const screenshots: ScreenshotDefinition[] = [
       await page.waitForURL(/\/admin\/members\/.+/);
       await page.getByText('Contrôle annuel').first().waitFor();
     },
-    targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/fiche-membre-controles`}, {repo: 'about', path: 'member-controls'}],
+    targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/member-controls`}, {repo: 'about', path: 'member-controls'}],
   },
   {
     id: 'config-badgeuse',
     role: 'ADMIN',
     url: '/admin/config/presences',
-    targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/badgeuse`}],
+    targets: [{repo: 'docs', path: `${DOCS_MEMBERS}/badger`}],
   },
   {
     id: 'config-activites',
     role: 'ADMIN',
     url: '/admin/config/activities',
-    targets: [{repo: 'docs', path: `${DOCS_ACTIVITIES}/liste`}],
+    targets: [{repo: 'docs', path: `${DOCS_ACTIVITIES}/list`}],
   },
   {
     id: 'config-globale',
     role: 'ADMIN',
     url: '/admin/config',
-    targets: [{repo: 'docs', path: `${DOCS_START}/config-globale`}],
+    targets: [{repo: 'docs', path: `${DOCS_START}/global-config`}],
   },
   {
     id: 'config-permissions',
@@ -381,7 +381,7 @@ export const screenshots: ScreenshotDefinition[] = [
     role: 'ADMIN',
     url: '/admin/loans',
     targets: [
-      {repo: 'docs', path: `${DOCS_LOAN}/liste-prets`},
+      {repo: 'docs', path: `${DOCS_LOAN}/loans-list`},
       {repo: 'about', path: 'loan'},
     ],
   },
@@ -389,14 +389,14 @@ export const screenshots: ScreenshotDefinition[] = [
     id: 'loan-types-enregistrement',
     role: 'ADMIN',
     url: '/admin/loans/recording-types',
-    targets: [{repo: 'docs', path: `${DOCS_LOAN}/types-enregistrement`}],
+    targets: [{repo: 'docs', path: `${DOCS_LOAN}/recording-types`}],
   },
   {
     id: 'loan-statistiques',
     role: 'ADMIN',
     url: '/admin/statistics/loans',
     fullPage: true,
-    targets: [{repo: 'docs', path: `${DOCS_LOAN}/statistiques`}],
+    targets: [{repo: 'docs', path: `${DOCS_LOAN}/statistics`}],
   },
   {
     id: 'loan-detail-article',
@@ -407,7 +407,7 @@ export const screenshots: ScreenshotDefinition[] = [
       await page.waitForURL(/\/loans\/items\/.+/);
     },
     fullPage: true,
-    targets: [{repo: 'docs', path: `${DOCS_LOAN}/detail-article`}],
+    targets: [{repo: 'docs', path: `${DOCS_LOAN}/item-detail`}],
   },
   {
     id: 'loan-formulaire-pret',
@@ -418,13 +418,13 @@ export const screenshots: ScreenshotDefinition[] = [
       await dialog(page).waitFor();
     },
     locator: dialog,
-    targets: [{repo: 'docs', path: `${DOCS_LOAN}/formulaire-pret`}],
+    targets: [{repo: 'docs', path: `${DOCS_LOAN}/loan-form`}],
   },
   {
     id: 'loan-pret-point-de-vente',
     role: 'ADMIN',
     url: '/admin/sales/new',
     locator: page => cardWith(page, page.getByText('Matériel en prêt')),
-    targets: [{repo: 'docs', path: `${DOCS_LOAN}/pret-point-de-vente`}],
+    targets: [{repo: 'docs', path: `${DOCS_LOAN}/loan-in-pos`}],
   },
 ];
