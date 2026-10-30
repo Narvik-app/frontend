@@ -115,13 +115,28 @@ Random data must stay out of the images: seed it in the fixtures instead.
 
 `.github/workflows/screenshots.yml` (**Generate screenshots**):
 
-- Trigger: manual (`workflow_dispatch`, inputs: backend ref, base branch of the docs PR, base branch of the about PR) or when a release is published.
+- Trigger: manual (`workflow_dispatch`, inputs: backend ref, base branch of the docs PR, base branch of the about PR, `threshold`, `force`) or when a release is published.
   The workflow has to exist on the default branch to be dispatched.
-- `generate` job: same stack as the e2e workflow (backend built from `Narvik-app/backend`, fixtures reloaded, Nuxt dev server), runs `pnpm screenshots` and uploads `tests/screenshots/out` as the `screenshots` artifact.
+- `generate` job: same stack as the e2e workflow (backend built from `Narvik-app/backend`, fixtures reloaded, Nuxt dev server), runs `pnpm screenshots`, [drops the unchanged images](#unchanged-images) and uploads `tests/screenshots/out` as the `screenshots` artifact.
 - `publish` job (matrix `documentation` / `about`): generates a token with the GitHub App (`FROOZEIFY_APP_CLIENT_ID` / `FROOZEIFY_APP_PRIVATE_KEY`, installed on the whole organisation),
-  copies the images (`docs/` or `public/pics/`) and opens the `chore: Update screenshots` pull request on branch `ci/screenshots`. No PR when nothing changed.
+  copies the images (`docs/` or `public/pics/`) and opens the `chore: Update screenshots` pull request on branch `ci/screenshots`. No PR when no image changed.
 
 Review the PRs: the images show what the dev fixtures render, a visual regression would appear in the diff.
+
+### Unchanged images
+
+Images contain dates, clocks and other values that move at every run (presence times, sale dates, "last update"…): without a filter, 40% of the images
+changed on a run done a few minutes after the previous one, and most of them when run another day, which makes the pull requests unreadable.
+
+`filter-unchanged.ts` compares every generated image with the one already committed in the target repository (checked out by the workflow)
+and removes the ones where **less than 2%** of the pixels differ (a channel moving by more than 16/255). It keeps images that are new, resized or really different.
+The list of kept / dropped images (with their difference) is in the job summary.
+
+- `threshold` input: percentage of different pixels under which an image is considered unchanged (default `2`)
+- `force` input: skip the filter and update every image
+- locally: `pnpm exec tsx tests/screenshots/filter-unchanged.ts --docs ../documentation --about ../narvik-about [--threshold 2]`
+
+A tiny UI change (a label, an icon) stays under the threshold and is picked up the next time the page changes enough, or with `force`.
 
 ## What can't be generated
 

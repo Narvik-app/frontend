@@ -17,6 +17,14 @@ on:
         description: Base branch of the PR on the about website repository
         default: main
         required: true
+      threshold:
+        description: Images with less than this percentage of different pixels are considered unchanged (dates, clocks...) and are not updated
+        default: '2'
+        required: true
+      force:
+        description: Update every image, even the unchanged ones
+        type: boolean
+        default: false
   release:
     types: [published]
 
@@ -33,6 +41,8 @@ jobs:
     name: Generate images
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      changed: ${{ steps.changes.outputs.changed }}
 
     steps:
       - name: Checkout
@@ -120,7 +130,51 @@ jobs:
       - name: Generate screenshots
         run: pnpm screenshots
 
+      # Dates, clocks and other small data changes alter most images at every run: only keep the ones that really changed
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.FROOZEIFY_APP_CLIENT_ID }}
+          private-key: ${{ secrets.FROOZEIFY_APP_PRIVATE_KEY }}
+          owner: Narvik-app
+          repositories: |
+            documentation
+            about
+
+      - name: Checkout current documentation images
+        uses: actions/checkout@v7
+        with:
+          repository: Narvik-app/documentation
+          ref: ${{ inputs.docs_base || 'main' }}
+          path: target/documentation
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Checkout current about website images
+        uses: actions/checkout@v7
+        with:
+          repository: Narvik-app/about
+          ref: ${{ inputs.about_base || 'main' }}
+          path: target/about
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Keep only the changed images
+        if: ${{ !inputs.force }}
+        run: |
+          echo '### Screenshots' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          pnpm exec tsx tests/screenshots/filter-unchanged.ts --docs target/documentation --about target/about --threshold "${{ inputs.threshold || '2' }}" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Count images to publish
+        id: changes
+        run: |
+          count=$(find tests/screenshots/out -name '*.webp' | wc -l)
+          echo "$count image(s) to publish"
+          echo "changed=$([ "$count" -gt 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
       - name: Upload images
+        if: steps.changes.outputs.changed == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: screenshots
@@ -144,6 +198,7 @@ jobs:
   publish:
     name: Open PR (${{ matrix.target.name }})
     needs: generate
+    if: needs.generate.outputs.changed == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -187,8 +242,11 @@ jobs:
 
       - name: Copy images
         run: |
-          mkdir -p "${{ matrix.target.dest }}"
-          cp -r "screenshots/${{ matrix.target.out }}/." "${{ matrix.target.dest }}/"
+          # Nothing to copy when none of the images of this repository changed
+          if [ -d "screenshots/${{ matrix.target.out }}" ]; then
+            mkdir -p "${{ matrix.target.dest }}"
+            cp -r "screenshots/${{ matrix.target.out }}/." "${{ matrix.target.dest }}/"
+          fi
 
       - name: Open pull request
         uses: peter-evans/create-pull-request@v8
