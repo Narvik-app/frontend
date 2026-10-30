@@ -16,7 +16,11 @@ const only = (process.env.SCREENSHOT_ONLY ?? '').split(',').map(s => s.trim()).f
  */
 async function waitForSettled(page: Page) {
   await page.waitForLoadState('networkidle');
-  await expect(page.locator('.animate-pulse, [data-slot="skeleton"]')).toHaveCount(0);
+  const loaders = page.locator('.animate-pulse, .animate-spin, [data-slot="skeleton"]');
+  await expect(loaders).toHaveCount(0);
+  // Some widgets (file download links) only start loading once the page rendered: check twice
+  await page.waitForTimeout(1000);
+  await expect(loaders).toHaveCount(0);
   await page.evaluate(() => document.fonts.ready);
 }
 

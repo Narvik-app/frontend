@@ -27,6 +27,14 @@ const DOCS_LOAN = 'frontend/docs/pret/images';
 
 const dialog = (page: Page) => page.getByRole('dialog');
 
+/** The export list is sorted by period, newest first: the first one is the draft */
+async function openFirstExport(page: Page) {
+  await page.getByRole('link', {name: 'Détail'}).first().click();
+  await page.waitForURL(/\/exports\/.+/);
+  await page.getByRole('button', {name: 'Verrouiller définitivement'}).waitFor();
+  await page.locator('tbody tr').first().waitFor();
+}
+
 /**
  * Single source of truth of every generated image.
  * Images that show an external tool (iTAC, Cerbère, Eden...) can't be generated and stay manual.
@@ -104,6 +112,33 @@ export const screenshots: ScreenshotDefinition[] = [
     },
     locator: dialog,
     targets: [{repo: 'docs', path: `${DOCS_TT}/nouvel-export`}],
+  },
+
+  {
+    id: 'tt-attestations',
+    role: 'SUPERVISOR',
+    url: '/time-and-travel',
+    locator: page => page.locator('.rounded-lg', {has: page.getByText('Attestations', {exact: true})}).last(),
+    targets: [{repo: 'docs', path: `${DOCS_TT}/attestations`}],
+  },
+  {
+    id: 'tt-detail-export',
+    role: 'ADMIN',
+    url: '/admin/time-and-travel/exports',
+    prepare: openFirstExport,
+    targets: [{repo: 'docs', path: `${DOCS_TT}/detail-export`}],
+  },
+  {
+    id: 'tt-verrouillage-export',
+    role: 'ADMIN',
+    url: '/admin/time-and-travel/exports',
+    prepare: async (page) => {
+      await openFirstExport(page);
+      await page.getByRole('button', {name: 'Verrouiller définitivement'}).click();
+      await dialog(page).waitFor();
+    },
+    locator: dialog,
+    targets: [{repo: 'docs', path: `${DOCS_TT}/verrouillage-export`}],
   },
 
   // Prêts
