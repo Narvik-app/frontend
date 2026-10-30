@@ -1,4 +1,4 @@
-import type {Locator, Page} from '@playwright/test';
+import {expect, type Locator, type Page} from '@playwright/test';
 import {STORAGE_STATE} from '../e2e/utils/auth';
 
 export type ScreenshotTarget = {
@@ -446,6 +446,34 @@ export const screenshots: ScreenshotDefinition[] = [
     role: 'ADMIN',
     url: '/admin/config/activities',
     targets: [{repo: 'docs', path: `${DOCS_ACTIVITIES}/list`}],
+  },
+  {
+    id: 'tt-activite-declaration',
+    role: 'ADMIN',
+    url: '/admin/config/activities',
+    prepare: async (page) => {
+      await page.locator('tbody tr').first().click();
+      await page.getByText('Déclaration de temps & kilomètres', {exact: true}).waitFor();
+      // Shown enabled (not saved)
+      await page.getByRole('switch').last().click();
+    },
+    locator: page => cardWith(page, page.getByText('Déclaration de temps & kilomètres', {exact: true})),
+    targets: [{repo: 'docs', path: `${DOCS_TT}/activity-declaration`}],
+  },
+  {
+    id: 'tt-permissions',
+    role: 'ADMIN',
+    url: '/admin/members',
+    prepare: async (page) => {
+      await page.getByPlaceholder(/Rechercher/).first().fill('Supervisorclub1');
+      // Wait for the filter to be applied before opening the (only) member
+      await expect(page.getByRole('link', {name: 'Détail'})).toHaveCount(1);
+      await page.getByRole('link', {name: 'Détail'}).click();
+      await page.waitForURL(/\/admin\/members\/.+/);
+      await page.getByRole('tab', {name: 'Permissions'}).click();
+    },
+    locator: page => page.getByRole('tabpanel').first(),
+    targets: [{repo: 'docs', path: `${DOCS_TT}/permissions`}],
   },
   {
     id: 'config-globale',
