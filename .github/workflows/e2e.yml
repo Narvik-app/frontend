@@ -23,7 +23,7 @@ jobs:
     steps:
       - name: Determine Backend Branch
         id: determine-backend
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ secrets.GH_PAT || github.token }}
           script: |
@@ -93,10 +93,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Checkout Backend
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ env.BACKEND_REPOSITORY }}
           ref: ${{ needs.determine-backend.outputs.backend_ref }}
@@ -104,7 +104,7 @@ jobs:
           token: ${{ secrets.GH_PAT }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Build Backend (Cached)
         working-directory: backend
@@ -160,10 +160,10 @@ jobs:
           docker compose exec -T php composer reload-fixture
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '26'
           cache: 'pnpm'
@@ -176,7 +176,7 @@ jobs:
         run: echo "VERSION=$(pnpm exec playwright --version | awk '{print $2}')" >> $GITHUB_OUTPUT
 
       - name: Cache Playwright Browsers
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -209,7 +209,7 @@ jobs:
         run: pnpm test:e2e:ci --project=chromium
 
       - name: Upload Playwright report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
@@ -218,7 +218,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload test results
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}
         with:
           name: test-results

@@ -50,7 +50,7 @@ jobs:
     steps:
       - name: Generate GitHub App token
         id: app-token
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ vars.FROOZEIFY_APP_CLIENT_ID }}
           private-key: ${{ secrets.FROOZEIFY_APP_PRIVATE_KEY }}
@@ -106,14 +106,14 @@ jobs:
           VERSION_SUFFIX: ${{ inputs.suffix }}
 
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Update package.json
         id: bump
-        uses: froozeify/gh-version-updater@v1.0.6
+        uses: froozeify/gh-version-updater@7a7a4c5b888e2b6e2ac5b2f1a9979567443f7ede # v1.0.6
         with:
           version: ${{ steps.version.outputs.version }}
           token: ${{ steps.app-token.outputs.token }}
