@@ -226,6 +226,14 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+      - name: Show backend container logs on failure
+        if: failure()
+        working-directory: backend
+        run: |
+          [ -f compose.e2e.override.yaml ] || { echo 'Backend was not started'; exit 0; }
+          docker compose -f compose.yaml -f .github/compose.ci.yaml -f compose.e2e.override.yaml ps --all
+          docker compose -f compose.yaml -f .github/compose.ci.yaml -f compose.e2e.override.yaml logs --no-color --timestamps
+
       - name: Stop services
         if: always()
         working-directory: backend
