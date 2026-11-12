@@ -25,7 +25,6 @@ jobs:
         id: determine-backend
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ secrets.GH_PAT || github.token }}
           script: |
             // Pick the backend ref to test against, in order:
             // 1. main, if that's the branch being built
@@ -101,7 +100,6 @@ jobs:
           repository: ${{ env.BACKEND_REPOSITORY }}
           ref: ${{ needs.determine-backend.outputs.backend_ref }}
           path: backend
-          token: ${{ secrets.GH_PAT }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
