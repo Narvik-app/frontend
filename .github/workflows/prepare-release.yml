@@ -4,29 +4,23 @@ name: Prepare & Release
 # As a draft (default), publish it from the GitHub UI: the tag is created at that moment,
 # already containing the bump, so the release can be immutable.
 
-# The version is computed from the latest stable tag: the highest checked level wins
-# and the lower parts are reset (e.g. 1.4.2 + major + minor -> 2.0.0).
+# The version is computed from the latest stable tag: the chosen level is bumped
+# and the lower parts are reset (e.g. 1.4.2 + minor -> 1.5.0).
 
-run-name: "Prepare & Release (${{ inputs.major && 'major' || inputs.minor && 'minor' || 'bugfix' }}${{ inputs.suffix && format(' -{0}', inputs.suffix) || '' }})"
+run-name: "Prepare & Release (${{ inputs.bump }}${{ inputs.suffix && format(' -{0}', inputs.suffix) || '' }})"
 
 on:
   workflow_dispatch:
     inputs:
-      major:
-        description: 'Major release (X.0.0)'
-        required: false
-        type: boolean
-        default: false
-      minor:
-        description: 'Minor release (x.Y.0)'
-        required: false
-        type: boolean
-        default: false
-      bugfix:
-        description: 'Bugfix release (x.y.Z)'
-        required: false
-        type: boolean
-        default: true
+      bump:
+        description: 'Release type'
+        required: true
+        type: choice
+        options:
+          - bugfix
+          - minor
+          - major
+        default: bugfix
       suffix:
         description: 'Optional suffix, makes it a pre-release (e.g. rc.1 -> 1.2.0-rc.1)'
         required: false
@@ -70,16 +64,15 @@ jobs:
             | { grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' || true; } | sed 's/^v//' | sort -V | tail -n 1)
           IFS=. read -r major minor patch <<< "${latest:-0.0.0}"
 
-          if [[ "$BUMP_MAJOR" == "true" ]]; then
-            VERSION="$((major + 1)).0.0"
-          elif [[ "$BUMP_MINOR" == "true" ]]; then
-            VERSION="$major.$((minor + 1)).0"
-          elif [[ "$BUMP_BUGFIX" == "true" ]]; then
-            VERSION="$major.$minor.$((patch + 1))"
-          else
-            echo "::error::Check at least one of major, minor or bugfix."
-            exit 1
-          fi
+          case "$BUMP" in
+            major) VERSION="$((major + 1)).0.0" ;;
+            minor) VERSION="$major.$((minor + 1)).0" ;;
+            bugfix) VERSION="$major.$minor.$((patch + 1))" ;;
+            *)
+              echo "::error::Invalid release type '$BUMP' (expected major, minor or bugfix)."
+              exit 1
+              ;;
+          esac
           if [[ -n "$suffix" ]]; then
             VERSION="$VERSION-$suffix"
           fi
@@ -100,9 +93,7 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          BUMP_MAJOR: ${{ inputs.major }}
-          BUMP_MINOR: ${{ inputs.minor }}
-          BUMP_BUGFIX: ${{ inputs.bugfix }}
+          BUMP: ${{ inputs.bump }}
           VERSION_SUFFIX: ${{ inputs.suffix }}
 
       - name: Checkout
