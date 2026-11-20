@@ -13,6 +13,11 @@ if (runtimeConfig.public.umamiEnabled) {
     scriptInput: {
       src: runtimeConfig.public.umamiScript as string,
     },
+    scriptOptions: {
+      // Load the script from the Umami instance itself (not a build-time copy),
+      // so it targets its own host and respects the runtime per-install config.
+      bundle: false,
+    },
   })
 
   if (selfUser.isLogged() && selfUser.user?.uuid) {
