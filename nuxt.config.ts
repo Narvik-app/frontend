@@ -87,8 +87,6 @@ export default defineNuxtConfig({
       localApi: {
         url: process.env.NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL || 'http://php',
         client: false,
-        // The browser sends the user's JWT in the Authorization header; v5 withholds it unless enabled.
-        forwardCredentials: true,
       },
       localApiClientAuth: {
         url: process.env.NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL || 'http://php',
