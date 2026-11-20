@@ -1,3 +1,5 @@
+import type { FetchContext } from 'ofetch'
+
 /**
  * Injects the OAuth client Authorization header for the localApiClientAuth and badgerApi
  * endpoints (see nuxt.config.ts) on each proxied request, from private runtimeConfig, so
@@ -10,23 +12,25 @@
 export default defineNitroPlugin((nitro) => {
   const config = useRuntimeConfig()
 
-  function injectBasicAuth(clientId: string, clientSecret: string) {
-    return (ctx: { options: { headers?: HeadersInit } }) => {
-      const headers = ctx.options.headers instanceof Headers
-        ? ctx.options.headers
-        : new Headers(ctx.options.headers)
-
-      if (!headers.has('Authorization')) {
-        headers.set('Authorization', `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`)
-      }
-
-      ctx.options.headers = headers
-    }
+  function basicAuth(clientId: string, clientSecret: string) {
+    return `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`
   }
 
-  nitro.hooks.hook('api-party:request:localApiClientAuth' as never, injectBasicAuth(config.oauthClientId, config.oauthClientSecret) as never)
+  const clientAuthByEndpoint: Record<string, () => string> = {
+    localApiClientAuth: () => basicAuth(config.oauthClientId, config.oauthClientSecret),
+    // The badger OAuth client is public (no real secret - see narvik-back's install:oauth),
+    // so this carries no secret either; it exists purely for OAuth client_id identification.
+    badgerApi: () => basicAuth(config.oauthBadgerClientId, ''),
+  }
 
-  // The badger OAuth client is public (no real secret - see narvik-back's install:oauth),
-  // so this carries no secret either; it exists purely for OAuth client_id identification.
-  nitro.hooks.hook('api-party:request:badgerApi' as never, injectBasicAuth(config.oauthBadgerClientId, '') as never)
+  nitro.hooks.hook('api-party:request', (ctx: FetchContext, _event, endpointId: string) => {
+    const getAuthorization = clientAuthByEndpoint[endpointId]
+    if (!getAuthorization) return
+
+    const headers = new Headers(ctx.options.headers)
+    if (!headers.has('Authorization')) {
+      headers.set('Authorization', getAuthorization())
+    }
+    ctx.options.headers = headers
+  })
 })

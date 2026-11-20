@@ -3,7 +3,7 @@ import type {FetchAllData, FetchItemData} from "~/types/api/api";
 import type {View} from "~/types/api/view";
 import type {Item} from "~/types/api/item";
 import {mergician} from 'mergician';
-import type {UseApiDataOptions} from "nuxt-api-party/dist/runtime/composables/useApiData";
+import type {ApiClientFetchOptions} from "#nuxt-api-party";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import type {NuxtError} from "#app";
 import type {ItemError} from "~/types/api/itemError";
@@ -17,8 +17,12 @@ export const MIME_TYPE_CSV = "text/csv"
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const CONTENT_TYPE_FORM_DATA = "multipart/form-data"
 
-async function useApi<T>(path: string, options: UseApiDataOptions<T> = {}, requireLogin: boolean = true, timeout: number = 30000): Promise<T | undefined> {
-  let overloadedOptions: UseApiDataOptions<T> = {
+type ApiOptions = Omit<ApiClientFetchOptions, 'headers'> & { headers?: Record<string, string> }
+
+type ResolvedApiOptions = ApiOptions & { headers: Record<string, string> }
+
+async function useApi<T>(path: string, options: ApiOptions = {}, requireLogin: boolean = true, timeout: number = 30000): Promise<T | undefined> {
+  let overloadedOptions: ResolvedApiOptions = {
     mode: "cors",
     timeout: timeout,
 
@@ -42,7 +46,7 @@ async function useApi<T>(path: string, options: UseApiDataOptions<T> = {}, requi
       headers: {
         Authorization: `Bearer ${token.access!.token}`
       }
-    }, options)
+    }, options) as ResolvedApiOptions
 
     if (selfStore.selectedProfile?.id) {
       overloadedOptions.headers.Profile = `${selfStore.selectedProfile.id}`
@@ -67,7 +71,7 @@ async function useApi<T>(path: string, options: UseApiDataOptions<T> = {}, requi
 
   // No Bearer token: authenticate this call as the main OAuth client instead. The
   // Authorization header is injected server-side, never computed in the browser.
-  overloadedOptions = mergician({ headers: {} }, options);
+  overloadedOptions = mergician({ headers: {} }, options) as ResolvedApiOptions;
   return await $localApiClientAuth<T>(path, overloadedOptions);
 }
 
@@ -164,21 +168,28 @@ export async function useFetchList<T>(resource: string): Promise<FetchAllData<T>
   };
 }
 
+// In-memory cache for useFetchItem(useCache = true). Replaces nuxt-api-party's payloadCache, removed in v5.
+const itemCache = new Map<string, unknown>();
+
 export async function useFetchItem<T>(path: string, useCache: boolean = false, requireLogin: boolean = true): Promise<FetchItemData<T>> {
   let retrieved: T | undefined = undefined;
   const hubUrl: URL | undefined = undefined;
   let error: NuxtError<ItemError> | undefined = undefined;
 
   try {
-    const data = await useApi<T>(path, {
-      payloadCache: useCache,
-    }, requireLogin);
+    if (useCache && itemCache.has(path)) {
+      retrieved = itemCache.get(path) as T;
+    } else {
+      const data = await useApi<T>(path, {}, requireLogin);
+      retrieved = data as T;
 
-    retrieved = data as T;
+      if (useCache && data !== undefined) {
+        itemCache.set(path, data);
+      }
+    }
   } catch (e) {
     error = formatErrorFromApiResponse(e as object) as NuxtError<ItemError>
   }
-
 
   return {
     retrieved,

@@ -70,7 +70,7 @@ test.describe.serial('Billing a loan from the sale page', () => {
     // The outgoing sale payload must carry the loan fee as a free-form line, priced and
     // categorized so it groups correctly in the per-item sale stats instead of flooding
     // "Sans catégorie" — see app/pages/admin/sales/new.vue#buildPurchasedItems.
-    const outgoingBody = saleResponse.request().postDataJSON().body as {
+    const outgoingBody = saleResponse.request().postDataJSON() as {
       salePurchasedItems: Array<{ item?: string; itemName?: string; itemCategory?: string; itemPrice?: string }>
     };
     const loanLine = outgoingBody.salePurchasedItems.find(line => line.itemName === loanItemName);

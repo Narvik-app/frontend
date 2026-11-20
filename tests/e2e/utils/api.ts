@@ -1,13 +1,27 @@
 import type { Page, Response } from '@playwright/test';
 
 /**
- * All API calls go through the nuxt-api-party server-side proxy (POST to
- * /api/__api_party/localApi). The actual backend path and query string are
- * in the request body, not the URL.
+ * All API calls go through the nuxt-api-party server-side proxy, which serves
+ * `/api/__api_party/{endpointId}/{backend path}?{query}` and forwards the
+ * request with its original method, headers and body.
  *
  * These helpers let tests intercept and inspect those proxied requests in a
- * readable way without duplicating the URL/body-parsing boilerplate.
+ * readable way without duplicating the URL-parsing boilerplate.
  */
+
+const PROXY_SEGMENT = /\/__api_party\/[^/]+\//;
+
+/**
+ * Extract the decoded backend path (including query string) from a proxied
+ * request URL, or undefined when the URL is not a proxied API call.
+ */
+function extractBackendPath(url: string): string | undefined {
+  const parsed = new URL(url);
+  const match = PROXY_SEGMENT.exec(parsed.pathname);
+  if (!match) return undefined;
+  const path = parsed.pathname.slice(match.index + match[0].length);
+  return decodeURIComponent(path + parsed.search);
+}
 
 /**
  * Wait for the next proxied API response whose backend path satisfies the
@@ -20,23 +34,17 @@ export function waitForApiResponse(
   predicate: (path: string) => boolean,
 ): Promise<Response> {
   return page.waitForResponse(r => {
-    if (!r.url().includes('__api_party')) return false;
-    try {
-      const body = r.request().postDataJSON();
-      if (typeof body?.path !== 'string') return false;
-      return predicate(decodeURIComponent(body.path));
-    } catch {
-      return false;
-    }
+    const path = extractBackendPath(r.url());
+    return path !== undefined && predicate(path);
   });
 }
 
 /**
- * Extract and decode the backend path (including query string) from the
- * request body of a proxied API response.
+ * Extract and decode the backend path (including query string) from a
+ * proxied API response.
  *
  * Example return value: "clubs/.../sales?page=1&createdAt[after]=2026-06-21"
  */
 export function getProxyRequestPath(response: Response): string {
-  return decodeURIComponent(response.request().postDataJSON().path as string);
+  return extractBackendPath(response.request().url()) ?? '';
 }
