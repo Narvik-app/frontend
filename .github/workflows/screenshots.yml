@@ -34,7 +34,6 @@ concurrency:
 
 env:
   BACKEND_REPOSITORY: ${{ vars.BACKEND_REPOSITORY || 'Narvik-app/backend' }}
-  BACKEND_REF: ${{ inputs.backend_ref || github.event.release.target_commitish || 'main' }}
 
 jobs:
   generate:
@@ -48,11 +47,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # On a release, target_commitish is a commit of this repository: use the backend tag
+      # of the same version instead, or main when the backend has no such tag
+      - name: Resolve backend ref
+        id: backend-ref
+        run: |
+          ref="${INPUT_REF:-main}"
+          if [[ -n "$RELEASE_TAG" ]]; then
+            if git ls-remote --exit-code --tags "https://github.com/$BACKEND_REPOSITORY.git" "refs/tags/$RELEASE_TAG" > /dev/null; then
+              ref="$RELEASE_TAG"
+            else
+              echo "::warning::No tag '$RELEASE_TAG' on $BACKEND_REPOSITORY, using main."
+            fi
+          fi
+          echo "Backend ref: $ref"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+        env:
+          INPUT_REF: ${{ inputs.backend_ref }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+
       - name: Checkout Backend
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ env.BACKEND_REPOSITORY }}
-          ref: ${{ env.BACKEND_REF }}
+          ref: ${{ steps.backend-ref.outputs.ref }}
           path: backend
 
       - name: Set up Docker Buildx
