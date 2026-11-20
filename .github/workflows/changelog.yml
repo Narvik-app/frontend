@@ -1,0 +1,61 @@
+name: Changelog
+
+# Adds (or updates) the pull request's entry under "## [Unreleased]" in CHANGELOG.md, committed to the PR branch itself,
+# so it lands in main with the merge. Re-runs on title/description/label changes keep the entry in sync (matched by PR number).
+# The category comes from the PR labels; the text is the PR title, or a "Changelog: ..." line in the PR description.
+# The section is promoted to the released version by prepare-release.yml.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: changelog-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  update-changelog:
+    name: Add unreleased entry
+    # No token can push to a fork's branch, so this only covers same-repo PRs.
+    # Dependabot PRs are skipped: their runs get no Actions secret (so no app token),
+    # and their "dependencies" label keeps them out of the changelog anyway.
+    if: >-
+      ${{ github.event.pull_request.head.repo.full_name == github.repository &&
+          github.event.pull_request.user.login != 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      # Commits made with the app token (unlike GITHUB_TOKEN) trigger the other PR workflows
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.FROOZEIFY_APP_CLIENT_ID }}
+          private-key: ${{ secrets.FROOZEIFY_APP_PRIVATE_KEY }}
+          permission-contents: write
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Add changelog entry
+        uses: froozeify/gh-changelog-updater@7db1d5d8822e2858c0b6995445cb03f52544b52d # v1.0.6
+        with:
+          mode: add-unreleased
+          token: ${{ steps.app-token.outputs.token }}
+          require-merged: 'false'
+          commit-branch: ${{ github.head_ref }}
+          label-mapping: |
+            Added=enhancement,feature
+            Fixed=fix,bug
+            Security=security
+            Deprecated=deprecation
+            Removed=removal
+            Changed=refactor,performance,breaking-change,style,documentation
+          # PRs without a mapped label (ci, test, chore, ...) are left out
+          default-category: ''
+          category-order: Added,Changed,Deprecated,Removed,Fixed,Security
+          exclude-labels: ignore-for-changelog,ignore-for-release,dependencies,build
