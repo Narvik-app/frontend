@@ -101,7 +101,7 @@ test.describe.serial('Time and travel self-service', () => {
     ]);
     expect(response.ok()).toBeTruthy();
 
-    const outgoingBody = response.request().postDataJSON().body as { kilometers?: number };
+    const outgoingBody = response.request().postDataJSON() as { kilometers?: number };
     expect(outgoingBody.kilometers).toBe(20);
 
     const row = page.locator('tbody tr', { hasText: 'Domicile' });

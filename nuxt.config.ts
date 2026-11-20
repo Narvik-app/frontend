@@ -82,16 +82,21 @@ export default defineNuxtConfig({
   // - badgerApi: used for badger kiosk calls. The badger OAuth client is public (no real
   //   secret - see narvik-back's install:oauth), so this header carries no secret either.
   apiParty: {
-    client: false, // Force server-side proxy even with SSR disabled
+    // Every endpoint stays on the server-side proxy (`client: false`), even with SSR disabled.
     endpoints: {
       localApi: {
         url: process.env.NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL || 'http://php',
+        client: false,
+        // The browser sends the user's JWT in the Authorization header; v5 withholds it unless enabled.
+        forwardCredentials: true,
       },
       localApiClientAuth: {
         url: process.env.NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL || 'http://php',
+        client: false,
       },
       badgerApi: {
         url: process.env.NUXT_API_PARTY_ENDPOINTS_LOCAL_API_URL || 'http://php',
+        client: false,
       },
     }
   },
