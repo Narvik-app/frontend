@@ -1,6 +1,6 @@
 name: Prepare & Release
 
-# Bumps the version on main, then creates a release targeting that commit.
+# Bumps the version and promotes the CHANGELOG.md [Unreleased] section on main, then creates a release targeting that commit.
 # As a draft (default), publish it from the GitHub UI: the tag is created at that moment,
 # already containing the bump, so the release can be immutable.
 
@@ -108,6 +108,17 @@ jobs:
         with:
           version: ${{ steps.version.outputs.version }}
           token: ${{ steps.app-token.outputs.token }}
+
+      # Turns "## [Unreleased]" into "## [X.Y.Z] - date" on main, so the release commit already contains it.
+      # Pre-releases keep accumulating in [Unreleased] until the stable version.
+      - name: Promote changelog
+        if: ${{ !contains(steps.version.outputs.version, '-') }}
+        uses: froozeify/gh-changelog-updater@7db1d5d8822e2858c0b6995445cb03f52544b52d # v1.0.6
+        with:
+          mode: promote-unreleased
+          version: ${{ steps.version.outputs.version }}
+          token: ${{ steps.app-token.outputs.token }}
+          commit-branch: main
 
       - name: Resolve release commit
         id: target
