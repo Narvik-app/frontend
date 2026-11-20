@@ -44,7 +44,8 @@ async function useApi<T>(path: string, options: ApiOptions = {}, requireLogin: b
 
     overloadedOptions = mergician({
       headers: {
-        Authorization: `Bearer ${token.access!.token}`
+        // Not a real Authorization header, see shared/utils/apiAuth.ts
+        [USER_TOKEN_HEADER]: token.access!.token
       }
     }, options) as ResolvedApiOptions
 
@@ -62,10 +63,9 @@ async function useApi<T>(path: string, options: ApiOptions = {}, requireLogin: b
     overloadedOptions.body = options.body
   }
 
-  if (overloadedOptions?.headers?.Authorization) {
-    // Already carrying a Bearer token: use the plain endpoint, which sets no client
-    // Authorization header of its own (mixing it with the Bearer token would corrupt
-    // the request - see server/plugins/configure-api-party-auth.ts).
+  if (overloadedOptions?.headers?.[USER_TOKEN_HEADER]) {
+    // Carrying the user's token: use the plain endpoint, whose Bearer Authorization header
+    // is built server-side from it (see server/plugins/configure-api-party-auth.ts).
     return await $localApi<T>(path, overloadedOptions);
   }
 
