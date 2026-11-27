@@ -44,8 +44,8 @@ sh: ## Connect to the Node container
 	@$(NODE_CONT) sh
 
 ## —— Cloudflared 🕸️ ——————————————————————————————————————————————————————————————
-cloudflared-tunnel: ## Expose local env through cloudflared tunnel (url must be set to host.docker.internal:3000 on cloudflare tunnel setting)
-	docker run --rm -it cloudflare/cloudflared:latest tunnel --no-autoupdate run --token $$CLOUDFLARED_TUNNEL
+cloudflared-tunnel: ## Expose local env through cloudflared tunnel (url must be set to https://localhost:3000 on cloudflare tunnel setting)
+	docker run --rm -it --network host cloudflare/cloudflared:latest tunnel --no-autoupdate run --token $$CLOUDFLARED_TUNNEL
 
 cloudflared-tunnel-free: ## Expose local env through cloudflared tunnel (free version is limited to 200 in-flight request)
-	docker run --rm -it cloudflare/cloudflared:latest tunnel --no-autoupdate --url http://host.docker.internal:3000
+	docker run --rm -it --network host cloudflare/cloudflared:latest tunnel --no-autoupdate --url https://localhost:3000 --no-tls-verify
