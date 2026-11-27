@@ -11,7 +11,7 @@ import PasskeyQuery from "~/composables/api/query/PasskeyQuery";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import ModalLegalsAcceptance from "~/components/Modal/ModalLegalsAcceptance.vue";
 import {convertUuidToUrlUuid} from "~/utils/resource";
-import {isPasskeyCancelled} from "~/utils/passkey";
+import {isPasskeyAborted, isPasskeyNotAllowed} from "~/utils/passkey";
 
 definePageMeta({
   layout: "empty",
@@ -34,19 +34,35 @@ let autofillTimer: ReturnType<typeof setTimeout> | undefined
 // Only the latest passkey ceremony may continue after an await (a click replaces the autofill one)
 let ceremonyId = 0
 
+let isUnmounted = false
+
 onMounted(async () => {
   canUsePasskey.value = browserSupportsWebAuthn()
-  canUsePasskeyAutofill = canUsePasskey.value && await browserSupportsWebAuthnAutofill()
+  const supportsAutofill = canUsePasskey.value && await browserSupportsWebAuthnAutofill()
+  // The page may have been left during the await: don't start a ceremony nobody will clean up
+  if (isUnmounted) return
+  canUsePasskeyAutofill = supportsAutofill
+  window.addEventListener('pageshow', onPageShow)
   startPasskeyAutofill()
 })
 
 onBeforeUnmount(() => {
+  isUnmounted = true
   canUsePasskeyAutofill = false
   ceremonyId++
   clearTimeout(autofillTimer)
   document.removeEventListener('visibilitychange', renewPasskeyAutofill)
+  window.removeEventListener('pageshow', onPageShow)
   WebAuthnAbortService.cancelCeremony()
 })
+
+// Restored from the back/forward cache: the pending autofill challenge may have expired meanwhile
+function onPageShow(event: PageTransitionEvent) {
+  if (event.persisted) {
+    document.removeEventListener('visibilitychange', renewPasskeyAutofill)
+    startPasskeyAutofill()
+  }
+}
 
 const state = reactive({
   email: undefined,
@@ -133,10 +149,18 @@ async function passkeyLogin(autofill: boolean) {
     try {
       credential = await startAuthentication({ optionsJSON: options.publicKey, useBrowserAutofill: autofill })
     } catch (e) {
-      if (!isPasskeyCancelled(e)) {
-        console.error(e)
-        if (!autofill) toastPasskeyError(undefined, "La clé d'accès n'a pas pu être utilisée")
+      // Autofill waits silently in the background, and an aborted ceremony was replaced by another one
+      if (autofill || isPasskeyAborted(e)) return
+      if (isPasskeyNotAllowed(e)) {
+        toast.add({
+          color: "warning",
+          title: "Aucune clé d'accès utilisée",
+          description: "La demande a été annulée ou a expiré, ou cet appareil n'a pas de clé d'accès pour ce site."
+        })
+        return
       }
+      console.error(e)
+      toastPasskeyError(undefined, "La clé d'accès n'a pas pu être utilisée")
       return
     }
 
@@ -180,7 +204,7 @@ function redirectSuccessLogin() {
     proxy.identify(convertUuidToUrlUuid(selfStore.user.uuid))
   }
   if (selfStore.isSuperAdmin()) {
-    navigateTo('/super-admin');
+    return navigateTo('/super-admin');
   }
   navigateTo('/');
 }

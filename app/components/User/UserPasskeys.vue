@@ -5,7 +5,7 @@ import PasskeyQuery from "~/composables/api/query/PasskeyQuery";
 import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
 import type {WebauthnCredential} from "~/types/api/item/webauthnCredential";
 import {formatDateTimeReadable} from "~/utils/date";
-import {isPasskeyCancelled} from "~/utils/passkey";
+import {isPasskeyAborted, isPasskeyNotAllowed} from "~/utils/passkey";
 
 const toast = useToast()
 const overlay = useOverlay()
@@ -20,6 +20,8 @@ const browserSupportsPasskey = ref(false)
 const isAddOpen = ref(false)
 const isAdding = ref(false)
 const newName = ref('')
+// Only the latest registration may update the state (a new one aborts the pending browser prompt)
+let addId = 0
 
 const editedPasskey = ref<WebauthnCredential | null>(null)
 const editedName = ref('')
@@ -42,9 +44,11 @@ async function loadPasskeys() {
 }
 
 async function addPasskey() {
+  const id = ++addId
   isAdding.value = true
   try {
     const { item: options, error } = await passkeyQuery.registrationOptions()
+    if (id !== addId) return
     if (!options) {
       toast.add({ color: "error", title: "L'ajout de la clé d'accès a échoué", description: error?.message })
       return
@@ -54,7 +58,15 @@ async function addPasskey() {
     try {
       credential = await startRegistration({ optionsJSON: options.publicKey })
     } catch (e) {
-      if (isPasskeyCancelled(e)) {
+      if (isPasskeyAborted(e)) {
+        return
+      }
+      if (isPasskeyNotAllowed(e)) {
+        toast.add({
+          color: "warning",
+          title: "Clé d'accès non créée",
+          description: "La demande a été annulée ou a expiré."
+        })
         return
       }
       const alreadyRegistered = e instanceof WebAuthnError && e.code === 'ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED'
@@ -82,7 +94,9 @@ async function addPasskey() {
     newName.value = ''
     await loadPasskeys()
   } finally {
-    isAdding.value = false
+    if (id === addId) {
+      isAdding.value = false
+    }
   }
 }
 
@@ -109,7 +123,9 @@ async function renamePasskey() {
 
 function confirmDelete(passkey: WebauthnCredential) {
   overlayDeleteConfirmation.open({
-    alertTitle: `La clé d'accès « ${passkey.name} » ne pourra plus être utilisée pour se connecter.`,
+    alertTitle: passkey.name
+      ? `La clé d'accès « ${passkey.name} » ne pourra plus être utilisée pour se connecter.`
+      : "Cette clé d'accès ne pourra plus être utilisée pour se connecter.",
     alertDescription: "Pensez aussi à la supprimer du gestionnaire de mots de passe de votre appareil.",
     alertColor: 'warning',
     async onDelete() {
