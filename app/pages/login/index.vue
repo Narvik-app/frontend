@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type {FormError, FormSubmitEvent} from '#ui/types'
-import {useLoginUser} from "~/composables/api/api";
+import {browserSupportsWebAuthn, startAuthentication, WebAuthnError} from "@simplewebauthn/browser";
+import {useLoginPasskey, useLoginUser} from "~/composables/api/api";
+import PasskeyQuery from "~/composables/api/query/PasskeyQuery";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import ModalLegalsAcceptance from "~/components/Modal/ModalLegalsAcceptance.vue";
 import {convertUuidToUrlUuid} from "~/utils/resource";
@@ -13,7 +15,14 @@ definePageMeta({
 const toast = useToast()
 const overlay = useOverlay()
 const isLoading = ref(false)
+const isPasskeyLoading = ref(false)
 const showPassword = ref(false)
+
+// Checked on mount: WebAuthn is a browser API (and only available on HTTPS or localhost)
+const canUsePasskey = ref(false)
+onMounted(() => {
+  canUsePasskey.value = browserSupportsWebAuthn()
+})
 
 const state = reactive({
   email: undefined,
@@ -44,6 +53,55 @@ async function onSubmit(event: FormSubmitEvent<{email: string, password: string}
     return;
   }
 
+  await onLoggedIn()
+  isLoading.value = false
+}
+
+async function onPasskeyLogin() {
+  isPasskeyLoading.value = true
+  try {
+    const passkeyQuery = new PasskeyQuery()
+    const { options, error } = await passkeyQuery.loginOptions()
+    if (!options) {
+      toast.add({
+        color: "error",
+        title: error?.statusCode === 429 ? "Trop de tentative" : "Erreur de connexion",
+        description: error?.statusCode === 429 ? 'Veuillez réessayer dans 5 minutes.' : 'Connexion par clé d\'accès indisponible'
+      })
+      return
+    }
+
+    let credential
+    try {
+      credential = await startAuthentication({ optionsJSON: options.publicKey })
+    } catch (e) {
+      // The user closed the browser prompt: nothing to report
+      if ((e as Error).name === 'NotAllowedError' || (e instanceof WebAuthnError && e.code === 'ERROR_CEREMONY_ABORTED')) {
+        return
+      }
+      console.error(e)
+      toast.add({ color: "error", title: "Erreur de connexion", description: "La clé d'accès n'a pas pu être utilisée" })
+      return
+    }
+
+    const { error: loginError } = await useLoginPasskey(options.challengeId, credential)
+    if (loginError) {
+      toast.add({
+        color: "error",
+        title: loginError.statusCode === 429 ? "Trop de tentative" : "Erreur de connexion",
+        description: loginError.statusCode === 429 ? 'Veuillez réessayer dans 5 minutes.' : "Clé d'accès non reconnue"
+      })
+      console.error(loginError)
+      return
+    }
+
+    await onLoggedIn()
+  } finally {
+    isPasskeyLoading.value = false
+  }
+}
+
+async function onLoggedIn() {
   if (!selfStore.isLegalsAccepted()) {
     const modal = overlay.create(ModalLegalsAcceptance)
     const instance = modal.open({
@@ -52,7 +110,6 @@ async function onSubmit(event: FormSubmitEvent<{email: string, password: string}
       }
     })
     await instance.result
-    isLoading.value = false
   } else {
     redirectSuccessLogin()
   }
@@ -106,8 +163,21 @@ function redirectSuccessLogin() {
         </div>
 
         <div class="flex flex-col justify-center gap-4">
-          <UButton block type="submit" :loading="isLoading" data-testid="login-submit">
+          <UButton block type="submit" :loading="isLoading" :disabled="isPasskeyLoading" data-testid="login-submit">
             Connexion
+          </UButton>
+
+          <UButton
+            v-if="canUsePasskey"
+            block
+            variant="outline"
+            icon="i-heroicons-finger-print"
+            :loading="isPasskeyLoading"
+            :disabled="isLoading"
+            data-testid="login-passkey"
+            @click="onPasskeyLogin"
+          >
+            Se connecter avec une clé d'accès
           </UButton>
 
           <USeparator label="Ou" />

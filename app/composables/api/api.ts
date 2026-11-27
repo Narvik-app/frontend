@@ -14,6 +14,9 @@ export const MIME_TYPE_JSON = "application/json";
 export const MIME_TYPE_JSON_PATCH = "application/merge-patch+json"
 export const MIME_TYPE_CSV = "text/csv"
 
+// Custom OAuth grant declared by the backend (App\Security\Grant\PasskeyGrant)
+const PASSKEY_GRANT_TYPE = "urn:narvik:grant:passkey"
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const CONTENT_TYPE_FORM_DATA = "multipart/form-data"
 
@@ -80,6 +83,26 @@ export async function useLoginUser(email: string, password: string) {
     grant_type: 'password',
     username: email,
     password: password
+  });
+
+  if (data) {
+    const selfStore = useSelfUserStore()
+    selfStore.setJwtSelfJwtTokenFromApiResponse(data as { access_token: string; refresh_token: string; expires_in?: number })
+
+    await selfStore.refresh()
+  }
+
+  return { error };
+}
+
+/**
+ * Passwordless login: exchange a passkey assertion (navigator.credentials.get()) for the same tokens as a password login.
+ */
+export async function useLoginPasskey(challengeId: string, credential: object) {
+  const { data, error } = await usePostRawJson("token", {
+    grant_type: PASSKEY_GRANT_TYPE,
+    challenge_id: challengeId,
+    credential: credential,
   });
 
   if (data) {

@@ -165,6 +165,8 @@ async function deleteUser() {
 
         </div>
       </UCard>
+
+      <UserPasskeys class="mt-4" />
     </div>
 
     <div class="flex flex-col md:flex-row justify-between mb-4">
