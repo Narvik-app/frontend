@@ -25,8 +25,27 @@ async function addVirtualAuthenticator(page: Page) {
   });
 }
 
-test('register a passkey, log in with it, then remove it', async ({ page }) => {
+/**
+ * The virtual authenticator answers the login page autofill request (conditional UI) by itself,
+ * which logs in without any click. window.__e2eNoAutofill turns autofill off to test the button.
+ */
+async function allowDisablingAutofill(page: Page) {
+  await page.addInitScript(() => {
+    const isAvailable = PublicKeyCredential.isConditionalMediationAvailable.bind(PublicKeyCredential);
+    PublicKeyCredential.isConditionalMediationAvailable = () =>
+      (window as unknown as { __e2eNoAutofill?: boolean }).__e2eNoAutofill ? Promise.resolve(false) : isAvailable();
+  });
+}
+
+async function setAutofill(page: Page, enabled: boolean) {
+  await page.evaluate((disabled) => {
+    (window as unknown as { __e2eNoAutofill?: boolean }).__e2eNoAutofill = disabled;
+  }, !enabled);
+}
+
+test('register a passkey, log in with it (button and autofill), then remove it', async ({ page }) => {
   await addVirtualAuthenticator(page);
+  await allowDisablingAutofill(page);
   const passkeyName = `E2E ${Date.now()}`;
 
   // Register from the account page
@@ -40,11 +59,20 @@ test('register a passkey, log in with it, then remove it', async ({ page }) => {
   const item = card.getByTestId('passkey-item').filter({ hasText: passkeyName });
   await expect(item).toBeVisible();
 
-  // Passwordless login
+  // Passwordless login with the button
+  await setAutofill(page, false);
   await logout(page);
   await page.getByTestId('login-passkey').click();
   await expect(page.getByTestId('user-menu')).toBeVisible();
   await expect(page).not.toHaveURL(/\/login/);
+
+  // Passwordless login from the email field autofill: the login page logs in by itself
+  await setAutofill(page, true);
+  await page.getByTestId('user-menu').click();
+  await page.getByRole('menuitem', { name: 'Déconnexion' }).click();
+  await page.waitForURL(/\/login/);
+  await expect(page).not.toHaveURL(/\/login/);
+  await expect(page.getByTestId('user-menu')).toBeVisible();
 
   // The last use is displayed, then we clean up
   await page.goto('/self');

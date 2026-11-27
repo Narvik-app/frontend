@@ -60,7 +60,9 @@ async function addPasskey() {
       toast.add({
         color: "error",
         title: "L'ajout de la clé d'accès a échoué",
-        description: alreadyRegistered ? "Cet appareil a déjà une clé d'accès pour ce compte" : undefined
+        description: alreadyRegistered
+          ? "Cet appareil a déjà une clé d'accès pour ce compte"
+          : "Votre navigateur ou votre gestionnaire de mots de passe a refusé de créer la clé d'accès"
       })
       console.error(e)
       return

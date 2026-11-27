@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import type {FormError, FormSubmitEvent} from '#ui/types'
-import {browserSupportsWebAuthn, startAuthentication, WebAuthnError} from "@simplewebauthn/browser";
+import {
+  browserSupportsWebAuthn,
+  browserSupportsWebAuthnAutofill,
+  startAuthentication,
+  WebAuthnAbortService,
+  WebAuthnError
+} from "@simplewebauthn/browser";
 import {useLoginPasskey, useLoginUser} from "~/composables/api/api";
 import PasskeyQuery from "~/composables/api/query/PasskeyQuery";
 import {useSelfUserStore} from "~/stores/useSelfUser";
@@ -20,8 +26,25 @@ const showPassword = ref(false)
 
 // Checked on mount: WebAuthn is a browser API (and only available on HTTPS or localhost)
 const canUsePasskey = ref(false)
-onMounted(() => {
+// Passkeys suggested in the email field autofill (conditional UI)
+let canUsePasskeyAutofill = false
+// The backend login challenge expires after 5 minutes: renew the pending autofill request before
+const AUTOFILL_RENEW_MS = 4 * 60 * 1000
+let autofillTimer: ReturnType<typeof setTimeout> | undefined
+// Only the latest passkey ceremony may continue after an await (a click replaces the autofill one)
+let ceremonyId = 0
+
+onMounted(async () => {
   canUsePasskey.value = browserSupportsWebAuthn()
+  canUsePasskeyAutofill = canUsePasskey.value && await browserSupportsWebAuthnAutofill()
+  startPasskeyAutofill()
+})
+
+onBeforeUnmount(() => {
+  canUsePasskeyAutofill = false
+  ceremonyId++
+  clearTimeout(autofillTimer)
+  WebAuthnAbortService.cancelCeremony()
 })
 
 const state = reactive({
@@ -57,47 +80,78 @@ async function onSubmit(event: FormSubmitEvent<{email: string, password: string}
   isLoading.value = false
 }
 
-async function onPasskeyLogin() {
-  isPasskeyLoading.value = true
+function startPasskeyAutofill() {
+  if (canUsePasskeyAutofill) {
+    passkeyLogin(true)
+  }
+}
+
+function isPasskeyCancelled(e: unknown) {
+  // The user closed the browser prompt, or another ceremony replaced this one
+  return (e as Error).name === 'NotAllowedError' || (e instanceof WebAuthnError && e.code === 'ERROR_CEREMONY_ABORTED')
+}
+
+function toastPasskeyError(statusCode: number | undefined, description: string) {
+  toast.add({
+    color: "error",
+    title: statusCode === 429 ? "Trop de tentative" : "Erreur de connexion",
+    description: statusCode === 429 ? 'Veuillez réessayer dans 5 minutes.' : description
+  })
+}
+
+/**
+ * Passwordless login. With autofill, the browser waits in the background for the user to pick a
+ * passkey in the email field suggestions, so only a failed login (after a pick) is reported.
+ */
+async function passkeyLogin(autofill: boolean) {
+  const id = ++ceremonyId
+  clearTimeout(autofillTimer)
+  if (!autofill) {
+    isPasskeyLoading.value = true
+  }
+
+  // After a click, or a failed login with a picked passkey, keep suggesting passkeys in the email field.
+  // Not after an autofill setup failure (rate limit...), it would loop.
+  let restartAutofill = !autofill
   try {
-    const passkeyQuery = new PasskeyQuery()
-    const { options, error } = await passkeyQuery.loginOptions()
+    const { options, error } = await new PasskeyQuery().loginOptions()
+    if (id !== ceremonyId) return
     if (!options) {
-      toast.add({
-        color: "error",
-        title: error?.statusCode === 429 ? "Trop de tentative" : "Erreur de connexion",
-        description: error?.statusCode === 429 ? 'Veuillez réessayer dans 5 minutes.' : 'Connexion par clé d\'accès indisponible'
-      })
+      if (!autofill) toastPasskeyError(error?.statusCode, "Connexion par clé d'accès indisponible")
       return
+    }
+    if (autofill) {
+      autofillTimer = setTimeout(startPasskeyAutofill, AUTOFILL_RENEW_MS)
     }
 
     let credential
     try {
-      credential = await startAuthentication({ optionsJSON: options.publicKey })
+      credential = await startAuthentication({ optionsJSON: options.publicKey, useBrowserAutofill: autofill })
     } catch (e) {
-      // The user closed the browser prompt: nothing to report
-      if ((e as Error).name === 'NotAllowedError' || (e instanceof WebAuthnError && e.code === 'ERROR_CEREMONY_ABORTED')) {
-        return
+      if (!isPasskeyCancelled(e)) {
+        console.error(e)
+        if (!autofill) toastPasskeyError(undefined, "La clé d'accès n'a pas pu être utilisée")
       }
-      console.error(e)
-      toast.add({ color: "error", title: "Erreur de connexion", description: "La clé d'accès n'a pas pu être utilisée" })
       return
     }
 
+    clearTimeout(autofillTimer)
+    isPasskeyLoading.value = true
     const { error: loginError } = await useLoginPasskey(options.challengeId, credential)
     if (loginError) {
-      toast.add({
-        color: "error",
-        title: loginError.statusCode === 429 ? "Trop de tentative" : "Erreur de connexion",
-        description: loginError.statusCode === 429 ? 'Veuillez réessayer dans 5 minutes.' : "Clé d'accès non reconnue"
-      })
+      restartAutofill = true
       console.error(loginError)
+      toastPasskeyError(loginError.statusCode, "Clé d'accès non reconnue")
       return
     }
 
+    restartAutofill = false
     await onLoggedIn()
   } finally {
-    isPasskeyLoading.value = false
+    if (id === ceremonyId) {
+      isPasskeyLoading.value = false
+      if (restartAutofill) startPasskeyAutofill()
+    }
   }
 }
 
@@ -134,13 +188,14 @@ function redirectSuccessLogin() {
     <UCard>
       <UForm :state="state" class="space-y-4" :validate="validate" @submit="onSubmit">
         <UFormField label="Email" name="email">
-          <UInput v-model="state.email" type="email" data-testid="login-email" />
+          <UInput v-model="state.email" type="email" autocomplete="username webauthn" data-testid="login-email" />
         </UFormField>
 
         <UFormField label="Mot de passe" name="password">
           <UInput
             v-model="state.password"
             :type="showPassword ? 'text' : 'password'"
+            autocomplete="current-password"
             data-testid="login-password"
           >
             <template #trailing>
@@ -175,7 +230,7 @@ function redirectSuccessLogin() {
             :loading="isPasskeyLoading"
             :disabled="isLoading"
             data-testid="login-passkey"
-            @click="onPasskeyLogin"
+            @click="passkeyLogin(false)"
           >
             Se connecter avec une clé d'accès
           </UButton>
