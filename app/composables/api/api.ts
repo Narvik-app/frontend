@@ -78,12 +78,11 @@ async function useApi<T>(path: string, options: ApiOptions = {}, requireLogin: b
   return await $localApiClientAuth<T>(path, overloadedOptions);
 }
 
-export async function useLoginUser(email: string, password: string) {
-  const { data, error } = await usePostRawJson("token", {
-    grant_type: 'password',
-    username: email,
-    password: password
-  });
+/**
+ * POST /token with any user grant, then store the tokens and load the logged user.
+ */
+async function loginWithGrant(payload: object) {
+  const { data, error } = await usePostRawJson("token", payload);
 
   if (data) {
     const selfStore = useSelfUserStore()
@@ -95,24 +94,23 @@ export async function useLoginUser(email: string, password: string) {
   return { error };
 }
 
+export async function useLoginUser(email: string, password: string) {
+  return loginWithGrant({
+    grant_type: 'password',
+    username: email,
+    password: password
+  });
+}
+
 /**
  * Passwordless login: exchange a passkey assertion (navigator.credentials.get()) for the same tokens as a password login.
  */
 export async function useLoginPasskey(challengeId: string, credential: object) {
-  const { data, error } = await usePostRawJson("token", {
+  return loginWithGrant({
     grant_type: PASSKEY_GRANT_TYPE,
     challenge_id: challengeId,
     credential: credential,
   });
-
-  if (data) {
-    const selfStore = useSelfUserStore()
-    selfStore.setJwtSelfJwtTokenFromApiResponse(data as { access_token: string; refresh_token: string; expires_in?: number })
-
-    await selfStore.refresh()
-  }
-
-  return { error };
 }
 
 export async function useLoginBadger(clubId: string, loginToken: string) {

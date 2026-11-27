@@ -3,7 +3,7 @@ import type {
   PublicKeyCredentialRequestOptionsJSON,
   RegistrationResponseJSON
 } from "@simplewebauthn/browser";
-import {usePost, usePostRawJson} from "~/composables/api/api";
+import {usePost} from "~/composables/api/api";
 import {AbstractQuery} from "~/composables/api/query/AbstractQuery";
 import type {WebauthnCredential, WebauthnOptions} from "~/types/api/item/webauthnCredential";
 
@@ -22,10 +22,6 @@ export default class PasskeyQuery extends AbstractQuery<WebauthnCredential, Weba
 
   /** Public: start a passwordless login */
   async loginOptions() {
-    const { data, error } = await usePostRawJson('public/passkeys/-/login-options', {})
-    return {
-      options: data as WebauthnOptions<PublicKeyCredentialRequestOptionsJSON> | undefined,
-      error
-    }
+    return usePost<WebauthnOptions<PublicKeyCredentialRequestOptionsJSON>>('public/passkeys/-/login-options', {}, false)
   }
 }

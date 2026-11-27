@@ -4,14 +4,14 @@ import {
   browserSupportsWebAuthn,
   browserSupportsWebAuthnAutofill,
   startAuthentication,
-  WebAuthnAbortService,
-  WebAuthnError
+  WebAuthnAbortService
 } from "@simplewebauthn/browser";
 import {useLoginPasskey, useLoginUser} from "~/composables/api/api";
 import PasskeyQuery from "~/composables/api/query/PasskeyQuery";
 import {useSelfUserStore} from "~/stores/useSelfUser";
 import ModalLegalsAcceptance from "~/components/Modal/ModalLegalsAcceptance.vue";
 import {convertUuidToUrlUuid} from "~/utils/resource";
+import {isPasskeyCancelled} from "~/utils/passkey";
 
 definePageMeta({
   layout: "empty",
@@ -44,6 +44,7 @@ onBeforeUnmount(() => {
   canUsePasskeyAutofill = false
   ceremonyId++
   clearTimeout(autofillTimer)
+  document.removeEventListener('visibilitychange', renewPasskeyAutofill)
   WebAuthnAbortService.cancelCeremony()
 })
 
@@ -86,9 +87,13 @@ function startPasskeyAutofill() {
   }
 }
 
-function isPasskeyCancelled(e: unknown) {
-  // The user closed the browser prompt, or another ceremony replaced this one
-  return (e as Error).name === 'NotAllowedError' || (e instanceof WebAuthnError && e.code === 'ERROR_CEREMONY_ABORTED')
+// A hidden tab doesn't renew its request (a new challenge each time): it does when it's shown again
+function renewPasskeyAutofill() {
+  if (document.visibilityState === 'hidden') {
+    document.addEventListener('visibilitychange', renewPasskeyAutofill, { once: true })
+    return
+  }
+  startPasskeyAutofill()
 }
 
 function toastPasskeyError(statusCode: number | undefined, description: string) {
@@ -114,14 +119,14 @@ async function passkeyLogin(autofill: boolean) {
   // Not after an autofill setup failure (rate limit...), it would loop.
   let restartAutofill = !autofill
   try {
-    const { options, error } = await new PasskeyQuery().loginOptions()
+    const { item: options, error } = await new PasskeyQuery().loginOptions()
     if (id !== ceremonyId) return
     if (!options) {
       if (!autofill) toastPasskeyError(error?.statusCode, "Connexion par clé d'accès indisponible")
       return
     }
     if (autofill) {
-      autofillTimer = setTimeout(startPasskeyAutofill, AUTOFILL_RENEW_MS)
+      autofillTimer = setTimeout(renewPasskeyAutofill, AUTOFILL_RENEW_MS)
     }
 
     let credential

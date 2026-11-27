@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import {browserSupportsWebAuthn, startRegistration, WebAuthnError} from "@simplewebauthn/browser";
+import ModalWithActions from "~/components/Modal/ModalWithActions.vue";
 import PasskeyQuery from "~/composables/api/query/PasskeyQuery";
 import ModalDeleteConfirmation from "~/components/Modal/ModalDeleteConfirmation.vue";
 import type {WebauthnCredential} from "~/types/api/item/webauthnCredential";
 import {formatDateTimeReadable} from "~/utils/date";
+import {isPasskeyCancelled} from "~/utils/passkey";
 
 const toast = useToast()
 const overlay = useOverlay()
@@ -52,8 +54,7 @@ async function addPasskey() {
     try {
       credential = await startRegistration({ optionsJSON: options.publicKey })
     } catch (e) {
-      // The user closed the browser prompt
-      if ((e as Error).name === 'NotAllowedError' || (e instanceof WebAuthnError && e.code === 'ERROR_CEREMONY_ABORTED')) {
+      if (isPasskeyCancelled(e)) {
         return
       }
       const alreadyRegistered = e instanceof WebAuthnError && e.code === 'ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED'
@@ -178,32 +179,37 @@ function confirmDelete(passkey: WebauthnCredential) {
       </li>
     </ul>
 
-    <UModal v-model:open="isAddOpen" title="Ajouter une clé d'accès">
-      <template #body>
-        <UForm :state="{ newName }" class="space-y-4" @submit="addPasskey">
-          <UFormField label="Nom (optionnel)" name="name" help="Pour la reconnaître, par exemple « Téléphone » ou « Ordinateur du bureau ».">
-            <UInput v-model="newName" maxlength="100" class="w-full" data-testid="passkey-name" />
-          </UFormField>
+    <ModalWithActions v-model:open="isAddOpen" title="Ajouter une clé d'accès" @close="isAddOpen = false">
+      <UForm id="passkey-add-form" :state="{ newName }" @submit="addPasskey">
+        <UFormField label="Nom (optionnel)" name="name" help="Pour la reconnaître, par exemple « Téléphone » ou « Ordinateur du bureau ».">
+          <UInput v-model="newName" maxlength="100" class="w-full" data-testid="passkey-name" />
+        </UFormField>
+      </UForm>
 
-          <UButton type="submit" block :loading="isAdding" data-testid="passkey-create">
-            Créer la clé d'accès
-          </UButton>
-        </UForm>
+      <template #actions>
+        <UButton type="submit" form="passkey-add-form" :loading="isAdding" data-testid="passkey-create">
+          Créer la clé d'accès
+        </UButton>
       </template>
-    </UModal>
+    </ModalWithActions>
 
-    <UModal :open="!!editedPasskey" title="Renommer la clé d'accès" @update:open="(open: boolean) => { if (!open) editedPasskey = null }">
-      <template #body>
-        <UForm :state="{ editedName }" class="space-y-4" @submit="renamePasskey">
-          <UFormField label="Nom" name="name">
-            <UInput v-model="editedName" maxlength="100" required class="w-full" />
-          </UFormField>
+    <ModalWithActions
+      :open="!!editedPasskey"
+      title="Renommer la clé d'accès"
+      @update:open="(open: boolean) => { if (!open) editedPasskey = null }"
+      @close="editedPasskey = null"
+    >
+      <UForm id="passkey-rename-form" :state="{ editedName }" @submit="renamePasskey">
+        <UFormField label="Nom" name="name">
+          <UInput v-model="editedName" maxlength="100" required class="w-full" />
+        </UFormField>
+      </UForm>
 
-          <UButton type="submit" block :loading="isRenaming" :disabled="!editedName.trim()">
-            Enregistrer
-          </UButton>
-        </UForm>
+      <template #actions>
+        <UButton type="submit" form="passkey-rename-form" :loading="isRenaming" :disabled="!editedName.trim()">
+          Enregistrer
+        </UButton>
       </template>
-    </UModal>
+    </ModalWithActions>
   </UCard>
 </template>
