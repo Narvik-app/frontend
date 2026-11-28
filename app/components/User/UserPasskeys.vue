@@ -144,7 +144,7 @@ function confirmDelete(passkey: WebauthnCredential) {
 
 <template>
   <UCard data-testid="passkeys-card">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+    <div class="flex flex-col gap-2 mb-2">
       <div>
         <div class="text-xl font-bold">Clés d'accès</div>
         <p class="text-sm text-muted">
@@ -155,7 +155,7 @@ function confirmDelete(passkey: WebauthnCredential) {
       <UButton
         v-if="browserSupportsPasskey"
         icon="i-heroicons-plus"
-        class="self-start sm:self-center"
+        class="self-start"
         data-testid="passkey-add"
         @click="isAddOpen = true"
       >
