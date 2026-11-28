@@ -14,6 +14,9 @@ export const MIME_TYPE_JSON = "application/json";
 export const MIME_TYPE_JSON_PATCH = "application/merge-patch+json"
 export const MIME_TYPE_CSV = "text/csv"
 
+// Custom OAuth grant declared by the backend (App\Security\Grant\PasskeyGrant)
+const PASSKEY_GRANT_TYPE = "urn:narvik:grant:passkey"
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const CONTENT_TYPE_FORM_DATA = "multipart/form-data"
 
@@ -75,12 +78,11 @@ async function useApi<T>(path: string, options: ApiOptions = {}, requireLogin: b
   return await $localApiClientAuth<T>(path, overloadedOptions);
 }
 
-export async function useLoginUser(email: string, password: string) {
-  const { data, error } = await usePostRawJson("token", {
-    grant_type: 'password',
-    username: email,
-    password: password
-  });
+/**
+ * POST /token with any user grant, then store the tokens and load the logged user.
+ */
+async function loginWithGrant(payload: object) {
+  const { data, error } = await usePostRawJson("token", payload);
 
   if (data) {
     const selfStore = useSelfUserStore()
@@ -90,6 +92,25 @@ export async function useLoginUser(email: string, password: string) {
   }
 
   return { error };
+}
+
+export async function useLoginUser(email: string, password: string) {
+  return loginWithGrant({
+    grant_type: 'password',
+    username: email,
+    password: password
+  });
+}
+
+/**
+ * Passwordless login: exchange a passkey assertion (navigator.credentials.get()) for the same tokens as a password login.
+ */
+export async function useLoginPasskey(challengeId: string, credential: object) {
+  return loginWithGrant({
+    grant_type: PASSKEY_GRANT_TYPE,
+    challenge_id: challengeId,
+    credential: credential,
+  });
 }
 
 export async function useLoginBadger(clubId: string, loginToken: string) {

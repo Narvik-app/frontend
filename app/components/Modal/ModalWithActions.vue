@@ -24,7 +24,8 @@ const props = defineProps(
 </script>
 
 <template>
-  <UModal :dismissible="props.dismissible">
+  <!-- The title is also given to UModal: with a custom #content it renders it as a visually hidden dialog title for screen readers -->
+  <UModal :dismissible="props.dismissible" :title="props.title">
     <template #content>
       <div>
         <UCard>

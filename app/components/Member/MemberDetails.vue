@@ -43,10 +43,6 @@ const props = defineProps({
     type: String,
     required: false,
     default: undefined
-  },
-  self: {
-    type: Boolean,
-    default: false
   }
 });
 
@@ -65,7 +61,7 @@ const isAdmin = selfStore.isAdmin();
 const isSupervisor = selfStore.hasSupervisorRole();
 const canSendEmail = selfStore.can(Permission.EmailEdit)
 
-const canEditPicture = computed(() => isSuperAdmin || isAdmin || memberRef.value?.email === loggedUsername || props.self)
+const canEditPicture = computed(() => isSuperAdmin || isAdmin || memberRef.value?.email === loggedUsername)
 
 function openProfileImageModal() {
   if (!memberRef.value) return
@@ -374,7 +370,7 @@ const displayedControlTypes = computed(() => controlTypes.value.filter(t => t.di
 // read access to the plugin — `can()` already grants this to admins and to anyone holding the
 // edit permission, so this single check covers all of them.
 const canViewDeclarations = selfStore.can(Permission.TimeAndTravelAccess)
-const showDeclarationsTab = computed(() => !!memberRef.value && !props.self && canViewDeclarations && hasClubSupervisorRole(memberRef.value?.role) && selfStore.selectedProfile?.club.timeAndTravelEnabled)
+const showDeclarationsTab = computed(() => !!memberRef.value && canViewDeclarations && hasClubSupervisorRole(memberRef.value?.role) && selfStore.selectedProfile?.club.timeAndTravelEnabled)
 const showPermissionsTab = computed(() => hasAssignablePermissions(memberRef.value?.role))
 
 // Presences first (and default) — the tab members/admins look at most often. Declarations and
