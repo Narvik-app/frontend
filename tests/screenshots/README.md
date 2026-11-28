@@ -63,7 +63,7 @@ Add an entry in `manifest.ts`:
   id: 'loan-liste-prets',            // unique, prefix by module, used by SCREENSHOT_ONLY
     role
 :
-  'ADMIN',                     // login state (see STORAGE_STATE in tests/e2e/utils/auth.ts)
+  'ADMIN',                     // login state (see STORAGE_STATE in tests/e2e/utils/auth.ts), omit it for pages shown before login
     url
 :
   '/admin/loans',

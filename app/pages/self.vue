@@ -14,7 +14,7 @@ const { member, user, selectedProfile } = storeToRefs(selfStore)
 </script>
 
 <template>
-  <div v-if="user" class="flex flex-col gap-4">
+  <div v-if="user" class="flex flex-col gap-4" data-testid="self-page">
     <div class="text-3xl font-bold">Mon compte</div>
 
     <UserSelfHeader :user="user" :member="member" :club-name="selectedProfile?.club?.name" />

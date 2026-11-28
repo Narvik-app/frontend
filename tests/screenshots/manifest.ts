@@ -11,7 +11,8 @@ export type ScreenshotTarget = {
 export type ScreenshotDefinition = {
   /** Unique name, used for the intermediate png */
   id: string;
-  role: keyof typeof STORAGE_STATE;
+  /** Logged in user, none for the pages shown before login */
+  role?: keyof typeof STORAGE_STATE;
   url: string;
   /** Run after the page settled (open a modal, fill a form...) */
   prepare?: (page: Page) => Promise<void>;
@@ -484,6 +485,31 @@ export const screenshots: ScreenshotDefinition[] = [
     },
     locator: page => page.getByRole('tabpanel').first(),
     targets: [{repo: 'docs', path: `${DOCS_TT}/permissions`}],
+  },
+  {
+    id: 'login-passkey',
+    url: '/login',
+    locator: page => cardWith(page, page.getByTestId('login-passkey')),
+    targets: [{repo: 'docs', path: `${DOCS_START}/login`}],
+  },
+  {
+    id: 'self-account',
+    role: 'MEMBER',
+    url: '/self',
+    // Docs only: the about website evolutions keep a static copy (public/evolutions/v3.24.webp)
+    locator: page => page.getByTestId('self-page'),
+    targets: [{repo: 'docs', path: `${DOCS_START}/account`}],
+  },
+  {
+    id: 'self-passkey-add',
+    role: 'MEMBER',
+    url: '/self',
+    prepare: async (page) => {
+      await page.getByTestId('passkey-add').click();
+      await dialog(page).waitFor();
+    },
+    locator: dialog,
+    targets: [{repo: 'docs', path: `${DOCS_START}/passkey-add`}],
   },
   {
     id: 'config-globale',
