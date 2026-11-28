@@ -55,7 +55,7 @@ for (const definition of screenshots) {
   if (only.length && !only.some(prefix => definition.id.startsWith(prefix))) continue;
 
   test.describe(definition.id, () => {
-    test.use({storageState: STORAGE_STATE[definition.role]});
+    test.use({storageState: definition.role ? STORAGE_STATE[definition.role] : {cookies: [], origins: []}});
 
     test('capture', async ({page}) => {
       await page.goto(definition.url);
