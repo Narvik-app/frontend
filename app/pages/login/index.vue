@@ -155,7 +155,6 @@ async function passkeyLogin(autofill: boolean) {
         toast.add({
           color: "warning",
           title: "Aucune clé d'accès utilisée",
-          description: "La demande a été annulée ou a expiré, ou cet appareil n'a pas de clé d'accès pour ce site."
         })
         return
       }
@@ -261,7 +260,7 @@ function redirectSuccessLogin() {
             data-testid="login-passkey"
             @click="passkeyLogin(false)"
           >
-            Se connecter avec une clé d'accès
+            Connexion par clé d'accès
           </UButton>
 
           <USeparator label="Ou" />

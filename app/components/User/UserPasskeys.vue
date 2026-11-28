@@ -197,7 +197,7 @@ function confirmDelete(passkey: WebauthnCredential) {
 
     <ModalWithActions v-model:open="isAddOpen" title="Ajouter une clé d'accès" @close="isAddOpen = false">
       <UForm id="passkey-add-form" :state="{ newName }" @submit="addPasskey">
-        <UFormField label="Nom (optionnel)" name="name" help="Pour la reconnaître, par exemple « Téléphone » ou « Ordinateur du bureau ».">
+        <UFormField label="Nom (optionnel)" name="name" help="Par exemple « Téléphone » ou « Enpass ».">
           <UInput v-model="newName" maxlength="100" class="w-full" data-testid="passkey-name" />
         </UFormField>
       </UForm>
